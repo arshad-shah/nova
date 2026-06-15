@@ -58,7 +58,7 @@ jobs:
           ref: ${{ env.SDK_REF }}
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@a3252b78c470c02df07e9d59298aecedc3ccdd6d # v4
+        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v4
         with:
           version: 11.1.2
 
