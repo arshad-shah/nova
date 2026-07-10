@@ -167,6 +167,13 @@
   --color-decorative-7: color-mix(in oklab, var(--color-accent-emphasis), var(--color-warning) 50%);
   --color-decorative-8: color-mix(in oklab, var(--color-accent), var(--color-error) 45%);
 
+  /* On-status text — a strongly darkened shade of each status hue, readable
+     as text on the status-colored background in ALL themes (built-in and
+     user-added) with no per-theme upkeep. Derived, like the decorative ramp. */
+  --color-on-success: color-mix(in oklab, var(--color-success), black 70%);
+  --color-on-warning: color-mix(in oklab, var(--color-warning), black 70%);
+  --color-on-error: color-mix(in oklab, var(--color-error), black 70%);
+
   /* Interactive */
   --color-hover: rgba(232, 236, 243, 0.05);
   --color-active: rgba(232, 236, 243, 0.1);

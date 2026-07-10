@@ -23,6 +23,13 @@ describe('decorative token ramp', () => {
     }
   })
 
+  it('declares on-status text tokens in base tokens.css', () => {
+    const css = fs.readFileSync(TOKENS, 'utf-8')
+    for (const token of ['--color-on-success:', '--color-on-warning:', '--color-on-error:']) {
+      expect(css, `missing ${token}`).toContain(token)
+    }
+  })
+
   it('every *_CSS theme block defines all source tokens', () => {
     const src = fs.readFileSync(THEMES, 'utf-8')
     // Each theme is a `const XXX_CSS = \`...\`` template literal.
