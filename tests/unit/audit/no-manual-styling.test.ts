@@ -24,6 +24,9 @@ const ALLOWLIST = new Set<string>([
   //
   // Theme-preview fallback shown only when a theme omits `preview`. (Task 8)
   path.join(COMPONENTS, 'settings', 'categories', 'AppearanceSettings.tsx'),
+  // User-data preset swatches — concrete hexes the user picks a connection
+  // color from (not theme appearance). Like AppearanceSettings' preview.
+  path.join(COMPONENTS, 'connections', 'form', 'types.ts'),
 ])
 
 // Raw 3/6/8-digit hex color literal.
@@ -32,12 +35,22 @@ const RAW_HEX = /#[0-9a-fA-F]{3}(?:[0-9a-fA-F]{3}(?:[0-9a-fA-F]{2})?)?\b/
 const PALETTE_CLASS = /\b(?:bg|text|border|ring|from|to|via|fill|stroke)-(?:gray|red|blue|green|zinc|slate|neutral|stone|yellow|amber|emerald|indigo|purple|orange|sky|rose|teal|cyan|violet|pink|lime|fuchsia)-[0-9]{2,3}\b/
 // Arbitrary Tailwind color value, e.g. bg-[#e81123], text-[#ff8c6b].
 const ARBITRARY_COLOR = /\b(?:bg|text|border|ring|fill|stroke)-\[#[0-9a-fA-F]{3,8}\]/
+// Raw neutral-alpha overlay, e.g. bg-white/5, hover:bg-black/50, border-white/3.
+const OVERLAY_ALPHA = /\b(?:bg|text|border|ring|from|to|fill|stroke)-(?:white|black)\/[0-9]+/
 
 function walk(dir: string, out: string[] = []): string[] {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
     const p = path.join(dir, entry.name)
-    if (entry.isDirectory()) walk(p, out)
-    else if (entry.isFile() && p.endsWith('.tsx') && !p.endsWith('.stories.tsx')) out.push(p)
+    if (entry.isDirectory()) {
+      walk(p, out)
+    } else if (
+      entry.isFile() &&
+      (p.endsWith('.tsx') || p.endsWith('.ts')) &&
+      !p.endsWith('.stories.tsx') && !p.endsWith('.stories.ts') &&
+      !p.endsWith('.test.ts') && !p.endsWith('.test.tsx')
+    ) {
+      out.push(p)
+    }
   }
   return out
 }
@@ -57,7 +70,7 @@ describe('guardrail — components carry no manual styling', () => {
     if (ALLOWLIST.has(file)) return
     const src = stripComments(fs.readFileSync(file, 'utf-8'))
     const offenders: string[] = []
-    for (const re of [RAW_HEX, PALETTE_CLASS, ARBITRARY_COLOR]) {
+    for (const re of [RAW_HEX, PALETTE_CLASS, ARBITRARY_COLOR, OVERLAY_ALPHA]) {
       const m = src.match(re)
       if (m) offenders.push(m[0])
     }
