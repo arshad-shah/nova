@@ -150,7 +150,7 @@ export function SchemaAutocomplete({ triggerText, onSelect, onDismiss, anchorRef
           onMouseEnter={() => setSelectedIndex(i)}
         >
           <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-            item.type === 'table' ? 'bg-blue-400' : 'bg-green-400'
+            item.type === 'table' ? 'bg-info' : 'bg-success'
           }`} />
           <span className="text-text-primary font-medium truncate">{item.label}</span>
           <span className="text-text-muted ml-auto shrink-0">{item.detail}</span>

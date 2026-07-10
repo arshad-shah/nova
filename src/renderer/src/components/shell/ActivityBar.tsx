@@ -91,7 +91,7 @@ export function ActivityBar() {
             size="lg"
             variant="ghost"
             onClick={() => openSettings(SETTINGS_CATEGORY.MCP)}
-            className="rounded-lg transition-colors text-green-400 hover:text-green-300 hover:bg-white/5"
+            className="rounded-lg transition-colors text-success hover:text-success hover:bg-hover"
           >
             <Radio size={18} />
           </IconButton>

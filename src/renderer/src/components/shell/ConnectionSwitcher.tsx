@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, type CSSProperties } from 'react'
 import { useConnectionsStore } from '@/stores/connections'
 import { Search, Plus, Check } from 'lucide-react'
 import { Button, Input, Text, Box, Flex, ScrollArea } from '@/primitives'
@@ -18,8 +18,13 @@ const DB_TYPE_COLORS: Record<string, string> = {
   postgresql: 'text-accent',
   mysql: 'text-warning',
   sqlite: 'text-info',
-  mongodb: 'text-[#ff8c6b]',
   redis: 'text-error',
+}
+
+// mongodb has no dedicated semantic token (not a status hue); route its brand
+// accent through the theme's decorative color scale instead of a raw hex.
+const DB_TYPE_STYLE: Record<string, CSSProperties> = {
+  mongodb: { color: 'var(--color-decorative-2)' },
 }
 
 interface ConnectionSwitcherProps {
@@ -82,6 +87,7 @@ export function ConnectionSwitcher({ isOpen, onClose, onNewConnection }: Connect
   const renderConnection = (c: typeof connections[0], isActive: boolean) => {
     const abbr = DB_ABBREVIATIONS[c.type] ?? c.type.slice(0, 2).toUpperCase()
     const color = DB_TYPE_COLORS[c.type] ?? 'text-text-primary'
+    const colorStyle = DB_TYPE_STYLE[c.type]
     const isLive = connectedIds.has(c.id)
 
     return (
@@ -103,7 +109,7 @@ export function ConnectionSwitcher({ isOpen, onClose, onNewConnection }: Connect
         />
         <Box className="min-w-0 flex-1">
           <Flex align="center" gap="xs">
-            <Text as="span" weight="semibold" className={cn('text-[10px]', color)}>{abbr}</Text>
+            <Text as="span" weight="semibold" className={cn('text-[10px]', color)} style={colorStyle}>{abbr}</Text>
             <Text as="span" truncate className="text-[10px] text-text-primary">{c.name}</Text>
           </Flex>
           <Text as="p" truncate className="text-[9px] text-text-tertiary">

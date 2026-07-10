@@ -54,7 +54,7 @@ export function WindowControls() {
   // lets these win over the variant defaults.
   const base = 'no-drag w-12 h-full rounded-none text-text-muted focus-visible:shadow-none'
   const minMax = `${base} hover:bg-white/10 hover:text-text-primary focus-visible:bg-white/10 focus-visible:text-text-primary`
-  const closeBtn = `${base} hover:bg-[#e81123] hover:text-white focus-visible:bg-[#e81123] focus-visible:text-white`
+  const closeBtn = `${base} hover:bg-error hover:text-text-inverse focus-visible:bg-error focus-visible:text-text-inverse`
 
   return (
     <div className="no-drag flex items-stretch h-full">

@@ -18,9 +18,9 @@ export interface PluginInfo {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  active: 'bg-green-400',
-  degraded: 'bg-yellow-400',
-  error: 'bg-red-400',
+  active: 'bg-success',
+  degraded: 'bg-warning',
+  error: 'bg-error',
 }
 
 export function PluginsPanel() {
@@ -138,7 +138,7 @@ export function PluginsPanel() {
 }
 
 function PluginRow({ plugin, isSelected, onClick }: { plugin: PluginInfo; isSelected: boolean; onClick: () => void }) {
-  const statusColor = STATUS_COLORS[plugin.status.state] ?? 'bg-gray-500'
+  const statusColor = STATUS_COLORS[plugin.status.state] ?? 'bg-text-muted'
 
   return (
     <Flex
