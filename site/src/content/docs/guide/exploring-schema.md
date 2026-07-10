@@ -43,7 +43,7 @@ wide to read comfortably across the grid.
 
 ## Chart panel
 
-The **chart panel**, built with [Recharts](https://recharts.org/), turns query
+The **chart panel**, built with swift-chart, turns query
 results into a quick visualisation — a fast way to eyeball trends or
 distributions without leaving the app. Run a query, then send its results to the
 chart panel to plot them.

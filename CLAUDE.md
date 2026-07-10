@@ -140,7 +140,7 @@ Three-layer theming in `primitives/theme/tokens.css`: raw color scale → semant
 - **Monaco Editor** — query editor with custom completion provider (`lib/monaco-sql.ts`); the language is driver-declared via the `editorLanguage` capability (SQL by default), not assumed
 - **AG Grid** — Query results display with custom dark theme
 - **@xyflow/react** — ER diagram visualization
-- **Recharts** — Chart panel for data visualization
+- **@arshad-shah/swift-chart** — Chart panel for data visualization (theme-aware via `addTheme` + CSS token vars)
 
 ## Build Configuration
 
