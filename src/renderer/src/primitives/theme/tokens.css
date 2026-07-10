@@ -153,6 +153,20 @@
   --color-error-emphasis: color-mix(in oklch, var(--color-error), black 25%);
   --color-info: var(--raw-blue-500);
 
+  /* Decorative — derived, theme-agnostic ramp for deterministic/generated
+     coloring (plugin icons, avatars, charts). Built from tokens every theme
+     already defines, so all built-in AND user-added themes get a coherent
+     ramp for free. A theme MAY override these for bespoke hues, but never
+     has to. Do not hand-author per theme. */
+  --color-decorative-1: var(--color-accent);
+  --color-decorative-2: var(--color-accent-emphasis);
+  --color-decorative-3: var(--color-success);
+  --color-decorative-4: var(--color-warning);
+  --color-decorative-5: var(--color-error);
+  --color-decorative-6: color-mix(in oklab, var(--color-accent), var(--color-success) 50%);
+  --color-decorative-7: color-mix(in oklab, var(--color-accent-emphasis), var(--color-warning) 50%);
+  --color-decorative-8: color-mix(in oklab, var(--color-accent), var(--color-error) 45%);
+
   /* Interactive */
   --color-hover: rgba(232, 236, 243, 0.05);
   --color-active: rgba(232, 236, 243, 0.1);
