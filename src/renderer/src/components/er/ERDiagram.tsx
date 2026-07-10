@@ -20,11 +20,7 @@ import { Loader2 } from 'lucide-react'
 import { Flex, Text, Box, Button, Spinner } from '@/primitives'
 import { useTheme } from '@/primitives/theme/ThemeProvider'
 import { useTranslation } from '@/i18n/I18nProvider'
-
-function readVar(name: string, fallback: string): string {
-  const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim()
-  return v || fallback
-}
+import { themeColor } from '@/primitives/theme/theme-color'
 
 const nodeTypes = { tableNode: TableNode }
 
@@ -43,8 +39,8 @@ export function ERDiagram({ connectionId, schema }: Props) {
   const { fetchTables, fetchColumns } = useSchemaStore()
   const { theme } = useTheme()
   const { gridColor, accentColor } = useMemo(() => ({
-    gridColor: readVar('--color-border-default', '#2a2a3e'),
-    accentColor: readVar('--color-accent', '#7c6ff7'),
+    gridColor: themeColor('--color-border-default'),
+    accentColor: themeColor('--color-accent'),
   }), [theme])
 
   useEffect(() => {
