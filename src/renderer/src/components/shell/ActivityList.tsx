@@ -215,7 +215,7 @@ export function ActivityList({ entries, onClear }: ActivityListProps) {
             <button
               type="button"
               onClick={() => setLevels((p) => toggle(p, 'error'))}
-              className={cn('flex items-center gap-0.5 rounded px-1 py-0.5 text-[10px]', levels.has('error') ? 'bg-error/15 text-error' : 'text-error hover:bg-white/5')}
+              className={cn('flex items-center gap-0.5 rounded px-1 py-0.5 text-[10px]', levels.has('error') ? 'bg-error/15 text-error' : 'text-error hover:bg-hover')}
             >
               <AlertCircle size={11} />{errorCount}
             </button>
@@ -224,7 +224,7 @@ export function ActivityList({ entries, onClear }: ActivityListProps) {
             <button
               type="button"
               onClick={() => setLevels((p) => toggle(p, 'warn'))}
-              className={cn('flex items-center gap-0.5 rounded px-1 py-0.5 text-[10px]', levels.has('warn') ? 'bg-warning/15 text-warning' : 'text-warning hover:bg-white/5')}
+              className={cn('flex items-center gap-0.5 rounded px-1 py-0.5 text-[10px]', levels.has('warn') ? 'bg-warning/15 text-warning' : 'text-warning hover:bg-hover')}
             >
               <TriangleAlert size={11} />{warnCount}
             </button>
@@ -234,7 +234,7 @@ export function ActivityList({ entries, onClear }: ActivityListProps) {
             onClick={toggleVerbose}
             title={t('shell.activity.verbose')}
             className={cn(
-              'flex items-center rounded p-1 hover:bg-white/5',
+              'flex items-center rounded p-1 hover:bg-hover',
               verbose ? 'text-accent' : 'text-text-muted hover:text-text-primary',
             )}
           >
@@ -245,7 +245,7 @@ export function ActivityList({ entries, onClear }: ActivityListProps) {
             onClick={togglePause}
             title={t(paused ? 'shell.activity.resume' : 'shell.activity.pause')}
             className={cn(
-              'flex items-center rounded p-1 hover:bg-white/5',
+              'flex items-center rounded p-1 hover:bg-hover',
               paused ? 'text-warning' : 'text-text-muted hover:text-text-primary',
             )}
           >
@@ -256,7 +256,7 @@ export function ActivityList({ entries, onClear }: ActivityListProps) {
             onClick={() => downloadEntries(matched)}
             disabled={matched.length === 0}
             title={t('shell.activity.export')}
-            className="flex items-center rounded p-1 text-text-muted hover:text-text-primary hover:bg-white/5 disabled:opacity-40 disabled:hover:bg-transparent"
+            className="flex items-center rounded p-1 text-text-muted hover:text-text-primary hover:bg-hover disabled:opacity-40 disabled:hover:bg-transparent"
           >
             <Download size={13} />
           </button>
@@ -264,7 +264,7 @@ export function ActivityList({ entries, onClear }: ActivityListProps) {
             type="button"
             onClick={onClear}
             title={t('shell.activity.clear')}
-            className="flex items-center rounded p-1 text-text-muted hover:text-error hover:bg-white/5"
+            className="flex items-center rounded p-1 text-text-muted hover:text-error hover:bg-hover"
           >
             <Trash2 size={13} />
           </button>
@@ -281,7 +281,7 @@ export function ActivityList({ entries, onClear }: ActivityListProps) {
                 title={t(label)}
                 className={cn(
                   'flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] transition-colors',
-                  on ? 'bg-accent/15 text-accent' : 'text-text-muted hover:text-text-primary hover:bg-white/5',
+                  on ? 'bg-accent/15 text-accent' : 'text-text-muted hover:text-text-primary hover:bg-hover',
                 )}
               >
                 <Icon size={12} />
@@ -301,7 +301,7 @@ export function ActivityList({ entries, onClear }: ActivityListProps) {
                 title={t(label)}
                 className={cn(
                   'flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] transition-colors',
-                  on ? 'bg-accent/15 text-accent' : 'text-text-muted hover:text-text-primary hover:bg-white/5',
+                  on ? 'bg-accent/15 text-accent' : 'text-text-muted hover:text-text-primary hover:bg-hover',
                 )}
               >
                 <span className={cn('h-1.5 w-1.5 rounded-full bg-current', LEVEL_CLASS[level])} />

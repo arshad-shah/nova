@@ -150,7 +150,7 @@ function PluginRow({ plugin, isSelected, onClick }: { plugin: PluginInfo; isSele
         'px-2 py-1.5 rounded-md cursor-pointer transition-colors',
         isSelected
           ? 'bg-accent/10 border-l-2 border-l-accent'
-          : 'hover:bg-white/5'
+          : 'hover:bg-hover'
       )}
     >
       <PluginIcon plugin={plugin} size={28} />

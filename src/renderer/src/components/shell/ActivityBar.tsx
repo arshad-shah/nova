@@ -58,7 +58,7 @@ export function ActivityBar() {
             'rounded-lg transition-colors',
             isActive
               ? 'bg-accent/10 text-accent hover:bg-accent/10'
-              : 'text-text-muted hover:text-text-primary hover:bg-white/5'
+              : 'text-text-muted hover:text-text-primary hover:bg-hover'
           )}
         >
           <Icon size={20} />
@@ -107,7 +107,7 @@ export function ActivityBar() {
             'rounded-lg transition-colors',
             activeTabType === 'settings'
               ? 'bg-accent/10 text-accent hover:bg-accent/10'
-              : 'text-text-muted hover:text-text-primary hover:bg-white/5'
+              : 'text-text-muted hover:text-text-primary hover:bg-hover'
           )}
         >
           <Settings size={20} />

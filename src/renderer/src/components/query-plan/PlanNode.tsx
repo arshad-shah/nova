@@ -33,7 +33,7 @@ export function PlanNodeView({ node, maxCost, depth = 0 }: Props) {
       <Flex
         align="center"
         gap="sm"
-        className="py-1.5 px-2 rounded-md hover:bg-white/5 cursor-pointer"
+        className="py-1.5 px-2 rounded-md hover:bg-hover cursor-pointer"
         onClick={() => setExpanded(!expanded)}
       >
         {hasChildren ? (

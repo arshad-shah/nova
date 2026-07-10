@@ -218,7 +218,7 @@ export function CommandPalette({ open, onClose }: Props) {
 
   return (
     <>
-      <Box className="fixed inset-0 bg-black/30 z-50" onClick={onClose} />
+      <Box className="fixed inset-0 bg-scrim-weak z-50" onClick={onClose} />
       <Box className="fixed top-[15%] left-1/2 -translate-x-1/2 z-50 w-[520px] bg-bg-secondary border border-border rounded-xl shadow-2xl overflow-hidden">
         {/* Search input */}
         <Flex align="center" gap="sm" className="px-4 py-3 border-b border-border">
@@ -245,7 +245,7 @@ export function CommandPalette({ open, onClose }: Props) {
               variant="ghost"
               onClick={() => { cmd.action(); onClose() }}
               className={`w-full flex items-center justify-between px-4 py-2 text-left transition-colors rounded-none border-0 h-auto ${
-                i === selectedIndex ? 'bg-accent/10 text-accent' : 'text-text-secondary hover:bg-white/5'
+                i === selectedIndex ? 'bg-accent/10 text-accent' : 'text-text-secondary hover:bg-hover'
               }`}
             >
               <Flex align="center" gap="sm">

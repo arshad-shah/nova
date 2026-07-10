@@ -23,7 +23,7 @@ export function ErrorsTab({ errors, expandedError, onToggleError }: {
               align="start"
               gap="sm"
               onClick={() => onToggleError(expandedError === i ? null : i)}
-              className="py-1.5 cursor-pointer hover:bg-white/5 rounded px-2 -mx-2 transition-colors"
+              className="py-1.5 cursor-pointer hover:bg-hover rounded px-2 -mx-2 transition-colors"
             >
               <XCircle size={14} className="text-error mt-0.5 shrink-0" />
               <Box className="flex-1 min-w-0">

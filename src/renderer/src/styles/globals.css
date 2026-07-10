@@ -54,6 +54,8 @@
   --color-overlay-soft: var(--color-overlay-soft, rgba(0, 0, 0, 0.2));
   --color-hover: var(--color-hover);
   --color-active: var(--color-active);
+  --color-scrim: var(--color-scrim);
+  --color-scrim-weak: var(--color-scrim-weak);
   --color-focus-ring: var(--color-focus-ring);
   --shadow-input-inset: var(--shadow-input-inset);
   --shadow-card: var(--shadow-card);

@@ -10,7 +10,7 @@ export function MCPApprovalDialog() {
   if (!req) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-scrim">
       <div className="bg-bg-primary border border-border rounded-lg shadow-xl max-w-lg w-full mx-4">
         <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-warning/10">
           <AlertTriangle size={18} className="text-warning shrink-0" />

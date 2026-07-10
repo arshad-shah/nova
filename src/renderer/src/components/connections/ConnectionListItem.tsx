@@ -98,8 +98,8 @@ export function ConnectionListItem({
         active
           ? 'bg-accent/10 border-l-accent'
           : connected
-            ? 'border-l-transparent hover:bg-white/5'
-            : 'border-l-transparent hover:bg-white/5 opacity-80'
+            ? 'border-l-transparent hover:bg-hover'
+            : 'border-l-transparent hover:bg-hover opacity-80'
       }`}
       onClick={onActivate}
     >

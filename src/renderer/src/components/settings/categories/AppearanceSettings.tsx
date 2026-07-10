@@ -76,8 +76,9 @@ function ThemeGrid({
               {(hasError || hasWarning) && (
                 <span
                   className={`absolute top-1.5 right-1.5 inline-flex items-center justify-center rounded-full p-0.5 ${
-                    hasError ? 'bg-error text-white' : 'bg-warning text-black/80'
+                    hasError ? 'bg-error text-white' : 'bg-warning'
                   }`}
+                  style={hasError ? undefined : { color: 'var(--color-on-warning)' }}
                   aria-label={tooltip}
                 >
                   <AlertTriangle size={9} />

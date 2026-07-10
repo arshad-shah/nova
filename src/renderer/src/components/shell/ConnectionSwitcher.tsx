@@ -165,7 +165,7 @@ export function ConnectionSwitcher({ isOpen, onClose, onNewConnection }: Connect
         )}
 
         {savedConns.length > 0 && (
-          <Box className="px-1.5 pt-0.5 border-t border-white/3">
+          <Box className="px-1.5 pt-0.5 border-t border-border-subtle">
             <Text as="p" weight="semibold" className="px-1.5 py-1 text-[8px] uppercase tracking-wider text-text-tertiary">
               {t('shell.connectionSwitcher.saved')}
             </Text>

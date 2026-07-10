@@ -177,6 +177,11 @@
   /* Interactive */
   --color-hover: rgba(232, 236, 243, 0.05);
   --color-active: rgba(232, 236, 243, 0.1);
+
+  /* Scrim — modal/backdrop dimming. Intentionally theme-invariant (a backdrop
+     dims toward black in every theme). */
+  --color-scrim: rgba(0, 0, 0, 0.5);
+  --color-scrim-weak: rgba(0, 0, 0, 0.3);
   --color-focus-ring: var(--raw-mint-400);
   --color-disabled: var(--raw-ink-400);
 

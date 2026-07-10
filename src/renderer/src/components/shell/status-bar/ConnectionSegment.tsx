@@ -55,7 +55,7 @@ export function ConnectionSegment({ onNewConnection }: Props) {
           <>
             <span>{active.name}</span>
             {driver && (
-              <span className="rounded-sm bg-white/18 px-1 py-px text-[9.5px] font-medium">
+              <span className="rounded-sm bg-active px-1 py-px text-[9.5px] font-medium">
                 {driver}
               </span>
             )}
@@ -63,7 +63,7 @@ export function ConnectionSegment({ onNewConnection }: Props) {
         ) : (
           <>
             <span>{t('shell.statusBar.noConnection')}</span>
-            <span className="rounded-sm bg-white/8 px-1 py-px text-[9.5px] font-medium opacity-80">
+            <span className="rounded-sm bg-active px-1 py-px text-[9.5px] font-medium opacity-80">
               {t('shell.statusBar.clickToConnect')}
             </span>
           </>
