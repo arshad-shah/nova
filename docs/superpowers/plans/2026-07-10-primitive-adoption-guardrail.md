@@ -846,3 +846,35 @@ Run: `pnpm storybook`; switch across a light theme (`light`/`lab`) and dark them
 **Placeholder scan:** No TBD/TODO; every code step has concrete code. The one judgment call (AppearanceSettings: allowlist vs token) is explicitly decided with a default (allowlist). ✓
 
 **Type consistency:** `themeColor`, `readThemeColors`, `decorativeColor`, `DECORATIVE_COUNT` used identically in Tasks 2, 4, 6. `DEFAULT_CONNECTION_COLOR` defined and consumed consistently in Task 7. Guardrail regexes shared between Task 8 recon and Task 9/11 enforcement. ✓
+
+---
+
+## Addendum — Second wave (from final whole-branch review, user-approved)
+
+The final review approved the branch "with fixes." User chose the thorough option on all three findings. Five follow-up tasks:
+
+### Task 12: On-status text tokens + PlanNode contrast fix
+- `tokens.css` base `:root`: add derived `--color-on-success/warning/error` = `color-mix(in oklab, var(--color-<status>), black 70%)` (a dark shade of each status hue — readable on the status-colored badge in ALL themes, no per-theme upkeep).
+- `PlanNode.tsx`: badge text color → the matching `var(--color-on-*)` for the current cost bg (parallel to `costColor`). Fixes the light-theme warning-badge contrast regression.
+- Extend `tests/unit/theme/decorative-tokens.test.ts` to also assert the 3 on-status tokens exist.
+
+### Task 13: er-layout.ts → live-re-theming var() strings
+- `buildErElements` bakes colors at build time (only runs on load, not theme change). Store literal `var(--color-...)` STRINGS (not resolved colors) so the browser resolves them live:
+  - node `color`: `` `var(--color-decorative-${(i % 8) + 1})` `` (decorative ramp).
+  - edge `stroke: 'var(--color-accent)'`; label `fill: 'var(--color-text-tertiary)'`.
+- Result: ER edges/nodes re-theme without rebuild. No raw hex remains.
+
+### Task 14: tab-icons.ts + form/types.ts
+- `tab-icons.ts` returns `{icon, className}` consumed by `TabItem.tsx`. No `text-decorative-N` utility exists (decorative is inline-var only, cf. ConnectionSwitcher). Change `TabIconConfig` to carry a `color: string` (a `var(--color-...)`), map the 7 raw `text-*-400` to decorative vars and the 2 existing token classes (accent, text-tertiary) to their vars for uniformity; `TabItem.tsx` applies `style={{ color }}`.
+- `form/types.ts` `COLOR_PRESETS`: user-data selectable swatches (concrete hexes required) — leave as-is; it will be ALLOWLISTED in the extended guardrail (Task 16), like AppearanceSettings.
+
+### Task 15: Neutral overlay sweep (43 occurrences, 24 files)
+- Map `bg-white/5`→`bg-hover`, `bg-white/10`→`bg-active` (tokens exist: `--color-hover`, `--color-active` — theme-defined so they invert on light themes). Other hover/active-intent overlays → nearest of those.
+- `bg-black/N` modal scrims/backdrops → add a `--color-scrim` token (base `:root`, e.g. `rgba(0,0,0,0.5)`) and a `bg-scrim` usage (confirm utility or use inline `var`); scrims stay dark by intent.
+- Any overlay that doesn't map cleanly → implementer STOPS and asks.
+
+### Task 16: Extend guardrail + final re-verify
+- `no-manual-styling.test.ts`: `walk()` also collects `.ts` (exclude `*.stories.*`, `*.test.*`); add `white`/`black` to the alpha-overlay detection so `bg-white/x`/`bg-black/x` are caught (unless a sanctioned token like `bg-scrim`).
+- ALLOWLIST additions with justification: `connections/form/types.ts` (user-data preset swatches).
+- Guardrail must PASS after Tasks 12–15; re-prove regression-catch (add offender → fail → revert → pass).
+- Final: `tsc -b --noEmit` clean; new/changed tests pass; full-suite failure set unchanged from the pre-existing baseline (45, all in untouched files).
