@@ -3,6 +3,7 @@ import { ConnectionTestButton } from './ConnectionTestButton'
 import { useConnectionsStore } from '@/stores/connections'
 import { useTabsStore } from '@/stores/tabs'
 import type { ConnectionProfile, DatabaseType } from '@shared/types'
+import { DEFAULT_CONNECTION_COLOR } from '@/lib/connection-color'
 import {
   ScrollArea, Container, Stack, Flex, Grid, Divider,
   Heading, Text,
@@ -51,7 +52,7 @@ export function ConnectionFormView({ tabId, editingId }: Props) {
     database: '',
     username: '',
     password: '',
-    color: '#7c6ff7',
+    color: DEFAULT_CONNECTION_COLOR,
     ...(existingProfile ?? {})
   })
 
@@ -158,7 +159,7 @@ export function ConnectionFormView({ tabId, editingId }: Props) {
                   </FormField>
                   <FormField label={t('connections.form.color')}>
                     <ColorInput
-                      value={String(profile.color ?? '#7c6ff7')}
+                      value={String(profile.color ?? DEFAULT_CONNECTION_COLOR)}
                       onChange={(v) => update({ color: v })}
                       presets={COLOR_PRESETS}
                       size="lg"
