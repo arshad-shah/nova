@@ -3,19 +3,19 @@ import type { Tab } from '@shared/types'
 
 interface TabIconConfig {
   icon: LucideIcon
-  className: string
+  color: string
 }
 
 const tabIconMap: Record<Tab['type'], TabIconConfig> = {
-  query: { icon: FileText, className: 'text-blue-400' },
-  'er-diagram': { icon: GitFork, className: 'text-purple-400' },
-  'connection-form': { icon: Plug, className: 'text-yellow-400' },
-  table: { icon: Table2, className: 'text-sky-400' },
-  'plugin-detail': { icon: Puzzle, className: 'text-emerald-400' },
-  'install-plugin': { icon: Package, className: 'text-orange-400' },
-  settings: { icon: Settings, className: 'text-text-tertiary' },
-  welcome: { icon: Sparkles, className: 'text-accent' },
-  'release-notes': { icon: PartyPopper, className: 'text-pink-400' },
+  query: { icon: FileText, color: 'var(--color-decorative-2)' },
+  'er-diagram': { icon: GitFork, color: 'var(--color-decorative-3)' },
+  'connection-form': { icon: Plug, color: 'var(--color-decorative-4)' },
+  table: { icon: Table2, color: 'var(--color-decorative-5)' },
+  'plugin-detail': { icon: Puzzle, color: 'var(--color-decorative-6)' },
+  'install-plugin': { icon: Package, color: 'var(--color-decorative-7)' },
+  settings: { icon: Settings, color: 'var(--color-text-tertiary)' },
+  welcome: { icon: Sparkles, color: 'var(--color-accent)' },
+  'release-notes': { icon: PartyPopper, color: 'var(--color-decorative-8)' },
 }
 
 export function getTabIcon(type: Tab['type']): TabIconConfig {

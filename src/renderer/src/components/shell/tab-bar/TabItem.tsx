@@ -34,7 +34,7 @@ export function TabItem({
 }: TabItemProps) {
   const { t } = useTranslation()
   const [closeHovered, setCloseHovered] = useState(false)
-  const { icon: Icon, className: iconColor } = getTabIcon(tab.type)
+  const { icon: Icon, color: iconColor } = getTabIcon(tab.type)
   const isDirty = tab.type === 'query' && tab.isDirty
 
   return (
@@ -69,7 +69,7 @@ export function TabItem({
           </>
         )}
 
-        <Icon size={14} className={cn(iconColor, 'shrink-0')} />
+        <Icon size={14} className="shrink-0" style={{ color: iconColor }} />
         <Tooltip content={tab.title} side="bottom" delay={600}>
           <Text
             size="xs"
