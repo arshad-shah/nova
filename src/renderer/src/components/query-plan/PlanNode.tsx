@@ -35,7 +35,7 @@ export function PlanNodeView({ node, maxCost, depth = 0 }: Props) {
           <Box as="span" className="w-3.5 shrink-0" />
         )}
 
-        <Text size="xs" weight="semibold" className="px-2 py-0.5 rounded" style={{ backgroundColor: color, color: costRatio > 0.3 ? '#000' : '#fff' }}>
+        <Text size="xs" weight="semibold" className="px-2 py-0.5 rounded" style={{ backgroundColor: color, color: 'var(--color-text-inverse)' }}>
           {node.type}
         </Text>
 
