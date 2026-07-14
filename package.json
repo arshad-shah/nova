@@ -39,7 +39,7 @@
     "@modelcontextprotocol/sdk": "^1.29.0",
     "@monaco-editor/react": "4.7.0",
     "@xyflow/react": "12.10.2",
-    "ag-grid-community": "35.2.1",
+    "ag-grid-community": "36.0.0",
     "ag-grid-react": "35.2.1",
     "better-sqlite3": "12.8.0",
     "class-variance-authority": "0.7.1",
