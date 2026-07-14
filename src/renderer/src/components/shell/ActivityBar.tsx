@@ -58,7 +58,7 @@ export function ActivityBar() {
             'rounded-lg transition-colors',
             isActive
               ? 'bg-accent/10 text-accent hover:bg-accent/10'
-              : 'text-text-muted hover:text-text-primary hover:bg-white/5'
+              : 'text-text-muted hover:text-text-primary hover:bg-hover'
           )}
         >
           <Icon size={20} />
@@ -91,7 +91,7 @@ export function ActivityBar() {
             size="lg"
             variant="ghost"
             onClick={() => openSettings(SETTINGS_CATEGORY.MCP)}
-            className="rounded-lg transition-colors text-green-400 hover:text-green-300 hover:bg-white/5"
+            className="rounded-lg transition-colors text-success hover:text-success hover:bg-hover"
           >
             <Radio size={18} />
           </IconButton>
@@ -107,7 +107,7 @@ export function ActivityBar() {
             'rounded-lg transition-colors',
             activeTabType === 'settings'
               ? 'bg-accent/10 text-accent hover:bg-accent/10'
-              : 'text-text-muted hover:text-text-primary hover:bg-white/5'
+              : 'text-text-muted hover:text-text-primary hover:bg-hover'
           )}
         >
           <Settings size={20} />

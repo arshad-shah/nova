@@ -52,9 +52,13 @@ export function layoutErDiagram(
   return { nodes: layoutedNodes, edges }
 }
 
+// Node accent colors drawn from the theme's decorative ramp (var() strings so
+// the browser resolves them live — the ER diagram re-themes without a rebuild).
 const TABLE_COLORS = [
-  '#7c6ff7', '#28c840', '#e5c07b', '#61afef', '#ff5f57', '#c678dd',
-  '#56b6c2', '#d19a66', '#98c379', '#e06c75'
+  'var(--color-decorative-1)', 'var(--color-decorative-2)',
+  'var(--color-decorative-3)', 'var(--color-decorative-4)',
+  'var(--color-decorative-5)', 'var(--color-decorative-6)',
+  'var(--color-decorative-7)', 'var(--color-decorative-8)',
 ]
 
 export function buildErElements(
@@ -89,8 +93,8 @@ export function buildErElements(
           label: `${col.name} → ${col.references.column}`,
           type: 'smoothstep',
           animated: false,
-          style: { stroke: '#7c6ff7', strokeWidth: 1.5 },
-          labelStyle: { fontSize: 9, fill: '#888' }
+          style: { stroke: 'var(--color-accent)', strokeWidth: 1.5 },
+          labelStyle: { fontSize: 9, fill: 'var(--color-text-tertiary)' }
         })
       }
     }

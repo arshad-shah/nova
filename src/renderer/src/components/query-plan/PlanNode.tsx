@@ -15,18 +15,25 @@ function costColor(ratio: number): string {
   return 'var(--color-error)'
 }
 
+function onCostColor(ratio: number): string {
+  if (ratio < 0.3) return 'var(--color-on-success)'
+  if (ratio < 0.6) return 'var(--color-on-warning)'
+  return 'var(--color-on-error)'
+}
+
 export function PlanNodeView({ node, maxCost, depth = 0 }: Props) {
   const [expanded, setExpanded] = useState(true)
   const costRatio = maxCost > 0 ? node.cost / maxCost : 0
   const hasChildren = node.children.length > 0
   const color = costColor(costRatio)
+  const onColor = onCostColor(costRatio)
 
   return (
     <Box style={{ marginLeft: depth * 24 }}>
       <Flex
         align="center"
         gap="sm"
-        className="py-1.5 px-2 rounded-md hover:bg-white/5 cursor-pointer"
+        className="py-1.5 px-2 rounded-md hover:bg-hover cursor-pointer"
         onClick={() => setExpanded(!expanded)}
       >
         {hasChildren ? (
@@ -35,7 +42,7 @@ export function PlanNodeView({ node, maxCost, depth = 0 }: Props) {
           <Box as="span" className="w-3.5 shrink-0" />
         )}
 
-        <Text size="xs" weight="semibold" className="px-2 py-0.5 rounded" style={{ backgroundColor: color, color: costRatio > 0.3 ? '#000' : '#fff' }}>
+        <Text size="xs" weight="semibold" className="px-2 py-0.5 rounded" style={{ backgroundColor: color, color: onColor }}>
           {node.type}
         </Text>
 

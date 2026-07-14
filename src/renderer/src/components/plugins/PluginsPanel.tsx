@@ -18,9 +18,9 @@ export interface PluginInfo {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  active: 'bg-green-400',
-  degraded: 'bg-yellow-400',
-  error: 'bg-red-400',
+  active: 'bg-success',
+  degraded: 'bg-warning',
+  error: 'bg-error',
 }
 
 export function PluginsPanel() {
@@ -138,7 +138,7 @@ export function PluginsPanel() {
 }
 
 function PluginRow({ plugin, isSelected, onClick }: { plugin: PluginInfo; isSelected: boolean; onClick: () => void }) {
-  const statusColor = STATUS_COLORS[plugin.status.state] ?? 'bg-gray-500'
+  const statusColor = STATUS_COLORS[plugin.status.state] ?? 'bg-text-muted'
 
   return (
     <Flex
@@ -150,7 +150,7 @@ function PluginRow({ plugin, isSelected, onClick }: { plugin: PluginInfo; isSele
         'px-2 py-1.5 rounded-md cursor-pointer transition-colors',
         isSelected
           ? 'bg-accent/10 border-l-2 border-l-accent'
-          : 'hover:bg-white/5'
+          : 'hover:bg-hover'
       )}
     >
       <PluginIcon plugin={plugin} size={28} />

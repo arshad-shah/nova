@@ -155,7 +155,7 @@ themes; `ColorInput`'s picker portals so it isn't clipped. The new
 (`tone` × `intensity`) for hero panels, empty states, and callouts.
 
 **Key libraries:** Monaco (SQL editor, custom completion in
-`lib/monaco-sql.ts`), AG Grid (results), `@xyflow/react` (ER diagrams), Recharts
+`lib/monaco-sql.ts`), AG Grid (results), `@xyflow/react` (ER diagrams), `@arshad-shah/swift-chart`
 (chart panel).
 
 **Query editor.** The query editor renders per-statement actions through a `StatementGutter` overlay rather than Monaco's built-in CodeLens. The splitter + lens actions are keyed by **statement syntax** (`'sql'` / `'redis'` / `'mongodb'`), which each driver declares via its `statementSyntax` capability — the renderer resolves the syntax from capabilities and looks up the matching contribution (no hardcoded db-type list). The gutter owns the view-zone + content-widget lifecycle and reads execution results from the `statement-status` store to show a per-statement chip (last run duration, row count, error).

@@ -603,7 +603,7 @@ mindmap
       Monaco SQL editor
       AG Grid results
       xyflow ER diagram
-      Recharts charts
+      swift-chart charts
 ```
 
 ---

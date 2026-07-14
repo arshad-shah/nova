@@ -28,7 +28,7 @@ export function SecondaryActivityBar() {
             'rounded-lg transition-colors',
             isActive
               ? 'bg-accent/10 text-accent hover:bg-accent/10'
-              : 'text-text-muted hover:text-text-primary hover:bg-white/5'
+              : 'text-text-muted hover:text-text-primary hover:bg-hover'
           )}
         >
           <Icon size={20} />

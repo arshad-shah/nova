@@ -10,12 +10,12 @@ export function MCPApprovalDialog() {
   if (!req) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-scrim">
       <div className="bg-bg-primary border border-border rounded-lg shadow-xl max-w-lg w-full mx-4">
-        <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-yellow-500/10">
-          <AlertTriangle size={18} className="text-yellow-500 shrink-0" />
+        <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-warning/10">
+          <AlertTriangle size={18} className="text-warning shrink-0" />
           <span className="text-sm font-medium text-text-primary">{t('aiui.approval.mcpTitle')}</span>
-          <span className={`ml-auto text-[10px] px-1.5 py-0.5 rounded ${req.permission === 'write' ? 'bg-yellow-500/20 text-yellow-600' : 'bg-bg-secondary text-text-secondary'}`}>
+          <span className={`ml-auto text-[10px] px-1.5 py-0.5 rounded ${req.permission === 'write' ? 'bg-warning/20 text-warning' : 'bg-bg-secondary text-text-secondary'}`}>
             {req.permission === 'write' ? t('aiui.approval.write') : t('aiui.approval.read')}
           </span>
         </div>

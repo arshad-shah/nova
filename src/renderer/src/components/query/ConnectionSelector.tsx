@@ -124,7 +124,7 @@ export function ConnectionSelector({ tabId, connectionId, database, schema }: Pr
       >
         {activeConn ? (
           <>
-            <Box className="w-2 h-2 rounded-full" style={{ backgroundColor: activeConn.color ?? '#7c6ff7' }} />
+            <Box className="w-2 h-2 rounded-full" style={{ backgroundColor: activeConn.color ?? 'var(--color-accent)' }} />
             <Text size="xs" color="primary" truncate className="max-w-28">{activeConn.name}</Text>
           </>
         ) : (
@@ -188,11 +188,11 @@ export function ConnectionSelector({ tabId, connectionId, database, schema }: Pr
               variant="ghost"
               size="xs"
               onClick={() => handleSelectConnection(conn.id)}
-              className={`w-full flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-white/5 transition-colors rounded-none border-0 h-auto ${
+              className={`w-full flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-hover transition-colors rounded-none border-0 h-auto ${
                 connectionId === conn.id ? 'text-accent' : 'text-text-secondary'
               }`}
             >
-              <Box className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: conn.color ?? '#7c6ff7' }} />
+              <Box className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: conn.color ?? 'var(--color-accent)' }} />
               <Text size="xs" truncate>{conn.name}</Text>
               <Text size="xs" color="muted" className="ml-auto">{conn.database}</Text>
             </Button>
@@ -213,7 +213,7 @@ export function ConnectionSelector({ tabId, connectionId, database, schema }: Pr
                     if (result.success) handleSelectConnection(conn.id)
                     setShowConnDropdown(false)
                   }}
-                  className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-text-muted hover:bg-white/5 transition-colors rounded-none border-0 h-auto"
+                  className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-text-muted hover:bg-hover transition-colors rounded-none border-0 h-auto"
                 >
                   <Box className="w-2 h-2 rounded-full shrink-0 bg-text-muted" />
                   <Text size="xs" truncate>{conn.name}</Text>
@@ -237,7 +237,7 @@ export function ConnectionSelector({ tabId, connectionId, database, schema }: Pr
               variant="ghost"
               size="xs"
               onClick={() => handleSelectDatabase(db)}
-              className={`w-full flex items-center gap-2 text-left px-3 py-1.5 text-xs hover:bg-white/5 transition-colors rounded-none border-0 h-auto ${
+              className={`w-full flex items-center gap-2 text-left px-3 py-1.5 text-xs hover:bg-hover transition-colors rounded-none border-0 h-auto ${
                 database === db ? 'text-accent' : 'text-text-secondary'
               }`}
             >
@@ -260,7 +260,7 @@ export function ConnectionSelector({ tabId, connectionId, database, schema }: Pr
               variant="ghost"
               size="xs"
               onClick={() => handleSelectSchema(s)}
-              className={`w-full flex items-center gap-2 text-left px-3 py-1.5 text-xs hover:bg-white/5 transition-colors rounded-none border-0 h-auto ${
+              className={`w-full flex items-center gap-2 text-left px-3 py-1.5 text-xs hover:bg-hover transition-colors rounded-none border-0 h-auto ${
                 schema === s ? 'text-accent' : 'text-text-secondary'
               }`}
             >

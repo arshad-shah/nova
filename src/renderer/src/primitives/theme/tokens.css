@@ -153,9 +153,35 @@
   --color-error-emphasis: color-mix(in oklch, var(--color-error), black 25%);
   --color-info: var(--raw-blue-500);
 
+  /* Decorative — derived, theme-agnostic ramp for deterministic/generated
+     coloring (plugin icons, avatars, charts). Built from tokens every theme
+     already defines, so all built-in AND user-added themes get a coherent
+     ramp for free. A theme MAY override these for bespoke hues, but never
+     has to. Do not hand-author per theme. */
+  --color-decorative-1: var(--color-accent);
+  --color-decorative-2: var(--color-accent-emphasis);
+  --color-decorative-3: var(--color-success);
+  --color-decorative-4: var(--color-warning);
+  --color-decorative-5: var(--color-error);
+  --color-decorative-6: color-mix(in oklab, var(--color-accent), var(--color-success) 50%);
+  --color-decorative-7: color-mix(in oklab, var(--color-accent-emphasis), var(--color-warning) 50%);
+  --color-decorative-8: color-mix(in oklab, var(--color-accent), var(--color-error) 45%);
+
+  /* On-status text — a strongly darkened shade of each status hue, readable
+     as text on the status-colored background in ALL themes (built-in and
+     user-added) with no per-theme upkeep. Derived, like the decorative ramp. */
+  --color-on-success: color-mix(in oklab, var(--color-success), black 70%);
+  --color-on-warning: color-mix(in oklab, var(--color-warning), black 70%);
+  --color-on-error: color-mix(in oklab, var(--color-error), black 70%);
+
   /* Interactive */
   --color-hover: rgba(232, 236, 243, 0.05);
   --color-active: rgba(232, 236, 243, 0.1);
+
+  /* Scrim — modal/backdrop dimming. Intentionally theme-invariant (a backdrop
+     dims toward black in every theme). */
+  --color-scrim: rgba(0, 0, 0, 0.5);
+  --color-scrim-weak: rgba(0, 0, 0, 0.3);
   --color-focus-ring: var(--raw-mint-400);
   --color-disabled: var(--raw-ink-400);
 
