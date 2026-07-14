@@ -51,7 +51,7 @@ way to reach the OS.
 | `types.ts` | domain types: `ConnectionProfile`, `QueryResult`, `Tab`, schema metadata |
 | `ai-types.ts` | chat messages, stream events, the chat-start request |
 | `settings.ts` | `AppSettings` shape + defaults (+ centralized `KEYBINDING_ACTION` ids) |
-| `driver-capabilities.ts` | serializable driver capability flags — incl. `statementSyntax`, `errorRules`, plan/session/explain support |
+| `driver-capabilities.ts` | serializable driver capability flags — incl. `statementSyntax`, `errorRules`, `nouns` (object/field/record terms so the explorer isn't SQL-specific), plan/session/explain support |
 | `db-errors.ts` | `DbErrorCode` taxonomy + serializable `DbErrorRule` (driver-contributed error classification) |
 | `i18n/` | the message catalogue + framework-free `t()` / `MessageKey` (see [i18n.md](/develop/i18n/)) |
 | `mcp.ts`, `plugin-ui-types.ts`, `appdata.ts` | MCP types, plugin UI contracts, app-data-store record types |
