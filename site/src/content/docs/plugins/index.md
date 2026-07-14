@@ -211,6 +211,24 @@ ctx.drivers.register('cassandra', {
   // the destructive confirm for this driver.
   statementSyntax: 'sql',               // 'sql' | 'redis' | 'mongodb'
 
+  // What this driver calls its data concepts, so the schema explorer labels
+  // things in *your* terms instead of assuming SQL "table/column/row". The
+  // renderer resolves these via `useDataNouns` and falls back to generic words
+  // ("object/field/record") when a noun is omitted. Examples: SQL drivers use
+  // table/column/row; Mongo collection/field/document; Redis key/field/entry.
+  nouns: {
+    object: { one: 'table', many: 'tables' },   // top-level container
+    field:  { one: 'column', many: 'columns' }, // a field within an object
+    record: { one: 'row', many: 'rows' },       // a single record
+  },
+  // Nouns drive every relational label the shell shows: the explorer's search
+  // placeholder, group header, loading/empty states and row counts; the
+  // context-menu / hover labels ("Copy {object} name", "Export {object}", "Copy
+  // {field} name"); and the query-semantic error copy in `errors.ts` (a
+  // not-found / duplicate / constraint error reads in the driver's terms). The
+  // renderer resolves them in one place — `lib/data-nouns.ts` (`resolveDataNouns`
+  // + `nounVars`), surfaced reactively via the `useDataNouns` hook.
+
   // Driver-owned error classification. Each rule's regex (matched
   // case-insensitively against the cleaned message; first capture group → the
   // message variable) maps to a DbErrorCode; the renderer owns the friendly

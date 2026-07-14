@@ -65,19 +65,22 @@ log call:
 An object detail is **secret-redacted** before serialisation: any property whose
 key looks like a credential (`password`, `token`, `*key`, `secret`,
 `authorization`, `credential`) is replaced with `[redacted]`, recursively — so a
-call site that logs a whole `ConnectionProfile` can't leak secrets to the console
-or the persisted stream. Non-secret fields and free-text strings are untouched.
+call site that logs a whole `ConnectionProfile` (plaintext secrets in memory)
+can't leak them to the console or the persisted stream. Non-secret fields and
+free-text strings are untouched.
 
 `mark(label)` returns an `end(extra?)` that records a `log` entry carrying
 `durationMs` (and returns that number), so a timed operation — e.g. plugin boot —
 shows up in the stream like any other recorder. The engine underneath is
-[`@arshad-shah/log-kit`](https://www.npmjs.com/package/@arshad-shah/log-kit),
-which owns the record pipeline (level gating, child-scope nesting, perf markers)
-and fans each record out to two app-supplied transports — a **console** transport
-that preserves the `[scope] message` format + level→method mapping, and an
-**activity** transport that records into the `sink`. Transport fan-out is
+[`@arshad-shah/log-kit`](https://www.npmjs.com/package/@arshad-shah/log-kit):
+log-kit owns the record pipeline (level gating, child-scope nesting, perf
+markers) and fans each record out to two app-supplied transports — a **console**
+transport that preserves the `[scope] message` format + level→method mapping, and
+an **activity** transport that records into the `sink`. Transport fan-out is
 failure-isolated, so a throwing sink can never break console output (or vice
-versa).
+versa); failures surface via `onTransportError`. The narrow four-level
+`Logger` facade (serialised `detail`, `child`, `mark`) is the app's own surface
+on top of log-kit's six-level structured API.
 
 The host provides it as the `logger` service so plugins can log into the same
 stream, and wires a few glue call-sites (plugin boot, MCP auto-start, drag-drop)
