@@ -63,7 +63,11 @@ overrides:
   tmp@<0.2.7: '>=0.2.7'
   tar@<7.5.16: '>=7.5.16'
   esbuild@<0.28.1: '>=0.28.1'
-  '@babel/core@<7.29.1': '>=7.29.1'
+  # Bump vulnerable @babel/core to the patched 7.29.1+, but STAY IN 7.x (<8):
+  # unbounded, pnpm resolves to Babel 8.x, whose `loadPartialConfig` requires a
+  # callback — the sync call in react-docgen@8 (Storybook's prop extractor)
+  # then throws and the Storybook build (site `build:storybook`) fails.
+  '@babel/core@<7.29.1': '>=7.29.1 <8'
   # undici 6/7 CVEs — dev/build/test-only (node-gyp -> @electron/rebuild;
   # jsdom -> vitest). Bump the vulnerable 6.x/early-7.x to patched 7.28+, but
   # STAY IN 7.x (^): jsdom 29 needs undici ^7 (uses lib/handler/wrap-handler.js
