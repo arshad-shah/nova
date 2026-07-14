@@ -103,6 +103,13 @@ Built-ins are registered at startup (`builtins.ts`, via `registerBuiltinAppActio
 in `App.tsx`); plugins can register their own through the same `appActions.register`
 API, so any plugin destination becomes referenceable by the AI automatically.
 
+**Built-in ids are centralized constants.** Every built-in action id lives once
+in `APP_ACTION` (`lib/app-actions/ids.ts`) — the same pattern as `KEYBINDING_ACTION`,
+`SETTINGS_CATEGORY` and `IPC_CHANNELS`. Code never writes a built-in action id as
+a raw string: `builtins.ts`, the chip icon map, and tests all import `APP_ACTION.*`.
+Plugin actions keep using composite `pluginId:commandId` ids, so `AppAction.id`
+stays a permissive `string`.
+
 **Two surfaces, one registry:**
 
 1. **Deep-link chips (user-clicked).** The assistant writes a markdown link with
