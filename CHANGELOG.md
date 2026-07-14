@@ -1,5 +1,27 @@
 # Changelog
 
+## 1.4.1
+
+### Patch Changes
+
+- [#138](https://github.com/arshad-shah/verql/pull/138) [`b4307d1`](https://github.com/arshad-shah/verql/commit/b4307d19d08238a28624ae5679759fde8524b8e7) Thanks [@arshad-shah](https://github.com/arshad-shah)! - Security: resolve all open Dependabot advisories. Bumped direct deps
+  (dompurify, vite, vitest) and refreshed the `pnpm-workspace.yaml` transitive
+  `overrides` to current patched versions — form-data, hono, dompurify, undici,
+  esbuild, tar, tmp, ws, @babel/core, js-yaml (both the 3.x consumer via
+  read-yaml-file and the 4.x line). The undici override is bounded to `^7.28.0`
+  so jsdom's test DOM environment keeps working. The docs `site/` gets astro
+  6.4.8 plus its own dompurify/esbuild overrides. App and site workspaces both
+  report zero known vulnerabilities; production build and the test baseline are
+  unchanged.
+
+- [#137](https://github.com/arshad-shah/verql/pull/137) [`510725c`](https://github.com/arshad-shah/verql/commit/510725c42097c3aff689ab38c563b89a87c2a19e) Thanks [@arshad-shah](https://github.com/arshad-shah)! - Docs site: sync curated pages with the current source. Restored content that had
+  drifted behind the code — the driver `nouns` capability (object/field/record
+  terms) in the plugin guide and architecture map, the `onboarding.*` settings
+  state, the log-kit `onTransportError` failure-isolation and four-level `Logger`
+  facade detail in the activity subsystem, and the centralized `APP_ACTION` id
+  constants in the AI docs. Each addition was validated against the actual
+  subsystem source, not the internal `docs/` copies.
+
 ## 1.4.0
 
 ### Minor Changes
