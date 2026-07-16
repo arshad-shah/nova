@@ -51,6 +51,12 @@
   --color-action: var(--color-action);
   --color-action-hover: var(--color-action-hover);
   --color-action-fg: var(--color-action-fg, #ffffff);
+  /* The action colour's quiet weight — a wash of the hue for secondary
+     actions. Falls back to a transparent fill + action-coloured label so a
+     plugin theme predating these tokens still renders a sane subtle button. */
+  --color-action-subtle: var(--color-action-subtle, transparent);
+  --color-action-subtle-hover: var(--color-action-subtle-hover, var(--color-hover));
+  --color-action-subtle-fg: var(--color-action-subtle-fg, var(--color-action));
   /* Windows title-bar close affordance — platform convention, all themes */
   --color-window-close: var(--color-window-close);
   /* Grid selection — cyan ring + wash */
@@ -67,6 +73,7 @@
   --color-warning: var(--color-warning);
   --color-error: var(--color-error);
   --color-error-emphasis: var(--color-error-emphasis);
+  --color-error-emphasis-hover: var(--color-error-emphasis-hover, var(--color-error));
   --color-info: var(--color-info);
   --color-text-primary: var(--color-text-primary);
   --color-text-secondary: var(--color-text-secondary);
@@ -131,17 +138,25 @@ body {
   color-scheme: light;
 }
 
-/* Pointer cursor for all interactive elements */
-button, [role="button"], a, select, label[for],
-input[type="checkbox"], input[type="radio"], input[type="range"],
-[role="tab"], [role="menuitem"], [role="switch"], [tabindex="0"] {
-  cursor: pointer;
-}
+/* Default cursors for interactive elements.
+   These MUST stay inside `@layer base`. Unlayered rules beat every layered
+   rule no matter the specificity, and Tailwind's utilities live in
+   `@layer utilities` — so unlayered, these would silently defeat any
+   `cursor-*` utility on a <button>/<a>/[tabindex]. That is a real bug and not
+   a hypothetical: it is why a `cursor-ns-resize` resize grip rendered a
+   pointer. In `base`, these are the default and a utility still wins. */
+@layer base {
+  button, [role="button"], a, select, label[for],
+  input[type="checkbox"], input[type="radio"], input[type="range"],
+  [role="tab"], [role="menuitem"], [role="switch"], [tabindex="0"] {
+    cursor: pointer;
+  }
 
-input[type="text"], input[type="number"], input[type="email"],
-input[type="password"], input[type="search"], input[type="url"],
-input[type="tel"], textarea {
-  cursor: text;
+  input[type="text"], input[type="number"], input[type="email"],
+  input[type="password"], input[type="search"], input[type="url"],
+  input[type="tel"], textarea {
+    cursor: text;
+  }
 }
 
 button:disabled, [role="button"][aria-disabled="true"] {
