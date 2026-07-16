@@ -1,51 +1,51 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" fill="none">
   <!--
-    Verql app icon — Nightshift LIGHT variant.
-    Mirrors build/icon.svg geometry (five V-bars) but on a pale canvas so the
-    mark reads on light-mode dock, white documentation, paper print. The
-    central bar keeps the brand mint accent; outer bars use a deep midnight
-    fill so they hold contrast on a bright background.
+    Verql app icon — ribbon-V edition, LIGHT variant.
+    Mirrors build/icon.svg geometry (two folded ribbon strokes tracing a V)
+    but on a pale canvas so the mark reads on light-mode dock, white
+    documentation, paper print. The ribbon colors are vivid enough to hold
+    contrast on a bright background unchanged.
 
     Always edit both files together — keep geometry identical, only swap
-    the background/contrast layers.
+    the tile.
   -->
   <defs>
     <radialGradient id="bg" cx="50%" cy="42%" r="68%">
-      <stop offset="0%"   stop-color="#FFFFFF"/>
-      <stop offset="55%"  stop-color="#EEF2F8"/>
-      <stop offset="100%" stop-color="#D6DEEC"/>
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="55%" stop-color="#F0F3FA"/>
+      <stop offset="100%" stop-color="#DAE1EF"/>
     </radialGradient>
-    <radialGradient id="glow" cx="50%" cy="62%" r="48%">
-      <stop offset="0%"   stop-color="#2BD9A3" stop-opacity="0.30"/>
-      <stop offset="60%"  stop-color="#00C990" stop-opacity="0"/>
-    </radialGradient>
-    <linearGradient id="frost" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%"   stop-color="#1A2030"/>
-      <stop offset="100%" stop-color="#3B4A6B"/>
+    <linearGradient id="verql-vl" gradientUnits="userSpaceOnUse" x1="272.00" y1="292.00" x2="500.00" y2="740.00">
+      <stop offset="0%" stop-color="#7C42FB"/>
+      <stop offset="55%" stop-color="#5A63F5"/>
+      <stop offset="100%" stop-color="#4157E9"/>
     </linearGradient>
-    <linearGradient id="mint" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%"   stop-color="#5CE0BD"/>
-      <stop offset="100%" stop-color="#00C990"/>
+    <linearGradient id="verql-vr" gradientUnits="userSpaceOnUse" x1="752.00" y1="292.00" x2="535.00" y2="856.00">
+      <stop offset="0%" stop-color="#41C0FF"/>
+      <stop offset="100%" stop-color="#25A2F8"/>
     </linearGradient>
+    <linearGradient id="verql-vf" gradientUnits="userSpaceOnUse" x1="524.00" y1="652.00" x2="502.00" y2="868.00">
+      <stop offset="0%" stop-color="#3D4CE1"/>
+      <stop offset="60%" stop-color="#4A6BF6"/>
+      <stop offset="100%" stop-color="#4E79FD"/>
+    </linearGradient>
+    <clipPath id="cyanclip"><path d="M 646.9 320.2 Q 662.0 292.0 694.0 292.0 L 810.0 292.0 Q 842.0 292.0 826.7 320.1 L 557.9 813.8 Q 535.0 856.0 498.7 824.6 L 451.3 783.4 Q 415.0 752.0 437.7 709.7 Z"/></clipPath>
+    <filter id="soft" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="22"/>
+    </filter>
   </defs>
 
-  <g transform="translate(512 512) scale(0.805) translate(-512 -512)">
-    <rect width="1024" height="1024" rx="224" fill="url(#bg)"/>
-    <circle cx="512" cy="640" r="420" fill="url(#glow)"/>
+  <rect width="1024" height="1024" rx="224" fill="url(#bg)"/>
 
-    <!-- Five V-bars. All bottoms at y=860; tops descend toward the middle.
-         Centered: outer bars at x=183 / x=735 leave equal 183px margins. -->
-    <g>
-      <!-- bar 1 (left, tallest) -->
-      <rect x="183" y="220" width="106" height="640" rx="22" fill="url(#frost)"/>
-      <!-- bar 2 (faded) -->
-      <rect x="321" y="340" width="106" height="520" rx="22" fill="url(#frost)" opacity="0.78"/>
-      <!-- bar 3 (middle, shortest — MINT, the brand accent) -->
-      <rect x="459" y="500" width="106" height="360" rx="22" fill="url(#mint)"/>
-      <!-- bar 4 (faded, mirror) -->
-      <rect x="597" y="340" width="106" height="520" rx="22" fill="url(#frost)" opacity="0.78"/>
-      <!-- bar 5 (right, tallest) -->
-      <rect x="735" y="220" width="106" height="640" rx="22" fill="url(#frost)"/>
-    </g>
+  <!-- right stroke (cyan-blue, behind) -->
+  <path d="M 646.9 320.2 Q 662.0 292.0 694.0 292.0 L 810.0 292.0 Q 842.0 292.0 826.7 320.1 L 557.9 813.8 Q 535.0 856.0 498.7 824.6 L 451.3 783.4 Q 415.0 752.0 437.7 709.7 Z" fill="url(#verql-vr)"/>
+  <!-- shadow the front ribbon casts on the cyan stroke -->
+  <g clip-path="url(#cyanclip)">
+    <path d="M 197.3 320.1 Q 182.0 292.0 214.0 292.0 L 330.0 292.0 Q 362.0 292.0 377.3 320.1 L 531.7 603.7 Q 546.0 630.0 523.2 649.5 L 444.3 716.8 Q 423.0 735.0 409.6 710.4 Z" fill="#25335C" opacity="0.45" filter="url(#soft)" transform="translate(20,10)"/>
+    <path d="M 440.0 720.0 L 528.0 646.5 Q 546.0 630.0 551.0 655.0 C 559.0 710.0 552.0 786.0 531.0 836.0 Q 514.0 874.0 485.0 840.0 C 463.0 813.0 444.0 776.0 431.5 751.0 Q 423.0 735.0 440.0 720.0 Z" fill="#25335C" opacity="0.45" filter="url(#soft)" transform="translate(22,8)"/>
   </g>
+  <!-- left stroke (violet, in front) -->
+  <path d="M 197.3 320.1 Q 182.0 292.0 214.0 292.0 L 330.0 292.0 Q 362.0 292.0 377.3 320.1 L 531.7 603.7 Q 546.0 630.0 523.2 649.5 L 444.3 716.8 Q 423.0 735.0 409.6 710.4 Z" fill="url(#verql-vl)"/>
+  <!-- fold facet forming the tip -->
+  <path d="M 440.0 720.0 L 528.0 646.5 Q 546.0 630.0 551.0 655.0 C 559.0 710.0 552.0 786.0 531.0 836.0 Q 514.0 874.0 485.0 840.0 C 463.0 813.0 444.0 776.0 431.5 751.0 Q 423.0 735.0 440.0 720.0 Z" fill="url(#verql-vf)"/>
 </svg>

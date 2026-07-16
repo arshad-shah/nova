@@ -1,15 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="currentColor" stroke="none" aria-hidden="true">
   <!--
-    Verql hero — empty-state / splash variant. The "V-bars" mark sized up.
-    Inherits `currentColor`; opacity layers do the contrast lifting under masking.
+    Verql hero — empty-state / splash variant. The ribbon-V mark sized up as a
+    single-color silhouette. Inherits `currentColor` so surrounding context
+    sets the tone.
   -->
-
-  <!-- Bars (V shape, top edges descend toward middle) -->
   <g>
-    <rect x="56"  y="50"  width="14" height="100" rx="2.5"/>
-    <rect x="78"  y="78"  width="14" height="72"  rx="2.5" opacity="0.78"/>
-    <rect x="100" y="106" width="14" height="44"  rx="2.5"/>
-    <rect x="122" y="78"  width="14" height="72"  rx="2.5" opacity="0.78"/>
-    <rect x="144" y="50"  width="14" height="100" rx="2.5"/>
+    <path d="M 121.26 58.59 Q 123.64 54.15 128.68 54.15 L 146.96 54.15 Q 152.00 54.15 149.59 58.57 L 107.23 136.37 Q 103.62 143.02 97.90 138.07 L 90.44 131.58 Q 84.72 126.63 88.29 119.96 Z"/>
+    <path d="M 50.41 58.57 Q 48.00 54.15 53.04 54.15 L 71.32 54.15 Q 76.36 54.15 78.77 58.57 L 103.10 103.26 Q 105.36 107.41 101.76 110.48 L 89.33 121.08 Q 85.98 123.95 83.86 120.08 Z"/>
+    <path d="M 88.65 121.59 L 102.52 110.01 Q 105.36 107.41 106.15 111.35 C 107.41 120.01 106.30 131.99 102.99 139.87 Q 100.32 145.85 95.75 140.50 C 92.28 136.24 89.28 130.41 87.32 126.47 Q 85.98 123.95 88.65 121.59 Z"/>
   </g>
 </svg>

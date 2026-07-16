@@ -87,7 +87,10 @@ speaking generally.
 
 | Token | Value | Use |
 |-------|-------|-----|
-| Brand background | `#1e1e2e` | App/installer background, MSIX `backgroundColor` |
+| Brand background | `#0B1220` | App/installer background, MSIX `backgroundColor` (deep end of the icon tile's navy gradient, `#182238 → #0B1220`) |
+| Ribbon violet | `#7C42FB → #4157E9` | Left stroke of the ribbon-V mark |
+| Ribbon cyan | `#41C0FF → #25A2F8` | Right stroke of the ribbon-V mark |
+| Fold blue | `#4E79FD` (crease `#3D4CE1`) | Page-curl fold at the mark's tip; usable as a brand accent |
 | Site theme colour | `#0e121b` | Web meta `theme-color` |
 
 ## Asset sources

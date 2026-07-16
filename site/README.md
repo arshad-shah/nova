@@ -41,9 +41,10 @@ light/dark theme is toggled.
 
 ## Branding
 
-The brand palette mirrors the app's `tokens.css` — electric **mint**
-(`#00c990` / `#5ce0bd`) on deep **midnight ink** (`#0b0f16` / `#0e121b`) with
-**frost** neutrals. See `src/styles/theme.css`. Logos live in `src/assets/`
+The brand palette follows the ribbon-V mark — **ribbon blue**
+(`#25a2f8` / `#41c0ff`, with the mark's violet `#7c42fb → #4157e9` stroke) on
+deep **midnight ink** (`#0b0f16` / `#0e121b`) with **frost** neutrals. See
+`src/styles/theme.css`. Logos live in `src/assets/`
 (copied from the app's `build/icon.svg` and `src/renderer/src/assets/brand/`).
 
 ## Deploying to Cloudflare Pages
