@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { createHighlighterCore, type HighlighterCore } from 'shiki/core'
+import { createHighlighterCore, createCssVariablesTheme, type HighlighterCore } from 'shiki/core'
 import { createOnigurumaEngine } from 'shiki/engine/oniguruma'
 import DOMPurify from 'dompurify'
 import { useClipboard } from '@/hooks/useClipboard'
@@ -7,11 +7,26 @@ import { useClipboard } from '@/hooks/useClipboard'
 const SUPPORTED_LANGS = ['sql', 'json', 'javascript'] as const
 type SupportedLang = typeof SUPPORTED_LANGS[number]
 
+const THEME_NAME = 'verql'
+
+/**
+ * Code blocks emit CSS variables rather than baked-in colours, so they follow
+ * the active theme instead of staying GitHub-dark on every one. The
+ * `--vq-code-*` variables are wired to the functional syntax set
+ * (`--fn-syntax-*`) in `styles/globals.css`, which keeps these blocks in sync
+ * with the Monaco editor — a keyword is the same colour in both.
+ */
+const cssVariablesTheme = createCssVariablesTheme({
+  name: THEME_NAME,
+  variablePrefix: '--vq-code-',
+  fontStyle: true,
+})
+
 let highlighterPromise: Promise<HighlighterCore> | null = null
 function getHighlighter() {
   if (!highlighterPromise) {
     highlighterPromise = createHighlighterCore({
-      themes: [import('shiki/themes/github-dark-default.mjs')],
+      themes: [cssVariablesTheme],
       langs: [
         import('shiki/langs/sql.mjs'),
         import('shiki/langs/json.mjs'),
@@ -50,7 +65,7 @@ export function CodeView({ code, language, actions, showCopy = true }: CodeViewP
       : 'sql'
     getHighlighter().then((hl) => {
       if (cancelled) return
-      const result = hl.codeToHtml(code, { lang, theme: 'github-dark-default' })
+      const result = hl.codeToHtml(code, { lang, theme: THEME_NAME })
       setHtml(DOMPurify.sanitize(result))
     }).catch(() => {})
     return () => { cancelled = true }
@@ -61,15 +76,15 @@ export function CodeView({ code, language, actions, showCopy = true }: CodeViewP
   const langLabel = LANG_LABELS[language || ''] || language || 'Code'
 
   return (
-    <div className="my-2 rounded-lg border border-[var(--color-border)] overflow-hidden">
-      <div className="flex items-center justify-between px-3 py-1.5 bg-[var(--color-bg-tertiary)] border-b border-[var(--color-border)]">
-        <span className="text-[11px] text-[var(--color-text-secondary)]">{langLabel}</span>
+    <div className="my-2 rounded-lg border border-border overflow-hidden">
+      <div className="flex items-center justify-between px-3 py-1.5 bg-bg-tertiary border-b border-border">
+        <span className="text-[11px] text-text-secondary">{langLabel}</span>
         <div className="flex items-center gap-1">
           {showCopy && (
             <button
               type="button"
               onClick={handleCopy}
-              className="px-1.5 py-0.5 rounded text-[10px] text-[var(--color-text-secondary)] hover:text-[var(--color-text)] hover:bg-[var(--color-hover)]"
+              className="px-1.5 py-0.5 rounded text-[10px] text-text-secondary hover:text-text-primary hover:bg-hover"
             >
               {copied ? 'Copied' : 'Copy'}
             </button>
@@ -83,7 +98,7 @@ export function CodeView({ code, language, actions, showCopy = true }: CodeViewP
           dangerouslySetInnerHTML={{ __html: html }}
         />
       ) : (
-        <pre className="bg-[var(--color-bg-inset)] p-3 text-xs whitespace-pre-wrap break-words">
+        <pre className="bg-bg-primary p-3 text-xs whitespace-pre-wrap break-words">
           <code>{code}</code>
         </pre>
       )}

@@ -324,6 +324,29 @@ dialog[open] { display: flex; flex-direction: column; }
  * automatically render a visible skeleton without needing to opt in. A theme
  * can still override `--color-skeleton-base` / `--color-skeleton-highlight`
  * if it wants a custom tone. */
+/*
+ * Shiki code blocks — see `primitives/data-display/CodeView.tsx`, which builds
+ * a CSS-variables theme with this prefix. Pointing them at the functional
+ * syntax set keeps <CodeView> and the Monaco editor in agreement: a keyword is
+ * the same colour in a chat code block and in the query editor, on every theme.
+ */
+:root {
+  --vq-code-foreground: var(--color-text-primary);
+  --vq-code-background: var(--color-bg-primary);
+  --vq-code-token-keyword: var(--fn-syntax-kw);
+  --vq-code-token-function: var(--fn-syntax-fn);
+  --vq-code-token-string: var(--fn-syntax-str);
+  --vq-code-token-string-expression: var(--fn-syntax-str);
+  --vq-code-token-constant: var(--fn-syntax-num);
+  --vq-code-token-comment: var(--fn-syntax-cm);
+  --vq-code-token-parameter: var(--color-text-primary);
+  --vq-code-token-punctuation: var(--color-text-secondary);
+  --vq-code-token-link: var(--color-data-accent);
+  --vq-code-token-inserted: var(--color-success);
+  --vq-code-token-deleted: var(--color-error);
+  --vq-code-token-changed: var(--color-warning);
+}
+
 .skeleton-token {
   background-color: var(--color-skeleton-base);
 }
