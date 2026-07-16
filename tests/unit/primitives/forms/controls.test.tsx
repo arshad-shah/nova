@@ -35,30 +35,29 @@ describe('Select', () => {
     expect(screen.getByRole('combobox')).toHaveTextContent('Pick one')
   })
 
+  // The trigger is sized by the shared `--field-*` density tokens now, not by
+  // its own hardcoded heights. That's the point of the change: with h-9 baked
+  // in, Select was the one field that ignored compact/comfortable mode.
   it('applies md size by default', () => {
     render(<Select options={testOptions} value="" onChange={noop} />)
+    expect(screen.getByRole('combobox')).toHaveClass('[--field-ctl-h:var(--field-h-md)]')
+  })
+
+  it.each(['xs', 'sm', 'lg', 'xl'] as const)('applies %s size from the density scale', (size) => {
+    render(<Select options={testOptions} value="" onChange={noop} size={size} />)
+    expect(screen.getByRole('combobox')).toHaveClass(`[--field-ctl-h:var(--field-h-${size})]`)
+  })
+
+  it('marks the trigger invalid when state is error', () => {
+    render(<Select options={testOptions} value="" onChange={noop} state="error" />)
     const trigger = screen.getByRole('combobox')
-    expect(trigger).toHaveClass('h-9')
+    expect(trigger).toHaveClass('border-error')
+    expect(trigger).toHaveAttribute('aria-invalid', 'true')
   })
 
-  it('applies xs size', () => {
-    render(<Select options={testOptions} value="" onChange={noop} size="xs" />)
-    expect(screen.getByRole('combobox')).toHaveClass('h-7')
-  })
-
-  it('applies sm size', () => {
-    render(<Select options={testOptions} value="" onChange={noop} size="sm" />)
-    expect(screen.getByRole('combobox')).toHaveClass('h-8')
-  })
-
-  it('applies lg size', () => {
-    render(<Select options={testOptions} value="" onChange={noop} size="lg" />)
-    expect(screen.getByRole('combobox')).toHaveClass('h-10')
-  })
-
-  it('applies xl size', () => {
-    render(<Select options={testOptions} value="" onChange={noop} size="xl" />)
-    expect(screen.getByRole('combobox')).toHaveClass('h-12')
+  it('does not mark the trigger invalid by default', () => {
+    render(<Select options={testOptions} value="" onChange={noop} />)
+    expect(screen.getByRole('combobox')).not.toHaveAttribute('aria-invalid')
   })
 
   it('is disabled when disabled prop is true', () => {

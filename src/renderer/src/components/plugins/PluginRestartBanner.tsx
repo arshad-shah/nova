@@ -1,6 +1,6 @@
 import { usePluginLifecycleStore } from '@/stores/plugin-lifecycle'
 import { useTranslation } from '@/i18n/I18nProvider'
-import { Button, Flex, Text } from '@/primitives'
+import { Button, Card, Flex, Text } from '@/primitives'
 
 /**
  * Banner that appears whenever a plugin is activated, deactivated, installed,
@@ -24,21 +24,16 @@ export function PluginRestartBanner() {
   } as const)[pending.event]
 
   return (
-    <div
+    // Was a hand-built surface of raw inline styles, and it was painting no
+    // background at all: `var(--color-surface-raised)` is not a token that
+    // exists anywhere, so it resolved to nothing and this floated over the app
+    // with a border and a shadow but no fill. `elevated` is what it was trying
+    // to be, and it follows the theme.
+    <Card
       role="status"
-      style={{
-        position: 'fixed',
-        bottom: 32,
-        left: '50%',
-        transform: 'translateX(-50%)',
-        zIndex: 9999,
-        background: 'var(--color-surface-raised)',
-        border: '1px solid var(--color-border)',
-        borderRadius: 8,
-        padding: '10px 14px',
-        boxShadow: '0 8px 24px rgba(0,0,0,0.25)',
-        maxWidth: 460
-      }}
+      variant="elevated"
+      padding="none"
+      className="fixed bottom-8 left-1/2 z-9999 max-w-115 -translate-x-1/2 px-3.5 py-2.5"
     >
       <Flex direction="column" gap="xs">
         <Text size="sm">
@@ -49,6 +44,6 @@ export function PluginRestartBanner() {
           <Button size="sm" onClick={restart}>{t('plugins.restart.restart')}</Button>
         </Flex>
       </Flex>
-    </div>
+    </Card>
   )
 }

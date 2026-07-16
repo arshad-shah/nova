@@ -1,5 +1,5 @@
 import { ChevronDown, ChevronRight } from 'lucide-react'
-import { Stack, Flex, Box, Grid, Text, Button } from '@/primitives'
+import { Stack, Flex, Box, Card, Grid, Text, Button } from '@/primitives'
 import { useTranslation } from '@/i18n/I18nProvider'
 import { PluginFieldInput } from './PluginFieldInput'
 import { fieldSpan, type PluginField, type MiddlewareField, type AuthStatus } from './types'
@@ -20,7 +20,9 @@ export function SshTunnelSection({ sshFields, expanded, onToggle, profile, authS
   const { t } = useTranslation()
 
   return (
-    <Box className="border border-border-subtle rounded-lg overflow-hidden bg-bg-secondary">
+    // Same shape as Section: the toggle row and body own their padding, so the
+    // card supplies only the surface. These two were duplicates of each other.
+    <Card padding="none" className="border-border-subtle overflow-hidden">
       <Button
         type="button"
         variant="ghost"
@@ -50,6 +52,6 @@ export function SshTunnelSection({ sshFields, expanded, onToggle, profile, authS
           </Grid>
         </Box>
       )}
-    </Box>
+    </Card>
   )
 }

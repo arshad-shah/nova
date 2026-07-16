@@ -3,7 +3,7 @@ import { ChevronRight, ChevronDown, Table2 } from 'lucide-react'
 import { useUiStore } from '@/stores/ui'
 import { useSchemaStore } from '@/stores/schema'
 import { ContextMenu } from '@/primitives/surfaces/ContextMenu'
-import { Box, Text, Button } from '@/primitives'
+import { Box, Card, Text, Button } from '@/primitives'
 import { ColumnRow } from './ColumnRow'
 import { HighlightedText } from './HighlightedText'
 import { TableHoverActions } from './TableHoverActions'
@@ -121,8 +121,11 @@ export function TableNode({
 
   return (
     <ContextMenu items={menuItems}>
-      <Box
-        className="mb-1 rounded-lg overflow-hidden border border-border-default bg-bg-secondary"
+      {/* The comment above already called this a contained card — it just
+          predated Card being able to express it. */}
+      <Card
+        padding="none"
+        className="mb-1 overflow-hidden"
         style={{
           marginLeft: paddingLeft,
           marginRight: 4,
@@ -191,7 +194,7 @@ export function TableNode({
             ))
           )}
         </Box>
-      </Box>
+      </Card>
     </ContextMenu>
   )
 }

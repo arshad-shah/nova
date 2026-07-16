@@ -1,5 +1,5 @@
 import { ExternalLink, type LucideIcon } from 'lucide-react'
-import { Flex, Box, Stack, Text, Heading, Badge, GradientSurface, Button } from '@/primitives'
+import { Flex, Box, Card, Stack, Text, Heading, Badge, GradientSurface, Button } from '@/primitives'
 import { VerqlHero } from '@/components/brand/VerqlHero'
 import { useTranslation } from '@/i18n/I18nProvider'
 import { IPC_CHANNELS } from '@shared/ipc'
@@ -26,7 +26,7 @@ function HighlightCard({ icon: Icon, title, description }: {
 }) {
   // title/description are already resolved to display strings by the caller.
   return (
-    <Flex gap="md" className="rounded-lg border border-border-default bg-bg-secondary p-4">
+    <Card padding="lg" className="flex gap-3">
       <Box className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-accent/10 text-accent">
         <Icon size={18} />
       </Box>
@@ -34,7 +34,7 @@ function HighlightCard({ icon: Icon, title, description }: {
         <Text size="sm" weight="semibold" color="primary">{title}</Text>
         <Text size="xs" color="muted" className="mt-0.5 leading-relaxed">{description}</Text>
       </Flex>
-    </Flex>
+    </Card>
   )
 }
 

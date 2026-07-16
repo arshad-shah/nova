@@ -2,13 +2,21 @@ import { memo } from 'react'
 import { Handle, Position, type NodeProps } from '@xyflow/react'
 import { Key, Link } from 'lucide-react'
 import type { TableNodeData } from './er-layout'
-import { Box, Flex, Text } from '@/primitives'
+import { Box, Card, Flex, Text } from '@/primitives'
 
 function TableNodeComponent({ data }: NodeProps) {
   const { tableName, columns, color } = data as TableNodeData
 
   return (
-    <Box className="bg-bg-secondary border border-border rounded-lg overflow-hidden shadow-lg min-w-[200px]" style={{ borderColor: color }}>
+    // An ER node is a floating card on a canvas, so `elevated`. The inline
+    // borderColor is the connection's own colour and must still win, which is
+    // why Card never marks its border !important.
+    <Card
+      variant="elevated"
+      padding="none"
+      className="min-w-50 overflow-hidden border"
+      style={{ borderColor: color }}
+    >
       <Handle type="target" position={Position.Left} className="!bg-accent !w-2 !h-2" />
       <Handle type="source" position={Position.Right} className="!bg-accent !w-2 !h-2" />
 
@@ -31,7 +39,7 @@ function TableNodeComponent({ data }: NodeProps) {
           </Flex>
         ))}
       </Box>
-    </Box>
+    </Card>
   )
 }
 
