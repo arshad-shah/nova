@@ -67,9 +67,11 @@ branch.
 
 ## Maintenance
 
-This spec was authored against `main` at v1.5.0 (July 2026). Phase 0's
-T-002 re-validates the point-in-time ecosystem claims (crate versions,
-Tauri capabilities) and amends ADRs before any porting begins. If v1 gains
+This spec was authored against `main` at v1.5.0 (July 2026), with the
+ecosystem claims researched and source-verified on 2026-07-16
+([`decisions/versions-baseline.md`](./decisions/versions-baseline.md)).
+Phase 0's T-002 re-verifies that baseline for drift and amends ADRs before
+any porting begins. If v1 gains
 features between now and execution, re-run the inventory sweep
 (`01-current-state-inventory.md` cites its sources) and extend the task
 graph via the 900-series process in `tasks/README.md`.

@@ -155,7 +155,9 @@ pub struct Registry<T: ?Sized>(DashMap<String, Arc<T>>); // duplicate-id insert 
 
 `verql-plugins` keeps the **entire v1 pipeline except code loading**:
 discovery in the (new) app-data `plugins/` dir, `validate_manifest` with the
-same rules, the same install guards (zip crate replaces `unzip`;
+same rules, the same install guards (the **`zip` crate, ≥8.x** — maintained
+at repo `zip-rs/zip2` but published as `zip`, there is no `zip2` crate;
+avoid the legacy 0.x line — replaces v1's `execFileSync('unzip')`;
 `assertSafeArchivePaths` and the symlink walk port verbatim as pure
 functions; the `unzip -Z1` pre-listing becomes iterating the zip central
 directory), bundled-name collision refusal, and `plugins:lifecycle`

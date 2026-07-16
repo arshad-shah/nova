@@ -209,10 +209,12 @@ pub trait Connection: Send + Sync {   // ≈ DbAdapter; one impl per engine
   adapters own them (sqlite flag-pair, pg pinned client); the dispatcher
   preserves the per-channel throw/no-op split from the handler table above.
 - **Cancellation-handle registry**: every `query()` registers an
-  engine-specific `CancelHandle` (rusqlite `InterruptHandle`, pg
-  `CancelToken`, mysql `KILL QUERY <thread_id>`, snowflake REST cancel;
-  mongo/redis stay no-ops) in a per-profile slot; `db:cancel-query` fires the
-  current one. This *extends* v1 (pg/mysql/sqlite gained real cancel) —
+  engine-specific `CancelHandle` (rusqlite `InterruptHandle` via
+  `get_interrupt_handle()`; pg `Client::cancel_token()` — not the
+  deprecated `cancel_query`; mysql `KILL QUERY <thread_id>` over a second
+  connection, best-effort; snowflake REST cancel; mongo/redis stay no-ops
+  — mechanisms per [`drivers.md`](./drivers.md)/ADR-0004) in a per-profile
+  slot; `db:cancel-query` fires the current one. This *extends* v1 (pg/mysql/sqlite gained real cancel) —
   permitted because v1's observable behavior was "nothing happens" and the
   phase-3 gate requires the SQLite fix; the allowlist records it per driver.
 - **Blocking engines** (rusqlite) run on `spawn_blocking`; no handler blocks

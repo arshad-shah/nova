@@ -110,8 +110,10 @@ SSE streaming; `tracedFetch`-equivalent activity recording), conversation
 manager (system prompt assembly, token budget trim, tool-call loop,
 `ai:chat:event` stream shape **identical** to v1), permission manager +
 approval flow, app-actions round trip, `ai:*` (24 channels), MCP server
-(token auth, Host guard, SSE transport compatibility for existing clients,
-approval + attention integration), `mcp:*` (9), os-notifications consumer.
+(token auth, Host + Origin guards, **Streamable HTTP `/mcp`** per the
+amended ADR-0006 — legacy SSE endpoints are not ported; the client
+reconfiguration notice ships with it), approval + attention integration,
+`mcp:*` (9), os-notifications consumer.
 
 **Gate:** recorded v1 chat-event streams replay identically from the Rust
 side (fixture-based — providers mocked); a live MCP client (Claude Code)
@@ -138,9 +140,10 @@ behind the final gate, cutover checklist for the human.
   Phase 3 is where the swarm fans out widest; Phase 2 is deliberately small
   so the fan-out starts early.
 - The highest-uncertainty items get spike tasks in Phase 0/1 rather than
-  discovery-during-port: Snowflake-without-official-driver (ADR-0004),
+  discovery-during-port: Snowflake auth-mode reality under the 2026 MFA
+  enforcement (ADR-0004),
   Microsoft Store packaging (ADR-0008), macOS overlay-titlebar behavior,
-  and SSE parity of the MCP transport.
+  and WebKitGTK's fitness for the heavy renderer views (T-009).
 - Anything cut from scope mid-flight (per the non-goals) is recorded in the
   task Log + `decisions/`, never silently dropped.
 

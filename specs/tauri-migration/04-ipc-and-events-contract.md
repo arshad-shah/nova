@@ -118,3 +118,10 @@ observable behavior:
 
 Every event channel gets at least one parity fixture; the Phase-5 gate
 replays the AI stream corpus.
+
+Transport note: Tauri documents events as unsuitable for high-frequency
+streams; designated hot channels (`ai:chat:event`, `activity:batch`) may be
+carried over `tauri::ipc::Channel` **behind the shim**, with the renderer's
+`on()` surface and payload shapes unchanged — see the streaming addendum in
+[ADR-0005](./decisions/ADR-0005-ipc-bridge.md). The parity fixtures apply
+identically regardless of carrier.

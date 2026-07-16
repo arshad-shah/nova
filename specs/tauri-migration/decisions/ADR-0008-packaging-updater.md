@@ -1,8 +1,8 @@
 # ADR-0008: Packaging & updater — tauri-bundler, per-platform channels, MSIX risk owned early
 
 - Status: proposed
-- Verify-first: T-002 + the Phase-1 packaging spike validate current
-  tauri-bundler target support (MSIX in particular)
+- Amended 2026-07-16 from ecosystem research ([versions-baseline.md](./versions-baseline.md));
+  T-008 (the packaging spike) validates the amended ladder hands-on
 
 ## Context
 
@@ -16,16 +16,25 @@ ids `mas|win-store|snap|apt|dmg-direct`. Progress streams over
 
 ## Decision
 
-1. **tauri-bundler** produces: macOS `.dmg`/`.app` (Homebrew cask keeps
-   working — `scripts/render-homebrew.mjs` updates), Linux **AppImage**,
-   Windows: **NSIS `.exe` as the guaranteed artifact**, with MSIX/Store as
-   a tracked risk item — if tauri-bundler (or an msix packaging step over
-   the built binaries) cannot produce a Store-acceptable MSIX with the
-   existing identity, the fallback ladder is: (a) external MSIX packaging
-   tooling wrapping the Tauri build, (b) Store listing via MSI/EXE where
-   policy allows, (c) Store submission deferred at cutover with NSIS direct
-   distribution — a **product decision escalated to the human**, never
-   decided silently by the swarm.
+1. **tauri-bundler** (2.9.x) produces: macOS `.dmg`/`.app` (Homebrew cask
+   keeps working — `scripts/render-homebrew.mjs` updates), Linux
+   **AppImage** (deb/rpm available cheaply if wanted later), Windows:
+   **NSIS `-setup.exe` as the guaranteed artifact** (MSI/WiX as needed;
+   pick a WebView2 install mode — `downloadBootstrapper` default, or
+   `offlineInstaller` where the Store path demands it). **MSIX is still not
+   natively supported by tauri-bundler** (upstream issues remain open), but
+   the Store situation improved: Microsoft Store **officially supports
+   EXE/MSI-linked listings** and Tauri documents that path (code-signed
+   installer, silent-install flags, offline WebView2). Ladder, validated by
+   T-008: (a) **EXE/MSI-linked Store listing** — the documented, supported
+   path; (b) third-party MSIX packaging over the Tauri build
+   (`@choochmeque/tauri-windows-bundle`) if a packaged-identity MSIX is
+   required (watch the known WACK S-mode failure, tauri#14935); (c) Store
+   submission deferred at cutover with NSIS direct distribution. Moving
+   below (a) is a **product decision escalated to the human**, never
+   decided silently by the swarm. Note (a)/(b) both require real code
+   signing — which v1's appx/Store identity sidestepped — so the signing
+   line in §3 becomes load-bearing for the Store path.
 2. **The v1 updater architecture ports as-is** (`verql-updater`: registry,
    first-available channel, same `updater:*` IPC + progress phases).
    Homebrew channel ships in v2.0 (`std::process::Command` around `brew`).

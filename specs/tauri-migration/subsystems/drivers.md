@@ -31,8 +31,11 @@ rolls back open txns. Synchronous on the main thread (known defect); no
 `INTEGER PRIMARY KEY` (rowid alias). Error rules (`error-rules.ts`): no such
 column/table, `near …: syntax error`, UNIQUE/NOT NULL/FK/CHECK constraint
 failed, `datatype mismatch`.
-**v2**: `rusqlite` (bundled), all calls on `spawn_blocking`; same pragmas.
-Cancel + timeout via `get_interrupt_handle()` — both new vs v1's nothing; the
+**v2**: `rusqlite` 0.40.x (bundled SQLite; see
+[versions-baseline.md](../decisions/versions-baseline.md)), all calls on
+`spawn_blocking`; same pragmas. Cancel + timeout via
+`get_interrupt_handle()` (ungated in 0.40; `InterruptHandle` is `Send+Sync`)
+— both new vs v1's nothing; the
 phase-3 gate requires the non-blocking proof. Reproduce the reader-flag branch
 (RETURNING/PRAGMA fixtures pin it); session model ports as-is.
 **Parity**: RETURNING rows; non-returning PRAGMA; UPDATE `affectedRows`;
@@ -77,9 +80,12 @@ in both formats. **Errors** (`error-rules.ts`): 13 rules — relation/column/
 schema does not exist, `syntax error at or near`, unique constraint, null
 value in column, FK/check violations, `invalid input syntax for type`,
 already exists, division by zero, deadlock, txn aborted.
-**v2**: `tokio-postgres`; pool of ≤5 with pinnable session clients (pool
+**v2**: `tokio-postgres` 0.7.18+ (actively maintained under the
+`rust-postgres` org); pool of ≤5 with pinnable session clients (pool
 crate validated by T-304). TLS default-verify with an explicit `no-verify`
-mode. Cancellation via `client.cancel_token()` (new vs v1). Keep the
+mode, via `tokio-postgres-rustls` (or `postgres-native-tls` if rustls
+fights a platform). Cancellation via `client.cancel_token()` — the old
+`cancel_query` is **deprecated**, do not use it (new vs v1). Keep the
 dedicated-connection `statement_timeout` mechanism and OID-string `dataType`.
 **Parity**: SELECT/INSERT/UPDATE shapes (`affectedRows` = pg `rowCount`);
 plan trees (text + JSON); BEGIN isolation/read-only visible server-side;
@@ -108,10 +114,15 @@ filters mysql/information_schema/performance_schema/sys; `switchDatabase`/
 Unknown column, doesn't exist, `error in your SQL syntax … near`, Duplicate
 entry, cannot be null, child-row FK, `Incorrect … value`, already exists,
 division by zero, Deadlock found.
-**v2**: `mysql_async`, pool cap 5. Cancel: `KILL QUERY <conn-id>` from a side
-connection (id recorded at query start) — new vs v1. `timeoutMs`:
-`tokio::time::timeout` + KILL (client-side bound, matching mysql2 semantics).
-Keep numeric-type-id `dataType` strings and flag-derived nullability.
+**v2**: `mysql_async` 0.37.x, pool cap 5. Cancel: `KILL QUERY <conn-id>`
+from a second connection (id recorded via `CONNECTION_ID()` at query start)
+— best-effort, new vs v1. `timeoutMs`: `mysql_async` has **no built-in
+per-query timeout**, so enforce `tokio::time::timeout` around the query
+future + best-effort KILL; this is a client-side bound and the server keeps
+executing — which matches v1, since mysql2's options-object `timeout` is
+also client-side, so parity holds. (Optional server-side
+`max_execution_time` is a post-cutover Note, not parity.) Keep
+numeric-type-id `dataType` strings and flag-derived nullability.
 **Parity**: result shapes; `USE` ↔ getSchemas interplay; index column
 ordering. Errors: ER_ACCESS_DENIED_ERROR, unreachable, syntax, duplicate
 entry, FK child row, client timeout. Types: `BIGINT` > 2^53 and `DECIMAL`
@@ -157,7 +168,8 @@ no-op; `timeoutMs` ignored. `getTableData` (`data-format.ts`) issues a `find`
 through the same JSON path (jsonl/json formats:
 [`import-export.md`](./import-export.md)); an AI context provider teaches the
 JSON command format (`index.ts:197`).
-**v2**: official tokio driver; URI construction verbatim; translation layer
+**v2**: official `mongodb` crate 3.8.x (tokio-only since 3.0); URI
+construction verbatim; translation layer
 as a pure parse → dispatch → format module with identical error strings;
 documents via `bson::Document`, cell rendering pinned by goldens (v1's
 `JSON.stringify` of driver objects is the oracle — whether `_id` appears as
@@ -192,7 +204,8 @@ parses `redis_version:` from `INFO server`. `cancelQuery` no-op; `timeoutMs`
 ignored. `sampleQuery` = `KEYS <glob-escaped-prefix>:*`; `getTableData`
 (`data-format.ts`) walks keys with `TYPE` then GET/LRANGE/SMEMBERS/HGETALL/
 ZRANGE…WITHSCORES into `{ key, type, value }` rows.
-**v2**: `redis` crate, tokio ConnectionManager; raw
+**v2**: `redis` crate 1.4.x (crossed 1.0 in 2026; RESP2/3), tokio
+ConnectionManager auto-reconnect; raw
 `redis::cmd(args[0]).arg(rest)` dispatch so ERR replies pass through. Value
 decoding must reproduce ioredis renderings (bulk strings as UTF-8, integers
 as numbers, nested arrays) — goldens decide ambiguous cells. No cancel/
@@ -241,7 +254,18 @@ but nothing reads it, and `query()` ignores `opts.timeoutMs`. v2 fixes it
 **v2 REST mapping** (de-risked by spike T-007): `POST /api/v2/statements`
 (`statement`, `bindings` for `?` binds, `database`/`schema`/`warehouse`/
 `role` context, timeout parameter), poll `GET /api/v2/statements/{handle}`,
-cancel endpoint above; auth = key-pair JWT + PAT/password per ADR-0004;
+cancel endpoint above. **Auth: the SQL API v2 does not accept basic
+password auth at all** — it takes OAuth, key-pair JWT, PAT, or WIF only.
+Independently, Snowflake's MFA enforcement rollout (M2, May–Jul 2026: new
+human users must use MFA — in effect now; M3, Aug–Oct 2026: service users
+limited to key-pair/OAuth/PAT/WIF) kills password-only auth generally
+during this migration's window. So the **v2 driver leads with key-pair JWT
++ PAT as first-class auth** (OAuth optional); the connection-form field
+change vs v1's password-first form is a sanctioned, product-visible
+deviation per [ADR-0004](../decisions/ADR-0004-database-crates.md).
+Fallback crate if owning the REST client stalls: `snowflake-connector-rs`
+1.0 (active, key-pair/PAT-capable); `snowflakedb/universal-driver` is
+experimental/unsupported — **watch only, do not ship**.
 `resultSetMetaData.rowType` → `FieldInfo`, numbers rendered **as strings**.
 `USE …` as plain statements vs per-request context — implementer picks;
 `SELECT CURRENT_ROLE()`-after-switch parity cases decide.
@@ -249,7 +273,8 @@ cancel endpoint above; auth = key-pair JWT + PAT/password per ADR-0004;
 skipped without secrets; gate report records what ran): numeric-as-string
 SELECT; SHOW quoted-column extraction; USE-switch visibility; EXPLAIN text;
 getConnectionOptions per field; cancel mid-query; timeout enforced
-(allowlisted intentional diff vs v1). Errors: bad password, bad account URL,
+(allowlisted intentional diff vs v1). Errors: bad credentials (rejected
+JWT/PAT — the SQL API takes no passwords), bad account URL,
 syntax, NOT NULL violation, timeout. Types: NUMBER/DECIMAL as strings,
 VARIANT/OBJECT/ARRAY, TIMESTAMP_NTZ/_TZ/_LTZ, DATE, BINARY, BOOLEAN.
 

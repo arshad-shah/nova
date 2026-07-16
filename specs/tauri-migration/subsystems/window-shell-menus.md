@@ -54,10 +54,10 @@ All act on the **requesting** window (`BrowserWindow.fromWebContents`).
 | `window:menu:popup` | pops native submenu at coords | **wontport** |
 | `window:edit-role` | `webContents.undo/redo/cut/copy/paste/selectAll` | renderer-local reimplementation; Rust stub stays `NOT_MIGRATED` → wontport ([renderer-bridge.md](./renderer-bridge.md)) |
 | `window:toggle-fullscreen` | toggle; returns new state | `set_fullscreen(!is_fullscreen())`; return new state |
-| `window:set-titlebar-height` | macOS traffic-light re-center (formula above) | macOS-only `#[cfg]` code via `ns_window()` handle repositioning `standardWindowButton` group; same `x=15`, same `trafficLightY` formula. First-paint position from `trafficLightPosition` in `tauri.conf.json` (macOS `titleBarStyle: "Overlay"`) |
+| `window:set-titlebar-height` | macOS traffic-light re-center (formula above) | macOS-only: **`trafficLightPosition` is a first-class Tauri window config since 2.4.0** (requires `titleBarStyle: "Overlay"` + `decorations: true`) — no private-API workaround. First-paint position from `tauri.conf.json`; runtime re-center applies the same `x=15` / `trafficLightY` formula through the positioning mechanism the pinned 2.x minor exposes (T-105 verifies) |
 | `window:reload` | `webContents.reload()` | `webview.eval("location.reload()")` (or native reload if exposed by the pinned Tauri minor) |
 | `window:toggle-devtools` | `toggleDevTools()` | `open_devtools()`/`close_devtools()` via `is_devtools_open()`; `devtools` cargo feature gated to dev builds like v1's `devOnly` menu gate |
-| `window:open-external` | scheme-guarded (`^https?:\/\//i`), WSL special case below | `tauri-plugin-opener`, same guard **kept in the Rust handler** |
+| `window:open-external` | scheme-guarded (`^https?:\/\//i`), WSL special case below | **`tauri-plugin-opener`** (Tauri split `shell.open` into the opener plugin; the shell plugin is only needed for child processes/sidecars, which we don't use), same guard **kept in the Rust handler** |
 
 WSL case: v1 detects `IS_WSL` (`platform === 'linux' &&
 /microsoft/i.test(os.release())`) and routes through
@@ -89,7 +89,14 @@ classes stay for the Electron build until cutover. Changes: add
 `index.html`; both mechanisms coexist during the migration. Caveat: because
 of target-only semantics, the attribute must also go on the inner full-width
 row and spacers in `TitleBar.tsx`, or the effective drag area shrinks vs v1 —
-the Phase-1 shell checklist covers drag + double-click-to-maximize on every
+**children never inherit the attribute; every drag-able element needs it
+explicitly**. **Double-click-to-maximize is manual under Tauri** (Electron's
+drag region gave it for free): a dblclick handler on the drag elements calls
+the `window:toggle-maximize` path. Required capabilities: the
+`core:window:*` permission set covering start-dragging
+(`core:window:allow-start-dragging`), minimize, maximize/unmaximize
+(toggle), close, fullscreen, and is-maximized — scoped to the app window.
+The Phase-1 shell checklist covers drag + double-click-to-maximize on every
 empty bar region.
 
 ### Menus (`shared/menus.ts` + `src/main/app-menu.ts`)
@@ -117,8 +124,9 @@ raw `APP_MENUS` tree (roles, ids, gates, keybinding refs, fixed accelerators)
 and (b) a `labelKey → string` map resolved through `shared/i18n` — keeping TS
 the authoring format (02 §what stays TS). The Rust builder
 (`verql-core::menu`) ports the pure functions (`keep`, `trimSeparators`,
-`resolveAccelerator`/`itemAccelerator`) and builds a Tauri 2 (muda) menu.
-muda's accelerator parser accepts the Electron syntax in use (`CmdOrCtrl+…`,
+`resolveAccelerator`/`itemAccelerator`) and builds the menu through the
+**stable `tauri::menu` API** (muda 0.19.x underneath — no direct muda dep
+needed). muda's accelerator parser accepts the Electron syntax in use (`CmdOrCtrl+…`,
 `Shift+Alt+F`, `Cmd+,`); the drift check asserts every exported string parses.
 
 **Role mapping:** `nativeRole` → muda `PredefinedMenuItem` where one exists
@@ -145,8 +153,14 @@ Rebuild-on-rebind ports as: the `settings:set` dispatch handler watches
 
 **Window creation** (`src-tauri/tauri.conf.json` + `main.rs`): same geometry,
 min size, background color, dev-title suffix. macOS `titleBarStyle: "Overlay"`
-+ `trafficLightPosition {x:15, y:16}` (the 45px first-paint guess through
-`trafficLightY`); Windows/Linux `decorations: false`. Security guards port as
++ `decorations: true` + first-class `trafficLightPosition {x:15, y:16}` (the
+45px first-paint guess through `trafficLightY`; Tauri ≥2.4); Windows/Linux
+`decorations: false`. **Windows has no window-controls-overlay equivalent in
+Tauri** (issue #12930 open), so v1's `env(titlebar-area-*)` CSS variables
+simply won't exist — the replacement is what v1 already effectively does:
+app-drawn controls (`WindowControls.tsx`) at a fixed inset, no
+titlebar-area geometry from the OS (the dead `env()` fallbacks in
+`TitleBar.tsx` can be dropped at cutover). Security guards port as
 configuration instead of handlers: capability file scoped to the single app
 window exposing only `ipc_dispatch`, the event listen surface, and
 `core:window:allow-start-dragging`; no `windows.create`/`webview` creation
@@ -176,10 +190,12 @@ by Tauri default + CSP in `tauri.conf.json` (v1's `will-navigate` pin).
 
 ## Open questions
 
-- Runtime traffic-light repositioning API: private `NSWindow` button walking
-  vs whatever the pinned Tauri 2.x exposes; T-105 spikes it and records the
-  choice (fallback: fixed position for the default density, accept ±2px at
-  other densities — needs human sign-off if the API path fails).
+- Runtime traffic-light repositioning: the *config-time* position is solved
+  first-class (`trafficLightPosition`, Tauri ≥2.4 — the private-API
+  workaround is off the table); the open question is only whether the
+  pinned 2.x minor exposes a *runtime* setter for per-density re-centering
+  or T-105 falls back to fixed position for the default density (accept
+  ±2px at other densities — needs human sign-off).
 - Whether WebKitGTK delivers `WindowEvent::Resized` for maximize under all
   common WMs, or a `Moved`/property-notify listener is also needed (T-105).
 - Renderer accelerator dispatch on Win/Linux while a native context menu or

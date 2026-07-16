@@ -91,7 +91,7 @@ Status legend: `open` `in_progress` `in_review` `blocked` `done`
 | T-503 | Conversation manager: prompt assembly, token budget, tool loop, `ai:chat:event` stream parity | T-501, T-502 | high | L | open |
 | T-504 | AI permission manager + approvals + app-actions round trip | T-503 | medium | M | open |
 | T-505 | `ai:*` (24 channels) + conversation persistence wiring | T-503 | medium | M | open |
-| T-506 | MCP server (rmcp/axum, token auth, SSE-compatible transport, health) + `mcp:*` | T-501 | high | L | open |
+| T-506 | MCP server (rmcp/axum, token auth, Streamable HTTP `/mcp`, health) + `mcp:*` | T-501 | high | L | open |
 | T-507 | MCP write-approval flow + attention integration | T-506, T-504 | medium | M | open |
 | T-508 | os-notifications port (attention consumer → tauri-plugin-notification) | T-499 | low | S | open |
 | T-599 | Phase 5 gate | T-501..T-508 | — | L | open |

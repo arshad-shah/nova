@@ -24,6 +24,20 @@ Three coupled choices (full detail: `../04-ipc-and-events-contract.md`):
 3. **TypeScript stays the authored contract**; Rust mirrors are verified by
    a CI schema drift-check + per-channel round-trip fixtures, rather than
    generated bindings becoming a new source of truth mid-migration.
+   (Tooling note, verified 2026-07: `ts-rs` 12.x is stable and fits the
+   Rust→schema export side; `tauri-specta` is still a multi-year release
+   candidate — usable but pin it, and nothing here depends on it.)
+
+Streaming addendum (2026-07): Tauri's docs are explicit that events are
+"not designed for low latency or high throughput" and that
+**`tauri::ipc::Channel` is the mechanism for high-frequency Rust→webview
+streams**. The shim owns this as an implementation detail: designated hot
+event channels (`ai:chat:event`, `activity:batch`) may be backed by a
+Channel handed over at subscription/start time, while the renderer-facing
+`on()` surface and payload shapes stay exactly v1. Cold events stay on
+`emit`. The choice is made per-channel by the implementing task (T-102
+plumbs the mechanism; T-503/T-206 decide for their streams) and recorded in
+the task Log — the contract does not change either way.
 
 ## Alternatives considered
 

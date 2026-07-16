@@ -91,7 +91,14 @@ These call sites are why v2 needs sync-shaped reads.
 
 ## v2 design: `verql-keyring` (per ADR-0007)
 
-- **Primary store:** `keyring` crate; `service = "verql"`,
+- **Primary store:** `keyring` crate, **v4 line** (per the amended
+  ADR-0007; 4.1.x as of 2026-07). v4 splits `keyring-core` from
+  per-platform store crates, and backends are explicit feature/dependency
+  choices: `apple-native-keyring-store` + `windows-native-keyring-store` +
+  on Linux `dbus-secret-service-keyring-store` (the **sync** store — the
+  baseline, avoiding async-runtime coupling in the sync-shaped accessor
+  paths below; the implementer may swap the `zbus-…` store if the cache
+  layer makes everything async anyway). `service = "verql"`,
   `account = "<namespace>/<key>"` (`/` because `:` is Windows-hostile in some
   backends; the namespace scheme itself is unchanged).
 - **Enumeration index:** OS keyrings cannot list by prefix, but v1's

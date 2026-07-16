@@ -13,10 +13,18 @@ time and stripped before config.json writes.
 
 ## Decision
 
-1. **Primary store: the `keyring` crate** — real OS credential stores
-   (macOS Keychain, Windows Credential Manager, Secret Service/libsecret on
-   Linux). Entries keyed `service = "verql"`, `account = "<namespace>/<key>"`,
-   preserving the v1 namespace scheme.
+1. **Primary store: the `keyring` crate, v4 line** (verified 2026-07:
+   4.1.x; the v4 architecture splits `keyring-core` from per-platform store
+   crates — `apple-native-keyring-store`, `windows-native-keyring-store`,
+   and on Linux a choice of `linux-keyutils-` / `dbus-secret-service-` /
+   `zbus-secret-service-keyring-store`). Backends are explicit feature
+   choices: apple-native + windows-native + dbus-secret-service (the sync
+   store, avoiding async-runtime coupling in sync-style accessor paths) is
+   the baseline selection; the implementer may swap zbus if the cache layer
+   makes everything async anyway. Entries keyed `service = "verql"`,
+   `account = "<namespace>/<key>"`, preserving the v1 namespace scheme.
+   Note OS keyrings don't enumerate: the names-only index entry the keyring
+   subsystem spec defines is what preserves v1's `listKeys`-based flows.
 2. **Fallback: an encrypted file** for Linux without Secret Service —
    age/ChaCha20-Poly1305 with a machine-derived key, honest about its
    strength in docs exactly as v1's `plain:` fallback was. Never silently

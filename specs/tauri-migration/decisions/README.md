@@ -12,6 +12,10 @@ the orchestrator drafts an amendment appended to the ADR (never rewriting
 history), and — if the *decision* (not just a detail) changes — escalates
 to the human per the playbook.
 
+The point-in-time ecosystem facts the ADRs cite live in
+[`versions-baseline.md`](./versions-baseline.md) (researched 2026-07-16,
+with sources) — T-002 re-verifies that baseline rather than re-researching.
+
 | ADR | Decision | Status |
 |---|---|---|
 | [0001](./ADR-0001-tauri-2.md) | Tauri 2.x is the target shell | proposed |
@@ -19,6 +23,6 @@ to the human per the playbook.
 | [0003](./ADR-0003-third-party-plugins.md) | v2 launches with declarative plugins only; programmatic SDK (WASM) post-launch | proposed — **requires explicit human sign-off** (compat break) |
 | [0004](./ADR-0004-database-crates.md) | Driver crate selection, incl. Snowflake via SQL REST API | proposed |
 | [0005](./ADR-0005-ipc-bridge.md) | Single dispatch command + `electronAPI`-shaped shim; TS contract stays authoritative | proposed |
-| [0006](./ADR-0006-mcp-rust.md) | MCP server reimplemented in Rust (rmcp), SSE-compatible | proposed |
+| [0006](./ADR-0006-mcp-rust.md) | MCP server in Rust (rmcp 2.x) on Streamable HTTP; legacy SSE endpoints not ported | proposed (amended 2026-07-16) |
 | [0007](./ADR-0007-secrets.md) | `keyring` crate for secrets; encrypted-file fallback retained; v1 secret migration | proposed |
-| [0008](./ADR-0008-packaging-updater.md) | tauri-bundler packaging; per-platform update channels; MSIX risk owned early | proposed |
+| [0008](./ADR-0008-packaging-updater.md) | tauri-bundler packaging; per-platform update channels; Windows Store via EXE/MSI-linked listing | proposed (amended 2026-07-16) |

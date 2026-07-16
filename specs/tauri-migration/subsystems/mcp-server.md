@@ -4,7 +4,9 @@ Ports `src/main/mcp/` (server, auth, port probe), the `mcp:*` IPC surface,
 and the ToolRegistry/db-tools contract both agent surfaces share. Crates:
 `verql-mcp` (transport/auth/approvals) + `verql-tools` (ToolRegistry +
 db-tools). Governing decision: [ADR-0006](../decisions/ADR-0006-mcp-rust.md)
-— rmcp/axum, **wire-compatible**. Related: [`ai-assistant.md`](./ai-assistant.md)
+(as amended 2026-07-16) — rmcp 2.x on **Streamable HTTP**; v1's legacy SSE
+endpoints are **not ported** (a sanctioned wire-contract deviation). Related:
+[`ai-assistant.md`](./ai-assistant.md)
 (same tools, same `isWriteToolCall`),
 [`activity-attention-notifications.md`](./activity-attention-notifications.md)
 (attention hub).
@@ -128,7 +130,7 @@ produced by `toJsonSchema(zod)`), `permission: 'read'|'write'`, `surfaces?:
 | `connection_info` | read | `{}` | profile type/host/port/database/name |
 | `get_app_activity` | read | `{kinds?: enum[], limit?: number}` | limit clamp: default 50, max 500; kinds ∈ query/tool-call/connection/notification/network |
 
-## v2 design (per ADR-0006)
+## v2 design (per ADR-0006, amended 2026-07-16)
 
 - **`verql-tools`**: `trait Tool` mirroring the v1 shape (`input_schema:
   serde_json::Value` stays JSON Schema — no zod round trip needed in Rust;
@@ -137,16 +139,31 @@ produced by `toJsonSchema(zod)`), `permission: 'read'|'write'`, `surfaces?:
   activity-recorder hook, `is_write_tool_call` ported once and shared with
   `verql-ai`. The seven db-tools port as plain functions over the
   `verql-db` access traits; `max_rows` read live from settings.
-- **`verql-mcp`**: axum router on `127.0.0.1` serving `/sse`, `/messages`,
-  `/health` with the exact status codes/bodies above; middleware order
-  CORS-preflight → Host guard → bearer auth (constant-time compare via
-  `subtle::ConstantTimeEq`). rmcp provides the MCP protocol layer; **if
-  current rmcp only ships Streamable HTTP, the SSE compat pair is kept as a
-  thin axum layer and Streamable HTTP is added alongside** — the spike task
-  (T-002) picks the mechanism, the endpoint contract stands.
-- Single-active-transport, `clientCount`, port probe (async TcpListener bind
-  probe over the same 20-port span), `autoSelectedPort`, and the
-  `EADDRINUSE`-shaped start error all replicate.
+- **`verql-mcp`**: **rmcp 2.x `StreamableHttpService`** (a tower `Service`)
+  mounted via axum `nest_service` at a **single `/mcp` endpoint**, plus a
+  plain axum `/health` route, bound to `127.0.0.1`. Transport = MCP
+  **Streamable HTTP** per spec revision **2025-11-25** (single endpoint,
+  POST+GET, JSON-or-SSE responses, `MCP-Session-Id`). **The legacy
+  `GET /sse` + `POST /messages` pair is NOT ported** — rmcp removed SSE in
+  v0.11.0, every major client speaks Streamable HTTP, and the ADR-0006
+  amendment sanctions the deviation. Middleware order stays
+  CORS-preflight → Host guard → **Origin guard** → bearer auth
+  (constant-time compare via `subtle::ConstantTimeEq`): the 2025-11-25 spec
+  makes **`Origin` validation a MUST** for local servers, so a mismatched
+  `Origin` header gets `403` in addition to v1's Host allowlist; the static
+  bearer token stays (the sanctioned localhost pattern — OAuth is out of
+  scope for loopback).
+- `clientCount` maps to rmcp's session tracking; port probe (async
+  TcpListener bind probe over the same 20-port span), `autoSelectedPort`,
+  and the `EADDRINUSE`-shaped start error all replicate. The `/health`
+  response and the `mcp:*` IPC shapes keep their v1 forms so the settings
+  UI ports unchanged; `buildMcpClientConfig` is updated to emit the
+  Streamable HTTP config (`type:'http'`, url `…/mcp`) — the renderer-facing
+  shape change is part of the sanctioned deviation.
+- **Client reconfiguration notice is an explicit deliverable**: users with
+  a configured v1 SSE client get a one-time notice (settings MCP panel,
+  T-506) and the v1→v2 migration report includes the new endpoint + a
+  copy-ready client config (T-605).
 - Token store = `verql-keyring`, namespace `__mcp__`/`token` unchanged (v1
   tokens survive data migration, so configured clients keep working — see
   [`keyring.md`](./keyring.md)).
@@ -160,10 +177,15 @@ produced by `toJsonSchema(zod)`), `permission: 'read'|'write'`, `surfaces?:
 
 ## Parity cases
 
-- **`/health` golden**: byte-identical body, 200, content-type.
+- **`/health` golden**: byte-identical body, 200, content-type (shape is
+  parity-pinned even though the MCP endpoint moved).
 - **Auth rejection matrix**: missing header, wrong scheme, wrong token,
   correct token wrong length, rebound Host (`evil.example:3100`,
-  `127.0.0.1:9999`, bare `[::1]`), OPTIONS preflight (204, no auth).
+  `127.0.0.1:9999`, bare `[::1]`), OPTIONS preflight (204, no auth) — same
+  verdicts as v1's matrix, now against `/mcp`.
+- **Origin-guard rejection**: a request with a non-local `Origin` header
+  (e.g. `https://evil.example`) gets `403` even with a valid bearer token —
+  the new MUST from spec 2025-11-25, per the ADR-0006 amendment.
 - **`selectExposedTools` table tests**: disabledTools, readOnly×write,
   `surfaces` undefined vs `['ai']` vs `['mcp']` — verdicts identical to the
   v1 pure function's unit tests.
@@ -172,14 +194,22 @@ produced by `toJsonSchema(zod)`), `permission: 'read'|'write'`, `surfaces?:
   activity status; read tool with `DROP TABLE` sql requires approval.
 - **Ring cap**: 101st entry evicts the first; `mcp:activity` ordering.
 - **Live-client checklist (Phase-5 gate, per ADR-0006)**: Claude Code
-  configured with `buildMcpClientConfig` output against the Rust server —
-  list tools, run `list_tables`/`query` (with approval), token regenerate
-  drops the session, `mcp.readOnly` hides `query`, health probe.
+  configured via `claude mcp add --transport http
+  http://127.0.0.1:3100/mcp --header "Authorization: Bearer …"` against the
+  Rust server — list tools, run `list_tables`/`query` (with approval),
+  token regenerate drops the session, `mcp.readOnly` hides `query`, health
+  probe.
+- **Client-reconfiguration notice**: the T-506 settings-panel notice and
+  the T-605 migration-report entry both render the new endpoint + config
+  snippet when v1 MCP state is detected.
 
 ## Open questions
 
-- rmcp SSE-transport support level — resolved by T-002 (fallback:
-  hand-rolled JSON-RPC over the same endpoints, sanctioned by ADR-0006).
+- ~~rmcp SSE-transport support level~~ — resolved by the 2026-07 research:
+  rmcp removed SSE in v0.11.0; Streamable HTTP only, SSE not ported
+  (ADR-0006 amendment). Fallback if rmcp 2.x fights the approval-flow
+  integration remains hand-rolled JSON-RPC over axum at the same `/mcp`
+  endpoint.
 - Whether `mcp:tools` should keep listing AI-only tools (v1 lists the whole
   registry unfiltered; the settings UI shows them with toggles). Parity says
   keep; T-507 verifies the renderer expectation before deviating.

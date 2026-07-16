@@ -76,11 +76,15 @@ shutdown). No keepalive, no auto-reconnect, no host-key verification in v1
 
 ## v2 design (crate `verql-ssh-tunnel`)
 
-- **Library**: russh (or a russh-based convenience layer) — the implementing
-  task validates the crate choice (maintenance, auth methods, key formats
-  incl. OpenSSH + PKCS#8 with passphrase — note v1 field set has **no**
-  passphrase field for the SSH key; do not add one) and records it in the task
-  Log, per the ADR-0004 verify-first rule.
+- **Library**: **russh 0.62.x** — verified active (2026-07, see
+  [versions-baseline.md](../decisions/versions-baseline.md)) with
+  direct-tcpip (local forward) confirmed supported. Alternatives explicitly
+  rejected: the `ssh2` crate (blocking, C libssh2 binding — wrong fit for
+  the tokio middleware seam) and `openssh` (shells out to the system ssh
+  binary). The implementing task still validates the details in-crate (auth
+  methods, key formats incl. OpenSSH + PKCS#8 with passphrase — note v1
+  field set has **no** passphrase field for the SSH key; do not add one)
+  and records findings in the task Log, per the ADR-0004 verify-first rule.
 - **Middleware trait** in `verql-db` mirroring the v1 shape:
   `should_apply(&Profile) -> bool`, `async before_connect(Profile) ->
   Result<Profile>`, `async on_disconnect(&str)`. The ConnectionManager runs
@@ -130,9 +134,11 @@ process in `../04-ipc-and-events-contract.md`.
 
 ## Open questions
 
-- **russh vs wrapper crate** and passphrase-protected key support (v1 has no
-  UI for an SSH key passphrase — confirm unsupported-in-v1 and keep it so):
-  resolved by T-309, recorded in its Log.
+- ~~russh vs wrapper crate~~ — resolved by the 2026-07 research: russh
+  0.62.x, active, direct-tcpip confirmed (ssh2/openssh rejected, above).
+  Remaining for T-309: passphrase-protected key support (v1 has no UI for
+  an SSH key passphrase — confirm unsupported-in-v1 and keep it so),
+  recorded in its Log.
 - **Hung-tunnel timeout layering**: v1 relies solely on the 15 s `safeCall`;
   does russh need its own connect timeout below that to produce the same
   error text? T-309 measures the v1 message for a black-holed host and pins it.

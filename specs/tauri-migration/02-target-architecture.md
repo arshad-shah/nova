@@ -4,7 +4,7 @@
 
 | Layer | v1 (Electron) | v2 (Tauri 2.x) |
 |---|---|---|
-| Shell | Chromium bundled | OS WebView (WebView2 / WKWebView / WebKitGTK) via tao/wry |
+| Shell | Chromium bundled | OS WebView (WebView2 / WKWebView / WebKitGTK `webkit2gtk-4.1`) via tao/wry — Tauri 2.11.x, MSRV 1.77.2 (see `decisions/versions-baseline.md`) |
 | Backend | Node.js main process | **Rust core process** (tokio async runtime) |
 | Bridge | preload `contextBridge` → `window.electronAPI` | Tauri `invoke`/`listen` wrapped by a compat shim exposing the same `electronAPI` shape |
 | Renderer | React 19 SPA | unchanged React 19 SPA |
@@ -78,18 +78,18 @@ one crate wherever possible so the swarm parallelizes cleanly.
 | v1 | v2 |
 |---|---|
 | `ipcMain.handle` + typed channel map | Tauri commands; a generic dispatch keyed by the same wire strings (04-ipc doc) |
-| `webContents.send(event, …)` broadcast | `app_handle.emit(event, payload)` |
+| `webContents.send(event, …)` broadcast | `app_handle.emit(event, payload)`; designated hot streams (`ai:chat:event`, `activity:batch`) may ride `tauri::ipc::Channel` behind the shim — Tauri's documented high-frequency mechanism (ADR-0005 streaming addendum) |
 | `safeStorage` + `credentials.enc` | `keyring` crate → OS keychain/DPAPI/libsecret (ADR-0007; keeps encrypted-file fallback for headless Linux) |
 | better-sqlite3 (app.db + sqlite driver) | `rusqlite` on `spawn_blocking`, `interrupt()` for cancellation/timeouts |
 | Electron `dialog` | `tauri-plugin-dialog` |
 | `shell.openExternal` | `tauri-plugin-opener` (keep the WSL special-case behavior) |
 | Electron `Notification` | `tauri-plugin-notification` |
 | Electron `Menu` (native + accelerators) | Tauri 2 menu API (muda); same `shared/menus.ts` tree drives it via a serialized export (subsystems/window-shell-menus.md) |
-| frameless + `-webkit-app-region` | `decorations:false` on Win/Linux + `data-tauri-drag-region`; macOS overlay title bar |
+| frameless + `-webkit-app-region` | `decorations:false` on Win/Linux + `data-tauri-drag-region` (per-element — children need it too; double-click-maximize is manual); macOS `titleBarStyle: Overlay` + first-class `trafficLightPosition` (Tauri ≥2.4). Windows has no WCO equivalent — v1's `env(titlebar-area-*)` CSS is dead; we draw our own controls (already exist) |
 | `utilityProcess` plugin isolation | dropped with JS plugins; future sandbox per ADR-0003 |
-| `child_process` (brew, unzip) | `std::process::Command` (brew); zip crate instead of shelling to `unzip` |
-| Node `http` MCP server | axum (or rmcp's built-in transport) on 127.0.0.1, same token + Host guard |
-| raw `fetch` AI providers | `reqwest` + SSE stream parsing, same `tracedFetch`-style activity recording |
+| `child_process` (brew, unzip) | `std::process::Command` (brew); `zip` crate ≥8.x (maintained at repo `zip-rs/zip2` but published as `zip`) instead of shelling to `unzip` |
+| Node `http` MCP server (legacy SSE) | rmcp 2.x `StreamableHttpService` mounted in axum on 127.0.0.1 — **Streamable HTTP `/mcp`, SSE endpoints not ported** (ADR-0006); same bearer token, Host guard + spec-mandated Origin validation |
+| raw `fetch` AI providers | `reqwest` 0.13 + SSE parsing (`eventsource-client`, or `bytes_stream` + `eventsource-stream`; not the stale `reqwest-eventsource`), same `tracedFetch`-style activity recording |
 | electron-builder (dmg/appx/AppImage) | `tauri-bundler` (+ ADR-0008 for the Microsoft Store path) |
 
 ## Concurrency model (new — v1 had none worth the name)

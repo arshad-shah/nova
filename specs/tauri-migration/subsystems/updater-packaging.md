@@ -99,7 +99,7 @@ platform WebView engine version (wry-reported); `node` and `v8` → `""`
 unchanged (`std::env::consts`). Pinned by a fixture; final display copy is
 T-604's call.
 
-### Bundling (tauri-bundler)
+### Bundling (tauri-bundler 2.9.x)
 
 - **Identifier changes to `com.arshadshah.verql`** (Apple rejects
   `com.electron.*` defaults; ADR-0008 fixes the name at scaffold time). This
@@ -112,10 +112,22 @@ T-604's call.
   renames artifacts; `render-homebrew.mjs` itself is packaging-agnostic and
   survives untouched.
 - Linux: AppImage.
-- Windows: **NSIS `.exe` guaranteed**; MSIX/Store with the existing identity
-  block is the Phase-1 spike + tracked risk, with the ADR-0008 fallback
-  ladder (external MSIX packaging → MSI/EXE Store listing → deferred Store
-  submission) escalated to the human, never decided by the swarm.
+- Windows (per the amended ADR-0008): **NSIS `-setup.exe` guaranteed**
+  (MSI/WiX available as needed); pick a WebView2 install mode —
+  `downloadBootstrapper` default, `offlineInstaller` where the Store path
+  demands it. tauri-bundler still has **no native MSIX**, but the Store
+  situation improved: Microsoft Store **officially supports EXE/MSI-linked
+  listings** and Tauri documents that path (code-signed installer,
+  silent-install flags, offline WebView2) — that is ladder rung (a), the
+  primary path validated by the T-008 spike. Rung (b): third-party MSIX
+  packaging over the Tauri build (`@choochmeque/tauri-windows-bundle`)
+  **only if** a packaged-identity MSIX is required — watch the known WACK
+  S-mode failure (tauri#14935). Rung (c): Store submission deferred at
+  cutover, NSIS direct distribution. Dropping below (a) is a product
+  decision escalated to the human, never decided by the swarm. Note (a) and
+  (b) both require **real code signing** — which v1's appx/Store identity
+  sidestepped — so the signing line below becomes load-bearing for the
+  Store path.
 - CI: per-platform bundle jobs; installer size + idle RSS + cold start
   recorded against the v1 baseline (00-goals footprint gate).
 
@@ -164,7 +176,8 @@ re-runs):
    Windows, Linux (config + secrets + app.db + a JS plugin present →
    correct report).
 3. Bundles: dmg (both arches) installs + launches; NSIS exe; AppImage;
-   MSIX decision resolved per the ADR-0008 ladder (human sign-off).
+   Windows Store path resolved per the ADR-0008 ladder — EXE/MSI-linked
+   listing, third-party MSIX, or deferred (human sign-off).
 4. Homebrew: tap templates updated, `brew install --cask verql` of the RC,
    then in-app `updater:check`/`updater:update` round trip against a staged
    bump.

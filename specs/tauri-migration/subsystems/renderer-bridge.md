@@ -43,8 +43,14 @@ selected one to `window.electronAPI`**:
 - **Tauri impl**: `invoke` → `invoke('ipc_dispatch', { channel, args })`;
   `on` → `listen(channel, e => cb(...e.payload))` returning the unlisten fn
   (note: Tauri's `listen` resolves the unlisten asynchronously — the shim wraps
-  it so `on` stays synchronous and the returned function queues the unlisten);
-  `platform` from `@tauri-apps/plugin-os`, **mapped to Node names**
+  it so `on` stays synchronous and the returned function queues the unlisten).
+  Per the [ADR-0005](../decisions/ADR-0005-ipc-bridge.md) streaming addendum,
+  designated hot event channels (`ai:chat:event`, `activity:batch`) **may be
+  backed by `tauri::ipc::Channel`** instead of `emit`/`listen` — the shim
+  hands the Channel over at subscription/start time and fans it into the same
+  callbacks; the renderer-facing `on()` surface and payload shapes are
+  unchanged either way. `platform` from `tauri-plugin-os`
+  (`@tauri-apps/plugin-os`), **mapped to Node names**
   (`macos → darwin`, `windows → win32`, `linux → linux`) because the renderer
   compares against `NodeJS.Platform` strings (`lib/platform.ts`).
 - Selection: feature-detect `'__TAURI_INTERNALS__' in window`; if neither host
@@ -73,6 +79,17 @@ handlers reject with plain `Error`s, so `message` is the only field existing
 renderer code reads; `code` exists for the burndown grep and dev overlay, and
 the literal string `NOT_MIGRATED` must appear in the message so failures are
 identifiable in screenshots and logs (03-migration-strategy §principles).
+
+### Drag-region migration (renderer-side note)
+
+The `-webkit-app-region` → `data-tauri-drag-region` migration touches
+renderer markup: the Tauri attribute applies **only to the element it is set
+on — children never inherit it**, so every drag-able element (title-bar root,
+inner rows, spacers, `#boot-splash`) needs the attribute explicitly, and the
+`no-drag` opt-outs become redundant under Tauri (kept for the Electron build
+until cutover). Full treatment incl. capabilities and manual
+double-click-maximize: [`window-shell-menus.md`](./window-shell-menus.md)
+§Drag regions.
 
 ## The file-drop port
 

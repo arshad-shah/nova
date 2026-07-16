@@ -149,18 +149,37 @@ AbortController>`; `ai:chat:abort` aborts by id **and** calls
 - **`trait AiProvider`** mirroring the v1 contract:
   `async fn models(&self) -> Vec<ModelInfo>`; `fn chat(&self, req:
   ChatRequest) -> BoxStream<'_, ProviderChunk>`; `fn supports_tool_calling`.
-  Implementations `anthropic.rs` / `openai.rs` / `ollama.rs` over **reqwest**
-  with `bytes_stream()` + a small line-splitting parser (one for SSE `data:`
-  framing, one for ndjson) — the v1 parsers are already hand-rolled
-  line-buffer loops, so they port structurally 1:1, including the OpenAI
-  per-index tool-call accumulator, the Anthropic `partial_json` accumulation,
-  the temperature/caching/context-window heuristics, and
+  Implementations `anthropic.rs` / `openai.rs` / `ollama.rs` over
+  **reqwest 0.13.x** (see [versions-baseline.md](../decisions/versions-baseline.md)).
+  SSE parsing: **eventsource-client** (LaunchDarkly, actively maintained)
+  or `bytes_stream()` + `eventsource-stream` (frozen-but-stable parser) —
+  **not `reqwest-eventsource`, which is stale since 2024**; ndjson stays a
+  small line-splitting loop. The v1 parsers are hand-rolled line-buffer
+  loops, so they port structurally 1:1, including the OpenAI per-index
+  tool-call accumulator, the Anthropic `partial_json` accumulation, the
+  temperature/caching/context-window heuristics, and
   `assert_safe_ollama_endpoint` (same blocklist, checked per request).
+- **Provider-API currency notes (2026-07)**: OpenAI `chat/completions` is
+  **not deprecated** and remains the multi-provider-compatible baseline —
+  the Responses API is OpenAI-specific and out of scope for the port.
+  Anthropic gotchas the port must not break on: the **newest models return
+  400 on `temperature`/`top_p`/`top_k`**, and new stop reasons exist
+  (`refusal`, `pause_turn`, `model_context_window_exceeded`). v1's
+  `supportsTemperature` regexes already drop `temperature` for Claude ≥4,
+  but **the implementer must verify the allowlist covers current model ids
+  (a parity-allowlist item)** — a stale regex that passes `temperature`
+  unconditionally to a new model turns every chat into a 400.
 - **Conversation manager** as an async fn spawned per `ai:chat:start`: the
   same round loop, budget math, and approval seam; events sent over a
   `tokio::sync::mpsc` channel whose consumer does
   `app_handle.emit("ai:chat:event", (stream_id, event))` — the tuple payload
-  is preserved so the shim delivers `(streamId, event)` unchanged. Abort via
+  is preserved so the shim delivers `(streamId, event)` unchanged.
+  Per the [ADR-0005](../decisions/ADR-0005-ipc-bridge.md) streaming
+  addendum, `ai:chat:event` is a designated hot channel and **may be backed
+  by `tauri::ipc::Channel`** behind the shim instead of `emit` (Tauri events
+  are documented as unsuited to high-frequency streams); payload shape and
+  the renderer-facing `on()` surface are identical either way — T-503
+  decides and logs. Abort via
   `tokio_util::sync::CancellationToken` mapped to reqwest request abort +
   loop checks, replacing `AbortController`.
 - **Token estimate**: `estimate_tokens` / `estimate_message_tokens` /

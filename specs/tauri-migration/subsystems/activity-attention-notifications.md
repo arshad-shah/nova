@@ -148,8 +148,13 @@ host for theme-token warnings, isolated-plugin crash notices, etc.
   durability log). `record_activity` global via `OnceLock<ActivitySink>`,
   mirroring the recorder seam.
 - **Batcher**: same algorithm on tokio — first-push arms a 100 ms sleep,
-  50-entry eager flush, `emit("activity:batch", batch)`. Constants shared
-  with the parity fixture.
+  50-entry eager flush, `emit("activity:batch", batch)`. Per the
+  [ADR-0005](../decisions/ADR-0005-ipc-bridge.md) streaming addendum,
+  `activity:batch` is a designated hot channel and **may be backed by
+  `tauri::ipc::Channel`** behind the shim instead of `emit` (Tauri events
+  are documented as unsuited to high-frequency streams); batch payload
+  shape and the 100 ms / 50-entry constants are identical either way —
+  T-206 decides and logs. Constants shared with the parity fixture.
 - **IPC tracer**: the one `ipc_dispatch` entry point
   ([`../04-ipc-and-events-contract.md`](../04-ipc-and-events-contract.md))
   wraps every channel with the same entry shape, the same 3-channel
@@ -164,7 +169,7 @@ host for theme-token warnings, isolated-plugin crash notices, etc.
   notifications module.
 - **Notifications**: the dispatcher policy ports verbatim (it is already
   dependency-injected and electron-free); the `NativeNotifier` impl is
-  `tauri-plugin-notification` + `tauri::Window::is_focused()` across all
+  `tauri-plugin-notification` (2.3.x) + `tauri::Window::is_focused()` across all
   windows for focus detection, `set_focus`/`unminimize` for the click
   handler. Same three settings at the same
   `plugins.verql-plugin-os-notifications.*` config keys. **Known
