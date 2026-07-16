@@ -3,7 +3,7 @@ import {
   Database, Wrench, Plug, Bell, Globe, ScrollText, Trash2, Search, Download, Pause, Play,
   Cable, Puzzle, Layers, Gauge, ChevronRight, ChevronDown, AlertCircle, TriangleAlert,
 } from 'lucide-react'
-import { Flex, Box, Text, cn, Button } from '@/primitives'
+import { Flex, Box, Text, cn, Button, ToggleGroup } from '@/primitives'
 import type { ActivityEntry, ActivityKind, ActivityLevel } from '@shared/activity'
 import { useTranslation } from '@/i18n/I18nProvider'
 import type { MessageKey } from '@shared/i18n'
@@ -282,50 +282,39 @@ export function ActivityList({ entries, onClear }: ActivityListProps) {
             <Trash2 size={13} />
           </Button>
         </Flex>
-        <Flex align="center" gap="xs" className="px-2 pb-1 flex-wrap">
-          {ALL_KINDS.map((kind) => {
-            const on = kinds.has(kind)
+        <ToggleGroup
+          wrap
+          size="xs"
+          className="px-2 pb-1"
+          label={t('shell.activity.fieldKind')}
+          value={[...kinds]}
+          onChange={(next) => setKinds(new Set(next))}
+          options={ALL_KINDS.map((kind) => {
             const { icon: Icon, label } = KIND_META[kind]
-            return (
-              <Button
-                variant="bare"
-                size="none"
-                key={kind}
-                type="button"
-                onClick={() => setKinds((prev) => toggle(prev, kind))}
-                title={t(label)}
-                className={cn(
-                  'flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] transition-colors',
-                  on ? 'bg-accent/15 text-accent' : 'text-text-muted hover:text-text-primary hover:bg-white/5',
-                )}
-              >
-                <Icon size={12} />
-                {t(label)}
-              </Button>
-            )
+            return { value: kind, label: t(label), icon: <Icon size={12} /> }
           })}
-        </Flex>
+        />
         <Flex align="center" gap="xs" className="px-2 pb-1.5 flex-wrap">
-          {LEVEL_META.map(({ level, label }) => {
-            const on = levels.has(level)
-            return (
-              <Button
-                variant="bare"
-                size="none"
-                key={level}
-                type="button"
-                onClick={() => setLevels((prev) => toggle(prev, level))}
-                title={t(label)}
-                className={cn(
-                  'flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] transition-colors',
-                  on ? 'bg-accent/15 text-accent' : 'text-text-muted hover:text-text-primary hover:bg-white/5',
-                )}
-              >
-                <Box as="span" className={cn('h-1.5 w-1.5 rounded-full bg-current', LEVEL_CLASS[level])} />
-                {t(label)}
-              </Button>
-            )
-          })}
+          <ToggleGroup
+            wrap
+            size="xs"
+            label={t('shell.activity.levelInfo')}
+            value={[...levels]}
+            onChange={(next) => setLevels(new Set(next))}
+            options={LEVEL_META.map(({ level, label }) => ({
+              value: level,
+              label: t(label),
+              // The dot keeps its own level colour while the pressed wash stays
+              // uniform — the level is already encoded in the dot, so tinting
+              // the chip too would say it twice.
+              icon: (
+                <Box
+                  as="span"
+                  className={cn('h-1.5 w-1.5 rounded-full bg-current', LEVEL_CLASS[level])}
+                />
+              ),
+            }))}
+          />
           {paused && (
             <>
               <Box as="span" className="flex-1" />

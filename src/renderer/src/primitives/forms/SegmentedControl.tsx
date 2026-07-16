@@ -134,6 +134,20 @@ export const SegmentedControl = forwardRef<
 
   const enabled = options.filter((o) => !o.disabled)
 
+  /**
+   * Which segment Tab lands on. Normally the selected one — that's the roving
+   * tabindex that makes the group a single tab stop.
+   *
+   * When `value` matches no option the group would otherwise have every
+   * segment at -1 and become unreachable by keyboard entirely. That is not
+   * hypothetical: the export/import pickers hold `null` until the driver's
+   * formats arrive. A radio group with nothing checked keeps its first option
+   * focusable, so do that.
+   */
+  const focusableValue = options.some((o) => o.value === value)
+    ? value
+    : enabled[0]?.value
+
   /** Arrows move the selection AND focus, which is the radiogroup contract —
    *  a radio group is selected by arrowing, not by arrowing then confirming. */
   const move = (delta: number) => {
@@ -197,7 +211,7 @@ export const SegmentedControl = forwardRef<
             disabled={isDisabled}
             // Roving tabindex: the group is ONE tab stop, and Tab out of it
             // goes to the next control rather than the next segment.
-            tabIndex={selected ? 0 : -1}
+            tabIndex={o.value === focusableValue ? 0 : -1}
             onClick={() => { if (!selected) onChange(o.value) }}
             className={cn(segmentVariants({ selected, tone: o.tone ?? tone, stretch }))}
           >

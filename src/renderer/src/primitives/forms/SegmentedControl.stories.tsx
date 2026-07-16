@@ -170,6 +170,21 @@ export const States: Story = {
   },
 }
 
+/** A value matching no option — the export/import pickers hold `null` until
+ *  the driver's formats arrive. Nothing is selected, which is right, and the
+ *  control must still be reachable: with a strict roving tabindex every segment
+ *  would sit at -1 and the group would drop out of the tab order entirely. */
+export const NoSelection: Story = {
+  render: () => <SegmentedControl label="Result view" options={VIEW} value="" onChange={() => {}} />,
+  play: async ({ canvas }) => {
+    for (const name of ['Table', 'JSON', 'Chart']) {
+      await expect(canvas.getByRole('radio', { name })).not.toBeChecked()
+    }
+    // The first option holds the tab stop so the group stays reachable.
+    await expect(canvas.getByRole('radio', { name: 'Table' })).toHaveAttribute('tabindex', '0')
+  },
+}
+
 /** Arrows move the selection, Home/End jump to the ends — the radiogroup
  *  contract. A segmented control is selected by arrowing, not by arrowing and
  *  then confirming. */
