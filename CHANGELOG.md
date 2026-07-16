@@ -1,5 +1,88 @@
 # Changelog
 
+## 1.5.0
+
+### Minor Changes
+
+- [#141](https://github.com/arshad-shah/verql/pull/141) [`61c0995`](https://github.com/arshad-shah/verql/commit/61c0995995f616ae8f9c4df32b78bf0a4bbbda3a) Thanks [@arshad-shah](https://github.com/arshad-shah)! - The interface reads at a proper desktop size. Everything used to render **12.5%
+  smaller than designed**: UI density set the root font size (13/14/15px) as its
+  scaling lever, but the styling scale is relative to that root — so at the
+  default density body text came out at 10.5px instead of 12px, the title bar at
+  35px instead of 40px, and buttons at 31.5px instead of 36px. Most text sat below
+  both the macOS (11px floor, 13px body) and Windows (14px body) guidance for
+  desktop apps.
+
+  Density no longer drags the whole interface down with it, and the scale has been
+  raised a step across all three settings — the old floor was simply too small on
+  a desktop display. At the default (**comfortable**) body text is now 15px, with
+  a 45px title bar and 42px controls. **Compact** is now what the old default
+  aimed to be — 12/14/16px text and 36px controls — so it's a genuinely dense
+  option rather than an unreadable one, and **spacious** goes further again (16px
+  body, 48px controls).
+
+  If the new default feels roomy, Settings → Appearance → UI density → compact.
+
+- [#141](https://github.com/arshad-shah/verql/pull/141) [`61c0995`](https://github.com/arshad-shah/verql/commit/61c0995995f616ae8f9c4df32b78bf0a4bbbda3a) Thanks [@arshad-shah](https://github.com/arshad-shah)! - Ion: a new look for Verql. **Ion is now the default theme** — a new palette
+  paired with a redrawn ribbon mark, and every brand artifact (app icons, Store
+  tiles and listing art) is generated from that one source.
+
+  The design system was rebuilt behind it. Toast was rebuilt and is now the only
+  one; Banner merged into Alert; Avatar was redesigned around what the app
+  actually shows; Input absorbed the single-line field variants; Card gained
+  variants and replaced hand-rolled surfaces; SegmentedControl and ToggleGroup are
+  new; Button gained loading and subtle variants and a corrected destructive red.
+  Components that reached for native HTML now use primitives instead, and the
+  pickers moved onto them.
+
+  Colour is theme-driven throughout: the action colour, Badge and Kbd shadows, and
+  Shiki code blocks all follow the active theme rather than hardcoded values, and
+  the stale Nightshift colours are gone. Alert and Toast body text now reads at
+  the same contrast as its title, and Badge can mark PK/FK/UNIQUE keys.
+
+  Naming follows one system across the primitives: **tone** carries meaning
+  (success, warning, error) and **variant** carries weight (solid, subtle, …).
+
+- [#141](https://github.com/arshad-shah/verql/pull/141) [`61c0995`](https://github.com/arshad-shah/verql/commit/61c0995995f616ae8f9c4df32b78bf0a4bbbda3a) Thanks [@arshad-shah](https://github.com/arshad-shah)! - macOS gets the full application menu. The native menu and the Windows/Linux
+  menu bar were declared in two separate places and had drifted: macOS was
+  missing the entire **Query** menu (Run, Run Selection, Save, Format Document),
+  plus Settings, Find in Editor, Close/Reopen Tab, the Explorer/Plugins and
+  sidebar/dock toggles, Welcome and What's New.
+
+  The menu is now declared once in `shared/menus.ts` and rendered by both
+  surfaces, so a command can't exist on one platform and not another. Placement
+  still follows each platform's conventions rather than mirroring one OS onto
+  another: Settings sits in the macOS app menu at Cmd+, and under File elsewhere.
+
+  **About now opens Verql's own About window on macOS** instead of the system
+  About panel, matching every other platform.
+
+  Menu shortcuts follow your keybindings. Previously the native menu hardcoded
+  its accelerators, so rebinding a command in Settings → Keybindings left the old
+  key firing the old command. One visible consequence: **New Query is Cmd/Ctrl+T**
+  — the shortcut the keybinding list always advertised — where the menu used to
+  say Cmd/Ctrl+N.
+
+### Patch Changes
+
+- [#141](https://github.com/arshad-shah/verql/pull/141) [`61c0995`](https://github.com/arshad-shah/verql/commit/61c0995995f616ae8f9c4df32b78bf0a4bbbda3a) Thanks [@arshad-shah](https://github.com/arshad-shah)! - The documentation site now wears Ion. It still carried the old Nightshift mint
+  while the app had moved to Ion's violet, so the docs and the product no longer
+  looked like the same thing. The site's accent, ink surfaces and hero glow are
+  now taken from the app's own Ion tokens, in both light and dark.
+
+- [#141](https://github.com/arshad-shah/verql/pull/141) [`61c0995`](https://github.com/arshad-shah/verql/commit/61c0995995f616ae8f9c4df32b78bf0a4bbbda3a) Thanks [@arshad-shah](https://github.com/arshad-shah)! - Storybook: give every story the app `ThemeProvider` from a single global
+  decorator. The title bar and welcome screen stories crashed with "useTheme must
+  be used within ThemeProvider" — both render `VerqlMark`, whose `auto` variant
+  resolves light/dark through `useTheme()`, and Storybook's theme toolbar only set
+  the `data-theme` attribute, never the React context. Every story that touched
+  the theme had to remember its own provider decorator, and the two newest ones
+  didn't.
+
+  The provider now wraps all stories from `.storybook/preview.tsx`, and the ten
+  per-file decorators that duplicated it are gone. The theme toolbar drives the
+  provider through its own `setTheme` instead of writing `data-theme` behind its
+  back, so the provider stays the single writer of that attribute — this replaces
+  addon-themes' `withThemeByDataAttribute`, which raced it.
+
 ## 1.4.1
 
 ### Patch Changes
