@@ -22,6 +22,16 @@ export type { CheckboxProps } from './Checkbox'
 export { Radio } from './Radio'
 export type { RadioProps } from './Radio'
 
+export { SegmentedControl } from './SegmentedControl'
+export type {
+  SegmentedControlProps,
+  SegmentedOption,
+  SegmentedTone,
+} from './SegmentedControl'
+
+export { ToggleGroup } from './ToggleGroup'
+export type { ToggleGroupProps, ToggleOption, ToggleTone } from './ToggleGroup'
+
 export { Switch } from './Switch'
 export type { SwitchProps } from './Switch'
 
