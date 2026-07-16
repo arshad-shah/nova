@@ -1,6 +1,7 @@
-import type { CSSProperties } from 'react'
 import { Key, Link, Hash } from 'lucide-react'
+import { Badge } from '@/primitives/data-display/Badge'
 import { ContextMenu } from '@/primitives/surfaces/ContextMenu'
+import { Box } from '@/primitives'
 import { useClipboard } from '@/hooks/useClipboard'
 import { useDataNouns } from '@/hooks/useDataNouns'
 import type { SchemaColumn } from '@shared/types'
@@ -14,51 +15,29 @@ interface ColumnRowProps {
 
 // ─── ColumnIcon ────────────────────────────────────────────────────────────────
 
+const ICON_BOX = 'inline-flex items-center justify-center rounded shrink-0 size-[18px]'
+
 function ColumnIcon({ column }: { column: SchemaColumn }) {
   if (column.isPrimaryKey) {
     return (
-      <span
-        className="inline-flex items-center justify-center rounded shrink-0"
-        style={{
-          width: 18,
-          height: 18,
-          background: 'color-mix(in srgb, var(--color-warning) 10%, transparent)',
-          color: 'var(--color-warning)',
-        }}
-      >
-        <Key size={10} />
-      </span>
+      <Box as="span" className={`${ICON_BOX} bg-key-pk-bg text-key-pk`}>
+        <Key size={10} strokeWidth={1.8} />
+      </Box>
     )
   }
 
   if (column.isForeignKey) {
     return (
-      <span
-        className="inline-flex items-center justify-center rounded shrink-0"
-        style={{
-          width: 18,
-          height: 18,
-          background: 'color-mix(in srgb, var(--color-info) 10%, transparent)',
-          color: 'var(--color-info)',
-        }}
-      >
-        <Link size={10} />
-      </span>
+      <Box as="span" className={`${ICON_BOX} bg-key-fk-bg text-key-fk`}>
+        <Link size={10} strokeWidth={1.8} />
+      </Box>
     )
   }
 
   return (
-    <span
-      className="inline-flex items-center justify-center rounded shrink-0"
-      style={{
-        width: 18,
-        height: 18,
-        background: 'color-mix(in srgb, var(--color-bg-tertiary) 50%, transparent)',
-        color: 'var(--color-text-disabled)',
-      }}
-    >
-      <Hash size={10} />
-    </span>
+    <Box as="span" className={`${ICON_BOX} bg-bg-tertiary/50 text-text-disabled`}>
+      <Hash size={10} strokeWidth={1.8} />
+    </Box>
   )
 }
 
@@ -66,31 +45,11 @@ function ColumnIcon({ column }: { column: SchemaColumn }) {
 
 function ConstraintBadge({ column }: { column: SchemaColumn }) {
   if (column.isPrimaryKey) {
-    return (
-      <span
-        className="inline-flex items-center rounded-full px-1.5 text-[9px] font-semibold leading-4 shrink-0"
-        style={{
-          background: 'color-mix(in srgb, var(--color-warning) 10%, transparent)',
-          color: 'var(--color-warning)',
-        }}
-      >
-        PK
-      </span>
-    )
+    return <Badge tone="pk" size="xs" className="font-semibold leading-4 shrink-0">PK</Badge>
   }
 
   if (column.isForeignKey) {
-    return (
-      <span
-        className="inline-flex items-center rounded-full px-1.5 text-[9px] font-semibold leading-4 shrink-0"
-        style={{
-          background: 'color-mix(in srgb, var(--color-info) 10%, transparent)',
-          color: 'var(--color-info)',
-        }}
-      >
-        FK
-      </span>
-    )
+    return <Badge tone="fk" size="xs" className="font-semibold leading-4 shrink-0">FK</Badge>
   }
 
   return null
@@ -118,32 +77,19 @@ export function ColumnRow({ column, tableName, connectionId }: ColumnRowProps) {
 
   return (
     <ContextMenu items={menuItems}>
-      <div
-        className="flex items-center gap-1.5 px-2 py-0.5 rounded text-xs min-w-0 cursor-default group"
-        style={{ '--hover-bg': 'var(--color-hover)' } as CSSProperties}
-        onMouseEnter={(e) =>
-          (e.currentTarget.style.background = 'var(--color-hover)')
-        }
-        onMouseLeave={(e) => (e.currentTarget.style.background = '')}
-      >
+      <Box className="flex items-center gap-1.5 px-2 py-0.5 rounded text-xs min-w-0 cursor-default group hover:bg-hover">
         <ColumnIcon column={column} />
 
-        <span
-          className="flex-1 truncate min-w-0"
-          style={{ color: 'var(--color-text-primary)' }}
-        >
+        <Box as="span" className="flex-1 truncate min-w-0 text-text-primary">
           {column.name}
-        </span>
+        </Box>
 
-        <span
-          className="text-[10px] shrink-0"
-          style={{ color: 'var(--color-text-muted)' }}
-        >
+        <Box as="span" className="text-[10px] shrink-0 text-text-muted">
           {column.dataType}
-        </span>
+        </Box>
 
         <ConstraintBadge column={column} />
-      </div>
+      </Box>
     </ContextMenu>
   )
 }

@@ -1,6 +1,7 @@
 import { type ReactNode, Children, isValidElement } from 'react'
 import Markdown, { defaultUrlTransform } from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import { Box, Text, Table, List, Link, Code } from '@/primitives'
 import { CodeBlock } from './CodeBlock'
 import { ActionChip } from './ActionChip'
 import { parseActionHref } from '@/lib/app-actions/parse'
@@ -44,39 +45,33 @@ export function MarkdownContent({ content }: Props) {
           const isBlock = className?.startsWith('language-')
           if (isBlock) {
             // Block code is handled by the pre override above
-            return <code>{children}</code>
+            return <Code>{children}</Code>
           }
-          return (
-            <code className="bg-[var(--color-bg-inset)] rounded px-1 py-0.5 text-xs text-[var(--color-accent)]">
-              {children}
-            </code>
-          )
+          return <Code className="text-accent">{children}</Code>
         },
         table: ({ children }) => (
-          <div className="overflow-x-auto my-1">
-            <table className="w-full text-xs border-collapse border border-[var(--color-border)]">
+          <Box className="overflow-x-auto my-1">
+            <Table className="text-xs border-collapse border border-border">
               {children}
-            </table>
-          </div>
+            </Table>
+          </Box>
         ),
-        thead: ({ children }) => (
-          <thead className="bg-[var(--color-bg-inset)]">{children}</thead>
-        ),
+        thead: ({ children }) => <Table.Header>{children}</Table.Header>,
         th: ({ children }) => (
-          <th className="border border-[var(--color-border)] px-2 py-1 text-left font-semibold text-[var(--color-text-secondary)]">
+          <Table.Head size="sm" className="border border-border font-semibold">
             {children}
-          </th>
+          </Table.Head>
         ),
         td: ({ children }) => (
-          <td className="border border-[var(--color-border)] px-2 py-1">
+          <Table.Cell size="sm" className="border border-border">
             {children}
-          </td>
+          </Table.Cell>
         ),
-        p: ({ children }) => <p className="mb-1 last:mb-0">{children}</p>,
-        ul: ({ children }) => <ul className="list-disc pl-4 mb-1">{children}</ul>,
-        ol: ({ children }) => <ol className="list-decimal pl-4 mb-1">{children}</ol>,
-        li: ({ children }) => <li className="mb-0.5">{children}</li>,
-        strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+        p: ({ children }) => <Text as="p" className="mb-1 last:mb-0">{children}</Text>,
+        ul: ({ children }) => <List marker="disc" className="mb-1">{children}</List>,
+        ol: ({ children }) => <List ordered marker="decimal" className="mb-1">{children}</List>,
+        li: ({ children }) => <List.Item size="none" className="mb-0.5">{children}</List.Item>,
+        strong: ({ children }) => <Text as="strong" weight="semibold">{children}</Text>,
         a: ({ href, children }) => {
           // `verql://action/<id>` links are in-app deep links — render them as
           // clickable action chips routed through the App-Action registry
@@ -86,9 +81,9 @@ export function MarkdownContent({ content }: Props) {
             return <ActionChip actionId={action.id} params={action.params}>{children}</ActionChip>
           }
           return (
-            <a href={href} className="text-[var(--color-accent)] underline" target="_blank" rel="noopener noreferrer">
+            <Link href={href} size="sm" className="underline" target="_blank" rel="noopener noreferrer">
               {children}
-            </a>
+            </Link>
           )
         },
       }}

@@ -1,38 +1,36 @@
 import { useEffect } from 'react'
 import { IPC_EVENTS } from '@shared/ipc'
-import { useUiStore } from '@/stores/ui'
-import { getProfile } from '@/stores/connections'
-import { initialAutoCommit } from '@/lib/initial-autocommit'
-import type { useTabsStore } from '@/stores/tabs'
+import { MENU_ACTION, type MenuActionId } from '@shared/menus'
+import { runMenuAction } from '@/components/shell/menu-model'
 
-type AddQueryTab = ReturnType<typeof useTabsStore.getState>['addQueryTab']
-
-interface Options {
-  activeConnectionId: string | null
-  addQueryTab: AddQueryTab
-  openConnectionForm: () => void
-}
-
-/** Subscribes to native application-menu commands (New Query Tab, New
- *  Connection, Toggle Command Palette) and the status bar's new-connection
- *  shortcut, translating each into the matching renderer action. */
-export function useShellMenuEvents({ activeConnectionId, addQueryTab, openConnectionForm }: Options): void {
+/**
+ * Runs commands invoked from the **native** application menu — the visible menu
+ * bar on macOS, and the accelerator table on every platform.
+ *
+ * The native menu ships an action id rather than a per-command event, and every
+ * id resolves through the same registry the app-drawn menu bar uses, so a
+ * command behaves identically however it was invoked. Adding a menu item needs
+ * no change here: declare it in `shared/menus.ts` and give it a handler in
+ * `menu-model.tsx`.
+ *
+ * Also handles the status bar's new-connection shortcut, which is a plain DOM
+ * event rather than an IPC one.
+ */
+export function useShellMenuEvents(): void {
   useEffect(() => {
-    const cleanups = [
-      window.electronAPI.on(IPC_EVENTS.MENU_NEW_QUERY_TAB, () => {
-        const activeProfile = getProfile(activeConnectionId)
-        addQueryTab(activeConnectionId, null, { autoCommit: initialAutoCommit(activeProfile) })
-      }),
-      window.electronAPI.on(IPC_EVENTS.MENU_NEW_CONNECTION, () => openConnectionForm()),
-      window.electronAPI.on(IPC_EVENTS.MENU_TOGGLE_COMMAND_PALETTE, () => useUiStore.getState().toggleCommandPalette()),
-    ]
+    // `electronAPI.on` hands callbacks `unknown` args, and this one crosses a
+    // process boundary, so check the shape rather than assert it. Ids that
+    // aren't in the registry are ignored by runMenuAction.
+    const offMenuAction = window.electronAPI.on(IPC_EVENTS.MENU_ACTION, (action) => {
+      if (typeof action === 'string') runMenuAction(action as MenuActionId)
+    })
 
-    const handleStatusBarNewConn = () => openConnectionForm()
+    const handleStatusBarNewConn = (): void => runMenuAction(MENU_ACTION.NEW_CONNECTION)
     window.addEventListener('statusbar:new-connection', handleStatusBarNewConn)
 
     return () => {
       window.removeEventListener('statusbar:new-connection', handleStatusBarNewConn)
-      cleanups.forEach(cleanup => cleanup())
+      offMenuAction()
     }
-  }, [activeConnectionId, addQueryTab, openConnectionForm])
+  }, [])
 }

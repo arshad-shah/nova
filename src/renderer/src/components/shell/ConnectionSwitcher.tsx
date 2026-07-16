@@ -18,7 +18,7 @@ const DB_TYPE_COLORS: Record<string, string> = {
   postgresql: 'text-accent',
   mysql: 'text-warning',
   sqlite: 'text-info',
-  mongodb: 'text-[#ff8c6b]',
+  mongodb: 'text-data-accent',
   redis: 'text-error',
 }
 

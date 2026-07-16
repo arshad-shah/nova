@@ -24,12 +24,35 @@ const textareaRootVariants = cva(
         true: 'border-error focus-within:shadow-[var(--shadow-error-ring),var(--shadow-input-inset)]',
         false: 'border-border-default hover:border-border-strong',
       },
+      /**
+       * Whether the field paints its own chrome.
+       * - `field` (default): the standard bordered input surface.
+       * - `bare`: no border, fill or focus ring. For a textarea that already
+       *   sits inside a surface which owns the frame and focus affordance (the
+       *   AI composer inside its Card) — without this, such callers drop to a
+       *   native <textarea> and lose autoResize/limit/clearable.
+       * Declared last so twMerge resolves its border/bg against `error`.
+       */
+      surface: {
+        field: '',
+        bare: 'border-transparent bg-none bg-transparent shadow-none focus-within:border-transparent focus-within:shadow-none hover:border-transparent',
+      },
     },
-    defaultVariants: { size: 'md', error: false },
+    defaultVariants: { size: 'md', error: false, surface: 'field' },
   }
 )
 
 export type TextareaResizeMode = 'vertical' | 'horizontal' | 'both' | 'none'
+
+/** The grip's cursor, needed twice per axis: as a class while it sits there,
+ *  and as a raw CSS value pinned to <body> during the drag. One map so the two
+ *  can't disagree. `none` never renders a grip. */
+const GRIP_CURSOR = {
+  both: { cls: 'cursor-nwse-resize', css: 'nwse-resize' },
+  horizontal: { cls: 'cursor-ew-resize', css: 'ew-resize' },
+  vertical: { cls: 'cursor-ns-resize', css: 'ns-resize' },
+  none: { cls: '', css: '' },
+} as const satisfies Record<TextareaResizeMode, { cls: string; css: string }>
 
 export interface TextareaProps
   extends Omit<React.TextareaHTMLAttributes<HTMLTextAreaElement>, 'size' | 'style'>,
@@ -64,6 +87,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
       style,
       size,
       error,
+      surface,
       rows = 3,
       autoResize,
       maxRows,
@@ -168,6 +192,12 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
       if (!field || !root) return
       e.preventDefault()
       ;(e.target as Element).setPointerCapture?.(e.pointerId)
+      // Hold the resize cursor for the whole drag. The grip is ~12px, so the
+      // pointer leaves it almost immediately and would otherwise flip back to
+      // the text/pointer cursor of whatever it's now over — mid-resize. Same
+      // approach as ResizeHandle.
+      const prevCursor = document.body.style.cursor
+      document.body.style.cursor = GRIP_CURSOR[resize].css
       const startX = e.clientX
       const startY = e.clientY
       // Resize the root (the `flex-1` field fills it). Setting the field's own
@@ -185,6 +215,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
       }
       const onUp = () => {
         setDragging(false)
+        document.body.style.cursor = prevCursor
         window.removeEventListener('pointermove', onMove)
         window.removeEventListener('pointerup', onUp)
         window.removeEventListener('pointercancel', onUp)
@@ -203,15 +234,14 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
     const gripShown = resize !== 'none' && !autoResize && !disabled && !readOnly
     const clearShown = clearable && !empty && !disabled && !readOnly
 
-    const gripCursor =
-      resize === 'both' ? 'cursor-nwse-resize' : resize === 'horizontal' ? 'cursor-ew-resize' : 'cursor-ns-resize'
+    const gripCursor = GRIP_CURSOR[resize].cls
 
     return (
       <div
         ref={rootRef}
         style={style}
         className={cn(
-          textareaRootVariants({ size, error: invalid }),
+          textareaRootVariants({ size, error: invalid, surface }),
           disabled && 'opacity-50 pointer-events-none',
           dragging && 'select-none',
           className

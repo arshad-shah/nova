@@ -17,6 +17,59 @@ export const whatsNew = {
     sdkDocs: 'Plugin SDK docs',
     userGuide: 'User guide',
   },
+  // Covers everything since 1.3.1 — the release pages for 1.4.x were never
+  // authored, and a user updating from 1.3.1 only ever sees this page, so the
+  // form-field, text-area and toast work from 1.4.0 is folded in here.
+  v1_5_0: {
+    headline: 'A new look for Verql',
+    summary:
+      'Verql has been redrawn around Ion — a new default theme and a rebuilt set of controls. macOS gets the full application menu it was missing, menu shortcuts now follow your own keybindings, and the fields, text area and notifications you work in every day have been reworked.',
+    ion: {
+      title: 'Ion, the new default look',
+      description:
+        'A new palette and a redrawn mark, applied across every screen. Ion is the default theme now — the other themes are still there under Settings → Appearance, and any theme you had picked is kept.',
+    },
+    macMenu: {
+      title: 'The full menu on macOS',
+      description:
+        'The macOS menu was missing a lot: there was no Query menu at all, and no Settings, Find in Editor, Close or Reopen Tab, panel toggles, Welcome or What’s New. Every command is now on the menu, placed where macOS users expect it — Settings sits in the Verql menu at Cmd+, rather than under File.',
+    },
+    textArea: {
+      title: 'A text area you can work in',
+      description:
+        'The multi-line editor is rebuilt as a card you can resize from a corner grip, with optional auto-grow, a character counter that warns as you near a limit, and a clear button.',
+    },
+    fields: {
+      title: 'Fields that follow your density setting',
+      description:
+        'Every field — text, number, password, file and date pickers, and the text area — now changes height, text size, corner radius and padding together with Settings → Appearance → UI density. Glyphs are crisp icons, the password field shows a strength meter, and file pickers highlight when you drag a file onto them.',
+    },
+    toasts: {
+      title: 'Notifications that get out of the way',
+      description:
+        'Toasts slide in, and dismissing one slides the rest up smoothly instead of jumping. Each can auto-dismiss on a progress bar that pauses while you hover, so you have time to read it — and long-running ones stay until they finish.',
+    },
+    about: {
+      title: 'An About window that matches the app',
+      description:
+        'Clicking About Verql on macOS now opens Verql’s own About window — the same one every other platform shows — instead of the plain system panel.',
+    },
+    shortcuts: {
+      title: 'Menu shortcuts follow your keybindings',
+      description:
+        'Menu shortcuts were fixed in place, so rebinding a command under Settings → Keybindings left the old key still firing the old command. They now follow whatever you set. One change to note: New Query is Cmd/Ctrl+T — the shortcut the keybindings list always showed — where the menu used to say Cmd/Ctrl+N.',
+    },
+    contrast: {
+      title: 'Notifications read at full contrast',
+      description:
+        'Alert and toast messages are no longer tinted their status colour, which made them harder to read. The message reads in normal high-contrast text and the status colour moves to the icon and a slim rail down the edge.',
+    },
+    security: {
+      title: 'Security and dependency refresh',
+      description:
+        'Every outstanding dependency security advisory is resolved, and the packages Verql is built on are updated to their patched versions.',
+    },
+  },
   v1_3_1: {
     headline: 'Verql comes to Linux and the Microsoft Store',
     summary:

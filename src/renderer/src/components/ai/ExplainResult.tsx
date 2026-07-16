@@ -1,7 +1,7 @@
 import { useCallback, useEffect } from 'react'
 import { Sparkles, Copy, RefreshCcw, MessageSquarePlus, Square, AlertCircle } from 'lucide-react'
 import { Button } from '@/primitives/forms/Button'
-import { Text } from '@/primitives/typography/Text'
+import { Text, Box } from '@/primitives'
 import { Flex } from '@/primitives/layout/Flex'
 import { MarkdownContent } from '@/components/ai/MarkdownContent'
 import { useTabsStore } from '@/stores/tabs'
@@ -45,7 +45,7 @@ export function ExplainResult({ tabId, explanation }: { tabId: string; explanati
   const display = streamingText || explanation || ''
 
   return (
-    <div className="border-t border-accent/30 bg-bg-secondary shrink-0">
+    <Box className="border-t border-accent/30 bg-bg-secondary shrink-0">
       <Flex align="center" gap="sm" className="px-3 py-1.5 border-b border-border-default/40">
         <Sparkles size={12} className="text-accent" />
         <Text size="xs" className="text-accent font-medium">{t('aiui.explain.explanation')}</Text>
@@ -55,17 +55,17 @@ export function ExplainResult({ tabId, explanation }: { tabId: string; explanati
             : <ModelDurationLabel model={per?.model} durationMs={per?.durationMs} />}
         </Flex>
       </Flex>
-      <div className="px-3 py-2 text-sm text-text-secondary max-h-48 overflow-auto">
+      <Box className="px-3 py-2 text-sm text-text-secondary max-h-48 overflow-auto">
         {per?.error
           ? <ErrorRow message={per.error} />
           : per?.loading && !streamingText
             ? <SkeletonBody />
             : <MarkdownContent content={display} />}
-      </div>
+      </Box>
       {!per?.loading && (explanation || streamingText) ? (
         <ActionBar tabId={tabId} text={display} />
       ) : null}
-    </div>
+    </Box>
   )
 }
 
@@ -103,11 +103,11 @@ function ErrorRow({ message }: { message: string }) {
 
 function SkeletonBody() {
   return (
-    <div className="space-y-1.5 py-1">
-      <div className="h-3 rounded bg-bg-tertiary animate-pulse w-[90%]" />
-      <div className="h-3 rounded bg-bg-tertiary animate-pulse w-[75%]" />
-      <div className="h-3 rounded bg-bg-tertiary animate-pulse w-[60%]" />
-    </div>
+    <Box className="space-y-1.5 py-1">
+      <Box className="h-3 rounded bg-bg-tertiary animate-pulse w-[90%]" />
+      <Box className="h-3 rounded bg-bg-tertiary animate-pulse w-[75%]" />
+      <Box className="h-3 rounded bg-bg-tertiary animate-pulse w-[60%]" />
+    </Box>
   )
 }
 

@@ -4,7 +4,7 @@ import { useConnectionsStore } from '@/stores/connections'
 import { useTabsStore } from '@/stores/tabs'
 import type { ConnectionProfile, DatabaseType } from '@shared/types'
 import {
-  ScrollArea, Container, Stack, Flex, Grid, Divider,
+  Box, ScrollArea, Container, Stack, Flex, Grid, Divider,
   Heading, Text,
   FormField, Input, Select, ColorInput,
   Button
@@ -51,7 +51,7 @@ export function ConnectionFormView({ tabId, editingId }: Props) {
     database: '',
     username: '',
     password: '',
-    color: '#7c6ff7',
+    color: '#7A5CFF',
     ...(existingProfile ?? {})
   })
 
@@ -128,7 +128,7 @@ export function ConnectionFormView({ tabId, editingId }: Props) {
   return (
     <ScrollArea direction="vertical" className="h-full bg-bg-primary">
       <Container size="md" className="py-8">
-        <form onSubmit={handleSubmit}>
+        <Box as="form" onSubmit={handleSubmit}>
           <Stack gap="lg">
             {/* Header */}
             <Stack gap="xs">
@@ -158,7 +158,7 @@ export function ConnectionFormView({ tabId, editingId }: Props) {
                   </FormField>
                   <FormField label={t('connections.form.color')}>
                     <ColorInput
-                      value={String(profile.color ?? '#7c6ff7')}
+                      value={String(profile.color ?? '#7A5CFF')}
                       onChange={(v) => update({ color: v })}
                       presets={COLOR_PRESETS}
                       size="lg"
@@ -256,7 +256,7 @@ export function ConnectionFormView({ tabId, editingId }: Props) {
               </Flex>
             </Flex>
           </Stack>
-        </form>
+        </Box>
       </Container>
     </ScrollArea>
   )

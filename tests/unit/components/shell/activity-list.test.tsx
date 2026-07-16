@@ -29,7 +29,10 @@ describe('ActivityList', () => {
 
   it('filters by kind when a chip is clicked', () => {
     setup()
-    fireEvent.click(screen.getByTitle('Connections'))
+    // By role+name, not title: the chips are ToggleGroup toggles now, so their
+    // name comes from their label. This also asserts they're named at all,
+    // which a getByTitle never did.
+    fireEvent.click(screen.getByRole('button', { name: 'Connections' }))
     expect(screen.getByText('connected-row')).toBeInTheDocument()
     expect(screen.queryByText('q-one')).not.toBeInTheDocument()
     expect(screen.queryByText('debug-line')).not.toBeInTheDocument()
@@ -37,7 +40,7 @@ describe('ActivityList', () => {
 
   it('filters by level when a level chip is clicked', () => {
     setup()
-    fireEvent.click(screen.getByTitle('Errors'))
+    fireEvent.click(screen.getByRole('button', { name: 'Errors' }))
     expect(screen.getByText('q-two')).toBeInTheDocument()
     expect(screen.queryByText('q-one')).not.toBeInTheDocument()
     expect(screen.queryByText('debug-line')).not.toBeInTheDocument()

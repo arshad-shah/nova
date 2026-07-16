@@ -1,4 +1,4 @@
-import { Modal, Input, Button } from '@/primitives'
+import { Modal, Input, Button, Box } from '@/primitives'
 import { useTranslation } from '@/i18n/I18nProvider'
 
 interface Props {
@@ -15,16 +15,16 @@ export function SaveQueryDialog({ open, name, onNameChange, onClose, onConfirm }
   const { t } = useTranslation()
   return (
     <Modal open={open} onClose={onClose}>
-      <form
+      <Box as="form"
         onSubmit={(e) => { e.preventDefault(); onConfirm() }}
         className="p-4 flex flex-col gap-3"
       >
-        <div className="flex flex-col gap-1">
-          <div className="text-sm font-medium">{t('query.save.title')}</div>
-          <div className="text-xs text-text-tertiary">
+        <Box className="flex flex-col gap-1">
+          <Box className="text-sm font-medium">{t('query.save.title')}</Box>
+          <Box className="text-xs text-text-tertiary">
             {t('query.save.description')}
-          </div>
-        </div>
+          </Box>
+        </Box>
         <Input
           autoFocus
           value={name}
@@ -34,15 +34,15 @@ export function SaveQueryDialog({ open, name, onNameChange, onClose, onConfirm }
             if (e.key === 'Escape') onClose()
           }}
         />
-        <div className="flex justify-end gap-2 pt-1">
+        <Box className="flex justify-end gap-2 pt-1">
           <Button type="button" variant="ghost" size="sm" onClick={onClose}>
             {t('query.save.cancel')}
           </Button>
           <Button type="submit" variant="solid" size="sm" disabled={!name.trim()}>
             {t('query.save.save')}
           </Button>
-        </div>
-      </form>
+        </Box>
+      </Box>
     </Modal>
   )
 }

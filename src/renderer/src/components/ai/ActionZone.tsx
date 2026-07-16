@@ -1,4 +1,5 @@
 import { useAIStore } from '@/stores/ai'
+import { Box } from '@/primitives/layout/Box'
 import { ApprovalCardContent } from './ApprovalCard'
 import { PermissionModeRow } from './PermissionModeRow'
 import { ChatInput } from './ChatInput'
@@ -14,10 +15,10 @@ export function ActionZone() {
   const respond = useAIStore((s) => s.respondToApproval)
 
   return (
-    <div className="border-t border-border-default bg-bg-secondary">
+    <Box className="border-t border-border-default bg-bg-secondary">
       {pending ? <ApprovalCardContent approval={pending} onRespond={respond} /> : null}
       <PermissionModeRow />
       <ChatInput />
-    </div>
+    </Box>
   )
 }

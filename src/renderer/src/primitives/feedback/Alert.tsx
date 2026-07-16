@@ -1,82 +1,189 @@
 import React from 'react'
 import { cva, type VariantProps } from 'class-variance-authority'
-import { AlertCircle, CheckCircle2, Info, AlertTriangle, X } from 'lucide-react'
+import { ChevronRight, X } from 'lucide-react'
 import { cn } from '../utils/cn'
-import { Flex } from '../layout/Flex'
-import { Text } from '../typography/Text'
-import { IconButton } from '../forms/Button'
+import { Button, IconButton } from '../forms/Button'
+import { SeverityIcon } from './SeverityIcon'
+import { SEVERITY_SURFACE, SEVERITY_TONE } from './severity'
 
-const alertVariants = cva(
-  'rounded-lg border border-l-4 px-4 py-3 shadow-[var(--shadow-card)]',
-  {
-    variants: {
-      variant: {
-        default: 'bg-bg-elevated border-border-default text-text-primary',
-        success: 'bg-success/5 border-success text-success',
-        error: 'bg-error/5 border-error text-error',
-        warning: 'bg-warning/5 border-warning text-warning',
-        info: 'bg-info/5 border-info text-info',
-      },
+/**
+ * Alert: a message about the content it sits in, or about the app.
+ *
+ * This absorbed `Banner`. The two were the same component with different
+ * padding: Alert was a bordered box with a title and no action, Banner was a
+ * full-width strip with an action and no title, and they had already drifted on
+ * what `info` meant (Alert tinted its text with the accent — purple — while its
+ * border used --color-info; Banner declined to tint info at all). Banner had
+ * zero usages in the app while `AutoCompactBanner` hand-rolled a worse copy of
+ * it, which is the clearest sign it wasn't earning a file.
+ *
+ * The axes follow the system: `tone` is what it MEANS, `variant` is how much of
+ * itself it WEARS. (MUI reached the same split via `severity` + `variant`.)
+ * - `default` — bordered, lightly washed. It belongs to nearby content.
+ * - `filled` — solid, with a rail. The banner case: it spans a region and is
+ *   about the whole app, so it has to hold its own against everything below it.
+ * - `outlined` — the tone in the border only, for an already-busy surface.
+ *
+ * `Toast` stays separate. It floats, it's transient, it expires on a timer —
+ * different job, different look. What it shares is `./severity`, so the family
+ * can't disagree about what a warning is again.
+ */
+const alertVariants = cva('relative flex w-full items-start gap-2.5 border', {
+  variants: {
+    /** What it means. */
+    tone: {
+      neutral: SEVERITY_TONE.neutral,
+      info: SEVERITY_TONE.info,
+      success: SEVERITY_TONE.success,
+      warning: SEVERITY_TONE.warning,
+      error: SEVERITY_TONE.error,
+      // Banner's own, kept: a product announcement is the one message that's
+      // about Verql rather than the user's data, so it wears the brand accent.
+      update: SEVERITY_TONE.update,
     },
-    defaultVariants: {
-      variant: 'default',
+    /**
+     * How much of its colour it wears. Three weights, matching the vocabulary
+     * MUI already taught everyone (`standard` / `filled` / `outlined`).
+     */
+    variant: {
+      default: cn(SEVERITY_SURFACE.subtle, 'rounded-lg px-3.5 py-3 shadow-[var(--shadow-card)]'),
+      // Tighter and denser than `default`: a banner is a strip across a region,
+      // not a card in a column, so it doesn't want a card's padding.
+      filled: cn(SEVERITY_SURFACE.solid, 'rounded-lg border-l-4 border-l-[var(--fb-vc)] px-3 py-2'),
+      // The quietest: the tone lives in the border only, no wash. Still an
+      // opaque surface rather than `transparent` — MUI's outlined is see-through,
+      // but these land over grids and editors, and a transparent fill hands the
+      // decision about whether the text is readable to whatever happens to be
+      // behind it. Outlined means untinted, not unpainted.
+      outlined: cn(
+        'rounded-lg border-[color-mix(in_srgb,var(--fb-vc)_44%,var(--color-border-default))]',
+        'bg-bg-elevated px-3.5 py-3'
+      ),
     },
-  }
-)
+  },
+  defaultVariants: { tone: 'neutral', variant: 'default' },
+})
 
-const variantIcons = {
-  default: Info,
-  success: CheckCircle2,
-  error: AlertCircle,
-  warning: AlertTriangle,
-  info: Info,
-} as const
+export type AlertTone = NonNullable<VariantProps<typeof alertVariants>['tone']>
+export type AlertVariant = NonNullable<VariantProps<typeof alertVariants>['variant']>
 
-const variantTextColor = {
-  default: undefined,
-  success: 'success',
-  error: 'error',
-  warning: 'warning',
-  info: 'accent',
-} as const
-
-export interface AlertProps
-  extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof alertVariants> {
-  title?: string
-  icon?: React.ReactNode
-  onClose?: () => void
+export interface AlertAction {
+  label: string
+  onClick: () => void
 }
 
-export function Alert({ className, variant = 'default', title, icon, onClose, children, ...props }: AlertProps) {
-  const IconComponent = variantIcons[variant ?? 'default']
-  const textColor = variantTextColor[variant ?? 'default']
-  const resolvedIcon = icon !== undefined ? icon : <IconComponent size={16} className="mt-0.5 shrink-0" />
+export interface AlertProps
+  extends Omit<React.HTMLAttributes<HTMLDivElement>, 'title'>,
+    VariantProps<typeof alertVariants> {
+  /** The headline. Optional — most alerts are one line, and then the body takes
+   *  the headline's weight rather than being a muted afterthought under nothing. */
+  title?: string
+  /** Replace the severity mark. `null` removes it. */
+  icon?: React.ReactNode
+  /**
+   * One action, rendered with a chevron — "View details ›".
+   *
+   * A node is still accepted for the cases that genuinely need two buttons
+   * (Compact now / Skip, Run / Decline), but the `{label, onClick}` form is
+   * preferred: it takes the tone colouring automatically and can't drift.
+   */
+  action?: AlertAction | React.ReactNode
+  onClose?: () => void
+  closeLabel?: string
+}
+
+function isAction(a: unknown): a is AlertAction {
+  return typeof a === 'object' && a !== null && 'label' in a && 'onClick' in a
+}
+
+export function Alert({
+  className,
+  tone = 'neutral',
+  variant,
+  title,
+  icon,
+  action,
+  onClose,
+  closeLabel = 'Close alert',
+  children,
+  ...props
+}: AlertProps) {
+  const v = tone ?? 'neutral'
 
   return (
     <div
-      role="alert"
-      className={cn(alertVariants({ variant }), className)}
+      // `alert` interrupts a screen reader; `status` waits its turn. An error or
+      // a warning has earned the interruption, an announcement hasn't.
+      role={v === 'error' || v === 'warning' ? 'alert' : 'status'}
+      className={cn(alertVariants({ tone, variant }), className)}
       {...props}
     >
-      <Flex gap="sm" align="start">
-        {resolvedIcon}
-        <Flex direction="column" gap="xs" className="min-w-0 flex-1">
-          {title && <Text size="sm" weight="medium" color={textColor}>{title}</Text>}
-          {children && <Text size="sm" color={textColor === undefined ? 'secondary' : textColor} className="opacity-90">{children}</Text>}
-        </Flex>
-        {onClose && (
-          <IconButton
-            label="Close alert"
-            variant="ghost"
-            size="xs"
-            onClick={onClose}
-            className="shrink-0 -mr-1 -mt-0.5"
-          >
-            <X size={14} />
-          </IconButton>
+      {/* A touch larger than Toast's 16px. An alert sits in content and has to
+          be found by someone scrolling past it; a toast arrives in front of you
+          and doesn't. The mark is the thing that does the finding. */}
+      {icon === undefined ? (
+        <SeverityIcon severity={v} size={18} />
+      ) : (
+        icon !== null && <span className="shrink-0 text-[var(--fb-vc)]">{icon}</span>
+      )}
+
+      <div className="min-w-0 flex-1">
+        {title && (
+          <p className="text-[length:var(--field-fs-md)] font-semibold leading-snug text-text-primary">
+            {title}
+          </p>
         )}
-      </Flex>
+        {children && (
+          // A plain div, NOT a <Text>. The body is a slot: the query-error view
+          // puts a whole subtree in here — paragraphs, a hint box, a badge, a
+          // disclosure button, a code block — and nesting those inside a <Text>
+          // (a span) put block elements and buttons inside a span.
+          //
+          // The body is the SAME colour as the title, not a step down from it.
+          // The title only summarises; the body is the part that actually says
+          // what happened, and it's what you're being asked to read. Stepping
+          // it down to `secondary` halved its contrast (12.4:1 -> 6.1:1) to buy
+          // a hierarchy that weight (600 vs 400) and size (fs-md vs fs-sm)
+          // already provide for free.
+          //
+          // Identical to Toast's, deliberately — the same two roles get the
+          // same two values in both.
+          <div
+            className={cn(
+              'text-[length:var(--field-fs-sm)] leading-relaxed text-text-primary',
+              title && 'mt-1'
+            )}
+          >
+            {children}
+          </div>
+        )}
+      </div>
+
+      {isAction(action) ? (
+        <Button
+          variant="bare"
+          size="none"
+          onClick={action.onClick}
+          className="mt-px flex shrink-0 items-center gap-0.5 px-1 text-[length:var(--field-fs-sm)] font-semibold text-[var(--fb-vc)] hover:brightness-125"
+        >
+          {action.label}
+          <ChevronRight size={13} />
+        </Button>
+      ) : (
+        action && <div className="flex shrink-0 items-center gap-1.5">{action}</div>
+      )}
+
+      {onClose && (
+        <IconButton
+          label={closeLabel}
+          variant="ghost"
+          size="xs"
+          onClick={onClose}
+          className="-mt-0.5 -mr-1 shrink-0 text-text-muted hover:text-text-primary"
+        >
+          <X size={14} />
+        </IconButton>
+      )}
     </div>
   )
 }

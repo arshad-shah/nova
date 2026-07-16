@@ -35,30 +35,29 @@ describe('Select', () => {
     expect(screen.getByRole('combobox')).toHaveTextContent('Pick one')
   })
 
+  // The trigger is sized by the shared `--field-*` density tokens now, not by
+  // its own hardcoded heights. That's the point of the change: with h-9 baked
+  // in, Select was the one field that ignored compact/comfortable mode.
   it('applies md size by default', () => {
     render(<Select options={testOptions} value="" onChange={noop} />)
+    expect(screen.getByRole('combobox')).toHaveClass('[--field-ctl-h:var(--field-h-md)]')
+  })
+
+  it.each(['xs', 'sm', 'lg', 'xl'] as const)('applies %s size from the density scale', (size) => {
+    render(<Select options={testOptions} value="" onChange={noop} size={size} />)
+    expect(screen.getByRole('combobox')).toHaveClass(`[--field-ctl-h:var(--field-h-${size})]`)
+  })
+
+  it('marks the trigger invalid when state is error', () => {
+    render(<Select options={testOptions} value="" onChange={noop} state="error" />)
     const trigger = screen.getByRole('combobox')
-    expect(trigger).toHaveClass('h-9')
+    expect(trigger).toHaveClass('border-error')
+    expect(trigger).toHaveAttribute('aria-invalid', 'true')
   })
 
-  it('applies xs size', () => {
-    render(<Select options={testOptions} value="" onChange={noop} size="xs" />)
-    expect(screen.getByRole('combobox')).toHaveClass('h-7')
-  })
-
-  it('applies sm size', () => {
-    render(<Select options={testOptions} value="" onChange={noop} size="sm" />)
-    expect(screen.getByRole('combobox')).toHaveClass('h-8')
-  })
-
-  it('applies lg size', () => {
-    render(<Select options={testOptions} value="" onChange={noop} size="lg" />)
-    expect(screen.getByRole('combobox')).toHaveClass('h-10')
-  })
-
-  it('applies xl size', () => {
-    render(<Select options={testOptions} value="" onChange={noop} size="xl" />)
-    expect(screen.getByRole('combobox')).toHaveClass('h-12')
+  it('does not mark the trigger invalid by default', () => {
+    render(<Select options={testOptions} value="" onChange={noop} />)
+    expect(screen.getByRole('combobox')).not.toHaveAttribute('aria-invalid')
   })
 
   it('is disabled when disabled prop is true', () => {
@@ -85,15 +84,38 @@ describe('Checkbox', () => {
     expect(handler).toHaveBeenCalledTimes(1)
   })
 
-  it('applies styling classes', () => {
-    // Box size is density-token driven: every size shares the same base
-    // width/height class (`*-[var(--cb-size)]`) and differs only by the
-    // `--cb-size` var it sets. md maps to `--check-md`.
+  it('applies styling classes to the visual companion', () => {
+    // The input is transparent and only carries behaviour; the looks live on
+    // the aria-hidden companion beside it. Box size is density-token driven:
+    // every size shares the same width/height class (`*-[var(--cb-size)]`) and
+    // differs only by the `--cb-size` var it sets. md maps to `--check-md`.
+    const { container } = render(<Checkbox />)
+    const companion = container.querySelector('[aria-hidden="true"]')
+    expect(companion).toHaveClass('h-[var(--cb-size)]')
+    expect(companion).toHaveClass('w-[var(--cb-size)]')
+    expect(companion).toHaveClass('[--cb-size:var(--check-md)]')
+  })
+
+  it('keeps the input as the hit target over the companion', () => {
+    // If the input stops covering the box, clicking the box stops toggling it.
     const { container } = render(<Checkbox />)
     const input = container.querySelector('input')
-    expect(input).toHaveClass('h-[var(--cb-size)]')
-    expect(input).toHaveClass('w-[var(--cb-size)]')
-    expect(input).toHaveClass('[--cb-size:var(--check-md)]')
+    expect(input).toHaveClass('absolute')
+    expect(input).toHaveClass('inset-0')
+    expect(input).toHaveClass('opacity-0')
+  })
+
+  it('renders both marks so toggling cannot shift layout', () => {
+    const { container } = render(<Checkbox />)
+    expect(container.querySelector('[data-mark="tick"]')).toBeInTheDocument()
+    expect(container.querySelector('[data-mark="dash"]')).toBeInTheDocument()
+  })
+
+  it('supports indeterminate via ref', () => {
+    const ref = createRef<HTMLInputElement>()
+    render(<Checkbox ref={ref} />)
+    ref.current!.indeterminate = true
+    expect(ref.current!.indeterminate).toBe(true)
   })
 
   it('forwards ref', () => {

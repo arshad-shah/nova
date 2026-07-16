@@ -14,8 +14,10 @@ import {
   size as floatingSize,
 } from '@floating-ui/react'
 import { cva, type VariantProps } from 'class-variance-authority'
-import { Check, ChevronDown } from 'lucide-react'
+import { Check, ChevronDown, Search, X } from 'lucide-react'
 import { cn } from '../utils/cn'
+import { fieldRowVariants, fieldSizeVariants } from './field-variants'
+import { Input } from './Input'
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -54,29 +56,40 @@ function flattenOptions(items: SelectItem[]): SelectOption[] {
 /*  Trigger variants (matches Input sizing)                            */
 /* ------------------------------------------------------------------ */
 
-const triggerVariants = cva(
-  'w-full flex items-center justify-between gap-2 border border-border-default bg-[linear-gradient(180deg,var(--color-input-gradient-top),var(--color-input-gradient-bottom)),var(--color-bg-tertiary)] text-text-primary shadow-[var(--shadow-input-inset)] transition-all duration-(--transition-fast) focus:outline-none focus:shadow-[var(--shadow-focus-glow),var(--shadow-input-inset)] hover:border-border-strong disabled:pointer-events-none disabled:opacity-50 cursor-pointer',
-  {
-    variants: {
-      size: {
-        xs: 'h-7 px-2 text-xs rounded',
-        sm: 'h-8 px-2.5 text-xs rounded',
-        md: 'h-9 px-3 text-sm rounded-md',
-        lg: 'h-10 px-4 text-sm rounded-md',
-        xl: 'h-12 px-5 text-base rounded-lg',
-      },
-    },
-    defaultVariants: {
-      size: 'md',
-    },
-  }
-)
+/**
+ * The trigger is the field shell again — it was the fourth hand-made copy of
+ * it, with its own hardcoded heights, which meant Select silently ignored the
+ * density setting that rescales every other field. `fieldRowVariants` is that
+ * shell, already shared by FilePathInput and FileContentInput.
+ *
+ * Composed at call time rather than baked into a cva base: `fieldRowVariants()`
+ * applies its own default size, so putting it in a static base would emit
+ * `[--field-ctl-h:…]` twice and leave which one wins up to stylesheet order.
+ */
+export type SelectSize = keyof typeof fieldSizeVariants
+export type SelectState = 'default' | 'error' | 'success'
+
+/** Border + ring per validity. Mirrors Input's `state` exactly — Select and
+ *  Input are siblings, and a form couldn't mark a select invalid at all before
+ *  this, because it had no such prop. */
+const TRIGGER_STATE: Record<SelectState, string> = {
+  default:
+    'border-border-default hover:border-border-strong focus:border-accent focus:shadow-[var(--shadow-focus-glow),var(--shadow-input-inset)]',
+  error: 'border-error focus:shadow-[var(--shadow-error-ring),var(--shadow-input-inset)]',
+  success: 'border-success focus:shadow-[var(--shadow-success-ring),var(--shadow-input-inset)]',
+}
+
+const TRIGGER_BASE =
+  'w-full cursor-pointer justify-between focus:outline-none disabled:pointer-events-none disabled:opacity-50'
 
 /* ------------------------------------------------------------------ */
 /*  Props                                                              */
 /* ------------------------------------------------------------------ */
 
-export interface SelectProps extends VariantProps<typeof triggerVariants> {
+export interface SelectProps {
+  size?: SelectSize
+  /** Validity styling. The message belongs to `FormField`, as with Input. */
+  state?: SelectState
   id?: string
   value: string
   onChange: (value: string) => void
@@ -87,6 +100,12 @@ export interface SelectProps extends VariantProps<typeof triggerVariants> {
   disabled?: boolean
   searchable?: boolean
   searchPlaceholder?: string
+  /** Leading slot in the trigger — an icon that says what's being chosen. */
+  prefix?: React.ReactNode
+  /** Offer to unset the value. Only shown once something is selected. */
+  clearable?: boolean
+  /** Called to unset the value. Required for `clearable` to do anything. */
+  onClear?: () => void
   className?: string
   'aria-label'?: string
 }
@@ -108,7 +127,11 @@ export function Select({
   disabled = false,
   searchable = false,
   searchPlaceholder = 'Search\u2026',
+  prefix,
+  clearable = false,
+  onClear,
   size,
+  state,
   className,
   'aria-label': ariaLabel,
 }: SelectProps) {
@@ -311,6 +334,8 @@ export function Select({
 
   /* ---- Render helpers ---- */
 
+  const clearShown = clearable && Boolean(selectedOption) && !disabled && Boolean(onClear)
+
   function renderTriggerContent() {
     if (renderValue) return renderValue(selectedOption)
     if (selectedOption) return <span className="truncate">{selectedOption.label}</span>
@@ -322,7 +347,10 @@ export function Select({
     return (
       <>
         <span className="truncate flex-1">{opt.label}</span>
-        {state.selected && <Check size={14} className="shrink-0 text-text-accent" />}
+        {/* `text-accent`, not `text-text-accent`: the latter is not a token, so
+            the class emitted no CSS and this tick quietly inherited body colour
+            instead of the accent. */}
+        {state.selected && <Check size={14} className="shrink-0 text-accent" />}
       </>
     )
   }
@@ -367,20 +395,43 @@ export function Select({
         id={id}
         ref={refs.setReference}
         disabled={disabled}
-        className={cn(triggerVariants({ size }))}
+        className={cn(fieldRowVariants({ size }), TRIGGER_BASE, TRIGGER_STATE[state ?? 'default'])}
         role="combobox"
         aria-haspopup="listbox"
         aria-expanded={isOpen}
+        aria-invalid={state === 'error' || undefined}
         aria-label={ariaLabel}
         {...getReferenceProps({
           onKeyDown: handleKeyDown,
         })}
       >
+        {prefix && <span className="flex shrink-0 items-center text-text-muted">{prefix}</span>}
         {renderTriggerContent()}
+        {clearShown && (
+          // A span, not a button: this trigger is already a <button> and HTML
+          // forbids nesting one inside another — React renders it, the browser
+          // un-nests it, and the click handler is quietly lost. The clear
+          // affordance is reachable another way (Backspace on the open list),
+          // so it's aria-hidden rather than a fake control.
+          <span
+            role="presentation"
+            aria-hidden="true"
+            onClick={(e) => {
+              // Without this the click bubbles to the trigger and opens the
+              // list at the same moment the value is cleared.
+              e.stopPropagation()
+              onClear?.()
+            }}
+            className="ml-auto flex shrink-0 items-center text-text-muted transition-colors hover:text-text-primary"
+          >
+            <X size={13} />
+          </span>
+        )}
         <ChevronDown
           size={14}
           className={cn(
             'shrink-0 text-text-muted transition-transform duration-(--transition-fast)',
+            !clearShown && 'ml-auto',
             isOpen && 'rotate-180'
           )}
         />
@@ -407,14 +458,18 @@ export function Select({
             >
               {searchable && (
                 <div className="px-2 pt-2 pb-1">
-                  <input
+                  {/* A real Input rather than a hand-rolled one — it was the
+                      fifth copy of the field shell, with its own hardcoded
+                      height that ignored the density setting. */}
+                  <Input
                     ref={searchInputRef}
+                    size="xs"
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onKeyDown={handleKeyDown}
                     placeholder={searchPlaceholder}
-                    className="w-full h-7 px-2 text-xs rounded bg-bg-tertiary border border-border-default text-text-primary placeholder:text-text-tertiary outline-none focus:shadow-[var(--shadow-focus-glow)]"
+                    prefix={<Search size={12} />}
                     aria-label="Filter options"
                   />
                 </div>

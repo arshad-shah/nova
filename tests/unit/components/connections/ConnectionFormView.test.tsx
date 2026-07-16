@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { ConnectionFormView } from '../../../../src/renderer/src/components/connections/ConnectionFormView'
 
@@ -99,11 +99,26 @@ describe('ConnectionFormView', () => {
     })
   })
 
-  it('renders SSL switch for postgresql', async () => {
+  // A checkbox, not a switch. Every boolean in this form writes to a draft that
+  // only persists on Save and that Cancel discards, so a switch would promise
+  // an immediacy it doesn't have. Settings keep their switches — those apply
+  // the moment you flip them.
+  it('renders the SSL field for postgresql as a checkbox, not a switch', async () => {
     render(<ConnectionFormView tabId="conn-form-new" />)
     await waitFor(() => {
-      expect(screen.getByRole('switch', { name: /ssl/i })).toBeTruthy()
+      expect(screen.getByRole('checkbox', { name: /ssl/i })).toBeTruthy()
     })
+    expect(screen.queryByRole('switch', { name: /ssl/i })).toBeNull()
+  })
+
+  it('leaves the SSL checkbox clickable via its label text', async () => {
+    render(<ConnectionFormView tabId="conn-form-new" />)
+    const box = await screen.findByRole('checkbox', { name: /ssl/i })
+    expect((box as HTMLInputElement).checked).toBe(false)
+    // The label wraps the box, so the browser forwards this to the input once —
+    // no hand-reconciled row onClick.
+    fireEvent.click(screen.getByText(/ssl/i))
+    expect((box as HTMLInputElement).checked).toBe(true)
   })
 
   it('renders cancel and save buttons', () => {

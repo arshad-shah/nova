@@ -11,6 +11,10 @@ coverage/
 .worktrees/
 .superpowers/
 storybook-static/
+# Local agent state: machine-specific settings and nested git worktrees.
+.claude/
+# Browser-automation scratch output (screenshots, console/page dumps).
+.playwright-mcp/
 
 # Generated SQLite test database (rebuild with scripts/make-sqlite-testdb.sh)
 docker/testdb.sqlite

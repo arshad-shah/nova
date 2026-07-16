@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Download, X } from 'lucide-react'
-import { Modal, Button, Checkbox, Text, Flex, Spinner, Stack, Box } from '@/primitives'
+import { Modal, Button, Checkbox, Text, Flex, Spinner, Stack, Box, SegmentedControl } from '@/primitives'
 import { IPC_CHANNELS } from '@shared/ipc'
 import type { ExportFormatInfo } from '@shared/export-import'
 import { useTranslation } from '@/i18n/I18nProvider'
@@ -62,26 +62,30 @@ export function ExportModal({ tableName, connectionId, onClose }: Props) {
       <Stack gap="md" className="p-4">
         <Box>
           <Text size="xs" color="muted" as="p" className="mb-2">{t('shell.exportModal.format')}</Text>
-          <Flex direction="row" gap="sm">
-            {formats.map(f => (
-              <Button
-                key={f.format}
-                variant={format === f.format ? 'outline' : 'ghost'}
-                size="sm"
-                onClick={() => setFormat(f.format)}
-                className={`flex-1 ${format === f.format ? 'border-accent text-accent bg-accent/10' : ''}`}
-              >
-                {f.displayName}
-              </Button>
-            ))}
-          </Flex>
+          <SegmentedControl
+            size="sm"
+            stretch
+            tone="accent"
+            label={t('shell.exportModal.format')}
+            // Null until the driver's formats arrive, and then no segment is
+            // selected — which is correct, and the control stays keyboard
+            // reachable because it falls back to focusing its first option.
+            value={format ?? ''}
+            onChange={setFormat}
+            options={formats.map(f => ({ value: f.format, label: f.displayName }))}
+          />
         </Box>
 
+        {/* A real <label>, not a click-to-toggle row. The row version worked,
+            but only by luck: its onClick and the box's own onChange both set the
+            same state, and it survived solely because onChange fires last and
+            sets an absolute value rather than toggling. A label lets the browser
+            forward the click to the input exactly once. */}
         {selected?.supportsSchema && (
-          <Flex direction="row" align="center" gap="sm" className="cursor-pointer" onClick={() => setIncludeSchema(v => !v)}>
+          <label className="flex cursor-pointer items-center gap-2 self-start">
             <Checkbox checked={includeSchema} onChange={e => setIncludeSchema(e.target.checked)} />
             <Text size="sm" color="secondary">{t('shell.exportModal.includeCreateTable')}</Text>
-          </Flex>
+          </label>
         )}
 
         {result && (

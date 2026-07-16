@@ -3,6 +3,7 @@ import { ChevronRight, ChevronDown, Table2 } from 'lucide-react'
 import { useUiStore } from '@/stores/ui'
 import { useSchemaStore } from '@/stores/schema'
 import { ContextMenu } from '@/primitives/surfaces/ContextMenu'
+import { Box, Card, Text, Button } from '@/primitives'
 import { ColumnRow } from './ColumnRow'
 import { HighlightedText } from './HighlightedText'
 import { TableHoverActions } from './TableHoverActions'
@@ -69,19 +70,16 @@ export function TableNode({
   // ── Shared header content ──────────────────────────────────────────────────
 
   const chevron = isExpanded ? (
-    <ChevronDown size={12} style={{ color: 'var(--color-text-tertiary)', flexShrink: 0 }} />
+    <ChevronDown size={12} className="text-text-muted shrink-0" strokeWidth={1.8} />
   ) : (
-    <ChevronRight size={12} style={{ color: 'var(--color-text-tertiary)', flexShrink: 0 }} />
+    <ChevronRight size={12} className="text-text-muted shrink-0" strokeWidth={1.8} />
   )
 
   const rowCountDisplay =
     rowCount !== undefined ? (
-      <span
-        className="text-xs shrink-0"
-        style={{ color: 'var(--color-text-secondary)' }}
-      >
+      <Box as="span" className="text-xs shrink-0 text-text-secondary">
         {formatCompactNumber(rowCount)}
-      </span>
+      </Box>
     ) : null
 
   // ── Collapsed view ─────────────────────────────────────────────────────────
@@ -89,22 +87,22 @@ export function TableNode({
   if (!isExpanded) {
     return (
       <ContextMenu items={menuItems}>
-        <button
-          className="group w-full flex items-center gap-1.5 rounded text-left transition-colors duration-[var(--transition-fast)]"
+        <Button
+          variant="bare"
+          size="none"
+          className="group w-full flex items-center gap-1.5 rounded text-left transition-colors duration-[var(--transition-fast)] hover:bg-hover"
           style={{ paddingLeft, paddingRight: 4, paddingTop: 2, paddingBottom: 2 }}
-          onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--color-hover)')}
-          onMouseLeave={(e) => (e.currentTarget.style.background = '')}
           onClick={handleToggle}
         >
           {chevron}
-          <Table2 size={14} style={{ color: 'var(--color-accent)', flexShrink: 0 }} />
-          <span
-            className="flex-1 truncate min-w-0 text-xs"
-            style={{ color: 'var(--color-text-primary)' }}
+          <Table2 size={14} className="text-accent shrink-0" strokeWidth={1.8} />
+          <Box
+            as="span"
+            className="flex-1 truncate min-w-0 text-xs text-text-primary"
             title={tableName}
           >
             <HighlightedText text={tableName} query={highlightQuery ?? ''} />
-          </span>
+          </Box>
           {rowCountDisplay}
 
           <TableHoverActions
@@ -114,7 +112,7 @@ export function TableNode({
             objectNoun={nouns.object.one}
             onCopySampleQuery={copySampleQuery}
           />
-        </button>
+        </Button>
       </ContextMenu>
     )
   }
@@ -123,69 +121,52 @@ export function TableNode({
 
   return (
     <ContextMenu items={menuItems}>
-      <div
-        className="mb-1 rounded-lg overflow-hidden"
+      {/* The comment above already called this a contained card — it just
+          predated Card being able to express it. */}
+      <Card
+        padding="none"
+        className="mb-1 overflow-hidden"
         style={{
           marginLeft: paddingLeft,
           marginRight: 4,
-          border: '1px solid var(--color-border-default)',
-          background: 'var(--color-bg-secondary)',
         }}
       >
         {/* Card header button */}
-        <button
-          className="group w-full flex items-center gap-1.5 text-left transition-colors duration-[var(--transition-fast)]"
+        <Button
+          variant="bare"
+          size="none"
+          className="group w-full flex items-center gap-1.5 text-left transition-colors duration-[var(--transition-fast)] bg-bg-tertiary border-b border-border-default hover:bg-[color-mix(in_srgb,var(--color-hover)_60%,var(--color-bg-tertiary))]"
           style={{
             paddingLeft: 8,
             paddingRight: 6,
             paddingTop: 3,
             paddingBottom: 3,
-            background: 'var(--color-bg-tertiary)',
-            borderBottom: '1px solid var(--color-border-default)',
           }}
-          onMouseEnter={(e) =>
-            (e.currentTarget.style.background = 'color-mix(in srgb, var(--color-hover) 60%, var(--color-bg-tertiary))')
-          }
-          onMouseLeave={(e) =>
-            (e.currentTarget.style.background = 'var(--color-bg-tertiary)')
-          }
           onClick={handleToggle}
         >
           {chevron}
-          <Table2 size={14} style={{ color: 'var(--color-accent)', flexShrink: 0 }} />
-          <span
-            className="flex-1 truncate min-w-0 text-xs font-medium"
-            style={{ color: 'var(--color-text-primary)' }}
+          <Table2 size={14} className="text-accent shrink-0" strokeWidth={1.8} />
+          <Box
+            as="span"
+            className="flex-1 truncate min-w-0 text-xs font-medium text-text-primary"
             title={tableName}
           >
             <HighlightedText text={tableName} query={highlightQuery ?? ''} />
-          </span>
+          </Box>
 
           {/* Stat pills */}
-          <span className="flex items-center gap-1 shrink-0">
+          <Box as="span" className="flex items-center gap-1 shrink-0">
             {rowCount !== undefined && (
-              <span
-                className="px-2 py-0.5 rounded-full text-[10px]"
-                style={{
-                  background: 'var(--color-bg-elevated)',
-                  color: 'var(--color-text-secondary)',
-                }}
-              >
+              <Box as="span" className="px-2 py-0.5 rounded-full text-[10px] bg-bg-elevated text-text-secondary">
                 {t('explorer.table.rows', { value: formatCompactNumber(rowCount), records: rowCount === 1 ? nouns.record.one : nouns.record.many })}
-              </span>
+              </Box>
             )}
             {tableIndexes.length > 0 && (
-              <span
-                className="px-2 py-0.5 rounded-full text-[10px]"
-                style={{
-                  background: 'var(--color-bg-elevated)',
-                  color: 'var(--color-text-secondary)',
-                }}
-              >
+              <Box as="span" className="px-2 py-0.5 rounded-full text-[10px] bg-bg-elevated text-text-secondary">
                 {t('explorer.table.indexes', { value: tableIndexes.length, n: tableIndexes.length })}
-              </span>
+              </Box>
             )}
-          </span>
+          </Box>
 
           <TableHoverActions
             canViewData={canViewData}
@@ -194,29 +175,26 @@ export function TableNode({
             objectNoun={nouns.object.one}
             onExportTable={onExportTable ? () => onExportTable(tableName) : undefined}
           />
-        </button>
+        </Button>
 
         {/* Column rows */}
-        <div className="py-1">
+        <Box className="py-1">
           {tableColumns.length === 0 ? (
-            <p
-              className="px-3 py-1 text-xs"
-              style={{ color: 'var(--color-text-secondary)' }}
-            >
+            <Text as="p" className="px-3 py-1 text-xs text-text-secondary">
               {/* Distinguish "loaded, but this driver has no columns" (e.g. Redis)
                   from "still fetching" — otherwise schema-less drivers show a
                   perpetual "Loading columns…". */}
               {columns.has(cacheKey)
                 ? t('explorer.noColumns', { fields: nouns.field.many })
                 : t('explorer.loading.columns', { fields: nouns.field.many })}
-            </p>
+            </Text>
           ) : (
             tableColumns.map((col) => (
               <ColumnRow key={col.name} column={col} tableName={tableName} connectionId={connectionId} />
             ))
           )}
-        </div>
-      </div>
+        </Box>
+      </Card>
     </ContextMenu>
   )
 }

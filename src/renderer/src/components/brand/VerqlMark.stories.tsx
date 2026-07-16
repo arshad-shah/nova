@@ -1,5 +1,4 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { ThemeProvider } from '@/primitives/theme/ThemeProvider'
 import { VerqlMark } from './VerqlMark'
 
 const meta: Meta<typeof VerqlMark> = {
@@ -8,16 +7,6 @@ const meta: Meta<typeof VerqlMark> = {
   args: {
     size: 96,
   },
-  // VerqlMark's `auto` variant reads the active theme via useTheme(), which
-  // requires the app ThemeProvider in the tree (Storybook's toolbar only sets
-  // the data-theme attribute, not the React context).
-  decorators: [
-    (Story) => (
-      <ThemeProvider>
-        <Story />
-      </ThemeProvider>
-    ),
-  ],
 }
 export default meta
 type Story = StoryObj<typeof meta>

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { ChevronDown, ChevronRight } from 'lucide-react'
-import { Alert, Box, Flex, Text, Badge } from '@/primitives'
+import { Alert, Box, Flex, Text, Badge, Button } from '@/primitives'
 import { parseDbError } from '@/lib/db-error'
 import { useTranslation } from '@/i18n/I18nProvider'
 
@@ -31,7 +31,7 @@ export function QueryErrorView({ error, dbType }: Props) {
 
   return (
     <Box className="p-4 overflow-auto h-full">
-      <Alert variant="error" title={parsed.title} className="max-w-2xl">
+      <Alert tone="error" title={parsed.title} className="max-w-2xl">
         <Flex direction="column" gap="sm">
           {/* Friendly message — primary action signal. */}
           <Text size="sm" as="p" className="leading-relaxed">{parsed.message}</Text>
@@ -48,18 +48,20 @@ export function QueryErrorView({ error, dbType }: Props) {
           {/* Footer: stable code chip (analytics + bug reports) + raw disclosure. */}
           <Flex align="center" justify="between" gap="sm" className="pt-1">
             {!isUnknown && (
-              <Badge variant="default" size="sm" className="font-mono text-[10px] uppercase">
+              <Badge tone="default" size="sm" className="font-mono text-[10px] uppercase">
                 {parsed.code}
               </Badge>
             )}
-            <button
+            <Button
+              variant="bare"
+              size="none"
               type="button"
               onClick={() => setShowRaw(s => !s)}
               className="inline-flex items-center gap-1 text-[11px] text-text-muted hover:text-text-primary transition-colors ml-auto"
             >
               {showRaw ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
               {showRaw ? t('query.error.hideDriverMessage') : t('query.error.showDriverMessage')}
-            </button>
+            </Button>
           </Flex>
 
           {showRaw && (

@@ -1,6 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { fn } from 'storybook/test'
-import { ThemeProvider } from '@/primitives/theme/ThemeProvider'
 import { TransactionToolbar } from './TransactionToolbar'
 
 const meta: Meta<typeof TransactionToolbar> = {
@@ -8,11 +7,9 @@ const meta: Meta<typeof TransactionToolbar> = {
   component: TransactionToolbar,
   decorators: [
     (Story) => (
-      <ThemeProvider>
-        <div className="p-4 bg-bg-primary">
-          <Story />
-        </div>
-      </ThemeProvider>
+      <div className="p-4 bg-bg-primary">
+        <Story />
+      </div>
     ),
   ],
   args: {

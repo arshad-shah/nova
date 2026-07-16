@@ -5,7 +5,7 @@
  * single source of truth. Edit the SVG, the change propagates to every
  * consumer. The component just `<img>`s the right pre-tinted variant:
  *
- *   color  — brand palette (frost + mint). Use on dark surfaces.
+ *   color  — brand palette (purple + cyan ribbon). Use on dark surfaces.
  *   light  — frost (white-ish) silhouette. Use on dark surfaces.
  *   dark   — midnight silhouette. Use on light surfaces.
  *   auto   — picks light/dark from the active theme's `type` (default).

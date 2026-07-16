@@ -1,5 +1,4 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { ThemeProvider } from '@/primitives/theme/ThemeProvider'
 import { ChartPanel } from './ChartPanel'
 import type { QueryResult } from '@shared/types'
 
@@ -47,14 +46,10 @@ const meta: Meta<typeof ChartPanel> = {
   title: 'Components/Charts/ChartPanel',
   component: ChartPanel,
   decorators: [
-    // ChartPanel renders ChartView, which reads the active theme via useTheme()
-    // — that needs the app ThemeProvider in the tree.
     (Story) => (
-      <ThemeProvider>
-        <div style={{ width: 720, height: 420 }}>
-          <Story />
-        </div>
-      </ThemeProvider>
+      <div style={{ width: 720, height: 420 }}>
+        <Story />
+      </div>
     ),
   ],
 }

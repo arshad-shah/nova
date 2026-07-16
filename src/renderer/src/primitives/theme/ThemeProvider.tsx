@@ -61,10 +61,10 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     )
     const safe = (id: string, fallback: string) => (selectable.has(id) ? id : fallback)
     if (appearanceMode === 'light') return safe(lightTheme, 'lab')
-    if (appearanceMode === 'dark') return safe(darkTheme, 'nightshift')
+    if (appearanceMode === 'dark') return safe(darkTheme, 'ion')
     // system
     const wantDark = systemPrefersDark
-    return wantDark ? safe(darkTheme, 'nightshift') : safe(lightTheme, 'lab')
+    return wantDark ? safe(darkTheme, 'ion') : safe(lightTheme, 'lab')
   }, [appearanceMode, lightTheme, darkTheme, systemPrefersDark, themes])
 
   // Mirror the resolved theme back into `appearance.theme` so other code

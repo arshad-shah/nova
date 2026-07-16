@@ -53,8 +53,8 @@ export function WindowControls() {
   // states (subtle for min/max, Windows red for close) via className — twMerge
   // lets these win over the variant defaults.
   const base = 'no-drag w-12 h-full rounded-none text-text-muted focus-visible:shadow-none'
-  const minMax = `${base} hover:bg-white/10 hover:text-text-primary focus-visible:bg-white/10 focus-visible:text-text-primary`
-  const closeBtn = `${base} hover:bg-[#e81123] hover:text-white focus-visible:bg-[#e81123] focus-visible:text-white`
+  const minMax = `${base} hover:bg-active hover:text-text-primary focus-visible:bg-active focus-visible:text-text-primary`
+  const closeBtn = `${base} hover:bg-window-close hover:text-white focus-visible:bg-window-close focus-visible:text-white`
 
   return (
     <div className="no-drag flex items-stretch h-full">

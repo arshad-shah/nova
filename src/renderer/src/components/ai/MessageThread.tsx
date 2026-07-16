@@ -3,6 +3,8 @@ import { Sparkles } from 'lucide-react'
 import { useAIStore } from '@/stores/ai'
 import { useConnectionsStore, useActiveProfile } from '@/stores/connections'
 import { ScrollArea } from '@/primitives/layout/ScrollArea'
+import { Box } from '@/primitives/layout/Box'
+import { Button } from '@/primitives/forms/Button'
 import { Text } from '@/primitives/typography/Text'
 import { MessageBubble } from './MessageBubble'
 import { ToolCallCard } from './ToolCallCard'
@@ -30,29 +32,31 @@ function EmptyState() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center h-full gap-4 px-4 text-center">
-      <div className="flex flex-col items-center gap-2">
-        <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-accent/10 text-accent ring-1 ring-border-default">
+    <Box className="flex flex-col items-center justify-center h-full gap-4 px-4 text-center">
+      <Box className="flex flex-col items-center gap-2">
+        <Box as="span" className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-accent/10 text-accent ring-1 ring-border-default">
           <Sparkles className="h-4 w-4" />
-        </span>
+        </Box>
         <Text size="sm" color="secondary">{t('aiui.chat.emptyPrompt')}</Text>
-      </div>
-      <div className="flex flex-wrap justify-center gap-1.5 max-w-[300px]">
+      </Box>
+      <Box className="flex flex-wrap justify-center gap-1.5 max-w-[300px]">
         {SUGGESTIONS.map(key => {
           const text = t(key)
           return (
-            <button
+            <Button
+              variant="bare"
+              size="none"
               key={key}
               type="button"
               onClick={() => ask(text)}
               className="rounded-md border border-border-default px-2 py-1 text-xs text-text-secondary hover:bg-hover hover:text-text-primary transition-colors"
             >
               {text}
-            </button>
+            </Button>
           )
         })}
-      </div>
-    </div>
+      </Box>
+    </Box>
   )
 }
 
@@ -95,7 +99,7 @@ export function MessageThread() {
         return <MessageBubble key={msg.id} message={msg} />
       })}
       <StreamingResponse />
-      <div ref={bottomRef} />
+      <Box ref={bottomRef} />
     </ScrollArea>
   )
 }

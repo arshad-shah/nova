@@ -1,8 +1,74 @@
 import type { RegisteredTheme } from '../../sdk/theme-registry'
 
-// Nightshift is intentionally absent from this plugin — it's the app's
-// brand theme and ships with the shell. See `stores/themes.ts` (renderer)
-// and `primitives/theme/baseline.css` for its definition.
+// Ion is intentionally absent from this plugin — it's the app's brand theme
+// *and* its default, so it ships with the shell rather than depending on a
+// plugin activating. See `stores/themes.ts` (renderer) and
+// `primitives/theme/baseline.css` for its definition.
+//
+// Nightshift was the brand theme before Ion. It's preserved here as an
+// ordinary selectable theme so existing users keep their palette.
+
+const NIGHTSHIFT_CSS = `
+[data-theme="nightshift"] {
+  --color-bg-primary: var(--raw-ink-900);
+  --color-bg-secondary: var(--raw-ink-800);
+  --color-bg-tertiary: var(--raw-ink-700);
+  --color-bg-elevated: var(--raw-ink-600);
+
+  --color-text-primary: var(--raw-ink-50);
+  --color-text-secondary: var(--raw-ink-200);
+  --color-text-tertiary: var(--raw-ink-300);
+  --color-text-disabled: var(--raw-ink-400);
+  --color-text-inverse: var(--raw-ink-900);
+
+  --color-border-default: rgba(232, 236, 243, 0.08);
+  --color-border-subtle: rgba(232, 236, 243, 0.04);
+  --color-border-strong: rgba(232, 236, 243, 0.16);
+
+  --color-accent: var(--raw-mint-400);
+  --color-accent-hover: var(--raw-mint-300);
+  --color-accent-muted: var(--raw-mint-900);
+  --color-accent-emphasis: var(--raw-mint-500);
+
+  --color-success: var(--raw-mint-400);
+  --color-warning: var(--raw-amber-500);
+  --color-error: var(--raw-red-500);
+  --color-info: var(--raw-blue-500);
+
+  --color-hover: rgba(232, 236, 243, 0.05);
+  --color-active: rgba(232, 236, 243, 0.1);
+  --color-focus-ring: var(--raw-mint-400);
+  --color-disabled: var(--raw-ink-400);
+
+  --shadow-input-inset: inset 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-elevated: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-dropdown: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --shadow-focus-glow: 0 0 0 3px rgba(43, 217, 163, 0.25);
+
+  --color-skeleton-base: rgba(232, 236, 243, 0.10);
+  --color-skeleton-highlight: rgba(232, 236, 243, 0.22);
+
+  --color-input-gradient-top: rgba(232, 236, 243, 0.03);
+  --color-input-gradient-bottom: transparent;
+  --color-button-highlight: rgba(232, 236, 243, 0.1);
+  --color-overlay-strong: rgba(0, 0, 0, 0.3);
+  --color-overlay-soft: rgba(0, 0, 0, 0.2);
+
+  --color-tab-bar-bg: var(--raw-ink-700);
+  --color-tab-active-bg: var(--raw-ink-900);
+  --color-tab-active-fg: var(--raw-ink-50);
+  --color-tab-inactive-fg: var(--raw-ink-200);
+  --color-tab-hover-bg: rgba(232, 236, 243, 0.06);
+
+  /* Syntax — matches this theme's editor rules */
+  --color-syntax-keyword: #2BD9A3;
+  --color-syntax-function: #5CE0BD;
+  --color-syntax-string: #FFB23D;
+  --color-syntax-number: #FFC061;
+  --color-syntax-comment: #4A5468;
+}
+`.trim()
 
 const LAB_CSS = `
 [data-theme="lab"] {
@@ -56,6 +122,13 @@ const LAB_CSS = `
   --color-tab-active-fg: var(--raw-paper-900);
   --color-tab-inactive-fg: var(--raw-paper-500);
   --color-tab-hover-bg: rgba(26, 26, 28, 0.05);
+
+  /* Syntax — matches this theme's editor rules */
+  --color-syntax-keyword: #115E59;
+  --color-syntax-function: #14716A;
+  --color-syntax-string: #B45309;
+  --color-syntax-number: #9A4F0B;
+  --color-syntax-comment: #6B6B68;
 }
 `.trim()
 
@@ -111,6 +184,13 @@ const INKPAPER_CSS = `
   --color-tab-active-fg: var(--raw-cream-900);
   --color-tab-inactive-fg: var(--raw-cream-500);
   --color-tab-hover-bg: rgba(20, 17, 15, 0.05);
+
+  /* Syntax — matches this theme's editor rules */
+  --color-syntax-keyword: #9E3022;
+  --color-syntax-function: #B23A2A;
+  --color-syntax-string: #6B4226;
+  --color-syntax-number: #8E5A1E;
+  --color-syntax-comment: #6D6759;
 }
 `.trim()
 
@@ -163,6 +243,13 @@ const DARK_CSS = `
   --color-tab-active-fg: #ffffff;
   --color-tab-inactive-fg: var(--raw-neutral-400);
   --color-tab-hover-bg: rgba(255, 255, 255, 0.06);
+
+  /* Syntax — matches this theme's editor rules */
+  --color-syntax-keyword: #c678dd;
+  --color-syntax-function: #e5c07b;
+  --color-syntax-string: #98c379;
+  --color-syntax-number: #d19a66;
+  --color-syntax-comment: #5c6370;
 }
 `.trim()
 
@@ -187,6 +274,12 @@ const LIGHT_CSS = `
   --color-accent-hover: var(--raw-purple-600);
   --color-accent-muted: #f0eeff;
   --color-accent-emphasis: var(--raw-purple-600);
+
+  /* Declared because the derived default doesn't hold here. A solid button
+     otherwise takes --color-accent with the page ground as its label, which on
+     this theme is mid purple on white — 3.84:1, under AA. The emphasis purple
+     with the same white label is 5.38:1. */
+  --color-action: var(--color-accent-emphasis);
 
   --color-success: #137F5C;
   --color-warning: #B45309;
@@ -215,6 +308,13 @@ const LIGHT_CSS = `
   --color-tab-active-fg: var(--raw-neutral-900);
   --color-tab-inactive-fg: var(--raw-neutral-500);
   --color-tab-hover-bg: rgba(0, 0, 0, 0.05);
+
+  /* Syntax — matches this theme's editor rules */
+  --color-syntax-keyword: #a626a4;
+  --color-syntax-function: #c18401;
+  --color-syntax-string: #50a14f;
+  --color-syntax-number: #986801;
+  --color-syntax-comment: #a0a1a7;
 }
 `.trim()
 
@@ -262,6 +362,13 @@ const MIDNIGHT_CSS = `
   --color-tab-active-fg: #e0e0f0;
   --color-tab-inactive-fg: #7878a0;
   --color-tab-hover-bg: rgba(255, 255, 255, 0.05);
+
+  /* Syntax — matches this theme's editor rules */
+  --color-syntax-keyword: #c678dd;
+  --color-syntax-function: #e5c07b;
+  --color-syntax-string: #98c379;
+  --color-syntax-number: #d19a66;
+  --color-syntax-comment: #555578;
 }
 `.trim()
 
@@ -309,6 +416,13 @@ const DRACULA_CSS = `
   --color-tab-active-fg: #f8f8f2;
   --color-tab-inactive-fg: #6272a4;
   --color-tab-hover-bg: rgba(255, 255, 255, 0.05);
+
+  /* Syntax — matches this theme's editor rules */
+  --color-syntax-keyword: #ff79c6;
+  --color-syntax-function: #8be9fd;
+  --color-syntax-string: #f1fa8c;
+  --color-syntax-number: #bd93f9;
+  --color-syntax-comment: #6272a4;
 }
 `.trim()
 
@@ -356,6 +470,13 @@ const NORD_CSS = `
   --color-tab-active-fg: #eceff4;
   --color-tab-inactive-fg: #4c566a;
   --color-tab-hover-bg: rgba(255, 255, 255, 0.04);
+
+  /* Syntax — matches this theme's editor rules */
+  --color-syntax-keyword: #81a1c1;
+  --color-syntax-function: #8fbcbb;
+  --color-syntax-string: #a3be8c;
+  --color-syntax-number: #b48ead;
+  --color-syntax-comment: #4c566a;
 }
 `.trim()
 
@@ -377,6 +498,13 @@ const SOLARIZED_CSS = `
   --color-accent-hover: #2aa198;
   --color-accent-muted: #0a2a3a;
   --color-accent-emphasis: color-mix(in oklab, var(--color-accent), black 14%);
+  /* Declared because Solarized blue is a mid-tone that isn't fill-worthy in
+     either direction: white on it is 3.68:1 and its own dark ground is 4.08:1,
+     so neither label passes AA. The emphasis blue with base3 as the label is
+     4.85:1. This is the case the derived default cannot cover — it assumes the
+     accent contrasts with the ground, and here it barely does. */
+  --color-action: var(--color-accent-emphasis);
+  --color-action-fg: var(--color-text-primary);
   --color-success: #859900;
   --color-warning: #b58900;
   --color-error: #dc322f;
@@ -403,6 +531,13 @@ const SOLARIZED_CSS = `
   --color-tab-active-fg: #fdf6e3;
   --color-tab-inactive-fg: #586e75;
   --color-tab-hover-bg: rgba(253, 246, 227, 0.05);
+
+  /* Syntax — matches this theme's editor rules */
+  --color-syntax-keyword: #859900;
+  --color-syntax-function: #b58900;
+  --color-syntax-string: #2aa198;
+  --color-syntax-number: #d33682;
+  --color-syntax-comment: #586e75;
 }
 `.trim()
 
@@ -450,11 +585,23 @@ const CATPPUCCIN_CSS = `
   --color-tab-active-fg: #cdd6f4;
   --color-tab-inactive-fg: #585b70;
   --color-tab-hover-bg: rgba(255, 255, 255, 0.04);
+
+  /* Syntax — matches this theme's editor rules */
+  --color-syntax-keyword: #cba6f7;
+  --color-syntax-function: #f9e2af;
+  --color-syntax-string: #a6e3a1;
+  --color-syntax-number: #fab387;
+  --color-syntax-comment: #585b70;
 }
 `.trim()
 
 // Monaco rule sets — one per theme. Compact since they're token→colour maps.
 const MONACO = {
+  nightshift: {
+    base: 'vs-dark' as const,
+    colors: { 'editor.background': '#0B0F16', 'editor.foreground': '#E8ECF3', 'editor.lineHighlightBackground': '#E8ECF30A', 'editor.selectionBackground': '#2BD9A340', 'editorLineNumber.foreground': '#4A5468', 'editorCursor.foreground': '#2BD9A3', 'editor.selectionHighlightBackground': '#2BD9A320', 'editorBracketMatch.background': '#2BD9A330', 'editorBracketMatch.border': '#2BD9A350' },
+    rules: [{ token: 'keyword', foreground: '#2BD9A3' }, { token: 'string', foreground: '#FFB23D' }, { token: 'number', foreground: '#FFC061' }, { token: 'comment', foreground: '#4A5468', fontStyle: 'italic' }, { token: 'type', foreground: '#5CE0BD' }, { token: 'identifier', foreground: '#E8ECF3' }, { token: 'operator', foreground: '#7C8499' }, { token: 'delimiter', foreground: '#B8C0D1' }]
+  },
   lab: {
     base: 'vs' as const,
     colors: { 'editor.background': '#FAFAF6', 'editor.foreground': '#1A1A1C', 'editor.lineHighlightBackground': '#1A1A1C08', 'editor.selectionBackground': '#115E5930', 'editorLineNumber.foreground': '#BFBDB4', 'editorCursor.foreground': '#115E59', 'editor.selectionHighlightBackground': '#115E5915', 'editorBracketMatch.background': '#115E5920', 'editorBracketMatch.border': '#115E5940' },
@@ -503,6 +650,7 @@ const MONACO = {
 }
 
 export const CORE_THEMES: RegisteredTheme[] = [
+  { id: 'nightshift', name: 'Nightshift', type: 'dark', css: NIGHTSHIFT_CSS, monaco: MONACO.nightshift, preview: { bg: '#0B0F16', sidebar: '#131825', text: '#E8ECF3', accent: '#2bd9a3' } },
   { id: 'lab', name: 'Lab', type: 'light', css: LAB_CSS, monaco: MONACO.lab, preview: { bg: '#FAFAF6', sidebar: '#F1F0EA', text: '#1A1A1C', accent: '#115E59' } },
   { id: 'inkpaper', name: 'Ink & Paper', type: 'light', css: INKPAPER_CSS, monaco: MONACO.inkpaper, preview: { bg: '#F2EBDE', sidebar: '#ECE3D2', text: '#14110F', accent: '#9E3022' } },
   { id: 'dark', name: 'Dark', type: 'dark', css: DARK_CSS, monaco: MONACO.dark, preview: { bg: '#1e1e2e', sidebar: '#313244', text: '#cdd6f4', accent: '#b4befe' } },

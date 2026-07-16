@@ -82,3 +82,23 @@ export const DeepNesting: Story = {
     </div>
   ),
 }
+
+/** `size` — `sm` (default) is the density the explorer sidebar uses, where rows
+ *  are packed tight; `md` is for roomier trees. */
+export const Sizes: Story = {
+  render: () => (
+    <div style={{ display: 'flex', gap: 24 }}>
+      {(['sm', 'md'] as const).map((size) => (
+        <div key={size}>
+          <p style={{ marginBottom: 8, fontSize: 12, color: 'var(--color-text-tertiary)' }}>{size}</p>
+          <div role="tree" aria-label={`Size ${size}`} style={{ width: 220, border: '1px solid var(--color-border-default)', borderRadius: 8, padding: '4px 0' }}>
+            <TreeItem size={size} label="public" depth={0} expanded onToggle={() => {}}>
+              <TreeItem size={size} label="users" depth={1} icon={<Table2 size={12} />} />
+              <TreeItem size={size} label="orders" depth={1} icon={<Table2 size={12} />} selected />
+            </TreeItem>
+          </div>
+        </div>
+      ))}
+    </div>
+  ),
+}

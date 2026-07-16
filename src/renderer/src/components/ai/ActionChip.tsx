@@ -7,6 +7,7 @@ import { appActions } from '@/lib/app-actions/registry'
 import { APP_ACTION } from '@/lib/app-actions/ids'
 import { useToastStore } from '@/stores/toast'
 import { useTranslation } from '@/i18n/I18nProvider'
+import { Button } from '@/primitives'
 
 // Per-action icons (lucide only — no emoji). Unknown ids fall back to a generic
 // "jump to" arrow so any plugin-registered action still renders sensibly.
@@ -67,7 +68,9 @@ export function ActionChip({ actionId, params, children }: Props) {
   }
 
   return (
-    <button
+    <Button
+      variant="bare"
+      size="none"
       type="button"
       onClick={handleClick}
       disabled={busy}
@@ -79,6 +82,6 @@ export function ActionChip({ actionId, params, children }: Props) {
     >
       <Icon className="h-3 w-3 shrink-0" />
       {label}
-    </button>
+    </Button>
   )
 }

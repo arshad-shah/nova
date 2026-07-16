@@ -1,9 +1,9 @@
-import { useMemo, useRef, useState } from 'react'
+import React, { useMemo, useRef, useState } from 'react'
 import {
   Database, Wrench, Plug, Bell, Globe, ScrollText, Trash2, Search, Download, Pause, Play,
   Cable, Puzzle, Layers, Gauge, ChevronRight, ChevronDown, AlertCircle, TriangleAlert,
 } from 'lucide-react'
-import { Flex, Box, Text, cn } from '@/primitives'
+import { Flex, Box, Text, cn, Button, ToggleGroup } from '@/primitives'
 import type { ActivityEntry, ActivityKind, ActivityLevel } from '@shared/activity'
 import { useTranslation } from '@/i18n/I18nProvider'
 import type { MessageKey } from '@shared/i18n'
@@ -49,21 +49,21 @@ const MAX_RENDERED = 400
 /** A labelled field row in the detail drawer. */
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="flex gap-2">
-      <span className="w-20 shrink-0 text-[10px] uppercase tracking-wider text-text-muted">{label}</span>
-      <span className="flex-1 min-w-0 break-words font-mono text-[10px] text-text-secondary">{children}</span>
-    </div>
+    <Box className="flex gap-2">
+      <Box as="span" className="w-20 shrink-0 text-[10px] uppercase tracking-wider text-text-muted">{label}</Box>
+      <Box as="span" className="flex-1 min-w-0 break-words font-mono text-[10px] text-text-secondary">{children}</Box>
+    </Box>
   )
 }
 
 function Pre({ text, tone }: { text: string; tone?: 'error' }) {
   return (
-    <pre className={cn(
+    <Box as="pre" className={cn(
       'mt-1 whitespace-pre-wrap break-words font-mono text-[10px] rounded p-2 max-h-56 overflow-auto bg-bg-inset',
       tone === 'error' ? 'text-error/90' : 'text-text-secondary',
     )}>
       {text}
-    </pre>
+    </Box>
   )
 }
 
@@ -87,26 +87,26 @@ function ActivityRow({ entry }: { entry: ActivityEntry }) {
       <Flex align="center" gap="sm" className="min-w-0">
         {expandable
           ? (open ? <ChevronDown size={11} className="shrink-0 text-text-muted" /> : <ChevronRight size={11} className="shrink-0 text-text-muted" />)
-          : <span className="w-[11px] shrink-0" />}
+          : <Box as="span" className="w-[11px] shrink-0" />}
         <Icon size={13} className={cn('shrink-0', LEVEL_CLASS[entry.level])} />
-        <span className="font-mono text-[10px] text-text-muted shrink-0 tabular-nums">
+        <Box as="span" className="font-mono text-[10px] text-text-muted shrink-0 tabular-nums">
           {formatClockTime(entry.ts)}
-        </span>
-        <span className={cn('truncate flex-1 min-w-0', entry.level === 'error' && 'text-error')}>
+        </Box>
+        <Box as="span" className={cn('truncate flex-1 min-w-0', entry.level === 'error' && 'text-error')}>
           {entry.title}
-        </span>
+        </Box>
         {entry.durationMs !== undefined && (
-          <span className="font-mono text-[10px] text-text-muted shrink-0 tabular-nums">{Math.round(entry.durationMs)}ms</span>
+          <Box as="span" className="font-mono text-[10px] text-text-muted shrink-0 tabular-nums">{Math.round(entry.durationMs)}ms</Box>
         )}
         {entry.source && (
-          <span className="text-[10px] text-text-muted shrink-0 max-w-[30%] truncate">
+          <Box as="span" className="text-[10px] text-text-muted shrink-0 max-w-[30%] truncate">
             {entry.source}
-          </span>
+          </Box>
         )}
       </Flex>
 
       {open && expandable && (
-        <div className="mt-2 ml-[24px] flex flex-col gap-1.5 pb-1">
+        <Box className="mt-2 ml-[24px] flex flex-col gap-1.5 pb-1">
           <Field label={t('shell.activity.fieldTime')}>{formatClockTimeWithMillis(entry.ts)}</Field>
           <Field label={t('shell.activity.fieldKind')}>{t(KIND_META[entry.kind].label)} · {entry.level}</Field>
           {entry.source && <Field label={t('shell.activity.fieldSource')}>{entry.source}</Field>}
@@ -115,7 +115,7 @@ function ActivityRow({ entry }: { entry: ActivityEntry }) {
           {entry.detail && <Pre text={entry.detail} />}
           {metaJson && <Pre text={metaJson} />}
           {entry.stack && <Pre text={entry.stack} tone="error" />}
-        </div>
+        </Box>
       )}
     </Box>
   )
@@ -202,34 +202,41 @@ export function ActivityList({ entries, onClear }: ActivityListProps) {
             className="flex-1 min-w-0 rounded bg-bg-inset px-1.5 py-0.5"
           >
             <Search size={12} className="text-text-muted shrink-0" />
-            <input
+            <Box
+              as="input"
               type="text"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
               placeholder={t('shell.activity.search')}
               className="flex-1 min-w-0 bg-transparent text-[11px] text-text-primary placeholder:text-text-muted outline-none"
             />
           </Flex>
           {/* Session severity summary — click to filter that level. */}
           {errorCount > 0 && (
-            <button
+            <Button
+              variant="bare"
+              size="none"
               type="button"
               onClick={() => setLevels((p) => toggle(p, 'error'))}
               className={cn('flex items-center gap-0.5 rounded px-1 py-0.5 text-[10px]', levels.has('error') ? 'bg-error/15 text-error' : 'text-error hover:bg-white/5')}
             >
               <AlertCircle size={11} />{errorCount}
-            </button>
+            </Button>
           )}
           {warnCount > 0 && (
-            <button
+            <Button
+              variant="bare"
+              size="none"
               type="button"
               onClick={() => setLevels((p) => toggle(p, 'warn'))}
               className={cn('flex items-center gap-0.5 rounded px-1 py-0.5 text-[10px]', levels.has('warn') ? 'bg-warning/15 text-warning' : 'text-warning hover:bg-white/5')}
             >
               <TriangleAlert size={11} />{warnCount}
-            </button>
+            </Button>
           )}
-          <button
+          <Button
+            variant="bare"
+            size="none"
             type="button"
             onClick={toggleVerbose}
             title={t('shell.activity.verbose')}
@@ -239,8 +246,10 @@ export function ActivityList({ entries, onClear }: ActivityListProps) {
             )}
           >
             <Gauge size={13} />
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="bare"
+            size="none"
             type="button"
             onClick={togglePause}
             title={t(paused ? 'shell.activity.resume' : 'shell.activity.pause')}
@@ -250,8 +259,10 @@ export function ActivityList({ entries, onClear }: ActivityListProps) {
             )}
           >
             {paused ? <Play size={13} /> : <Pause size={13} />}
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="bare"
+            size="none"
             type="button"
             onClick={() => downloadEntries(matched)}
             disabled={matched.length === 0}
@@ -259,60 +270,55 @@ export function ActivityList({ entries, onClear }: ActivityListProps) {
             className="flex items-center rounded p-1 text-text-muted hover:text-text-primary hover:bg-white/5 disabled:opacity-40 disabled:hover:bg-transparent"
           >
             <Download size={13} />
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="bare"
+            size="none"
             type="button"
             onClick={onClear}
             title={t('shell.activity.clear')}
             className="flex items-center rounded p-1 text-text-muted hover:text-error hover:bg-white/5"
           >
             <Trash2 size={13} />
-          </button>
+          </Button>
         </Flex>
-        <Flex align="center" gap="xs" className="px-2 pb-1 flex-wrap">
-          {ALL_KINDS.map((kind) => {
-            const on = kinds.has(kind)
+        <ToggleGroup
+          wrap
+          size="xs"
+          className="px-2 pb-1"
+          label={t('shell.activity.fieldKind')}
+          value={[...kinds]}
+          onChange={(next) => setKinds(new Set(next))}
+          options={ALL_KINDS.map((kind) => {
             const { icon: Icon, label } = KIND_META[kind]
-            return (
-              <button
-                key={kind}
-                type="button"
-                onClick={() => setKinds((prev) => toggle(prev, kind))}
-                title={t(label)}
-                className={cn(
-                  'flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] transition-colors',
-                  on ? 'bg-accent/15 text-accent' : 'text-text-muted hover:text-text-primary hover:bg-white/5',
-                )}
-              >
-                <Icon size={12} />
-                {t(label)}
-              </button>
-            )
+            return { value: kind, label: t(label), icon: <Icon size={12} /> }
           })}
-        </Flex>
+        />
         <Flex align="center" gap="xs" className="px-2 pb-1.5 flex-wrap">
-          {LEVEL_META.map(({ level, label }) => {
-            const on = levels.has(level)
-            return (
-              <button
-                key={level}
-                type="button"
-                onClick={() => setLevels((prev) => toggle(prev, level))}
-                title={t(label)}
-                className={cn(
-                  'flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] transition-colors',
-                  on ? 'bg-accent/15 text-accent' : 'text-text-muted hover:text-text-primary hover:bg-white/5',
-                )}
-              >
-                <span className={cn('h-1.5 w-1.5 rounded-full bg-current', LEVEL_CLASS[level])} />
-                {t(label)}
-              </button>
-            )
-          })}
+          <ToggleGroup
+            wrap
+            size="xs"
+            label={t('shell.activity.levelInfo')}
+            value={[...levels]}
+            onChange={(next) => setLevels(new Set(next))}
+            options={LEVEL_META.map(({ level, label }) => ({
+              value: level,
+              label: t(label),
+              // The dot keeps its own level colour while the pressed wash stays
+              // uniform — the level is already encoded in the dot, so tinting
+              // the chip too would say it twice.
+              icon: (
+                <Box
+                  as="span"
+                  className={cn('h-1.5 w-1.5 rounded-full bg-current', LEVEL_CLASS[level])}
+                />
+              ),
+            }))}
+          />
           {paused && (
             <>
-              <span className="flex-1" />
-              <span className="text-[10px] text-warning">{t('shell.activity.paused')}</span>
+              <Box as="span" className="flex-1" />
+              <Box as="span" className="text-[10px] text-warning">{t('shell.activity.paused')}</Box>
             </>
           )}
         </Flex>

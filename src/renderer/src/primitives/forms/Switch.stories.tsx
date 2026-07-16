@@ -62,7 +62,7 @@ export const Sizes: Story = {
 export const Themes: Story = {
   render: () => (
     <div className="flex flex-col gap-4">
-      {['nightshift', 'dark', 'light', 'midnight', 'dracula', 'nord', 'solarized', 'catppuccin', 'lab', 'inkpaper'].map(
+      {['ion', 'nightshift', 'dark', 'light', 'midnight', 'dracula', 'nord', 'solarized', 'catppuccin', 'lab', 'inkpaper'].map(
         (theme) => (
           <div
             key={theme}

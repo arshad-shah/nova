@@ -15,6 +15,12 @@ import {
   MonitorDown,
   Store,
   RefreshCw,
+  SquareMenu,
+  PencilRuler,
+  SlidersHorizontal,
+  BellRing,
+  Keyboard,
+  Contrast,
 } from 'lucide-react'
 import type { ReleaseNote } from './types'
 
@@ -34,6 +40,45 @@ import type { ReleaseNote } from './types'
  * resolves it.
  */
 export const RELEASE_NOTES: ReleaseNote[] = [
+  {
+    version: '1.5.0',
+    date: '2026-07-16',
+    headline: 'whatsNew.v1_5_0.headline',
+    summary: 'whatsNew.v1_5_0.summary',
+    groups: [
+      {
+        title: 'whatsNew.groups.features',
+        tone: 'feature',
+        highlights: [
+          { id: 'ion', icon: Palette, title: 'whatsNew.v1_5_0.ion.title', description: 'whatsNew.v1_5_0.ion.description' },
+          { id: 'mac-menu', icon: SquareMenu, title: 'whatsNew.v1_5_0.macMenu.title', description: 'whatsNew.v1_5_0.macMenu.description' },
+          { id: 'text-area', icon: PencilRuler, title: 'whatsNew.v1_5_0.textArea.title', description: 'whatsNew.v1_5_0.textArea.description' },
+        ],
+      },
+      {
+        title: 'whatsNew.groups.improvements',
+        tone: 'improvement',
+        highlights: [
+          { id: 'fields', icon: SlidersHorizontal, title: 'whatsNew.v1_5_0.fields.title', description: 'whatsNew.v1_5_0.fields.description' },
+          { id: 'toasts', icon: BellRing, title: 'whatsNew.v1_5_0.toasts.title', description: 'whatsNew.v1_5_0.toasts.description' },
+          { id: 'about', icon: Info, title: 'whatsNew.v1_5_0.about.title', description: 'whatsNew.v1_5_0.about.description' },
+          { id: 'shortcuts', icon: Keyboard, title: 'whatsNew.v1_5_0.shortcuts.title', description: 'whatsNew.v1_5_0.shortcuts.description' },
+        ],
+      },
+      {
+        title: 'whatsNew.groups.fixes',
+        tone: 'fix',
+        highlights: [
+          { id: 'contrast', icon: Contrast, title: 'whatsNew.v1_5_0.contrast.title', description: 'whatsNew.v1_5_0.contrast.description' },
+          { id: 'security', icon: ShieldCheck, title: 'whatsNew.v1_5_0.security.title', description: 'whatsNew.v1_5_0.security.description' },
+        ],
+      },
+    ],
+    links: [
+      { label: 'whatsNew.links.changelog', url: 'https://github.com/arshad-shah/verql/blob/main/CHANGELOG.md' },
+      { label: 'whatsNew.links.userGuide', url: 'https://verql.arshadshah.com/guide/' },
+    ],
+  },
   {
     version: '1.3.1',
     date: '2026-06-12',

@@ -1,7 +1,7 @@
 import { useState, type DragEvent } from 'react'
 import { X } from 'lucide-react'
 import type { Tab } from '@shared/types'
-import { Flex, Text, Tooltip, ContextMenu, cn, IconButton } from '@/primitives'
+import { Box, Flex, Text, Tooltip, ContextMenu, cn, IconButton } from '@/primitives'
 import { getTabIcon } from './tab-icons'
 import { useTranslation } from '@/i18n/I18nProvider'
 import './tab-bar.css'
@@ -61,9 +61,11 @@ export function TabItem({
       >
         {/* Active-tab skirt: concave fillets that visually attach the tab to
             the workspace surface (Chrome-style). Rendered only for the active
-            tab so inactive tabs stay flat. */}
+            tab so inactive tabs stay flat. The accent strip is one of the few
+            surfaces the brand gradient is reserved for. */}
         {isActive && (
           <>
+            <span className="tab-accent-strip" aria-hidden="true" />
             <span className="tab-skirt-left" aria-hidden="true" />
             <span className="tab-skirt-right" aria-hidden="true" />
           </>
@@ -95,7 +97,8 @@ export function TabItem({
           onMouseLeave={() => setCloseHovered(false)}
         >
           {isDirty && !closeHovered ? (
-            <span
+            <Box
+              as="span"
               className="block h-1.75 w-1.75 rounded-full bg-warning"
               aria-label={t('shell.tabBar.unsavedChanges')}
             />

@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { fn, expect, userEvent, within } from 'storybook/test'
 import { useState } from 'react'
+import { Database, Search } from 'lucide-react'
 import { Select } from './Select'
 import type { SelectItem } from './Select'
 
@@ -291,5 +292,65 @@ export const CustomRenderOption: Story = {
     await userEvent.click(option)
 
     await expect(trigger).toHaveTextContent('PostgreSQL')
+  },
+}
+
+/** Validity, mirroring Input's `state` exactly — the two are siblings, and
+ *  before this Select had no error prop at all, so no form could mark a select
+ *  invalid. Only the border and ring; the message belongs to FormField. */
+export const ValidityStates: Story = {
+  render: () => (
+    <div className="flex w-60 flex-col gap-3">
+      <Select aria-label="Default" value="postgresql" onChange={fn()} options={dbOptions} />
+      <Select aria-label="Error" state="error" value="postgresql" onChange={fn()} options={dbOptions} />
+      <Select aria-label="Success" state="success" value="postgresql" onChange={fn()} options={dbOptions} />
+    </div>
+  ),
+  play: async ({ canvas }) => {
+    await expect(canvas.getByRole('combobox', { name: 'Error' })).toHaveAttribute('aria-invalid', 'true')
+    await expect(canvas.getByRole('combobox', { name: 'Default' })).not.toHaveAttribute('aria-invalid')
+  },
+}
+
+/** A leading icon that says what's being chosen. */
+export const WithPrefix: Story = {
+  render: () => (
+    <div className="flex w-60 flex-col gap-3">
+      <Select
+        aria-label="Database"
+        prefix={<Database size={13} />}
+        value="postgresql"
+        onChange={fn()}
+        options={dbOptions}
+      />
+      <Select
+        aria-label="Searchable with icon"
+        searchable
+        prefix={<Search size={13} />}
+        value="mysql"
+        onChange={fn()}
+        options={dbOptions}
+      />
+    </div>
+  ),
+}
+
+/** `clearable` offers to unset the value once something is chosen. */
+export const Clearable: Story = {
+  render: () => {
+    const [value, setValue] = useState('postgresql')
+    return (
+      <div className="w-60">
+        <Select
+          aria-label="Clearable"
+          clearable
+          value={value}
+          onChange={setValue}
+          onClear={() => setValue('')}
+          options={dbOptions}
+          placeholder="Select a driver…"
+        />
+      </div>
+    )
   },
 }

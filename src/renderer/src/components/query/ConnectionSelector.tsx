@@ -124,16 +124,16 @@ export function ConnectionSelector({ tabId, connectionId, database, schema }: Pr
       >
         {activeConn ? (
           <>
-            <Box className="w-2 h-2 rounded-full" style={{ backgroundColor: activeConn.color ?? '#7c6ff7' }} />
+            <Box className="w-2 h-2 rounded-full" style={{ backgroundColor: activeConn.color ?? 'var(--color-accent)' }} />
             <Text size="xs" color="primary" truncate className="max-w-28">{activeConn.name}</Text>
           </>
         ) : (
           <>
-            <Database size={12} className="text-text-muted" />
+            <Database size={12} strokeWidth={1.8} className="text-text-muted" />
             <Text size="xs" color="muted">{t('query.connection.noConnection')}</Text>
           </>
         )}
-        <ChevronDown size={10} className="text-text-muted" />
+        <ChevronDown size={10} strokeWidth={1.8} className="text-text-muted" />
       </Button>
 
       {/* Database selector — only for multi-database connections */}
@@ -146,9 +146,9 @@ export function ConnectionSelector({ tabId, connectionId, database, schema }: Pr
             onClick={() => { setShowDbDropdown(!showDbDropdown); setShowConnDropdown(false); setShowSchemaDropdown(false) }}
             className="flex items-center gap-1"
           >
-            <HardDrive size={11} className="text-text-muted" />
+            <HardDrive size={11} strokeWidth={1.8} className="text-text-muted" />
             <Text size="xs" color="secondary" truncate className="max-w-24">{database ?? t('query.connection.database')}</Text>
-            <ChevronDown size={10} className="text-text-muted" />
+            <ChevronDown size={10} strokeWidth={1.8} className="text-text-muted" />
           </Button>
         </>
       )}
@@ -163,9 +163,9 @@ export function ConnectionSelector({ tabId, connectionId, database, schema }: Pr
             onClick={() => { setShowSchemaDropdown(!showSchemaDropdown); setShowConnDropdown(false); setShowDbDropdown(false) }}
             className="flex items-center gap-1"
           >
-            <Layers size={11} className="text-text-muted" />
+            <Layers size={11} strokeWidth={1.8} className="text-text-muted" />
             <Text size="xs" color="secondary" truncate className="max-w-24">{schema ?? t('query.connection.schema')}</Text>
-            <ChevronDown size={10} className="text-text-muted" />
+            <ChevronDown size={10} strokeWidth={1.8} className="text-text-muted" />
           </Button>
         </>
       )}
@@ -192,7 +192,7 @@ export function ConnectionSelector({ tabId, connectionId, database, schema }: Pr
                 connectionId === conn.id ? 'text-accent' : 'text-text-secondary'
               }`}
             >
-              <Box className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: conn.color ?? '#7c6ff7' }} />
+              <Box className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: conn.color ?? 'var(--color-accent)' }} />
               <Text size="xs" truncate>{conn.name}</Text>
               <Text size="xs" color="muted" className="ml-auto">{conn.database}</Text>
             </Button>
@@ -241,7 +241,7 @@ export function ConnectionSelector({ tabId, connectionId, database, schema }: Pr
                 database === db ? 'text-accent' : 'text-text-secondary'
               }`}
             >
-              <HardDrive size={11} className="shrink-0" />
+              <HardDrive size={11} strokeWidth={1.8} className="shrink-0" />
               <Text size="xs" truncate>{db}</Text>
             </Button>
           ))}
@@ -264,7 +264,7 @@ export function ConnectionSelector({ tabId, connectionId, database, schema }: Pr
                 schema === s ? 'text-accent' : 'text-text-secondary'
               }`}
             >
-              <Layers size={11} className="shrink-0" />
+              <Layers size={11} strokeWidth={1.8} className="shrink-0" />
               <Text size="xs" truncate>{s}</Text>
             </Button>
           ))}

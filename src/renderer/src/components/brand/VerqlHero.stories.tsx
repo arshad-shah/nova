@@ -18,7 +18,8 @@ export const Large: Story = {
   args: { size: 200 },
 }
 
-/** Custom className — tinted to the accent color. */
+/** Custom className — the hero carries the brand gradient, so className is for
+ *  layout/opacity rather than tint. */
 export const CustomClassName: Story = {
-  args: { size: 120, className: 'text-accent opacity-80' },
+  args: { size: 120, className: 'opacity-80' },
 }

@@ -1,23 +1,35 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { X, AlertCircle, CheckCircle, Info, Loader2 } from 'lucide-react'
 import { useToastStore } from '@/stores/toast'
-import { Stack, Flex, Text, IconButton, Box, cn } from '@/primitives'
+import { Stack, Toast, Box, cn } from '@/primitives'
+import type { ToastTone } from '@/primitives'
 import { useTranslation } from '@/i18n/I18nProvider'
 
 const LEAVE_MS = 300
 const DEFAULT_DURATION = 5000
 
+/** The kit's guideline — "do not stack more than 3 toasts" — enforced rather
+ *  than drawn. Past three, a stack stops being glanceable and becomes a log;
+ *  the oldest give way to the newest. */
+const MAX_VISIBLE = 3
+
 type ToastData = {
   id: string
-  type: 'error' | 'success' | 'info'
+  type: 'error' | 'success' | 'info' | 'warning'
   title: string
   message?: string
   persistent?: boolean
   duration?: number
+  action?: { label: string; onClick: () => void }
 }
 type RenderToast = ToastData & { leaving?: boolean }
 
-const icons = { error: AlertCircle, success: CheckCircle, info: Info } as const
+/** The store speaks in kinds; the primitive speaks in tones. */
+const TONE: Record<ToastData['type'], ToastTone> = {
+  error: 'error',
+  success: 'success',
+  info: 'info',
+  warning: 'warning',
+}
 
 export function ToastContainer() {
   const { t } = useTranslation()
@@ -47,15 +59,20 @@ export function ToastContainer() {
 
   if (items.length === 0) return null
 
+  // Newest wins. A toast already animating out still has to render until it has
+  // finished, so it doesn't count against the cap.
+  const live = new Set(items.filter((x) => !x.leaving).slice(-MAX_VISIBLE))
+  const visible = items.filter((x) => x.leaving || live.has(x))
+
   return (
     <Stack
       gap="none"
-      className="fixed bottom-10 right-4 z-50 w-[380px] max-w-[calc(100vw-2rem)] pointer-events-none"
+      className="pointer-events-none fixed right-4 bottom-10 z-50 w-95 max-w-[calc(100vw-2rem)]"
       aria-live="polite"
       aria-relevant="additions"
     >
-      {items.map((it) => (
-        <ToastView
+      {visible.map((it) => (
+        <ToastItem
           key={it.id}
           data={it}
           leaving={!!it.leaving}
@@ -68,7 +85,12 @@ export function ToastContainer() {
   )
 }
 
-function ToastView({
+/**
+ * The motion wrapper. It owns entering, leaving and the gap; the Toast owns
+ * everything you can see. Splitting there is what lets the height collapse on
+ * exit without the toast needing to know it's in a stack.
+ */
+function ToastItem({
   data,
   leaving,
   dismissLabel,
@@ -83,37 +105,24 @@ function ToastView({
 }) {
   const ref = useRef<HTMLDivElement>(null)
   const persistent = !!data.persistent
+  // A persistent info toast is the app's "still working" state.
   const isLoading = persistent && data.type === 'info'
-  const Icon = isLoading ? Loader2 : icons[data.type]
 
-  // entrance: render from initial state, release next frame so CSS transitions in
+  // Entrance: render from the initial state, release next frame so CSS transitions in.
   const [entered, setEntered] = useState(false)
   useEffect(() => {
     const r = requestAnimationFrame(() => requestAnimationFrame(() => setEntered(true)))
     return () => cancelAnimationFrame(r)
   }, [])
 
-  // auto-dismiss countdown with pause-on-hover (non-persistent only)
-  const remaining = useRef(data.duration ?? DEFAULT_DURATION)
-  const startedAt = useRef(0)
-  const timer = useRef<number | null>(null)
-  const paused = useRef(false)
-  const clear = useCallback(() => {
-    if (timer.current != null) { window.clearTimeout(timer.current); timer.current = null }
-  }, [])
-  const arm = useCallback(() => {
-    if (persistent) return
-    startedAt.current = Date.now()
-    timer.current = window.setTimeout(() => onRequestDismiss(data.id), Math.max(0, remaining.current))
-  }, [persistent, data.id, onRequestDismiss])
-  useEffect(() => { arm(); return clear }, [arm, clear])
-  useEffect(() => { if (leaving) clear() }, [leaving, clear])
-
-  // exit: when `leaving` flips true, collapse height (measured) then notify the container
+  // Exit: when `leaving` flips true, collapse the measured height, then notify.
   useEffect(() => {
     if (!leaving) return
     const el = ref.current
-    if (!el || window.matchMedia('(prefers-reduced-motion: reduce)').matches) { onLeft(data.id); return }
+    if (!el || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      onLeft(data.id)
+      return
+    }
     el.style.maxHeight = `${el.scrollHeight}px`
     void el.offsetHeight // reflow so the next change animates
     el.style.maxHeight = '0px'
@@ -121,52 +130,26 @@ function ToastView({
     return () => window.clearTimeout(tm)
   }, [leaving, data.id, onLeft])
 
-  const handleMouseEnter = () => {
-    if (persistent || paused.current || leaving) return
-    paused.current = true; clear(); remaining.current -= Date.now() - startedAt.current
-  }
-  const handleMouseLeave = () => {
-    if (persistent || !paused.current || leaving) return
-    paused.current = false; arm()
-  }
-
   return (
-    <div
+    <Box
       ref={ref}
-      role={data.type === 'error' ? 'alert' : 'status'}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-      style={{ ['--dur' as string]: `${data.duration ?? DEFAULT_DURATION}ms` }}
       className={cn(
-        'vq-toast',
-        data.type,
-        '[&:first-child]:mt-0 mt-[var(--toast-gap)]',
+        'toast-item mt-[var(--toast-gap)] [&:first-child]:mt-0',
         !entered && 'is-enter',
-        leaving && 'is-leaving',
-        !persistent && !leaving && 'is-running',
+        leaving && 'is-leaving'
       )}
     >
-      <Flex align="start" gap="sm">
-        <Icon size={16} aria-hidden className={cn('vq-toast__icon shrink-0 mt-0.5', isLoading && 'vq-toast__spin')} />
-        <Box className="flex-1 min-w-0">
-          <Text size="sm" weight="medium" as="p">{data.title}</Text>
-          {data.message && (
-            <Text size="xs" color="secondary" as="p" className="mt-0.5 whitespace-pre-wrap break-words">
-              {data.message}
-            </Text>
-          )}
-        </Box>
-        <IconButton
-          label={dismissLabel}
-          size="xs"
-          variant="ghost"
-          onClick={() => onRequestDismiss(data.id)}
-          className="shrink-0 -mr-1 -mt-0.5 text-text-muted hover:text-text-primary"
-        >
-          <X size={14} />
-        </IconButton>
-      </Flex>
-      {!persistent && <span aria-hidden className="vq-toast__track" />}
-    </div>
+      <Toast
+        tone={TONE[data.type]}
+        title={data.title}
+        description={data.message}
+        action={data.action}
+        loading={isLoading}
+        dismissLabel={dismissLabel}
+        // Persistent toasts get no timer and no track.
+        duration={persistent ? undefined : (data.duration ?? DEFAULT_DURATION)}
+        onDismiss={() => onRequestDismiss(data.id)}
+      />
+    </Box>
   )
 }

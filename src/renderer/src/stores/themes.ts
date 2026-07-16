@@ -1,38 +1,42 @@
 import { create } from 'zustand'
 import { IPC_CHANNELS, IPC_EVENTS } from '@shared/ipc'
 
-/** Baseline theme that ships with the app shell. Nightshift is the brand
- *  identity for Verql, so it's not a plugin contribution — it lives here
- *  (CSS vars in `primitives/theme/baseline.css`, Monaco def below) and is
- *  always present in the picker. */
-const BASELINE_NIGHTSHIFT: RegisteredThemeView = {
-  id: 'nightshift',
-  name: 'Nightshift',
+/** Baseline theme that ships with the app shell. Ion is the brand identity
+ *  for Verql *and* the default theme, so it's not a plugin contribution — a
+ *  default that only paints when a plugin activates isn't a default. It lives
+ *  here (CSS vars in `primitives/theme/baseline.css`, Monaco def below) and is
+ *  always present in the picker. Nightshift, the previous brand theme, is now
+ *  an ordinary selectable theme contributed by core-themes. */
+const BASELINE_ION: RegisteredThemeView = {
+  id: 'ion',
+  name: 'Ion',
   type: 'dark',
-  preview: { bg: '#0B0F16', sidebar: '#131825', text: '#E8ECF3', accent: '#2bd9a3' },
+  preview: { bg: '#0B0F16', sidebar: '#111827', text: '#F2F4F7', accent: '#7A5CFF' },
   source: '<baseline>',
   monaco: {
     base: 'vs-dark',
     colors: {
       'editor.background': '#0B0F16',
-      'editor.foreground': '#E8ECF3',
-      'editor.lineHighlightBackground': '#E8ECF30A',
-      'editor.selectionBackground': '#2BD9A340',
-      'editorLineNumber.foreground': '#4A5468',
-      'editorCursor.foreground': '#2BD9A3',
-      'editor.selectionHighlightBackground': '#2BD9A320',
-      'editorBracketMatch.background': '#2BD9A330',
-      'editorBracketMatch.border': '#2BD9A350'
+      'editor.foreground': '#F2F4F7',
+      'editor.lineHighlightBackground': '#7A5CFF0F',
+      'editor.selectionBackground': '#00D4FF2E',
+      'editorLineNumber.foreground': '#66738A',
+      'editorCursor.foreground': '#00D4FF',
+      'editor.selectionHighlightBackground': '#00D4FF1C',
+      'editorBracketMatch.background': '#7A5CFF33',
+      'editorBracketMatch.border': '#7A5CFF55'
     },
+    // Syntax comes from the functional set (--fn-syntax-*), which is identical
+    // on every theme: a keyword shouldn't change meaning with the paint.
     rules: [
-      { token: 'keyword', foreground: '#2BD9A3' },
-      { token: 'string', foreground: '#FFB23D' },
-      { token: 'number', foreground: '#FFC061' },
-      { token: 'comment', foreground: '#4A5468', fontStyle: 'italic' },
-      { token: 'type', foreground: '#5CE0BD' },
-      { token: 'identifier', foreground: '#E8ECF3' },
-      { token: 'operator', foreground: '#7C8499' },
-      { token: 'delimiter', foreground: '#B8C0D1' }
+      { token: 'keyword', foreground: '#5EA8FF' },
+      { token: 'string', foreground: '#FF8B73' },
+      { token: 'number', foreground: '#7DD3FC' },
+      { token: 'comment', foreground: '#66738A', fontStyle: 'italic' },
+      { token: 'type', foreground: '#A78BFA' },
+      { token: 'identifier', foreground: '#F2F4F7' },
+      { token: 'operator', foreground: '#A7B2C5' },
+      { token: 'delimiter', foreground: '#A7B2C5' }
     ]
   }
 }
@@ -99,7 +103,7 @@ export const useThemesStore = create<ThemesState>((set) => ({
   loaded: false,
   fetch: async () => {
     if (typeof window === 'undefined' || !window.electronAPI) {
-      set({ themes: [BASELINE_NIGHTSHIFT], loaded: true })
+      set({ themes: [BASELINE_ION], loaded: true })
       return
     }
     let list: RegisteredThemeView[] = []
@@ -109,11 +113,11 @@ export const useThemesStore = create<ThemesState>((set) => ({
       list = []
     }
     injectThemes(list)
-    // Nightshift is the app's brand theme — always present, sourced from the
+    // Ion is the app's brand theme — always present, sourced from the
     // baseline rather than any plugin. Ignore any plugin trying to register
     // a theme with the same id to keep the brand surface authoritative.
-    const filtered = list.filter((t) => t.id !== 'nightshift')
-    set({ themes: [BASELINE_NIGHTSHIFT, ...filtered], loaded: true })
+    const filtered = list.filter((t) => t.id !== 'ion')
+    set({ themes: [BASELINE_ION, ...filtered], loaded: true })
   }
 }))
 

@@ -88,6 +88,58 @@
   --raw-red-500: #ff5f57;
   --raw-blue-500: #61afef;
 
+  /* ── Ion — brand palette (Verql brand kit 2026) ──
+     Purple carries interface state, cyan carries data, violet is reserved
+     for "an agent did this". `--raw-ink-900` (#0B0F16) is already the Ion
+     app background — reused above rather than redefined here. */
+  --raw-vpurple-200: #B6A6FF;
+  --raw-vpurple-300: #A78BFA;
+  --raw-vpurple-500: #7A5CFF;
+  --raw-vpurple-600: #5B43F6;
+  --raw-vcyan-300: #7DD3FC;
+  --raw-vcyan-400: #30B8FF;
+  --raw-vcyan-500: #00D4FF;
+
+  --raw-dark-300: #A7B2C5;
+  --raw-dark-400: #66738A;
+  --raw-dark-700: #252E3F;
+  --raw-dark-800: #1A2233;
+  --raw-dark-900: #111827;
+  --raw-light-100: #F2F4F7;
+  --raw-light-200: #E5E7EB;
+  --raw-light-300: #CBD5E1;
+
+  /* Functional — identical across ALL themes. Defined once here and never
+     remapped per-theme: an action button, an error, and a keyword should not
+     change meaning when the user switches theme. */
+  --fn-action: #2563EB;
+  --fn-action-hover: #2E6FF2;
+  --fn-ok: #34D399;
+  --fn-warn: #FBBF24;
+  --fn-danger: #F87171;
+  /* Danger comes in two weights, and they are not the same colour darkened.
+     `--fn-danger` is a *foreground* red — it reads on a dark ground, but white
+     on it is ~2.7:1, so it can never carry a label. The emphasis pair is the
+     *surface* red that white text sits on, and it mirrors the action scale
+     exactly (action is blue-600 → blue-500; danger is red-600 → red-500) so a
+     destructive button is the action button's twin, not a muddied cousin. */
+  --fn-danger-emphasis: #DC2626;
+  --fn-danger-emphasis-hover: #EF4444;
+  --fn-syntax-kw: #5EA8FF;
+  --fn-syntax-fn: #A78BFA;
+  --fn-syntax-str: #FF8B73;
+  --fn-syntax-num: #7DD3FC;
+  --fn-syntax-cm: #66738A;
+  /* Windows title-bar close affordance — a platform convention, not a brand
+     colour, so it holds on every theme. */
+  --fn-window-close: #E81123;
+
+  /* Brand gradient — reserved. See `docs/` design laws: mark/hero, splash and
+     welcome brand moments, empty states, active nav/rail indicators and
+     active-tab accent strips only. Never on repeated actions, hovers,
+     borders-at-large, or scrollbars. */
+  --vq-gradient: linear-gradient(115deg, #7A5CFF 0%, #00D4FF 100%);
+
   /* Spacing */
   --space-xs: 4px;
   --space-sm: 8px;
@@ -120,52 +172,158 @@
   --weight-bold: 700;
 }
 
-/* ── Layer 2: Semantic Tokens (default = Nightshift) ── */
+/* ── Layer 2: Semantic Tokens (default = Ion) ── */
 
 :root {
   /* Backgrounds */
   --color-bg-primary: var(--raw-ink-900);
-  --color-bg-secondary: var(--raw-ink-800);
-  --color-bg-tertiary: var(--raw-ink-700);
-  --color-bg-elevated: var(--raw-ink-600);
+  --color-bg-secondary: var(--raw-dark-900);
+  --color-bg-tertiary: var(--raw-dark-800);
+  --color-bg-elevated: var(--raw-dark-800);
+  /* Recessed surface — a well sunk into a card (code blocks, log output,
+     read-only detail panes). Defaults to the app's own floor, which reads as
+     "below" whatever surface it sits on for light and dark themes alike, so
+     plugin themes get it for free. Override per-theme for a custom tone. */
+  --color-bg-inset: var(--color-bg-primary);
 
   /* Text */
-  --color-text-primary: var(--raw-ink-50);
-  --color-text-secondary: var(--raw-ink-200);
-  --color-text-tertiary: var(--raw-ink-300);
-  --color-text-disabled: var(--raw-ink-400);
+  --color-text-primary: var(--raw-light-100);
+  --color-text-secondary: var(--raw-dark-300);
+  --color-text-tertiary: var(--raw-dark-400);
+  --color-text-disabled: var(--raw-dark-700);
 
-  /* Borders */
-  --color-border-default: rgba(232, 236, 243, 0.08);
-  --color-border-subtle: rgba(232, 236, 243, 0.04);
-  --color-border-strong: rgba(232, 236, 243, 0.16);
+  /* Borders — hairlines are light-300 at 9–18% */
+  --color-border-default: var(--raw-dark-700);
+  --color-border-subtle: rgba(203, 213, 225, 0.09);
+  --color-border-strong: rgba(203, 213, 225, 0.18);
 
-  /* Accent — Nightshift mint */
-  --color-accent: var(--raw-mint-400);
-  --color-accent-hover: var(--raw-mint-300);
-  --color-accent-muted: var(--raw-mint-900);
-  --color-accent-emphasis: var(--raw-mint-500);
+  /* Accent — Ion purple. Interface state only: selection, active nav, focus.
+     Never violet (--raw-vpurple-300), which means "an agent did this". */
+  --color-accent: var(--raw-vpurple-500);
+  --color-accent-hover: color-mix(in oklab, var(--raw-vpurple-500) 82%, white);
+  --color-accent-muted: rgba(122, 92, 255, 0.12);
+  --color-accent-emphasis: var(--raw-vpurple-600);
 
-  /* Status */
-  --color-success: var(--raw-mint-400);
-  --color-warning: var(--raw-amber-500);
-  --color-error: var(--raw-red-500);
-  --color-error-emphasis: color-mix(in oklch, var(--color-error), black 25%);
-  --color-info: var(--raw-blue-500);
+  /* Data accent — cyan. Connections, result meta, editor caret. */
+  --color-data-accent: var(--raw-vcyan-500);
+  --color-data-accent-hover: var(--raw-vcyan-400);
+  --color-data-accent-muted: rgba(0, 212, 255, 0.11);
+
+  /* Agent accent — violet. Reserved for "an agent did this": AI/MCP chips,
+     activity rows originating from agents. Never decorative. */
+  --color-agent-accent: var(--raw-vpurple-300);
+  --color-agent-accent-muted: rgba(167, 139, 250, 0.14);
+
+  /* Primary action — functional, so it holds on every theme, not just Ion.
+     Repeated actions (Run, Save, Connect) are solid; never gradient. */
+  /* Primary action. A theme MAY declare its own (Ion does, in baseline.css —
+     its action blue is part of the brand). Any theme that doesn't gets its own
+     accent, so a solid button follows the active theme instead of staying one
+     fixed blue everywhere.
+
+     The label is the page ground, not white. Every bundled theme's accent is
+     a *foreground* colour — designed to read as text on the ground — so white
+     on it fails badly (Nord 2.00:1, Catppuccin 2.03:1, Dracula 2.41:1). But an
+     accent is only usable as an accent if it already contrasts with the
+     ground, so borrowing the ground as the label inherits that contrast for
+     free, and it self-inverts on light themes (dark ground -> dark label on a
+     pale accent; light ground -> light label on a deep accent). */
+  --color-action: var(--color-accent);
+  --color-action-hover: var(--color-accent-hover);
+  --color-action-fg: var(--color-bg-primary);
+  /* The quiet weight of the action colour: a wash of the action hue rather
+     than a fill of it, labelled in the hue itself. For secondary actions that
+     belong to the same task as a solid button but must not compete with it.
+     Mixed against the page ground (not black/white) so it stays a tint of the
+     surface it sits on and follows the theme into light mode. */
+  --color-action-subtle: color-mix(in oklch, var(--color-action), var(--color-bg-primary) 86%);
+  --color-action-subtle-hover: color-mix(in oklch, var(--color-action), var(--color-bg-primary) 78%);
+  /* Not the action colour itself. The fill is a wash that sits near the page
+     ground, and the action colour is chosen to carry a label ON it, not to be
+     read against it — as itself it fails on the darker themes (Ion 3.36:1,
+     Solarized 2.52:1). Pulling it toward the theme's own text colour keeps the
+     hue while borrowing the contrast the theme already guarantees, and it
+     self-inverts: text is light on dark themes, dark on light ones. 45% clears
+     AA on every bundled theme with headroom to spare (worst case 5.56:1). */
+  --color-action-subtle-fg: color-mix(in oklab, var(--color-action), var(--color-text-primary) 45%);
+  --color-window-close: var(--fn-window-close);
+
+  /* Grid selection — cyan ring + wash */
+  --color-selection-ring: var(--raw-vcyan-400);
+  --color-selection-bg: rgba(0, 212, 255, 0.11);
+
+  /* Syntax — the semantic layer for highlighted code. Defaults to the
+     functional set, but themes MAY remap these to match their own editor
+     palette (see the `monaco` rules each theme ships): a theme that paints
+     keywords pink in the editor should paint them pink in a code block too.
+     Consumed by <CodeView> via the --vq-code-* bridge in globals.css. */
+  --color-syntax-keyword: var(--fn-syntax-kw);
+  --color-syntax-function: var(--fn-syntax-fn);
+  --color-syntax-string: var(--fn-syntax-str);
+  --color-syntax-number: var(--fn-syntax-num);
+  --color-syntax-comment: var(--fn-syntax-cm);
+
+  /* Key badges — PK reads violet, FK follows the data accent (cyan), UNIQUE
+     stays a neutral outline so it never competes with the two key kinds. */
+  --color-key-pk: var(--raw-vpurple-200);
+  --color-key-pk-bg: rgba(167, 139, 250, 0.14);
+  --color-key-pk-border: rgba(167, 139, 250, 0.35);
+  --color-key-fk: var(--raw-vcyan-300);
+  --color-key-fk-bg: rgba(0, 212, 255, 0.11);
+  --color-key-fk-border: rgba(0, 212, 255, 0.30);
+
+  /* Status — functional set, identical across themes */
+  --color-success: var(--fn-ok);
+  --color-warning: var(--fn-warn);
+  --color-error: var(--fn-danger);
+  --color-error-emphasis: var(--fn-danger-emphasis);
+  --color-error-emphasis-hover: var(--fn-danger-emphasis-hover);
+  /* The destructive label. Fixed, and deliberately NOT --color-action-fg: the
+     action fill follows the theme so its label must too, but the emphasis red
+     is the same red on every theme, so its label is the same white on every
+     theme (4.83:1). Borrowing the action's label breaks the moment a theme's
+     ground is light — a dark label on a vivid red reads 2.59:1 on Nord. */
+  --color-error-fg: #ffffff;
+  --color-info: var(--raw-vcyan-400);
+
+  /* Identity — a decorative palette for telling entities apart when they have
+     no icon of their own (a plugin's letter tile, and anything else that needs
+     a stable colour derived from a name).
+
+     Deliberately its OWN scale rather than a hash across the semantic tokens.
+     Hashing over success/warning/error would paint a perfectly healthy plugin
+     red, and those hues are reserved: `--color-accent` is interface state,
+     data-accent marks a data source, agent-accent marks agent activity. An
+     identity colour means only "this is a different thing from that thing", so
+     it must not borrow a hue that already means something.
+
+     Ion's values are the eight the plugin list already used; a theme can
+     remap them to its own palette. */
+  --color-identity-1: #3B82F6;
+  --color-identity-2: #10B981;
+  --color-identity-3: #A855F7;
+  --color-identity-4: #EF4444;
+  --color-identity-5: #F59E0B;
+  --color-identity-6: #06B6D4;
+  --color-identity-7: #EC4899;
+  --color-identity-8: #6366F1;
 
   /* Interactive */
-  --color-hover: rgba(232, 236, 243, 0.05);
-  --color-active: rgba(232, 236, 243, 0.1);
-  --color-focus-ring: var(--raw-mint-400);
-  --color-disabled: var(--raw-ink-400);
+  --color-hover: rgba(203, 213, 225, 0.05);
+  --color-active: rgba(203, 213, 225, 0.1);
+  --color-focus-ring: var(--raw-vpurple-500);
+  --color-disabled: var(--raw-dark-700);
 
   /* Shadows */
   --shadow-input-inset: inset 0 1px 2px rgba(0, 0, 0, 0.4);
   --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.3);
   --shadow-elevated: 0 4px 12px rgba(0, 0, 0, 0.4);
   --shadow-dropdown: 0 8px 24px rgba(0, 0, 0, 0.5);
-  --shadow-focus-glow: 0 0 0 3px rgba(43, 217, 163, 0.25);
+  --shadow-focus-glow: 0 0 0 3px rgba(122, 92, 255, 0.22);
   --shadow-error-ring: 0 0 0 3px color-mix(in oklch, var(--color-error), transparent 75%);
+  /* The error ring's twin, for a field that has passed validation. Derived the
+     same way so the two read as one family at different meanings. */
+  --shadow-success-ring: 0 0 0 3px color-mix(in oklch, var(--color-success), transparent 75%);
 
   /* Transitions */
   --transition-fast: 150ms ease;
@@ -173,9 +331,9 @@
   --transition-slow: 300ms ease;
 
   /* Gradients */
-  --color-input-gradient-top: rgba(232, 236, 243, 0.03);
+  --color-input-gradient-top: rgba(203, 213, 225, 0.03);
   --color-input-gradient-bottom: transparent;
-  --color-button-highlight: rgba(232, 236, 243, 0.1);
+  --color-button-highlight: rgba(203, 213, 225, 0.1);
 
   /* Tab strip — browser-style tabs need the active tab to visually attach
      to the workspace surface. Defaults derive from the theme's own
@@ -209,4 +367,10 @@
   --color-switch-track-off-hover: color-mix(in oklab, var(--color-text-primary) 42%, var(--color-bg-secondary));
   --color-switch-track-on: var(--color-accent);
   --color-switch-thumb: #ffffff;
+
+  /* Checkbox — the tick is drawn as an alpha mask over the box's own accent
+     fill, so this is the mark's colour, not the fill's. White reads on every
+     theme's accent (they're all mid-to-dark saturated hues); a theme with a
+     pale accent can override it the same way it can override the switch knob. */
+  --color-checkbox-mark: #ffffff;
 }

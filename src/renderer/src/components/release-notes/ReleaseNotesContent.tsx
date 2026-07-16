@@ -1,5 +1,5 @@
 import { ExternalLink, type LucideIcon } from 'lucide-react'
-import { Flex, Box, Stack, Text, Heading, Badge, GradientSurface } from '@/primitives'
+import { Flex, Box, Card, Stack, Text, Heading, Badge, GradientSurface, Button } from '@/primitives'
 import { VerqlHero } from '@/components/brand/VerqlHero'
 import { useTranslation } from '@/i18n/I18nProvider'
 import { IPC_CHANNELS } from '@shared/ipc'
@@ -26,7 +26,7 @@ function HighlightCard({ icon: Icon, title, description }: {
 }) {
   // title/description are already resolved to display strings by the caller.
   return (
-    <Flex gap="md" className="rounded-lg border border-border-default bg-bg-secondary p-4">
+    <Card padding="lg" className="flex gap-3">
       <Box className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-accent/10 text-accent">
         <Icon size={18} />
       </Box>
@@ -34,7 +34,7 @@ function HighlightCard({ icon: Icon, title, description }: {
         <Text size="sm" weight="semibold" color="primary">{title}</Text>
         <Text size="xs" color="muted" className="mt-0.5 leading-relaxed">{description}</Text>
       </Flex>
-    </Flex>
+    </Card>
   )
 }
 
@@ -60,7 +60,7 @@ export function ReleaseNotesContent({ note }: { note: ReleaseNote }) {
       <GradientSurface tone="accent" intensity="bold" className="rounded-2xl border border-border-default">
         <Stack gap="md" className="p-8">
           <Flex align="center" gap="sm">
-            <VerqlHero size={40} className="text-accent" />
+            <VerqlHero size={40} />
             <Text size="xs" weight="semibold" color="accent" className="uppercase tracking-wider">
               {t('shell.releaseNotes.eyebrow')}
             </Text>
@@ -80,7 +80,7 @@ export function ReleaseNotesContent({ note }: { note: ReleaseNote }) {
           <Box key={group.title}>
             <Flex align="center" gap="sm">
               <Heading level={4}>{t(group.title)}</Heading>
-              <Badge variant={TONE_VARIANT[group.tone]} size="sm">{toneLabel(group.tone)}</Badge>
+              <Badge tone={TONE_VARIANT[group.tone]} size="sm">{toneLabel(group.tone)}</Badge>
             </Flex>
             <Stack gap="sm" className="mt-4">
               {group.highlights.map((h) => (
@@ -99,14 +99,16 @@ export function ReleaseNotesContent({ note }: { note: ReleaseNote }) {
           </Text>
           <Flex gap="sm" wrap className="mt-3">
             {note.links.map((link) => (
-              <button
+              <Button
+                variant="bare"
+                size="none"
                 key={link.url}
                 onClick={() => openExternal(link.url)}
                 className="inline-flex items-center gap-2 rounded-md border border-border-default bg-bg-secondary px-3 py-1.5 text-sm text-text-secondary transition-colors hover:border-border-strong hover:bg-hover focus-visible:outline-none focus-visible:shadow-[var(--shadow-focus-glow)]"
               >
-                <span>{t(link.label)}</span>
+                <Box as="span">{t(link.label)}</Box>
                 <ExternalLink size={13} className="text-text-tertiary" />
-              </button>
+              </Button>
             ))}
           </Flex>
         </Box>

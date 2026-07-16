@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Flex, Text } from '@/primitives'
+import { Box, Flex, Text } from '@/primitives'
 import { ChevronRight } from 'lucide-react'
 import { cn } from '@/primitives/utils/cn'
 import { WidgetRenderer } from '../WidgetRenderer'
@@ -17,7 +17,7 @@ export function SectionWidgetRenderer({ widget, pluginId }: Props) {
   if (widget.visible === false) return null
 
   return (
-    <div className="space-y-1">
+    <Box className="space-y-1">
       <Flex
         align="center"
         gap="xs"
@@ -35,10 +35,10 @@ export function SectionWidgetRenderer({ widget, pluginId }: Props) {
         </Text>
       </Flex>
       {!collapsed && (
-        <div className="space-y-1 pl-2">
+        <Box className="space-y-1 pl-2">
           <WidgetRenderer widgets={widget.children} pluginId={pluginId} />
-        </div>
+        </Box>
       )}
-    </div>
+    </Box>
   )
 }

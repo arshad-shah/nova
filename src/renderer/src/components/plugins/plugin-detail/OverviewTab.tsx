@@ -42,7 +42,7 @@ export function OverviewTab({ plugin, stateConfig, errors }: {
 
       {/* Error alert if present */}
       {plugin.status.error && (
-        <Alert variant="error">{plugin.status.error}</Alert>
+        <Alert tone="error">{plugin.status.error}</Alert>
       )}
 
       {/* Details Card */}

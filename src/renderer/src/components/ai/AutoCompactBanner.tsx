@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import { AlertTriangle, Loader2, RotateCcw, X, Check } from 'lucide-react'
 import { useAIStore } from '@/stores/ai'
 import { useTranslation } from '@/i18n/I18nProvider'
+import { Box, Button } from '@/primitives'
 
 const AUTO_TRIGGER_THRESHOLD = 0.80
 const FORCED_WARNING_THRESHOLD = 0.95
@@ -96,15 +97,15 @@ export function AutoCompactBanner() {
     return (
       <Wrapper tone="warn">
         <AlertTriangle size={12} className="shrink-0" />
-        <span className="flex-1 text-[11px]"><strong>{t('aiui.autoCompact.usedPct', { pct: Math.round(pct * 100) })}</strong> {t('aiui.autoCompact.pending')}</span>
-        <button className="rounded bg-warning text-[10px] font-medium px-2 py-0.5 text-bg-primary"
+        <Box as="span" className="flex-1 text-[11px]"><strong>{t('aiui.autoCompact.usedPct', { pct: Math.round(pct * 100) })}</strong> {t('aiui.autoCompact.pending')}</Box>
+        <Button variant="bare" size="none" className="rounded bg-warning text-[10px] font-medium px-2 py-0.5 text-bg-primary"
           onClick={() => { window.clearTimeout(timer.current); justCompactedRef.current = true; void compact() }}>
           {t('aiui.autoCompact.now')}
-        </button>
-        <button className="rounded border border-warning/50 text-warning text-[10px] px-2 py-0.5"
+        </Button>
+        <Button variant="bare" size="none" className="rounded border border-warning/50 text-warning text-[10px] px-2 py-0.5"
           onClick={() => { window.clearTimeout(timer.current); suppress(); setPhase({ kind: 'idle' }) }}>
           {t('aiui.autoCompact.skip')}
-        </button>
+        </Button>
       </Wrapper>
     )
   }
@@ -113,7 +114,7 @@ export function AutoCompactBanner() {
     return (
       <Wrapper tone="info">
         <Loader2 size={12} className="shrink-0 animate-spin" />
-        <span className="flex-1 text-[11px]">{t('aiui.autoCompact.compacting')}</span>
+        <Box as="span" className="flex-1 text-[11px]">{t('aiui.autoCompact.compacting')}</Box>
       </Wrapper>
     )
   }
@@ -122,17 +123,17 @@ export function AutoCompactBanner() {
     return (
       <Wrapper tone="ok">
         <Check size={12} className="shrink-0" />
-        <span className="flex-1 text-[11px]">{t('aiui.autoCompact.success')}</span>
+        <Box as="span" className="flex-1 text-[11px]">{t('aiui.autoCompact.success')}</Box>
         {lastSnapshot ? (
-          <button className="rounded border border-success/50 text-success text-[10px] px-2 py-0.5 inline-flex items-center gap-1"
+          <Button variant="bare" size="none" className="rounded border border-success/50 text-success text-[10px] px-2 py-0.5 inline-flex items-center gap-1"
             onClick={() => { void undo(); setPhase({ kind: 'idle' }) }}>
             <RotateCcw size={10} /> {t('aiui.autoCompact.undo')}
-          </button>
+          </Button>
         ) : null}
-        <button className="text-success/70 hover:text-success" aria-label={t('aiui.autoCompact.dismiss')}
+        <Button variant="bare" size="none" className="text-success/70 hover:text-success" aria-label={t('aiui.autoCompact.dismiss')}
           onClick={() => setPhase({ kind: 'idle' })}>
           <X size={12} />
-        </button>
+        </Button>
       </Wrapper>
     )
   }
@@ -141,11 +142,11 @@ export function AutoCompactBanner() {
   return (
     <Wrapper tone="error">
       <AlertTriangle size={12} className="shrink-0" />
-      <span className="flex-1 text-[11px]"><strong>{t('aiui.autoCompact.usedPct', { pct: Math.round(pct * 100) })}</strong> {t('aiui.autoCompact.forced')}</span>
-      <button className="rounded bg-error text-[10px] font-medium px-2 py-0.5 text-bg-primary"
+      <Box as="span" className="flex-1 text-[11px]"><strong>{t('aiui.autoCompact.usedPct', { pct: Math.round(pct * 100) })}</strong> {t('aiui.autoCompact.forced')}</Box>
+      <Button variant="bare" size="none" className="rounded bg-error text-[10px] font-medium px-2 py-0.5 text-bg-primary"
         onClick={() => { justCompactedRef.current = true; void compact() }}>
         {t('aiui.autoCompact.compactNow')}
-      </button>
+      </Button>
     </Wrapper>
   )
 }
@@ -156,8 +157,8 @@ function Wrapper({ tone, children }: { tone: 'warn' | 'info' | 'ok' | 'error'; c
     : tone === 'ok' ? 'bg-success/10 border-success/30 text-success'
     : 'bg-error/10 border-error/30 text-error'
   return (
-    <div className={`flex items-center gap-2 px-3 py-2 border-b ${bg}`}>
+    <Box className={`flex items-center gap-2 px-3 py-2 border-b ${bg}`}>
       {children}
-    </div>
+    </Box>
   )
 }

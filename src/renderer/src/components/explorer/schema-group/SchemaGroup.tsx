@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { useSchemaStore } from '@/stores/schema'
+import { Box } from '@/primitives'
 import { useGroupExpanded } from './useGroupExpanded'
 import { GroupHeader } from './GroupHeader'
 
@@ -26,7 +27,7 @@ export function SchemaGroup({
   if (count === 0) return null
   const showExpanded = expanded || Boolean(filterText)
   return (
-    <div>
+    <Box>
       <GroupHeader
         label={label}
         count={count}
@@ -36,6 +37,6 @@ export function SchemaGroup({
         paddingLeft={headerPaddingLeft}
       />
       {showExpanded && children}
-    </div>
+    </Box>
   )
 }

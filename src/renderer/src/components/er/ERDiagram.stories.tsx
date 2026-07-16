@@ -1,6 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useEffect } from 'react'
-import { ThemeProvider } from '@/primitives/theme/ThemeProvider'
 import { ERDiagram } from './ERDiagram'
 import { useSchemaStore } from '@/stores/schema'
 import { IPC_CHANNELS } from '@shared/ipc'
@@ -91,14 +90,10 @@ const meta: Meta<typeof ERDiagram> = {
   title: 'Components/Er/ERDiagram',
   component: ERDiagram,
   decorators: [
-    // ERDiagram reads the active theme via useTheme() for node/edge styling,
-    // which needs the app ThemeProvider in the tree.
     (Story) => (
-      <ThemeProvider>
-        <div style={{ width: 820, height: 520 }}>
-          <Story />
-        </div>
-      </ThemeProvider>
+      <div style={{ width: 820, height: 520 }}>
+        <Story />
+      </div>
     ),
   ],
 }

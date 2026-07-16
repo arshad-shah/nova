@@ -15,7 +15,7 @@ const kbdVariants = cva(
       },
       variant: {
         solid:
-          'border bg-bg-tertiary border-border-default text-text-secondary shadow-[inset_0_-1px_0_rgba(0,0,0,0.2)]',
+          'border bg-bg-tertiary border-border-default text-text-secondary shadow-[inset_0_-1px_0_var(--color-overlay-soft)]',
         outline: 'border border-border-default bg-transparent text-text-secondary',
         ghost: 'bg-transparent text-text-tertiary',
       },

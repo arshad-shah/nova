@@ -14,7 +14,7 @@ export function PermissionsTab({ permissions, onToggle }: {
   if (permissions.trusted) {
     return (
       <Stack gap="md">
-        <Alert variant="info">
+        <Alert tone="info">
           {t('plugins.detail.permissions.trusted')}
         </Alert>
       </Stack>
@@ -33,7 +33,7 @@ export function PermissionsTab({ permissions, onToggle }: {
 
   return (
     <Stack gap="md">
-      <Alert variant="warning">
+      <Alert tone="warning">
         {t('plugins.detail.permissions.warning')}
       </Alert>
       <Card padding="md">
@@ -46,7 +46,7 @@ export function PermissionsTab({ permissions, onToggle }: {
                 <Box className="flex-1 min-w-0">
                   <Flex direction="row" align="center" gap="sm" className="flex-wrap">
                     <Text size="sm" weight="medium" color="primary">{info?.title ?? perm}</Text>
-                    <Badge size="sm" variant={info?.enforced ? 'accent' : 'default'}>
+                    <Badge size="sm" tone={info?.enforced ? 'accent' : 'default'}>
                       {info?.enforced ? t('plugins.detail.permissions.enforced') : t('plugins.detail.permissions.advisory')}
                     </Badge>
                   </Flex>

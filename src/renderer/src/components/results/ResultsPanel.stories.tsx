@@ -1,5 +1,4 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { ThemeProvider } from '@/primitives/theme/ThemeProvider'
 import { ResultsPanel } from './ResultsPanel'
 import type { QueryResult } from '@shared/types'
 
@@ -32,14 +31,10 @@ const meta: Meta<typeof ResultsPanel> = {
   title: 'Components/Results/ResultsPanel',
   component: ResultsPanel,
   decorators: [
-    // ResultsPanel renders ResultsGrid, which reads the active theme via
-    // useTheme() — that needs the app ThemeProvider in the tree.
     (Story) => (
-      <ThemeProvider>
-        <div style={{ width: 820, height: 440, maxWidth: '100%', border: '1px solid var(--color-border-default)' }}>
-          <Story />
-        </div>
-      </ThemeProvider>
+      <div style={{ width: 820, height: 440, maxWidth: '100%', border: '1px solid var(--color-border-default)' }}>
+        <Story />
+      </div>
     ),
   ],
 }

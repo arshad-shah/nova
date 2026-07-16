@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Upload, X } from 'lucide-react'
-import { Modal, Button, Input, Text, Flex, Spinner, Stack, Box } from '@/primitives'
+import { Modal, Button, Input, Text, Flex, Spinner, Stack, Box, SegmentedControl } from '@/primitives'
 import { IPC_CHANNELS } from '@shared/ipc'
 import type { ImportFormatInfo } from '@shared/export-import'
 import { useTranslation } from '@/i18n/I18nProvider'
@@ -86,19 +86,16 @@ export function ImportModal({ connectionId, onClose }: Props) {
       <Stack gap="md" className="p-4">
         <Box>
           <Text size="xs" color="muted" as="p" className="mb-2">{t('shell.importModal.importType')}</Text>
-          <Flex direction="row" gap="sm">
-            {formats.map(f => (
-              <Button
-                key={f.format}
-                variant={format === f.format ? 'outline' : 'ghost'}
-                size="sm"
-                onClick={() => setFormat(f.format)}
-                className={`flex-1 ${format === f.format ? 'border-accent text-accent bg-accent/10' : ''}`}
-              >
-                {f.displayName}
-              </Button>
-            ))}
-          </Flex>
+          <SegmentedControl
+            size="sm"
+            stretch
+            tone="accent"
+            label={t('shell.importModal.importType')}
+            // Null until the driver's formats arrive — see ExportModal.
+            value={format ?? ''}
+            onChange={setFormat}
+            options={formats.map(f => ({ value: f.format, label: f.displayName }))}
+          />
         </Box>
 
         {isDriverExecuted && (

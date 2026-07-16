@@ -1,6 +1,6 @@
 import { useRef } from 'react'
 import type { AIProviderInfo, AIModelInfo } from '@shared/ai-types'
-import { Text } from '@/primitives/typography/Text'
+import { Text, Box, Button } from '@/primitives'
 import { Card } from '@/primitives/surfaces/Card'
 import { ScrollArea } from '@/primitives/layout/ScrollArea'
 import { useClickOutside } from '@/hooks/useClickOutside'
@@ -22,22 +22,26 @@ export function ModelPicker({ providers, models, activeModel, onSelect, onSelect
   useClickOutside(ref, onDismiss)
 
   return (
-    <div ref={ref} className="absolute bottom-full left-3 right-3 mb-1 z-50">
+    <Box ref={ref} className="absolute bottom-full left-3 right-3 mb-1 z-50">
       <Card padding="sm" className="shadow-[var(--shadow-dropdown)]">
         <ScrollArea direction="vertical" className="max-h-64">
           {providers.map(provider => (
-            <div key={provider.id}>
-              <button
+            <Box key={provider.id}>
+              <Button
+                variant="bare"
+                size="none"
                 onClick={() => onSelectProvider(provider)}
                 className="w-full text-left px-2 py-1 hover:bg-hover rounded transition-colors"
               >
                 <Text size="xs" color="muted" weight="medium" className="uppercase tracking-wider">
                   {provider.name}
                 </Text>
-              </button>
+              </Button>
               {models.map(model => (
-                <button
+                <Button
                   key={model.id}
+                  variant="bare"
+                  size="none"
                   onClick={() => onSelect(model.id)}
                   className={`w-full text-left px-2 py-1.5 rounded transition-colors ${
                     model.id === activeModel
@@ -48,17 +52,17 @@ export function ModelPicker({ providers, models, activeModel, onSelect, onSelect
                   <Text size="xs" color={model.id === activeModel ? 'accent' : 'primary'}>
                     {model.name}
                   </Text>
-                </button>
+                </Button>
               ))}
-            </div>
+            </Box>
           ))}
           {providers.length === 0 && (
-            <div className="px-2 py-3">
+            <Box className="px-2 py-3">
               <Text size="xs" color="muted">{t('aiui.chat.providersEmpty')}</Text>
-            </div>
+            </Box>
           )}
         </ScrollArea>
       </Card>
-    </div>
+    </Box>
   )
 }

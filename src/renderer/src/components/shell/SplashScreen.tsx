@@ -24,7 +24,7 @@ export function SplashScreen({ status = t('shell.splash.starting') }: SplashScre
       aria-live="polite"
     >
       <Stack gap="lg" align="center">
-        <VerqlHero size={120} className="text-accent" />
+        <VerqlHero size={120} />
         <Spinner size="lg" label={status} />
         <Text size="base" color="muted">{status}</Text>
       </Stack>

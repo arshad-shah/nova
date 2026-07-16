@@ -99,6 +99,7 @@ export const AcrossThemes: Story = {
     // running app instead of the color-mix fallback in tokens.css.
     type Swatch = { id: string; label: string; bg: string; text: string; base: string; hi: string }
     const swatches: Swatch[] = [
+      { id: 'ion', label: 'Ion', bg: '#0B0F16', text: '#F2F4F7', base: 'rgba(203, 213, 225, 0.10)', hi: 'rgba(203, 213, 225, 0.22)' },
       { id: 'nightshift', label: 'Nightshift', bg: '#0B0F16', text: '#E8ECF3', base: 'rgba(232, 236, 243, 0.10)', hi: 'rgba(232, 236, 243, 0.22)' },
       { id: 'lab', label: 'Lab', bg: '#FAFAF6', text: '#1A1A1C', base: 'rgba(26, 26, 28, 0.10)', hi: 'rgba(26, 26, 28, 0.20)' },
       { id: 'inkpaper', label: 'Ink & Paper', bg: '#F2EBDE', text: '#14110F', base: 'rgba(20, 17, 15, 0.10)', hi: 'rgba(20, 17, 15, 0.20)' },

@@ -1,5 +1,4 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { ThemeProvider } from '@/primitives/theme/ThemeProvider'
 import { ResultsGrid } from './ResultsGrid'
 import type { QueryResult } from '@shared/types'
 
@@ -37,14 +36,10 @@ const meta: Meta<typeof ResultsGrid> = {
   title: 'Components/Results/ResultsGrid',
   component: ResultsGrid,
   decorators: [
-    // ResultsGrid reads the active theme via useTheme() to pick the AG Grid
-    // theme, which needs the app ThemeProvider in the tree.
     (Story) => (
-      <ThemeProvider>
-        <div style={{ width: 820, height: 400, maxWidth: '100%' }}>
-          <Story />
-        </div>
-      </ThemeProvider>
+      <div style={{ width: 820, height: 400, maxWidth: '100%' }}>
+        <Story />
+      </div>
     ),
   ],
 }

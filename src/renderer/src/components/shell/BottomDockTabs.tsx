@@ -1,5 +1,5 @@
 import { X } from 'lucide-react'
-import { Flex, cn } from '@/primitives'
+import { Box, Flex, cn, Button } from '@/primitives'
 import { useTranslation } from '@/i18n/I18nProvider'
 
 export interface BottomTab {
@@ -19,7 +19,9 @@ export function BottomDockTabs({ tabs, activeId, onSelect, onClose }: Props) {
   return (
     <Flex align="center" className="h-8 border-b border-border bg-bg-secondary px-1 shrink-0">
       {tabs.map(tab => (
-        <button
+        <Button
+          variant="bare"
+          size="none"
           key={tab.id}
           type="button"
           onClick={() => onSelect(tab.id)}
@@ -31,17 +33,19 @@ export function BottomDockTabs({ tabs, activeId, onSelect, onClose }: Props) {
           )}
         >
           {tab.title}
-        </button>
+        </Button>
       ))}
-      <div className="flex-1" />
-      <button
+      <Box className="flex-1" />
+      <Button
+        variant="bare"
+        size="none"
         type="button"
         aria-label={t('shell.bottomDock.hide')}
         onClick={onClose}
         className="h-7 w-7 inline-flex items-center justify-center text-text-muted hover:text-text-primary hover:bg-white/5 rounded-sm"
       >
         <X size={14} />
-      </button>
+      </Button>
     </Flex>
   )
 }

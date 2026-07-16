@@ -10,7 +10,9 @@ import { PluginContributedSettings } from '../PluginContributedSettings'
 import { SettingLabel } from '@/components/settings/SettingLabel'
 import { isThemeSelectable } from './theme-utils'
 
-const FALLBACK_PREVIEW = { bg: '#0B0F16', sidebar: '#131825', text: '#E8ECF3', accent: '#2bd9a3' }
+/** Swatch shown for a theme that ships no `preview`. Mirrors Ion, the
+ *  baseline theme — see `stores/themes.ts`. */
+const FALLBACK_PREVIEW = { bg: '#0B0F16', sidebar: '#111827', text: '#F2F4F7', accent: '#7A5CFF' }
 
 const MODE_OPTIONS: { id: 'light' | 'dark' | 'system'; Icon: typeof Sun }[] = [
   { id: 'light', Icon: Sun },
@@ -74,29 +76,30 @@ function ThemeGrid({
               title={tooltip}
             >
               {(hasError || hasWarning) && (
-                <span
+                <Box
+                  as="span"
                   className={`absolute top-1.5 right-1.5 inline-flex items-center justify-center rounded-full p-0.5 ${
                     hasError ? 'bg-error text-white' : 'bg-warning text-black/80'
                   }`}
                   aria-label={tooltip}
                 >
                   <AlertTriangle size={9} />
-                </span>
+                </Box>
               )}
               <Flex gap="xs" className="mb-2 h-1.5">
-                <div className="flex-1 rounded-sm" style={{ background: preview.sidebar }} />
-                <div
+                <Box className="flex-1 rounded-sm" style={{ background: preview.sidebar }} />
+                <Box
                   className="flex-2 rounded-sm"
                   style={{ background: preview.bg, border: `1px solid ${preview.sidebar}` }}
                 />
               </Flex>
               <Flex gap="xs" className="mb-1.5">
-                <div className="h-0.5 w-3 rounded-sm" style={{ background: preview.text }} />
-                <div className="h-0.5 w-5 rounded-sm" style={{ background: preview.sidebar }} />
+                <Box className="h-0.5 w-3 rounded-sm" style={{ background: preview.text }} />
+                <Box className="h-0.5 w-5 rounded-sm" style={{ background: preview.sidebar }} />
               </Flex>
               <Flex gap="xs">
-                <div className="h-0.5 w-2 rounded-sm" style={{ background: preview.accent }} />
-                <div className="h-0.5 w-4 rounded-sm" style={{ background: preview.sidebar }} />
+                <Box className="h-0.5 w-2 rounded-sm" style={{ background: preview.accent }} />
+                <Box className="h-0.5 w-4 rounded-sm" style={{ background: preview.sidebar }} />
               </Flex>
               <Text size="xs" className="mt-2 text-center block" style={{ color: preview.text }}>
                 {t.name} {currentTheme === t.id && <Check size={10} className="inline ml-0.5" />}

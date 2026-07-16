@@ -186,10 +186,10 @@ export const defaultSettings: AppSettings = {
     confirmDestructiveQueries: true,
   },
   appearance: {
-    theme: 'nightshift',
+    theme: 'ion',
     appearanceMode: 'dark',
     lightTheme: 'lab',
-    darkTheme: 'nightshift',
+    darkTheme: 'ion',
     uiDensity: 'comfortable',
     sidebarPosition: 'left',
     // Empty means "follow the theme's accent". Setting any non-empty value

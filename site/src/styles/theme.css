@@ -1,46 +1,53 @@
 /*
- * Verql brand theme for Starlight.
+ * Verql brand theme for Starlight — Ion.
  *
- * Maps the app's "Nightshift" palette onto Starlight's color tokens:
- *   accent  → electric mint  (#00c990 / #5ce0bd)
- *   gray    → cool ink neutrals (bluer than Starlight's defaults)
- *   surface → deep midnight ink for dark, warm white for light
+ * Maps the app's Ion palette (its default theme) onto Starlight's color tokens
+ * so the docs read as the same product as the app:
+ *   accent  → Ion violet  (#7A5CFF, with the mark's cyan for the hero glow)
+ *   gray    → the app's ink scale
+ *   surface → Ion's midnight ink for dark, warm white for light
  *
- * Mirrors src/renderer/src/primitives/theme/tokens.css in the app.
+ * Values come from the app's own tokens — the `[data-theme="ion"]` block in
+ * src/renderer/src/primitives/theme/baseline.css and the raw scale in
+ * primitives/theme/tokens.css. Keep them in step: this file is a copy of that
+ * palette, not a second opinion on it. The comment on each token names the app
+ * token it mirrors.
  */
 
 :root {
-  /* Mint accent — same scale the app uses for the central V-bar. */
-  --sl-color-accent-low: #00352a;
-  --sl-color-accent: #00c990;
-  --sl-color-accent-high: #9fe9d4;
+  /* Ion violet — --color-accent (--raw-vpurple-500) and its neighbours. */
+  --sl-color-accent-low: #241b5e;
+  --sl-color-accent: #7a5cff;
+  --sl-color-accent-high: #b6a6ff; /* --raw-vpurple-200 */
 
-  /* Cool ink neutrals (dark theme). */
-  --sl-color-white: #f3f6fb;
-  --sl-color-gray-1: #e8ecf3;
-  --sl-color-gray-2: #b8c0d1;
-  --sl-color-gray-3: #7c8499;
-  --sl-color-gray-4: #4a5468;
-  --sl-color-gray-5: #2a3140;
-  --sl-color-gray-6: #161b26;
-  --sl-color-black: #0b0f16;
+  /* The app's ink scale (--raw-ink-*). */
+  --sl-color-white: #f2f4f7; /* --raw-light-100 = --color-text-primary */
+  --sl-color-gray-1: #e8ecf3; /* --raw-ink-50 */
+  --sl-color-gray-2: #b8c0d1; /* --raw-ink-100 */
+  --sl-color-gray-3: #7c8499; /* --raw-ink-200 */
+  --sl-color-gray-4: #4a5468; /* --raw-ink-300 */
+  --sl-color-gray-5: #2a3140; /* --raw-ink-400 */
+  --sl-color-gray-6: #161b26; /* --raw-ink-600 */
+  --sl-color-black: #0b0f16; /* --raw-ink-900 */
 
-  /* Page + panel surfaces, tuned to the app's midnight ink. */
-  --sl-color-bg: #0b0f16;
-  --sl-color-bg-nav: #0e121b;
-  --sl-color-bg-sidebar: #0e121b;
-  --sl-color-bg-inline-code: #161b26;
-  --sl-color-hairline-shade: #1a2030;
+  /* Surfaces, straight from Ion's own. */
+  --sl-color-bg: #0b0f16; /* --color-bg-primary */
+  --sl-color-bg-nav: #0e121b; /* --raw-ink-800 */
+  --sl-color-bg-sidebar: #111827; /* --color-bg-secondary (--raw-dark-900) */
+  --sl-color-bg-inline-code: #161b26; /* --raw-ink-600 */
+  --sl-color-hairline-shade: #252e3f; /* --color-border-default */
 
-  /* Brand gradient used by the splash hero. */
-  --verql-glow: radial-gradient(60% 60% at 50% 30%, rgba(43, 217, 163, 0.18), transparent 70%);
+  /* Hero glow: the mark's violet→cyan, violet leading. */
+  --verql-glow:
+    radial-gradient(60% 60% at 50% 30%, rgba(122, 92, 255, 0.22), transparent 70%),
+    radial-gradient(40% 40% at 70% 45%, rgba(0, 212, 255, 0.1), transparent 70%);
 }
 
 :root[data-theme='light'] {
-  /* Mint darkened for AA contrast on warm white. */
-  --sl-color-accent-low: #c7f0e3;
-  --sl-color-accent: #008f68;
-  --sl-color-accent-high: #00352a;
+  /* Ion violet, darkened for AA contrast on white (--raw-vpurple-600). */
+  --sl-color-accent-low: #e2ddff;
+  --sl-color-accent: #5b43f6;
+  --sl-color-accent-high: #241b5e;
 
   --sl-color-white: #0b0f16;
   --sl-color-gray-1: #161b26;
@@ -58,7 +65,7 @@
   --sl-color-bg-inline-code: #eef1f6;
   --sl-color-hairline-shade: #e2e7ef;
 
-  --verql-glow: radial-gradient(60% 60% at 50% 30%, rgba(0, 143, 104, 0.12), transparent 70%);
+  --verql-glow: radial-gradient(60% 60% at 50% 30%, rgba(91, 67, 246, 0.12), transparent 70%);
 }
 
 /* ── Splash / landing polish ── */
@@ -77,21 +84,22 @@
   z-index: -1;
 }
 
-/* Hero V-bars icon: lift it off the page with a soft mint halo. */
+/* Hero mark: lift it off the page with a soft Ion halo. */
 .hero img {
-  filter: drop-shadow(0 24px 60px rgba(0, 201, 144, 0.22));
+  filter: drop-shadow(0 24px 60px rgba(122, 92, 255, 0.28));
 }
 
-/* Primary CTA in brand mint with readable ink text. */
+/* Primary CTA in Ion violet. White text rather than dark ink: the violet is
+   deep enough to carry it, where the old mint was not. */
 .hero .actions a.sl-link-button.primary {
-  background: linear-gradient(180deg, #5ce0bd, #00c990);
+  background: linear-gradient(180deg, #8f74ff, #5b43f6);
   border-color: transparent;
-  color: #06221a;
+  color: #ffffff;
   font-weight: 600;
 }
 
 .hero .actions a.sl-link-button.primary:hover {
-  background: linear-gradient(180deg, #6fe8c8, #11d49b);
+  background: linear-gradient(180deg, #a48dff, #6d55ff);
 }
 
 /* ── CardGrid accents ── */

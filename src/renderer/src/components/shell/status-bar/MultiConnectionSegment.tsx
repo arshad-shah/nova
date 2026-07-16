@@ -1,6 +1,7 @@
 import { ArrowLeftRight } from 'lucide-react'
 import { useConnectionsStore } from '@/stores/connections'
 import { StatusBarSegment } from './StatusBarSegment'
+import { Box } from '@/primitives'
 
 interface Props {
   onClick: () => void
@@ -19,7 +20,7 @@ export function MultiConnectionSegment({ onClick }: Props) {
       aria-label={`${count} active connections`}
     >
       <ArrowLeftRight size={11} aria-hidden />
-      <span>{count}</span>
+      <Box as="span">{count}</Box>
     </StatusBarSegment>
   )
 }

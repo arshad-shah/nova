@@ -1,4 +1,4 @@
-import { Flex, Button, Badge, Select } from '@/primitives'
+import { Flex, Button, Badge, Select, Box, Label } from '@/primitives'
 import { Switch } from '@/primitives/forms/Switch'
 import type { DriverCapabilities } from '@/stores/driver-capabilities'
 import type { QueryTabTxnState } from '@shared/types'
@@ -46,20 +46,20 @@ export function TransactionToolbar({
   return (
     <Flex direction="row" align="center" gap="sm" className="flex-wrap">
       {/* Status badge */}
-      <Badge variant={statusBadgeVariant} size="sm">
+      <Badge tone={statusBadgeVariant} size="sm">
         {statusText}
       </Badge>
 
       {/* Auto-commit toggle */}
       {caps.autoCommit && (
-        <label className="flex items-center gap-1.5 cursor-pointer select-none">
+        <Label className="flex items-center gap-1.5 cursor-pointer select-none">
           <Switch
             label={t('query.txn.autoCommit')}
             checked={txn.autoCommit}
             onChange={(e) => onToggleAutoCommit(e.target.checked)}
           />
-          <span className="text-xs text-text-secondary">{t('query.txn.autoCommit')}</span>
-        </label>
+          <Box as="span" className="text-xs text-text-secondary">{t('query.txn.autoCommit')}</Box>
+        </Label>
       )}
 
       {/* Isolation level select — disabled while a transaction is active because
@@ -80,15 +80,15 @@ export function TransactionToolbar({
       {/* Read-only toggle — disabled while a transaction is active for the same
           reason: it only applies at the next BEGIN. */}
       {caps.readOnly && (
-        <label className="flex items-center gap-1.5 cursor-pointer select-none">
+        <Label className="flex items-center gap-1.5 cursor-pointer select-none">
           <Switch
             label={t('query.txn.readOnly')}
             checked={txn.readOnly}
             onChange={(e) => onReadOnlyChange?.(e.target.checked)}
             disabled={isActive}
           />
-          <span className="text-xs text-text-secondary">{t('query.txn.readOnly')}</span>
-        </label>
+          <Box as="span" className="text-xs text-text-secondary">{t('query.txn.readOnly')}</Box>
+        </Label>
       )}
 
       {/* Commit / Rollback */}

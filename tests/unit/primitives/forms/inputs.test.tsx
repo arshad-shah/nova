@@ -46,14 +46,25 @@ describe('Input', () => {
     expect(container.firstChild).toHaveClass('[--field-ctl-h:var(--field-h-xl)]')
   })
 
-  it('applies error border when error is true', () => {
-    const { container } = render(<Input error />)
+  it('applies error border when state is error', () => {
+    const { container } = render(<Input state="error" />)
     expect(container.firstChild).toHaveClass('border-error')
   })
 
-  it('applies default border when no error', () => {
+  it('applies success border when state is success', () => {
+    const { container } = render(<Input state="success" />)
+    expect(container.firstChild).toHaveClass('border-success')
+  })
+
+  it('applies default border when no state', () => {
     const { container } = render(<Input />)
     expect(container.firstChild).toHaveClass('border-border-default')
+  })
+
+  it('flips itself to error past the limit, without the caller saying so', () => {
+    const { container } = render(<Input limit={5} defaultValue="far too long" />)
+    expect(container.firstChild).toHaveClass('border-error')
+    expect(screen.getByRole('textbox')).toHaveAttribute('aria-invalid', 'true')
   })
 
   it('is disabled when disabled prop is set', () => {
