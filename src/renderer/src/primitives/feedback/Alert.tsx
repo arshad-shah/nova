@@ -136,20 +136,19 @@ export function Alert({
           // disclosure button, a code block — and nesting those inside a <Text>
           // (a span) put block elements and buttons inside a span.
           //
-          // Untitled is the common case (4 of the app's 7 alerts), so an
-          // untitled body carries the line and stays primary. Only a body
-          // *under* a title is a supporting line, and gets muted.
+          // The body is the SAME colour as the title, not a step down from it.
+          // The title only summarises; the body is the part that actually says
+          // what happened, and it's what you're being asked to read. Stepping
+          // it down to `secondary` halved its contrast (12.4:1 -> 6.1:1) to buy
+          // a hierarchy that weight (600 vs 400) and size (fs-md vs fs-sm)
+          // already provide for free.
+          //
+          // Identical to Toast's, deliberately — the same two roles get the
+          // same two values in both.
           <div
             className={cn(
-              // Same type and colour as Toast's description — see the note
-              // there. These are the same two roles in both components, so
-              // they get the same two values.
-              'text-[length:var(--field-fs-sm)] leading-relaxed',
-              // `secondary`, not `muted`. An Alert is something you're meant to
-              // read, and muted is the app's dimmest text — it's for metadata
-              // you skip. A supporting line should be quieter than its title,
-              // not harder to read than the surface it sits on.
-              title ? 'mt-1 text-text-secondary' : 'text-text-primary'
+              'text-[length:var(--field-fs-sm)] leading-relaxed text-text-primary',
+              title && 'mt-1'
             )}
           >
             {children}

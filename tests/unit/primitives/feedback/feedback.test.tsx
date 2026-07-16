@@ -189,15 +189,24 @@ describe('Alert', () => {
     expect(container.querySelector('span p')).toBeNull()
   })
 
-  // 4 of the app's 7 alerts pass no title, so an untitled body has to carry the
-  // line rather than render as a muted afterthought under nothing. A body under
-  // a title steps back to `secondary` — not `muted`, which is the app's dimmest
-  // text and meant for metadata you skip, not for something you're asked to read.
-  it('keeps an untitled body primary, and steps it back only under a title', () => {
-    const { container: untitled } = render(<Alert tone="error">Boom</Alert>)
-    expect(untitled.querySelector('.text-text-primary')).toBeTruthy()
-    const { container: titled } = render(<Alert tone="error" title="Boom">details</Alert>)
-    expect(titled.querySelector('.text-text-secondary')).toBeTruthy()
+  // Title and description are the same colour. The title only summarises; the
+  // body is what actually says what happened, and it's what you're being asked
+  // to read. Stepping it down to `secondary` halved its contrast (12.4:1 ->
+  // 6.1:1) to buy a hierarchy that weight and size already provide.
+  it('renders the body at the same colour as the title', () => {
+    render(<Alert tone="error" title="Boom">the details</Alert>)
+    const titleEl = screen.getByText('Boom')
+    const bodyEl = screen.getByText('the details')
+    expect(titleEl).toHaveClass('text-text-primary')
+    expect(bodyEl).toHaveClass('text-text-primary')
+    // The separation is weight, not colour.
+    expect(titleEl).toHaveClass('font-semibold')
+    expect(bodyEl).not.toHaveClass('font-semibold')
+  })
+
+  it('renders an untitled body at the same colour too', () => {
+    render(<Alert tone="error">just a body</Alert>)
+    expect(screen.getByText('just a body')).toHaveClass('text-text-primary')
   })
 
   it('renders an action and calls it', () => {

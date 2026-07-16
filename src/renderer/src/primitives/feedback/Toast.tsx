@@ -179,12 +179,17 @@ export const Toast = forwardRef<HTMLDivElement, ToastProps>(function Toast(
     >
       <SeverityIcon severity={v} loading={loading} className="mt-px" />
 
+      {/* Title and description are the SAME colour, and identical to Alert's —
+          the same two roles get the same two values in both. The hierarchy is
+          weight (600 vs 400) and size (fs-md vs fs-sm), which is enough on its
+          own; dimming the description only halved its contrast to buy a
+          separation those two already gave for free. */}
       <div className="min-w-0 flex-1">
         <p className="text-[length:var(--field-fs-md)] font-semibold leading-snug text-text-primary">
           {title}
         </p>
         {description && (
-          <p className="mt-1 text-[length:var(--field-fs-sm)] leading-relaxed whitespace-pre-wrap break-words text-text-secondary">
+          <p className="mt-1 text-[length:var(--field-fs-sm)] leading-relaxed whitespace-pre-wrap break-words text-text-primary">
             {description}
           </p>
         )}
