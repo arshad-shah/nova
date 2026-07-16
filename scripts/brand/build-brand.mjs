@@ -161,21 +161,29 @@ if (!CHECK) {
   ]
   for (const [name, size] of APPX) rasterise('build/icon.svg', `build/appx/${name}`, size)
 
-  // ── 6 · Partner Center listing images ─────────────────────────────────────
+  // ── 6 · Partner Center listing art ────────────────────────────────────────
   // A different thing from the package tiles above: these are uploaded to the
   // store LISTING by hand, so they live outside build/appx (anything in there
   // gets packaged). 300x300 is the listing logo Partner Center asks for — it
   // is NOT the 310x310 large tile and does not replace it.
+  //
+  // Ratios are fixed by Partner Center and it rejects anything off-ratio:
+  //   Box art     1:1   1080x1080
+  //   Poster art  2:3    720x1080
+  //   Hero art   16:9   1920x1080
+  // The hero gets much more padding — it's a wide banner, and a mark scaled to
+  // its height would swamp it.
   for (const [name, size] of [['StoreLogo-300x300.png', 300], ['StoreLogo-2160x2160.png', 2160]]) {
     rasterise('build/icon.svg', `build/store-listing/${name}`, size)
   }
-
-  // Wide + splash are not square: the mark is CENTRED on the tile, never
-  // stretched. Fit the artwork bbox (221..1087 × 240..951 = 866 × 711) inside
-  // the tile with padding, scaling by whichever axis binds first — for a wide
-  // tile that's always the height.
+  // Any non-square art: the mark is CENTRED on the tile, never stretched. Fit
+  // the artwork bbox (221..1087 × 240..951 = 866 × 711) inside the tile with
+  // padding, scaling by whichever axis binds first. Padding is a fraction of
+  // the SHORT edge so a 16:9 hero and a 2:3 poster stay optically consistent
+  // rather than one of them coming out enormous.
   const MARK_W = 866, MARK_H = 711, MARK_X = 221, MARK_Y = 240
-  const wide = (w, h, pad = 18) => {
+  const art = (w, h, padFrac = 0.12) => {
+    const pad = Math.min(w, h) * padFrac
     const s = Math.min((w - pad * 2) / MARK_W, (h - pad * 2) / MARK_H)
     const tx = (w - MARK_W * s) / 2 - MARK_X * s
     const ty = (h - MARK_H * s) / 2 - MARK_Y * s
@@ -204,13 +212,29 @@ if (!CHECK) {
     written.push(`${pngRel} (${w}×${h})`)
   }
 
-  rasteriseAbs(scratch('wide.svg', wide(310, 150)), 'build/appx/Wide310x150Logo.png', 310, 150)
-  rasteriseAbs(scratch('splash.svg', wide(620, 300)), 'build/appx/SplashScreen.png', 620, 300)
+  rasteriseAbs(scratch('wide.svg', art(310, 150)), 'build/appx/Wide310x150Logo.png', 310, 150)
+  rasteriseAbs(scratch('splash.svg', art(620, 300)), 'build/appx/SplashScreen.png', 620, 300)
 
   // BadgeLogo must be monochrome + alpha only.
   const badge = buildMark('currentColor', { comment: 'Store badge — monochrome, alpha only.' })
     .replace('fill="currentColor"', 'fill="#FFFFFF"')
   rasteriseAbs(scratch('badge.svg', badge), 'build/appx/BadgeLogo.png', 24, 24)
+
+  // Partner Center listing art. Ratios are fixed and it rejects off-ratio
+  // uploads, so these are exact:
+  //   Box art     1:1   1080x1080
+  //   Poster art  2:3    720x1080
+  //   Hero art   16:9   1920x1080
+  // The hero takes far more padding — it's a wide banner, and a mark scaled to
+  // its height would swamp it.
+  const LISTING_ART = [
+    ['BoxArt-1080x1080.png', 1080, 1080, 0.16],
+    ['PosterArt-720x1080.png', 720, 1080, 0.14],
+    ['HeroArt-1920x1080.png', 1920, 1080, 0.30],
+  ]
+  for (const [name, w, h, padFrac] of LISTING_ART) {
+    rasteriseAbs(scratch(name.replace('.png', '.svg'), art(w, h, padFrac)), `build/store-listing/${name}`, w, h)
+  }
 
   rmSync(TMP, { recursive: true, force: true })
 }
