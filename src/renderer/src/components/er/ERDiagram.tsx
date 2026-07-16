@@ -43,8 +43,11 @@ export function ERDiagram({ connectionId, schema }: Props) {
   const { fetchTables, fetchColumns } = useSchemaStore()
   const { theme } = useTheme()
   const { gridColor, accentColor } = useMemo(() => ({
-    gridColor: readVar('--color-border-default', '#2a2a3e'),
-    accentColor: readVar('--color-accent', '#7c6ff7'),
+    // Ion values, mirroring baseline.css — xyflow needs concrete colours and
+    // can't resolve var(--…). Read live first; these only fire if the token
+    // is missing.
+    gridColor: readVar('--color-border-default', '#252E3F'),
+    accentColor: readVar('--color-accent', '#7A5CFF'),
   }), [theme])
 
   useEffect(() => {

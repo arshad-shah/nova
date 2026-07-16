@@ -122,6 +122,9 @@
   --fn-syntax-str: #FF8B73;
   --fn-syntax-num: #7DD3FC;
   --fn-syntax-cm: #66738A;
+  /* Windows title-bar close affordance — a platform convention, not a brand
+     colour, so it holds on every theme. */
+  --fn-window-close: #E81123;
 
   /* Brand gradient — reserved. See `docs/` design laws: mark/hero, splash and
      welcome brand moments, empty states, active nav/rail indicators and
@@ -203,6 +206,7 @@
   --color-action: var(--fn-action);
   --color-action-hover: var(--fn-action-hover);
   --color-action-fg: #ffffff;
+  --color-window-close: var(--fn-window-close);
 
   /* Grid selection — cyan ring + wash */
   --color-selection-ring: var(--raw-vcyan-400);

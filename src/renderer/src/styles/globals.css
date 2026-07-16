@@ -48,6 +48,8 @@
   --color-action: var(--color-action);
   --color-action-hover: var(--color-action-hover);
   --color-action-fg: var(--color-action-fg, #ffffff);
+  /* Windows title-bar close affordance — platform convention, all themes */
+  --color-window-close: var(--color-window-close);
   /* Grid selection — cyan ring + wash */
   --color-selection-ring: var(--color-selection-ring);
   --color-selection-bg: var(--color-selection-bg);

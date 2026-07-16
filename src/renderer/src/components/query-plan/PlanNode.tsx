@@ -26,7 +26,7 @@ export function PlanNodeView({ node, maxCost, depth = 0 }: Props) {
       <Flex
         align="center"
         gap="sm"
-        className="py-1.5 px-2 rounded-md hover:bg-white/5 cursor-pointer"
+        className="py-1.5 px-2 rounded-md hover:bg-hover cursor-pointer"
         onClick={() => setExpanded(!expanded)}
       >
         {hasChildren ? (
@@ -35,7 +35,11 @@ export function PlanNodeView({ node, maxCost, depth = 0 }: Props) {
           <Box as="span" className="w-3.5 shrink-0" />
         )}
 
-        <Text size="xs" weight="semibold" className="px-2 py-0.5 rounded" style={{ backgroundColor: color, color: costRatio > 0.3 ? '#000' : '#fff' }}>
+        {/* Cost tint is computed, so it stays inline — but it reads a token,
+            and the label uses inverse text: every status colour is a light
+            tint, so inverse stays legible on all three and flips correctly
+            on light themes. */}
+        <Text size="xs" weight="semibold" className="px-2 py-0.5 rounded text-text-inverse" style={{ backgroundColor: color }}>
           {node.type}
         </Text>
 

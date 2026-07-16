@@ -46,6 +46,7 @@
   --color-action: var(--fn-action);
   --color-action-hover: var(--fn-action-hover);
   --color-action-fg: #ffffff;
+  --color-window-close: var(--fn-window-close);
 
   --color-selection-ring: var(--raw-vcyan-400);
   --color-selection-bg: rgba(0, 212, 255, 0.11);

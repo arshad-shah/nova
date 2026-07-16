@@ -10,7 +10,9 @@ import { PluginContributedSettings } from '../PluginContributedSettings'
 import { SettingLabel } from '@/components/settings/SettingLabel'
 import { isThemeSelectable } from './theme-utils'
 
-const FALLBACK_PREVIEW = { bg: '#0B0F16', sidebar: '#131825', text: '#E8ECF3', accent: '#2bd9a3' }
+/** Swatch shown for a theme that ships no `preview`. Mirrors Ion, the
+ *  baseline theme — see `stores/themes.ts`. */
+const FALLBACK_PREVIEW = { bg: '#0B0F16', sidebar: '#111827', text: '#F2F4F7', accent: '#7A5CFF' }
 
 const MODE_OPTIONS: { id: 'light' | 'dark' | 'system'; Icon: typeof Sun }[] = [
   { id: 'light', Icon: Sun },

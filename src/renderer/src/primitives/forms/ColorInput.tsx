@@ -46,7 +46,7 @@ export interface ColorInputProps extends VariantProps<typeof colorInputVariants>
 }
 
 export const ColorInput = forwardRef<HTMLInputElement, ColorInputProps>(
-  ({ value: controlledValue, defaultValue = '#7c6ff7', onChange, presets, showPicker = true, disabled, size, className, 'aria-label': ariaLabel }, ref) => {
+  ({ value: controlledValue, defaultValue = '#7A5CFF', onChange, presets, showPicker = true, disabled, size, className, 'aria-label': ariaLabel }, ref) => {
     const isControlled = controlledValue !== undefined
     const [internalValue, setInternalValue] = useState(defaultValue)
     const [isOpen, setIsOpen] = useState(false)

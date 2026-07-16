@@ -8,6 +8,27 @@ import { useTranslation } from '@/i18n/I18nProvider'
 
 const THEME_NAME = 'verql'
 
+/**
+ * Ion values, mirroring `primitives/theme/baseline.css`. The chart library
+ * needs concrete colours — it can't resolve `var(--…)` — so every value below
+ * is read from the live theme first and only falls back here if the token is
+ * missing. Baseline.css declares all of them on `:root`, so in practice these
+ * fire only if that stylesheet failed to load.
+ */
+const FALLBACK = {
+  bg: '#0B0F16',
+  surface: '#1A2233',
+  text: '#F2F4F7',
+  textMuted: '#66738A',
+  border: '#252E3F',
+  accent: '#7A5CFF',
+  accentEmphasis: '#5B43F6',
+  dataAccent: '#00D4FF',
+  ok: '#34D399',
+  warn: '#FBBF24',
+  danger: '#F87171',
+} as const
+
 function readVar(name: string, fallback: string): string {
   const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim()
   return v || fallback
@@ -15,26 +36,28 @@ function readVar(name: string, fallback: string): string {
 
 function registerVerqlTheme(): void {
   addTheme(THEME_NAME, {
-    bg: readVar('--color-bg-primary', '#0b0f16'),
-    surface: readVar('--color-bg-secondary', '#131825'),
-    grid: readVar('--color-border-subtle', 'rgba(255,255,255,0.06)'),
-    text: readVar('--color-text-primary', '#e8ecf3'),
-    textMuted: readVar('--color-text-tertiary', '#8a93a4'),
-    axis: readVar('--color-border-default', 'rgba(255,255,255,0.1)'),
-    positive: readVar('--color-success', '#2bd9a3'),
-    negative: readVar('--color-error', '#ff5f57'),
-    onAccent: readVar('--color-text-inverse', '#0b0f16'),
+    bg: readVar('--color-bg-primary', FALLBACK.bg),
+    surface: readVar('--color-bg-secondary', FALLBACK.surface),
+    grid: readVar('--color-border-subtle', 'rgba(203,213,225,0.09)'),
+    text: readVar('--color-text-primary', FALLBACK.text),
+    textMuted: readVar('--color-text-tertiary', FALLBACK.textMuted),
+    axis: readVar('--color-border-default', FALLBACK.border),
+    positive: readVar('--color-success', FALLBACK.ok),
+    negative: readVar('--color-error', FALLBACK.danger),
+    onAccent: readVar('--color-text-inverse', FALLBACK.bg),
+    // Series colours walk the theme's own accents before reaching for status
+    // hues, so a chart reads as data rather than as a row of alerts.
     colors: [
-      readVar('--color-accent', '#7c6ff7'),
-      readVar('--color-accent-emphasis', '#5b8cff'),
-      readVar('--color-success', '#2bd9a3'),
-      readVar('--color-warning', '#e5c07b'),
-      readVar('--color-error', '#ff5f57'),
-      readVar('--color-accent-hover', '#a89bff'),
+      readVar('--color-accent', FALLBACK.accent),
+      readVar('--color-data-accent', FALLBACK.dataAccent),
+      readVar('--color-accent-emphasis', FALLBACK.accentEmphasis),
+      readVar('--color-success', FALLBACK.ok),
+      readVar('--color-warning', FALLBACK.warn),
+      readVar('--color-error', FALLBACK.danger),
     ],
-    tooltipBg: readVar('--color-bg-elevated', '#1a1f2e'),
-    tooltipBorder: readVar('--color-border-strong', 'rgba(255,255,255,0.16)'),
-    tooltipText: readVar('--color-text-primary', '#e8ecf3'),
+    tooltipBg: readVar('--color-bg-elevated', FALLBACK.surface),
+    tooltipBorder: readVar('--color-border-strong', 'rgba(203,213,225,0.18)'),
+    tooltipText: readVar('--color-text-primary', FALLBACK.text),
   })
 }
 

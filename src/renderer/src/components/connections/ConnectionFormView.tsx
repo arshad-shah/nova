@@ -51,7 +51,7 @@ export function ConnectionFormView({ tabId, editingId }: Props) {
     database: '',
     username: '',
     password: '',
-    color: '#7c6ff7',
+    color: '#7A5CFF',
     ...(existingProfile ?? {})
   })
 
@@ -158,7 +158,7 @@ export function ConnectionFormView({ tabId, editingId }: Props) {
                   </FormField>
                   <FormField label={t('connections.form.color')}>
                     <ColorInput
-                      value={String(profile.color ?? '#7c6ff7')}
+                      value={String(profile.color ?? '#7A5CFF')}
                       onChange={(v) => update({ color: v })}
                       presets={COLOR_PRESETS}
                       size="lg"
