@@ -14,7 +14,9 @@ const config: StorybookConfig = {
   addons: [
     '@storybook/addon-docs',
     '@storybook/addon-a11y',
-    '@storybook/addon-themes',
+    // No addon-themes: the app's own ThemeProvider owns `data-theme`, and the
+    // theme toolbar in preview.tsx drives it through the provider's setTheme.
+    // Letting the addon write the attribute too would race the provider.
     '@storybook/addon-mcp',
     '@storybook/addon-vitest'
   ],

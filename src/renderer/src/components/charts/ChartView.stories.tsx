@@ -1,5 +1,4 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { ThemeProvider } from '@/primitives/theme/ThemeProvider'
 import { ChartView } from './ChartView'
 
 const categorical = [
@@ -30,14 +29,10 @@ const meta: Meta<typeof ChartView> = {
   title: 'Components/Charts/ChartView',
   component: ChartView,
   decorators: [
-    // ChartView reads the active theme via useTheme() for series colors, which
-    // needs the app ThemeProvider in the tree (not just Storybook's data-theme).
     (Story) => (
-      <ThemeProvider>
-        <div style={{ width: 560, height: 320 }}>
-          <Story />
-        </div>
-      </ThemeProvider>
+      <div style={{ width: 560, height: 320 }}>
+        <Story />
+      </div>
     ),
   ],
 }
