@@ -239,21 +239,32 @@ dialog[open] { display: flex; flex-direction: column; }
      --text-*   — the type scale behind text-xs … text-base
 
    Tailwind declares these in `@layer theme`, which unlayered rules always beat,
-   so overriding them here is enough. Controls size off the absolute --field-*
-   tokens below and are unaffected, which is why the per-utility `.px-3`/`.py-2`
-   patches that used to live here are gone — --spacing covers them all. */
+   so overriding them here is enough. The per-utility `.px-3`/`.py-2` patches
+   that used to live here are gone — --spacing covers them all. Keep the
+   --field-* tokens below in step with this scale: they size the controls, and
+   drifting them apart puts a 13px field next to a 15px label.
+
+   The whole scale sits one step up from the type ramp's nominal values: the
+   floor that used to be `compact` read too small on a desktop display, so
+   `compact` is now the 12/14/16px baseline (Tailwind's own, and the macOS/
+   Fluent body sizes) rather than something under it. */
 [data-density="compact"] {
-  --spacing: 0.21875rem;   /* 3.5px unit */
-  --text-xs: 0.6875rem;    /* 11px — the HIG floor */
-  --text-sm: 0.8125rem;    /* 13px */
-  --text-base: 0.875rem;   /* 14px */
+  --spacing: 0.25rem;      /* 4px unit — h-9 = 36px */
+  --text-xs: 0.75rem;      /* 12px */
+  --text-sm: 0.875rem;     /* 14px */
+  --text-base: 1rem;       /* 16px */
 }
-/* comfortable is the baseline: Tailwind's defaults (4px unit; 12/14/16px). */
-[data-density="spacious"] {
-  --spacing: 0.28125rem;   /* 4.5px unit */
+[data-density="comfortable"] {
+  --spacing: 0.28125rem;   /* 4.5px unit — h-9 = 40.5px */
   --text-xs: 0.8125rem;    /* 13px */
   --text-sm: 0.9375rem;    /* 15px */
   --text-base: 1.0625rem;  /* 17px */
+}
+[data-density="spacious"] {
+  --spacing: 0.3125rem;    /* 5px unit — h-9 = 45px */
+  --text-xs: 0.875rem;     /* 14px */
+  --text-sm: 1rem;         /* 16px */
+  --text-base: 1.125rem;   /* 18px */
 }
 
 /* Shared control density tokens — Input, NumberInput, Textarea, Select… all
@@ -262,34 +273,34 @@ dialog[open] { display: flex; flex-direction: column; }
    colors. The :root block is the fallback (= comfortable) so controls size
    correctly even before density is wired. */
 :root {
-  --field-h-xs:26px; --field-h-sm:30px; --field-h-md:36px; --field-h-lg:40px; --field-h-xl:48px;
-  --field-fs-xs:11px; --field-fs-sm:12px; --field-fs-md:13px; --field-fs-lg:14px; --field-fs-xl:16px;
-  --field-r-sm:6px; --field-r-md:8px; --field-r-lg:10px;
-  --field-px:10px; --field-gap:7px; --ta-py:9px;
+  --field-h-xs:30px; --field-h-sm:34px; --field-h-md:42px; --field-h-lg:46px; --field-h-xl:54px;
+  --field-fs-xs:12px; --field-fs-sm:13px; --field-fs-md:14px; --field-fs-lg:15px; --field-fs-xl:17px;
+  --field-r-sm:7px; --field-r-md:9px; --field-r-lg:11px;
+  --field-px:13px; --field-gap:9px; --ta-py:12px;
   /* Checkbox box-size tokens (fallback = comfortable). The mark itself is a
      real SVG in the component's companion element — see forms/Checkbox.tsx. */
-  --check-sm:14px; --check-md:16px; --check-lg:20px;
+  --check-sm:16px; --check-md:18px; --check-lg:22px;
 }
 [data-density="compact"] {
-  --field-h-xs:22px; --field-h-sm:26px; --field-h-md:30px; --field-h-lg:34px; --field-h-xl:40px;
-  --field-fs-xs:10px; --field-fs-sm:11px; --field-fs-md:12px; --field-fs-lg:13px; --field-fs-xl:15px;
-  --field-r-sm:5px; --field-r-md:6px; --field-r-lg:8px;
-  --field-px:8px; --field-gap:6px; --ta-py:7px;
-  --check-sm:13px; --check-md:15px; --check-lg:18px;
-}
-[data-density="comfortable"] {
   --field-h-xs:26px; --field-h-sm:30px; --field-h-md:36px; --field-h-lg:40px; --field-h-xl:48px;
   --field-fs-xs:11px; --field-fs-sm:12px; --field-fs-md:13px; --field-fs-lg:14px; --field-fs-xl:16px;
   --field-r-sm:6px; --field-r-md:8px; --field-r-lg:10px;
   --field-px:10px; --field-gap:7px; --ta-py:9px;
   --check-sm:14px; --check-md:16px; --check-lg:20px;
 }
-[data-density="spacious"] {
+[data-density="comfortable"] {
   --field-h-xs:30px; --field-h-sm:34px; --field-h-md:42px; --field-h-lg:46px; --field-h-xl:54px;
   --field-fs-xs:12px; --field-fs-sm:13px; --field-fs-md:14px; --field-fs-lg:15px; --field-fs-xl:17px;
   --field-r-sm:7px; --field-r-md:9px; --field-r-lg:11px;
   --field-px:13px; --field-gap:9px; --ta-py:12px;
   --check-sm:16px; --check-md:18px; --check-lg:22px;
+}
+[data-density="spacious"] {
+  --field-h-xs:34px; --field-h-sm:38px; --field-h-md:48px; --field-h-lg:52px; --field-h-xl:60px;
+  --field-fs-xs:13px; --field-fs-sm:14px; --field-fs-md:15px; --field-fs-lg:16px; --field-fs-xl:18px;
+  --field-r-sm:8px; --field-r-md:10px; --field-r-lg:12px;
+  --field-px:15px; --field-gap:10px; --ta-py:14px;
+  --check-sm:18px; --check-md:20px; --check-lg:24px;
 }
 
 /* Honour the appearance.animations toggle. When off, kill all transitions/
