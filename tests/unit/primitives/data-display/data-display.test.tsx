@@ -111,33 +111,36 @@ describe('Tag', () => {
 })
 
 describe('Avatar', () => {
-  it('renders initials from single word name', () => {
+  it('renders a single letter from the name', () => {
     render(<Avatar name="Alice" />)
     expect(screen.getByText('A')).toBeInTheDocument()
   })
 
-  it('renders initials from two word name (max 2 letters)', () => {
+  // Deliberately one letter, not two. A two-word split ("John Doe" -> "JD") is
+  // a person-name algorithm, and this app has no people — the names it renders
+  // are `prod-replica` and `db-tools`, which have no surname to take.
+  it('takes only the first letter, even from a multi-word name', () => {
     render(<Avatar name="John Doe" />)
-    expect(screen.getByText('JD')).toBeInTheDocument()
+    expect(screen.getByText('J')).toBeInTheDocument()
+    expect(screen.queryByText('JD')).not.toBeInTheDocument()
   })
 
-  it('renders initials from three word name (max 2 letters)', () => {
-    render(<Avatar name="John Michael Doe" />)
-    expect(screen.getByText('JM')).toBeInTheDocument()
+  it('uppercases the letter', () => {
+    render(<Avatar name="alice" />)
+    expect(screen.getByText('A')).toBeInTheDocument()
   })
 
-  it('renders initials in uppercase', () => {
-    render(<Avatar name="alice bob" />)
-    expect(screen.getByText('AB')).toBeInTheDocument()
-  })
-
-  it('renders img element when src is provided', () => {
-    render(<Avatar name="Alice" src="https://example.com/avatar.jpg" />)
-    const img = screen.getByRole('img')
-    expect(img).toBeInTheDocument()
+  it('renders an img when src is provided', () => {
+    const { container } = render(<Avatar name="Alice" src="https://example.com/avatar.jpg" />)
+    // The wrapper carries role="img" and the name; the inner <img> is alt=""
+    // so a screen reader says the entity once, not twice.
+    const img = container.querySelector('img')
     expect(img).toHaveAttribute('src', 'https://example.com/avatar.jpg')
+    expect(img).toHaveAttribute('alt', '')
+    expect(screen.getByRole('img', { name: 'Alice' })).toBeInTheDocument()
   })
 
+  // The kit's scale: 16 / 24 / 32 / 48 / 64.
   it('applies md size by default', () => {
     const { container } = render(<Avatar name="Alice" />)
     expect(container.firstChild).toHaveClass('h-8')
@@ -146,14 +149,29 @@ describe('Avatar', () => {
 
   it('applies xs size', () => {
     const { container } = render(<Avatar name="Alice" size="xs" />)
-    expect(container.firstChild).toHaveClass('h-6')
-    expect(container.firstChild).toHaveClass('w-6')
+    expect(container.firstChild).toHaveClass('h-4')
+    expect(container.firstChild).toHaveClass('w-4')
   })
 
   it('applies xl size', () => {
     const { container } = render(<Avatar name="Alice" size="xl" />)
-    expect(container.firstChild).toHaveClass('h-10')
-    expect(container.firstChild).toHaveClass('w-10')
+    expect(container.firstChild).toHaveClass('h-16')
+    expect(container.firstChild).toHaveClass('w-16')
+  })
+
+  it('gives the same name the same identity colour every time', () => {
+    const { container: a } = render(<Avatar name="db-tools" tone="identity" />)
+    const { container: b } = render(<Avatar name="db-tools" tone="identity" />)
+    const bg = (c: HTMLElement) => (c.firstChild as HTMLElement).style.backgroundImage
+    expect(bg(a)).toBe(bg(b))
+    expect(bg(a)).toContain('--color-identity-')
+  })
+
+  it('seeds the identity colour on colorSeed when given, so renaming keeps the colour', () => {
+    const { container: a } = render(<Avatar name="DB Tools" colorSeed="db-tools" tone="identity" />)
+    const { container: b } = render(<Avatar name="Renamed Entirely" colorSeed="db-tools" tone="identity" />)
+    const bg = (c: HTMLElement) => (c.firstChild as HTMLElement).style.backgroundImage
+    expect(bg(a)).toBe(bg(b))
   })
 
   it('has base classes', () => {
