@@ -33,9 +33,13 @@ export const Default: Story = {
   },
 }
 
-/** Five variants. The colour drives the rail, the icon, the action and the
- *  track from one token (`--toast-vc`), so a variant is one declaration rather
- *  than four. */
+/** Five variants on ONE neutral surface — only the mark is coloured.
+ *
+ *  That's the difference from Alert, and it's deliberate: an Alert sits in
+ *  content and has to be found, so it wears its colour. A toast already has
+ *  your attention, and five stacked in five different colours is a fruit
+ *  salad. Both read their tone from `feedback/severity.ts`, so a warning is
+ *  the same warning in each — they differ in how much of it they wear. */
 export const Variants: Story = {
   args: { title: '' },
   render: () => (
@@ -53,8 +57,10 @@ export const Variants: Story = {
   ),
 }
 
-/** The kit's anatomy: icon, content, action, dismiss. `description` is optional
- *  — a one-line toast is the common case and shouldn't be padded out to two. */
+/** Anatomy: mark, content, action, dismiss. `description` is optional — a
+ *  one-line toast is the common case and shouldn't be padded out to two.
+ *  The dismiss X is quiet until hovered: the toast expires on its own, so the
+ *  close shouldn't compete with the message. */
 export const Anatomy: Story = {
   args: { title: '' },
   render: () => (

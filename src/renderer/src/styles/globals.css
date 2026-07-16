@@ -193,7 +193,8 @@ dialog[open] { display: flex; flex-direction: column; }
 
 /* Toast auto-dismiss progress track (rendered only when <Toast duration> is set) */
 .toast-progress { transform: scaleX(1); animation: toast-progress linear forwards; }
-.toast:hover .toast-progress { animation-play-state: paused; }
+/* The track pauses via a class from the component, not from :hover — it has
+   to hold for a blurred window too, not just a hovered toast. */
 @keyframes toast-progress { from { transform: scaleX(1); } to { transform: scaleX(0); } }
 @media (prefers-reduced-motion: reduce) { .toast-progress { animation: none; } }
 

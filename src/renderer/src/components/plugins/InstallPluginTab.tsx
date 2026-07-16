@@ -2,7 +2,7 @@ import { useState, useCallback, type DragEvent } from 'react'
 import { Package, Upload } from 'lucide-react'
 import { useToastStore } from '@/stores/toast'
 import { useTranslation } from '@/i18n/I18nProvider'
-import { Flex, Box, Text, Button, Spinner } from '@/primitives'
+import { Flex, Box, Text, Button, Spinner, Alert } from '@/primitives'
 import { IPC_CHANNELS } from '@shared/ipc'
 
 type InstallState = 'idle' | 'drag-over' | 'installing' | 'error'
@@ -129,11 +129,9 @@ export function InstallPluginTab() {
         </Flex>
 
         {state === 'error' && errorMessage && (
-          <Box
-            className="mt-3 rounded-lg px-3 py-2 text-xs bg-error/10 text-error border border-error/20"
-          >
+          <Alert variant="error" className="mt-3">
             {errorMessage}
-          </Box>
+          </Alert>
         )}
       </Box>
     </Flex>

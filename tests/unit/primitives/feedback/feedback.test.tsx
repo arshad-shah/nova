@@ -1,11 +1,10 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, cleanup } from '@testing-library/react'
 import React from 'react'
 import { Toast } from '../../../../src/renderer/src/primitives/feedback/Toast'
 import { Alert } from '../../../../src/renderer/src/primitives/feedback/Alert'
 import { Progress } from '../../../../src/renderer/src/primitives/feedback/Progress'
 import { Spinner } from '../../../../src/renderer/src/primitives/feedback/Spinner'
-import { Banner } from '../../../../src/renderer/src/primitives/feedback/Banner'
 
 describe('Toast', () => {
   it('renders message', () => {
@@ -27,7 +26,7 @@ describe('Toast', () => {
 
   it('defaults to the neutral variant', () => {
     const { container } = render(<Toast title="Hello" onDismiss={() => {}} />)
-    expect(container.firstChild).toHaveClass('[--toast-vc:var(--color-text-tertiary)]')
+    expect(container.firstChild).toHaveClass('[--fb-vc:var(--color-text-tertiary)]')
   })
 
   it('renders a description under the title when given one', () => {
@@ -56,33 +55,43 @@ describe('Toast', () => {
     expect(ok.firstChild).toHaveAttribute('role', 'status')
   })
 
-  // The variant colour now flows through a single `--toast-vc` custom property
+  // The variant colour now flows through a single `--fb-vc` custom property
   // (into the icon + left rail), not a flat border/bg tint of the whole toast.
   it('applies success variant classes', () => {
     const { container } = render(<Toast title="Done" onDismiss={() => {}} variant="success" />)
-    expect(container.firstChild).toHaveClass('[--toast-vc:var(--color-success)]')
+    expect(container.firstChild).toHaveClass('[--fb-vc:var(--color-success)]')
   })
 
   it('applies error variant classes', () => {
     const { container } = render(<Toast title="Error!" onDismiss={() => {}} variant="error" />)
-    expect(container.firstChild).toHaveClass('[--toast-vc:var(--color-error)]')
+    expect(container.firstChild).toHaveClass('[--fb-vc:var(--color-error)]')
   })
 
   it('applies warning variant classes', () => {
     const { container } = render(<Toast title="Warning" onDismiss={() => {}} variant="warning" />)
-    expect(container.firstChild).toHaveClass('[--toast-vc:var(--color-warning)]')
+    expect(container.firstChild).toHaveClass('[--fb-vc:var(--color-warning)]')
   })
 
   it('applies info variant classes', () => {
     const { container } = render(<Toast title="Info" onDismiss={() => {}} variant="info" />)
-    expect(container.firstChild).toHaveClass('[--toast-vc:var(--color-info)]')
+    expect(container.firstChild).toHaveClass('[--fb-vc:var(--color-info)]')
   })
 
   it('has base classes', () => {
     const { container } = render(<Toast title="Hello" onDismiss={() => {}} />)
     expect(container.firstChild).toHaveClass('toast')
     expect(container.firstChild).toHaveClass('border')
-    expect(container.firstChild).toHaveClass('rounded-[var(--field-r-lg)]')
+    expect(container.firstChild).toHaveClass('rounded-xl')
+  })
+
+  // Unlike Alert, a toast is NOT tinted: one neutral surface for every
+  // severity, and only the mark carries the colour. Five stacked toasts in five
+  // colours is a fruit salad.
+  it('keeps a neutral surface on every variant', () => {
+    const border = (v: 'success' | 'error') =>
+      (render(<Toast title="x" variant={v} />).container.firstChild as HTMLElement).className
+    expect(border('success')).toContain('border-border-default')
+    expect(border('error')).toContain('border-border-default')
   })
 
   it('renders the progress track only when duration is set', () => {
@@ -123,33 +132,79 @@ describe('Alert', () => {
     expect(screen.getByText('Something went wrong.')).toBeInTheDocument()
   })
 
-  it('has role="alert"', () => {
-    render(<Alert title="Alert" />)
+  // `alert` interrupts a screen reader mid-sentence; `status` waits its turn.
+  // An error or a warning has earned that; a success or an announcement hasn't.
+  // The component is named Alert, but not every alert is an emergency.
+  it('is an alert for error/warning and a status otherwise', () => {
+    render(<Alert variant="error" title="Boom" />)
     expect(screen.getByRole('alert')).toBeInTheDocument()
+    cleanup()
+    render(<Alert variant="warning" title="Careful" />)
+    expect(screen.getByRole('alert')).toBeInTheDocument()
+    cleanup()
+    render(<Alert variant="success" title="Saved" />)
+    expect(screen.queryByRole('alert')).toBeNull()
+    expect(screen.getByRole('status')).toBeInTheDocument()
   })
 
-  it('applies default variant classes', () => {
+  // The tone resolves through the family-wide `--fb-vc`, shared with Toast and
+  // Banner via feedback/severity.ts, rather than a per-variant border colour.
+  it('defaults to the neutral variant', () => {
     const { container } = render(<Alert title="Default" />)
-    expect(container.firstChild).toHaveClass('bg-bg-elevated')
-    expect(container.firstChild).toHaveClass('border-border-default')
+    expect(container.firstChild).toHaveClass('[--fb-vc:var(--color-text-tertiary)]')
   })
 
-  it('applies success variant classes', () => {
-    const { container } = render(<Alert variant="success" title="Success" />)
-    expect(container.firstChild).toHaveClass('border-success')
-  })
-
-  it('applies error variant classes', () => {
-    const { container } = render(<Alert variant="error" title="Error" />)
-    expect(container.firstChild).toHaveClass('border-error')
+  it.each([
+    ['success', 'var(--color-success)'],
+    ['error', 'var(--color-error)'],
+    ['warning', 'var(--color-warning)'],
+    // info is cyan, NOT the accent. Alert used to tint its text with the accent
+    // while its border used --color-info; the shared table makes that
+    // impossible to say two ways.
+    ['info', 'var(--color-info)'],
+  ] as const)('resolves the %s tone from the shared table', (variant, token) => {
+    const { container } = render(<Alert variant={variant} title="x" />)
+    expect(container.firstChild).toHaveClass(`[--fb-vc:${token}]`)
   })
 
   it('has base classes', () => {
     const { container } = render(<Alert title="Test" />)
     expect(container.firstChild).toHaveClass('rounded-lg')
     expect(container.firstChild).toHaveClass('border')
-    expect(container.firstChild).toHaveClass('px-4')
-    expect(container.firstChild).toHaveClass('py-3')
+  })
+
+  // The body is a slot, not a <Text>: QueryErrorView puts a whole subtree in
+  // here — paragraphs, a badge, a disclosure button, a code block — and a
+  // <Text> would nest block elements and buttons inside a span.
+  it('renders a rich subtree in the body without wrapping it in a span', () => {
+    const { container } = render(
+      <Alert variant="error" title="Query failed">
+        <div>
+          <p>message</p>
+          <button type="button">Show details</button>
+        </div>
+      </Alert>
+    )
+    expect(screen.getByRole('button', { name: 'Show details' })).toBeInTheDocument()
+    expect(container.querySelector('span p')).toBeNull()
+  })
+
+  // 4 of the app's 7 alerts pass no title, so an untitled body has to carry the
+  // line rather than render as a muted afterthought under nothing. A body under
+  // a title steps back to `secondary` — not `muted`, which is the app's dimmest
+  // text and meant for metadata you skip, not for something you're asked to read.
+  it('keeps an untitled body primary, and steps it back only under a title', () => {
+    const { container: untitled } = render(<Alert variant="error">Boom</Alert>)
+    expect(untitled.querySelector('.text-text-primary')).toBeTruthy()
+    const { container: titled } = render(<Alert variant="error" title="Boom">details</Alert>)
+    expect(titled.querySelector('.text-text-secondary')).toBeTruthy()
+  })
+
+  it('renders an action and calls it', () => {
+    const onClick = vi.fn()
+    render(<Alert variant="error" title="Failed" action={{ label: 'Try again', onClick }} />)
+    fireEvent.click(screen.getByRole('button', { name: /try again/i }))
+    expect(onClick).toHaveBeenCalledTimes(1)
   })
 })
 
@@ -253,37 +308,47 @@ describe('Spinner', () => {
   })
 })
 
-describe('Banner', () => {
+// Banner is gone — it was Alert with different padding and no title, had zero
+// app usages, and disagreed with Alert about `info`. Its job is `type="filled"`,
+// so its coverage moves here rather than being deleted with it.
+describe('Alert type="filled" (was Banner)', () => {
   it('renders children', () => {
-    render(<Banner>Maintenance scheduled tonight.</Banner>)
+    render(<Alert type="filled">Maintenance scheduled tonight.</Alert>)
     expect(screen.getByText('Maintenance scheduled tonight.')).toBeInTheDocument()
   })
 
-  it('applies default variant classes', () => {
-    const { container } = render(<Banner>Default</Banner>)
-    expect(container.firstChild).toHaveClass('bg-bg-elevated')
-    expect(container.firstChild).toHaveClass('text-text-primary')
+  it('is solid and railed, unlike the default type', () => {
+    const { container } = render(<Alert type="filled">x</Alert>)
+    expect(container.firstChild).toHaveClass('border-l-4')
+    const { container: def } = render(<Alert>x</Alert>)
+    expect(def.firstChild).not.toHaveClass('border-l-4')
   })
 
-  it('applies info variant classes', () => {
-    const { container } = render(<Banner variant="info">Info</Banner>)
-    expect(container.firstChild).toHaveClass('text-info')
+  // Banner's own variant, carried across: a product announcement is the one
+  // message about Verql rather than the user's data, so it wears the accent.
+  it('keeps the update variant', () => {
+    const { container } = render(<Alert variant="update" type="filled">Shipped</Alert>)
+    expect(container.firstChild).toHaveClass('[--fb-vc:var(--color-accent)]')
   })
 
-  it('applies warning variant classes', () => {
-    const { container } = render(<Banner variant="warning">Warning</Banner>)
-    expect(container.firstChild).toHaveClass('text-warning')
+  it('renders an action from the {label, onClick} form and calls it', () => {
+    const onClick = vi.fn()
+    render(<Alert type="filled" action={{ label: 'Learn more', onClick }}>Shipped</Alert>)
+    fireEvent.click(screen.getByRole('button', { name: /learn more/i }))
+    expect(onClick).toHaveBeenCalledTimes(1)
   })
 
-  it('applies error variant classes', () => {
-    const { container } = render(<Banner variant="error">Error</Banner>)
-    expect(container.firstChild).toHaveClass('text-error')
+  // Some callers genuinely need two buttons (Run / Decline), so a node is still
+  // accepted alongside the preferred object form.
+  it('still accepts an action node', () => {
+    render(<Alert type="filled" action={<button type="button">Custom</button>}>x</Alert>)
+    expect(screen.getByRole('button', { name: 'Custom' })).toBeInTheDocument()
   })
 
-  it('has base classes', () => {
-    const { container } = render(<Banner>Base</Banner>)
-    expect(container.firstChild).toHaveClass('w-full')
-    expect(container.firstChild).toHaveClass('px-4')
-    expect(container.firstChild).toHaveClass('py-2')
+  it('dismisses', () => {
+    const onClose = vi.fn()
+    render(<Alert type="filled" onClose={onClose}>x</Alert>)
+    fireEvent.click(screen.getByRole('button', { name: 'Close alert' }))
+    expect(onClose).toHaveBeenCalledTimes(1)
   })
 })
