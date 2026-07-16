@@ -3,68 +3,82 @@
  *
  * Even if the user disables the core-themes bundled plugin (or it errors out
  * during boot), the app must still paint with sensible colours. This file
- * defines the Nightshift palette directly on `:root` so every semantic
- * variable resolves from first paint, and ALSO scopes it to
- * `[data-theme="nightshift"]` so the plugin's later registration doesn't
- * leave us with an unstyled state.
+ * defines the Ion palette directly on `:root` so every semantic variable
+ * resolves from first paint, and ALSO scopes it to `[data-theme="ion"]` so
+ * the plugin's later registration doesn't leave us with an unstyled state.
  *
- * The core-themes plugin re-registers Nightshift with the same id; because
- * the plugin's <style data-theme-id> tag is appended AFTER this file, its
- * declarations win when present, but if it's absent the baseline keeps the
- * UI legible.
+ * Ion is the app's brand identity and its default theme, which is exactly why
+ * it lives here rather than in core-themes: the default must not depend on a
+ * plugin activating. `stores/themes.ts` ignores any plugin registering the
+ * `ion` id, keeping the brand surface authoritative. Nightshift — the previous
+ * brand theme — is now an ordinary selectable theme in core-themes.
  */
 
 :root,
-[data-theme="nightshift"] {
+[data-theme="ion"] {
   --color-bg-primary: var(--raw-ink-900);
-  --color-bg-secondary: var(--raw-ink-800);
-  --color-bg-tertiary: var(--raw-ink-700);
-  --color-bg-elevated: var(--raw-ink-600);
+  --color-bg-secondary: var(--raw-dark-900);
+  --color-bg-tertiary: var(--raw-dark-800);
+  --color-bg-elevated: var(--raw-dark-800);
 
-  --color-text-primary: var(--raw-ink-50);
-  --color-text-secondary: var(--raw-ink-200);
-  --color-text-tertiary: var(--raw-ink-300);
-  --color-text-disabled: var(--raw-ink-400);
+  --color-text-primary: var(--raw-light-100);
+  --color-text-secondary: var(--raw-dark-300);
+  --color-text-tertiary: var(--raw-dark-400);
+  --color-text-disabled: var(--raw-dark-700);
   --color-text-inverse: var(--raw-ink-900);
 
-  --color-border-default: rgba(232, 236, 243, 0.08);
-  --color-border-subtle: rgba(232, 236, 243, 0.04);
-  --color-border-strong: rgba(232, 236, 243, 0.16);
+  --color-border-default: var(--raw-dark-700);
+  --color-border-subtle: rgba(203, 213, 225, 0.09);
+  --color-border-strong: rgba(203, 213, 225, 0.18);
 
-  --color-accent: var(--raw-mint-400);
-  --color-accent-hover: var(--raw-mint-300);
-  --color-accent-muted: var(--raw-mint-900);
-  --color-accent-emphasis: var(--raw-mint-500);
+  --color-accent: var(--raw-vpurple-500);
+  --color-accent-hover: color-mix(in oklab, var(--raw-vpurple-500) 82%, white);
+  --color-accent-muted: rgba(122, 92, 255, 0.12);
+  --color-accent-emphasis: var(--raw-vpurple-600);
 
-  --color-success: var(--raw-mint-400);
-  --color-warning: var(--raw-amber-500);
-  --color-error: var(--raw-red-500);
-  --color-info: var(--raw-blue-500);
+  --color-data-accent: var(--raw-vcyan-500);
+  --color-data-accent-hover: var(--raw-vcyan-400);
+  --color-data-accent-muted: rgba(0, 212, 255, 0.11);
 
-  --color-hover: rgba(232, 236, 243, 0.05);
-  --color-active: rgba(232, 236, 243, 0.1);
-  --color-focus-ring: var(--raw-mint-400);
-  --color-disabled: var(--raw-ink-400);
+  --color-agent-accent: var(--raw-vpurple-300);
+  --color-agent-accent-muted: rgba(167, 139, 250, 0.14);
+
+  --color-action: var(--fn-action);
+  --color-action-hover: var(--fn-action-hover);
+  --color-action-fg: #ffffff;
+
+  --color-selection-ring: var(--raw-vcyan-400);
+  --color-selection-bg: rgba(0, 212, 255, 0.11);
+
+  --color-success: var(--fn-ok);
+  --color-warning: var(--fn-warn);
+  --color-error: var(--fn-danger);
+  --color-info: var(--raw-vcyan-400);
+
+  --color-hover: rgba(203, 213, 225, 0.05);
+  --color-active: rgba(203, 213, 225, 0.1);
+  --color-focus-ring: var(--raw-vpurple-500);
+  --color-disabled: var(--raw-dark-700);
 
   --shadow-input-inset: inset 0 1px 2px rgba(0, 0, 0, 0.4);
   --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.3);
   --shadow-elevated: 0 4px 12px rgba(0, 0, 0, 0.4);
   --shadow-dropdown: 0 8px 24px rgba(0, 0, 0, 0.5);
-  --shadow-focus-glow: 0 0 0 3px rgba(43, 217, 163, 0.25);
+  --shadow-focus-glow: 0 0 0 3px rgba(122, 92, 255, 0.22);
   --shadow-error-ring: 0 0 0 3px color-mix(in oklch, var(--color-error), transparent 75%);
 
-  --color-skeleton-base: rgba(232, 236, 243, 0.10);
-  --color-skeleton-highlight: rgba(232, 236, 243, 0.22);
+  --color-skeleton-base: rgba(203, 213, 225, 0.10);
+  --color-skeleton-highlight: rgba(203, 213, 225, 0.22);
 
-  --color-input-gradient-top: rgba(232, 236, 243, 0.03);
+  --color-input-gradient-top: rgba(203, 213, 225, 0.03);
   --color-input-gradient-bottom: transparent;
-  --color-button-highlight: rgba(232, 236, 243, 0.1);
+  --color-button-highlight: rgba(203, 213, 225, 0.1);
   --color-overlay-strong: rgba(0, 0, 0, 0.3);
   --color-overlay-soft: rgba(0, 0, 0, 0.2);
 
-  --color-tab-bar-bg: var(--raw-ink-700);
+  --color-tab-bar-bg: var(--raw-dark-900);
   --color-tab-active-bg: var(--raw-ink-900);
-  --color-tab-active-fg: var(--raw-ink-50);
-  --color-tab-inactive-fg: var(--raw-ink-200);
-  --color-tab-hover-bg: rgba(232, 236, 243, 0.06);
+  --color-tab-active-fg: var(--raw-light-100);
+  --color-tab-inactive-fg: var(--raw-dark-300);
+  --color-tab-hover-bg: rgba(203, 213, 225, 0.06);
 }

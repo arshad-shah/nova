@@ -1,8 +1,67 @@
 import type { RegisteredTheme } from '../../sdk/theme-registry'
 
-// Nightshift is intentionally absent from this plugin — it's the app's
-// brand theme and ships with the shell. See `stores/themes.ts` (renderer)
-// and `primitives/theme/baseline.css` for its definition.
+// Ion is intentionally absent from this plugin — it's the app's brand theme
+// *and* its default, so it ships with the shell rather than depending on a
+// plugin activating. See `stores/themes.ts` (renderer) and
+// `primitives/theme/baseline.css` for its definition.
+//
+// Nightshift was the brand theme before Ion. It's preserved here as an
+// ordinary selectable theme so existing users keep their palette.
+
+const NIGHTSHIFT_CSS = `
+[data-theme="nightshift"] {
+  --color-bg-primary: var(--raw-ink-900);
+  --color-bg-secondary: var(--raw-ink-800);
+  --color-bg-tertiary: var(--raw-ink-700);
+  --color-bg-elevated: var(--raw-ink-600);
+
+  --color-text-primary: var(--raw-ink-50);
+  --color-text-secondary: var(--raw-ink-200);
+  --color-text-tertiary: var(--raw-ink-300);
+  --color-text-disabled: var(--raw-ink-400);
+  --color-text-inverse: var(--raw-ink-900);
+
+  --color-border-default: rgba(232, 236, 243, 0.08);
+  --color-border-subtle: rgba(232, 236, 243, 0.04);
+  --color-border-strong: rgba(232, 236, 243, 0.16);
+
+  --color-accent: var(--raw-mint-400);
+  --color-accent-hover: var(--raw-mint-300);
+  --color-accent-muted: var(--raw-mint-900);
+  --color-accent-emphasis: var(--raw-mint-500);
+
+  --color-success: var(--raw-mint-400);
+  --color-warning: var(--raw-amber-500);
+  --color-error: var(--raw-red-500);
+  --color-info: var(--raw-blue-500);
+
+  --color-hover: rgba(232, 236, 243, 0.05);
+  --color-active: rgba(232, 236, 243, 0.1);
+  --color-focus-ring: var(--raw-mint-400);
+  --color-disabled: var(--raw-ink-400);
+
+  --shadow-input-inset: inset 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-elevated: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-dropdown: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --shadow-focus-glow: 0 0 0 3px rgba(43, 217, 163, 0.25);
+
+  --color-skeleton-base: rgba(232, 236, 243, 0.10);
+  --color-skeleton-highlight: rgba(232, 236, 243, 0.22);
+
+  --color-input-gradient-top: rgba(232, 236, 243, 0.03);
+  --color-input-gradient-bottom: transparent;
+  --color-button-highlight: rgba(232, 236, 243, 0.1);
+  --color-overlay-strong: rgba(0, 0, 0, 0.3);
+  --color-overlay-soft: rgba(0, 0, 0, 0.2);
+
+  --color-tab-bar-bg: var(--raw-ink-700);
+  --color-tab-active-bg: var(--raw-ink-900);
+  --color-tab-active-fg: var(--raw-ink-50);
+  --color-tab-inactive-fg: var(--raw-ink-200);
+  --color-tab-hover-bg: rgba(232, 236, 243, 0.06);
+}
+`.trim()
 
 const LAB_CSS = `
 [data-theme="lab"] {
@@ -455,6 +514,11 @@ const CATPPUCCIN_CSS = `
 
 // Monaco rule sets — one per theme. Compact since they're token→colour maps.
 const MONACO = {
+  nightshift: {
+    base: 'vs-dark' as const,
+    colors: { 'editor.background': '#0B0F16', 'editor.foreground': '#E8ECF3', 'editor.lineHighlightBackground': '#E8ECF30A', 'editor.selectionBackground': '#2BD9A340', 'editorLineNumber.foreground': '#4A5468', 'editorCursor.foreground': '#2BD9A3', 'editor.selectionHighlightBackground': '#2BD9A320', 'editorBracketMatch.background': '#2BD9A330', 'editorBracketMatch.border': '#2BD9A350' },
+    rules: [{ token: 'keyword', foreground: '#2BD9A3' }, { token: 'string', foreground: '#FFB23D' }, { token: 'number', foreground: '#FFC061' }, { token: 'comment', foreground: '#4A5468', fontStyle: 'italic' }, { token: 'type', foreground: '#5CE0BD' }, { token: 'identifier', foreground: '#E8ECF3' }, { token: 'operator', foreground: '#7C8499' }, { token: 'delimiter', foreground: '#B8C0D1' }]
+  },
   lab: {
     base: 'vs' as const,
     colors: { 'editor.background': '#FAFAF6', 'editor.foreground': '#1A1A1C', 'editor.lineHighlightBackground': '#1A1A1C08', 'editor.selectionBackground': '#115E5930', 'editorLineNumber.foreground': '#BFBDB4', 'editorCursor.foreground': '#115E59', 'editor.selectionHighlightBackground': '#115E5915', 'editorBracketMatch.background': '#115E5920', 'editorBracketMatch.border': '#115E5940' },
@@ -503,6 +567,7 @@ const MONACO = {
 }
 
 export const CORE_THEMES: RegisteredTheme[] = [
+  { id: 'nightshift', name: 'Nightshift', type: 'dark', css: NIGHTSHIFT_CSS, monaco: MONACO.nightshift, preview: { bg: '#0B0F16', sidebar: '#131825', text: '#E8ECF3', accent: '#2bd9a3' } },
   { id: 'lab', name: 'Lab', type: 'light', css: LAB_CSS, monaco: MONACO.lab, preview: { bg: '#FAFAF6', sidebar: '#F1F0EA', text: '#1A1A1C', accent: '#115E59' } },
   { id: 'inkpaper', name: 'Ink & Paper', type: 'light', css: INKPAPER_CSS, monaco: MONACO.inkpaper, preview: { bg: '#F2EBDE', sidebar: '#ECE3D2', text: '#14110F', accent: '#9E3022' } },
   { id: 'dark', name: 'Dark', type: 'dark', css: DARK_CSS, monaco: MONACO.dark, preview: { bg: '#1e1e2e', sidebar: '#313244', text: '#cdd6f4', accent: '#b4befe' } },

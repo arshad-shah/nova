@@ -24,6 +24,9 @@ if (typeof window !== 'undefined' && !(window as unknown as { electronAPI?: unkn
   // Stub themes so the theme picker has entries when a story renders it.
   // The CSS imports above already attach the variables to [data-theme="…"].
   const STUB_THEMES = [
+    // Ion ships with the shell (baseline.css), not the core-themes plugin, so
+    // it isn't in CORE_THEMES — list it here to match the real picker order.
+    { id: 'ion', name: 'Ion', type: 'dark', preview: { bg: '#0B0F16', sidebar: '#111827', text: '#F2F4F7', accent: '#7A5CFF' } },
     { id: 'nightshift', name: 'Nightshift', type: 'dark', preview: { bg: '#0B0F16', sidebar: '#131825', text: '#E8ECF3', accent: '#2bd9a3' } },
     { id: 'lab', name: 'Lab', type: 'light', preview: { bg: '#FAFAF6', sidebar: '#F1F0EA', text: '#1A1A1C', accent: '#115E59' } },
     { id: 'inkpaper', name: 'Ink & Paper', type: 'light', preview: { bg: '#F2EBDE', sidebar: '#ECE3D2', text: '#14110F', accent: '#9E3022' } },
@@ -63,6 +66,7 @@ const preview: Preview = {
   decorators: [
     withThemeByDataAttribute({
       themes: {
+        Ion: 'ion',
         Nightshift: 'nightshift',
         Lab: 'lab',
         'Ink & Paper': 'inkpaper',
@@ -74,7 +78,7 @@ const preview: Preview = {
         Solarized: 'solarized',
         Catppuccin: 'catppuccin',
       },
-      defaultTheme: 'Nightshift',
+      defaultTheme: 'Ion',
       attributeName: 'data-theme',
     }),
     (Story) => (

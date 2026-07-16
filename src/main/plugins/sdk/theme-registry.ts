@@ -70,8 +70,8 @@ export const REQUIRED_THEME_TOKENS: readonly string[] = [
 
 /**
  * Tokens whose absence won't crash anything (fallbacks exist on `:root` in
- * tokens.css), but where the inherited Nightshift value will probably clash
- * with the theme's intended palette. Surfaced as a warning, not an error.
+ * tokens.css), but where the inherited Ion value will probably clash with
+ * the theme's intended palette. Surfaced as a warning, not an error.
  */
 export const RECOMMENDED_THEME_TOKENS: readonly string[] = [
   '--color-accent-hover',

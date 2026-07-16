@@ -1,7 +1,7 @@
 import type { Monaco } from '@monaco-editor/react'
 import { useThemesStore } from '@/stores/themes'
 
-const FALLBACK_THEME_ID = 'nightshift'
+const FALLBACK_THEME_ID = 'ion'
 const definedThemes = new Set<string>()
 let monacoRef: Monaco | null = null
 
@@ -45,7 +45,7 @@ export function defineAppThemes(monaco: Monaco): void {
 
 /** Resolve the active app theme to a Monaco theme name. Theme ids and Monaco
  * theme names are now 1:1 — the plugin contributes its monaco def alongside
- * its app tokens. Falls back to nightshift if the theme isn't registered or
+ * its app tokens. Falls back to ion if the theme isn't registered or
  * doesn't ship Monaco rules. */
 export function getMonacoThemeName(appTheme: string): string {
   const themes = useThemesStore.getState().themes

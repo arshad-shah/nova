@@ -5,8 +5,8 @@
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Fira+Code:wght@400;500;600;700&family=Cascadia+Code:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 @import "../primitives/theme/tokens.css";
-/* Baseline (Nightshift) is always loaded so the app stays styled even when
- * the core-themes plugin is disabled or fails to boot. Plugin-contributed
+/* Baseline (Ion) is always loaded so the app stays styled even when the
+ * core-themes plugin is disabled or fails to boot. Plugin-contributed
  * themes are injected at runtime via the theme registry — see
  * [stores/themes.ts] — and override the baseline when present. */
 @import "../primitives/theme/baseline.css";
@@ -34,6 +34,23 @@
   --color-accent-hover: var(--color-accent-hover);
   --color-accent-muted: var(--color-accent-muted);
   --color-accent-emphasis: var(--color-accent-emphasis);
+  /* Meaning-bearing accents. Purple (--color-accent) is interface state;
+     these two are not interchangeable with it. Cyan marks a data source
+     (connections, result meta, editor caret); violet marks agent-authored
+     activity (AI/MCP chips) and nothing else. */
+  --color-data-accent: var(--color-data-accent);
+  --color-data-accent-hover: var(--color-data-accent-hover);
+  --color-data-accent-muted: var(--color-data-accent-muted);
+  --color-agent-accent: var(--color-agent-accent);
+  --color-agent-accent-muted: var(--color-agent-accent-muted);
+  /* Primary action — functional, identical on every theme. Repeated actions
+     are solid; the brand gradient is never used here. */
+  --color-action: var(--color-action);
+  --color-action-hover: var(--color-action-hover);
+  --color-action-fg: var(--color-action-fg, #ffffff);
+  /* Grid selection — cyan ring + wash */
+  --color-selection-ring: var(--color-selection-ring);
+  --color-selection-bg: var(--color-selection-bg);
   --color-success: var(--color-success);
   --color-warning: var(--color-warning);
   --color-error: var(--color-error);
