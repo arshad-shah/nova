@@ -117,6 +117,14 @@
   --fn-ok: #34D399;
   --fn-warn: #FBBF24;
   --fn-danger: #F87171;
+  /* Danger comes in two weights, and they are not the same colour darkened.
+     `--fn-danger` is a *foreground* red — it reads on a dark ground, but white
+     on it is ~2.7:1, so it can never carry a label. The emphasis pair is the
+     *surface* red that white text sits on, and it mirrors the action scale
+     exactly (action is blue-600 → blue-500; danger is red-600 → red-500) so a
+     destructive button is the action button's twin, not a muddied cousin. */
+  --fn-danger-emphasis: #DC2626;
+  --fn-danger-emphasis-hover: #EF4444;
   --fn-syntax-kw: #5EA8FF;
   --fn-syntax-fn: #A78BFA;
   --fn-syntax-str: #FF8B73;
@@ -211,6 +219,14 @@
   --color-action: var(--fn-action);
   --color-action-hover: var(--fn-action-hover);
   --color-action-fg: #ffffff;
+  /* The quiet weight of the action colour: a wash of the action hue rather
+     than a fill of it, labelled in the hue itself. For secondary actions that
+     belong to the same task as a solid button but must not compete with it.
+     Mixed against the page ground (not black/white) so it stays a tint of the
+     surface it sits on and follows the theme into light mode. */
+  --color-action-subtle: color-mix(in oklch, var(--color-action), var(--color-bg-primary) 86%);
+  --color-action-subtle-hover: color-mix(in oklch, var(--color-action), var(--color-bg-primary) 78%);
+  --color-action-subtle-fg: var(--color-action);
   --color-window-close: var(--fn-window-close);
 
   /* Grid selection — cyan ring + wash */
@@ -241,7 +257,8 @@
   --color-success: var(--fn-ok);
   --color-warning: var(--fn-warn);
   --color-error: var(--fn-danger);
-  --color-error-emphasis: color-mix(in oklch, var(--color-error), black 25%);
+  --color-error-emphasis: var(--fn-danger-emphasis);
+  --color-error-emphasis-hover: var(--fn-danger-emphasis-hover);
   --color-info: var(--raw-vcyan-400);
 
   /* Interactive */
