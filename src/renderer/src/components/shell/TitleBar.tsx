@@ -39,17 +39,11 @@ export function TitleBar({ platform = detectedPlatform }: TitleBarProps = {}) {
         // every other platform they're undefined and fall back to the full bar.
         style={{ marginLeft: 'env(titlebar-area-x, 0px)', width: 'env(titlebar-area-width, 100%)' }}
       >
-        <div className={`no-drag flex items-center gap-2 ${isMac ? 'pl-20' : 'pl-4'}`}>
+        <div className={`no-drag flex items-center gap-2 ${isMac ? 'pl-24' : 'pl-4'}`}>
           {/* The bare mark, not the tiled app icon — the tile is for OS surfaces
               (dock, taskbar) that need a container; in-app the mark sits
               directly on the title bar. */}
           <VerqlMark size={24} variant="color" />
-          {/* Wordmark: lowercase, tight tracking. Lowercased in CSS rather than
-              in the catalogue so the translated app name stays a proper noun
-              everywhere else it's used. */}
-          <Text size="sm" weight="semibold" color="primary" className="lowercase tracking-[-0.02em]">
-            {t('shell.titleBar.appName')}
-          </Text>
           {isDev && (
             <Badge tone="warning" size="sm" className="text-[9px] leading-none">
               {t('shell.statusBar.dev')}
