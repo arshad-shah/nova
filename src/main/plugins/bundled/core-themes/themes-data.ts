@@ -275,6 +275,12 @@ const LIGHT_CSS = `
   --color-accent-muted: #f0eeff;
   --color-accent-emphasis: var(--raw-purple-600);
 
+  /* Declared because the derived default doesn't hold here. A solid button
+     otherwise takes --color-accent with the page ground as its label, which on
+     this theme is mid purple on white — 3.84:1, under AA. The emphasis purple
+     with the same white label is 5.38:1. */
+  --color-action: var(--color-accent-emphasis);
+
   --color-success: #137F5C;
   --color-warning: #B45309;
   --color-error: #B53A2A;
@@ -492,6 +498,13 @@ const SOLARIZED_CSS = `
   --color-accent-hover: #2aa198;
   --color-accent-muted: #0a2a3a;
   --color-accent-emphasis: color-mix(in oklab, var(--color-accent), black 14%);
+  /* Declared because Solarized blue is a mid-tone that isn't fill-worthy in
+     either direction: white on it is 3.68:1 and its own dark ground is 4.08:1,
+     so neither label passes AA. The emphasis blue with base3 as the label is
+     4.85:1. This is the case the derived default cannot cover — it assumes the
+     accent contrasts with the ground, and here it barely does. */
+  --color-action: var(--color-accent-emphasis);
+  --color-action-fg: var(--color-text-primary);
   --color-success: #859900;
   --color-warning: #b58900;
   --color-error: #dc322f;

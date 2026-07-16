@@ -44,9 +44,6 @@
   --color-agent-accent: var(--raw-vpurple-300);
   --color-agent-accent-muted: rgba(167, 139, 250, 0.14);
 
-  --color-action: var(--fn-action);
-  --color-action-hover: var(--fn-action-hover);
-  --color-action-fg: #ffffff;
   --color-window-close: var(--fn-window-close);
 
   --color-selection-ring: var(--raw-vcyan-400);
@@ -96,4 +93,26 @@
   --color-tab-active-fg: var(--raw-light-100);
   --color-tab-inactive-fg: var(--raw-dark-300);
   --color-tab-hover-bg: rgba(203, 213, 225, 0.06);
+}
+
+/*
+ * Ion's action blue — scoped deliberately, and NOT part of the block above.
+ *
+ * That block leads with a bare `:root`, which matches the html element no
+ * matter which theme is active. Anything declared there is therefore a value
+ * for EVERY theme, not just Ion — fine for tokens a plugin theme is expected
+ * to override, but wrong for the action colour: no bundled theme declares one,
+ * so Ion's blue silently became every theme's button.
+ *
+ * `:not([data-theme])` narrows the unthemed case to "no theme chosen yet",
+ * which is the only thing the bare `:root` is actually needed for. A themed
+ * root falls through to tokens.css, which derives the action from that theme's
+ * own accent. Ion keeps its blue because the brand's primary action is blue,
+ * not purple — the accent stays interface state.
+ */
+:root:not([data-theme]),
+[data-theme="ion"] {
+  --color-action: var(--fn-action);
+  --color-action-hover: var(--fn-action-hover);
+  --color-action-fg: #ffffff;
 }

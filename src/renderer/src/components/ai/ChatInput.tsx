@@ -162,10 +162,9 @@ export function ChatInput() {
           {isStreaming ? (
             <IconButton
               label={t('aiui.input.stop')}
-              variant="solid"
+              variant="error"
               size="xs"
               onClick={abort}
-              className="bg-error-emphasis hover:bg-error"
             >
               <Square className="h-3.5 w-3.5" />
             </IconButton>

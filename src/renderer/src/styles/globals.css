@@ -74,6 +74,7 @@
   --color-error: var(--color-error);
   --color-error-emphasis: var(--color-error-emphasis);
   --color-error-emphasis-hover: var(--color-error-emphasis-hover, var(--color-error));
+  --color-error-fg: var(--color-error-fg, #ffffff);
   --color-info: var(--color-info);
   --color-text-primary: var(--color-text-primary);
   --color-text-secondary: var(--color-text-secondary);

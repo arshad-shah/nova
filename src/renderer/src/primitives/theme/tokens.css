@@ -216,9 +216,21 @@
 
   /* Primary action — functional, so it holds on every theme, not just Ion.
      Repeated actions (Run, Save, Connect) are solid; never gradient. */
-  --color-action: var(--fn-action);
-  --color-action-hover: var(--fn-action-hover);
-  --color-action-fg: #ffffff;
+  /* Primary action. A theme MAY declare its own (Ion does, in baseline.css —
+     its action blue is part of the brand). Any theme that doesn't gets its own
+     accent, so a solid button follows the active theme instead of staying one
+     fixed blue everywhere.
+
+     The label is the page ground, not white. Every bundled theme's accent is
+     a *foreground* colour — designed to read as text on the ground — so white
+     on it fails badly (Nord 2.00:1, Catppuccin 2.03:1, Dracula 2.41:1). But an
+     accent is only usable as an accent if it already contrasts with the
+     ground, so borrowing the ground as the label inherits that contrast for
+     free, and it self-inverts on light themes (dark ground -> dark label on a
+     pale accent; light ground -> light label on a deep accent). */
+  --color-action: var(--color-accent);
+  --color-action-hover: var(--color-accent-hover);
+  --color-action-fg: var(--color-bg-primary);
   /* The quiet weight of the action colour: a wash of the action hue rather
      than a fill of it, labelled in the hue itself. For secondary actions that
      belong to the same task as a solid button but must not compete with it.
@@ -226,7 +238,14 @@
      surface it sits on and follows the theme into light mode. */
   --color-action-subtle: color-mix(in oklch, var(--color-action), var(--color-bg-primary) 86%);
   --color-action-subtle-hover: color-mix(in oklch, var(--color-action), var(--color-bg-primary) 78%);
-  --color-action-subtle-fg: var(--color-action);
+  /* Not the action colour itself. The fill is a wash that sits near the page
+     ground, and the action colour is chosen to carry a label ON it, not to be
+     read against it — as itself it fails on the darker themes (Ion 3.36:1,
+     Solarized 2.52:1). Pulling it toward the theme's own text colour keeps the
+     hue while borrowing the contrast the theme already guarantees, and it
+     self-inverts: text is light on dark themes, dark on light ones. 45% clears
+     AA on every bundled theme with headroom to spare (worst case 5.56:1). */
+  --color-action-subtle-fg: color-mix(in oklab, var(--color-action), var(--color-text-primary) 45%);
   --color-window-close: var(--fn-window-close);
 
   /* Grid selection — cyan ring + wash */
@@ -259,6 +278,12 @@
   --color-error: var(--fn-danger);
   --color-error-emphasis: var(--fn-danger-emphasis);
   --color-error-emphasis-hover: var(--fn-danger-emphasis-hover);
+  /* The destructive label. Fixed, and deliberately NOT --color-action-fg: the
+     action fill follows the theme so its label must too, but the emphasis red
+     is the same red on every theme, so its label is the same white on every
+     theme (4.83:1). Borrowing the action's label breaks the moment a theme's
+     ground is light — a dark label on a vivid red reads 2.59:1 on Nord. */
+  --color-error-fg: #ffffff;
   --color-info: var(--raw-vcyan-400);
 
   /* Interactive */
