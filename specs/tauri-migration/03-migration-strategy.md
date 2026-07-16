@@ -93,12 +93,12 @@ performance guardrail met.
 Registries as Rust traits (exporter/importer/formatter/type-mapper/theme/
 command/completion/drag-drop), `verql-formats` (csv/json/jsonl/sql — parity
 with v1 exports byte-for-byte where formats are deterministic),
-`verql-themes` (9 themes + validation), plugin manifest model, discovery/
+`verql-themes` (10 themes + validation), plugin manifest model, discovery/
 install (zip crate, same guards), permission model, **declarative**
 third-party plugins (themes/connection fields) loading end-to-end,
 `plugins:*` (22) + `themes:*` channels, plugin lifecycle events.
 
-**Gate:** export/import parity suite green; all 9 themes render identically
+**Gate:** export/import parity suite green; all 10 themes render identically
 (screenshot diff on the theme gallery story); a sample declarative
 third-party plugin installs from zip and survives the same attack fixtures
 v1 guards against (zip-slip, symlink, name-collision — adversarial cases).

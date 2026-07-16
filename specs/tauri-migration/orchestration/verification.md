@@ -27,7 +27,7 @@ scoped by what the task touches:
 | Scope (from the task's `verify.scope`) | Commands |
 |---|---|
 | `rust` | `cargo fmt --check`, `cargo clippy --workspace --all-targets -- -D warnings`, `cargo test --workspace` |
-| `renderer` | `pnpm typecheck`, `pnpm test -- --run` (unit project), affected story tests |
+| `renderer` | `pnpm exec tsc -b --noEmit`, `pnpm exec vitest run --project unit`, affected story tests |
 | `contract` (IPC/bindings changes) | regenerate bindings, `git diff --exit-code` on generated files, contract round-trip tests |
 | `e2e` (tasks that claim user-visible behavior) | the task's listed driver/e2e scenario against the seeded test DBs |
 
@@ -74,7 +74,7 @@ platforms available to the swarm (document which were actually run; do not
 claim platforms that weren't).
 
 Additional per-phase exit criteria live in
-[`../02-migration-strategy.md`](../02-migration-strategy.md) — that document
+[`../03-migration-strategy.md`](../03-migration-strategy.md) — that document
 owns *what* each phase must prove; this one owns *how* proof is produced and
 recorded.
 

@@ -20,9 +20,11 @@ convenience view; the task files win on conflict).
 - depends_on: [T-101, T-102]
 - touches: [src-tauri/crates/verql-config/**, src-tauri/crates/verql-core/src/paths.rs]
 - reads: [specs/tauri-migration/subsystems/config-store.md, src/main/config/store.ts]
-- risk: low | medium | high
+- risk: low | medium | high   (gates use `—` — their risk is the phase's)
 - estimate: S | M | L
-- verify.scope: rust | renderer | contract | e2e   (one or more)
+- verify.scope: rust | renderer | contract | e2e | none   (one or more;
+  `none (<reason>)` is for spike/measurement/sign-off tasks whose Verify
+  block checks deliverables rather than code)
 
 ## Goal
 One paragraph: what exists when this task is done, and what v1 behavior it
@@ -60,7 +62,9 @@ evidence, refutations — each entry timestamped and attributed to a role)
 
 - **depends_on** — hard ordering. A task is *ready* only when every
   dependency is `done`. Don't encode soft preferences here; the dispatch
-  heuristics in the playbook handle priorities.
+  heuristics in the playbook handle priorities. (`INDEX.md` may abbreviate
+  contiguous lists as ranges, `T-201..T-209`; task files always spell out
+  the explicit list.)
 
 - **touches** — the exclusive write set, as globs. Two tasks whose `touches`
   intersect never run concurrently. Implementers may not write outside it;

@@ -29,8 +29,9 @@ export interface BackendBridge {
   wrong-platform UI — hydrate it in `main.tsx` before render).
 - Selection: feature-detect (`'__TAURI_INTERNALS__' in window`), no build flag.
 - Rollout: `window.electronAPI` is *assigned* from the shim so the 87
-  existing consumer files, the Storybook stub, and the 12 unit-test stubs
-  keep working unmodified. New code may import the bridge directly; mass
+  files that reference it (166 `invoke` call sites across 54 of them, plus
+  subscriptions and story stubs), the Storybook stub, and the 12 unit-test
+  stubs keep working unmodified. New code may import the bridge directly; mass
   call-site rewrites are explicitly out of scope (non-goal).
 
 ## Dispatch on the Rust side

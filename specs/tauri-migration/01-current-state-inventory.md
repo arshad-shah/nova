@@ -23,7 +23,9 @@ every privileged operation crosses the typed IPC boundary.
   `activity:batch`, `menu:action`, `plugins:lifecycle`,
   `plugins:ui:contributions-changed`, `settings:changed`,
   `notifications:show`, `themes:changed`, `updater:progress`,
-  `app:action:perform`, `window:maximize-changed`.
+  `app:action:perform`, `window:maximize-changed`. (Oddity worth knowing:
+  `plugins:ui:contributions-changed` is registered both as an invoke channel
+  and as an event — the per-domain counts above include it on the invoke side.)
 - Preload (`src/preload/index.ts`) exposes exactly `platform`,
   `invoke(channel, ...args)`, `on(channel, cb) → unsubscribe` as
   `window.electronAPI`. Nothing else.
@@ -48,7 +50,7 @@ every privileged operation crosses the typed IPC boundary.
 | Attention hub | `attention/attention-hub.ts` | delivery-agnostic "user response needed" relay; consumed by os-notifications plugin | — |
 | MCP server | `mcp/` | Node `http` on `127.0.0.1` (default port 3100, auto-port probe), `@modelcontextprotocol/sdk` **SSE transport** (`GET /sse`, `POST /messages`, `GET /health`); 32-byte bearer token in keyring ns `__mcp__`, timing-safe compare, Host-header DNS-rebinding guard; tools from the shared ToolRegistry gated by `mcp.disabledTools`/`mcp.readOnly`; write tools need approval (renderer + attention hub, 5-min timeout) | Node `http` |
 | Updater | `updater/` | **custom registry, NOT electron-updater**: first-available channel wins; only Homebrew implemented (shells to `brew` via `spawn`); planned ids `mas/win-store/snap/apt/dmg-direct`; progress via `updater:progress` | `child_process` |
-| Menus | `app-menu.ts` + `shared/menus.ts` | declarative tree (32 action ids, surface/platform gates, `nativeRole` passthrough); native menu built on every platform (accelerator table); non-role items emit `menu:action`; rebuilt on keybinding change | `Menu` |
+| Menus | `app-menu.ts` + `shared/menus.ts` | declarative tree (31 action ids, surface/platform gates, `nativeRole` passthrough); native menu built on every platform (accelerator table); non-role items emit `menu:action`; rebuilt on keybinding change | `Menu` |
 | Migration helpers | `migration/type-map.ts` | cross-DB type mapping + DDL generation (pure) | — |
 
 ## Plugin platform (`src/main/plugins/`)
@@ -91,7 +93,7 @@ every privileged operation crosses the typed IPC boundary.
 | `db-tools` | zod | AI/MCP tools (query, schema inspection, get_app_activity); essential | 227 |
 | `ai` | none (raw `fetch`) | providers anthropic/openai/ollama over REST (no vendor SDKs), conversation manager, permission manager, commands, chat panel, `ai` service | 2384 |
 | `core-formats` | csv-parse/stringify | csv/json exporters, csv/tsv importer, generic sql formatter | 120 |
-| `core-themes` | none | 9 themes (data-only) | 698 |
+| `core-themes` | none | 10 themes (data-only) | 698 |
 | `ssh-tunnel` | ssh2 + `net` | connection middleware (local port-forward), ssh* connection fields | 130 |
 | `os-notifications` | Electron `Notification` | attention-hub consumer → native notifications; `os-notifications` service | 280 |
 

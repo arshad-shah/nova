@@ -31,6 +31,8 @@ src-tauri/                      # NEW — the Rust side
 ├── tauri.conf.json
 ├── Cargo.toml                  # workspace root
 ├── src/main.rs                 # thin: builder, plugin init, state, window setup
+├── src/notifications.rs        # os-notifications attention consumer (needs the
+│                               # tauri notification plugin → app crate, not core)
 └── crates/
     ├── verql-core/             # registries, capability model, error taxonomy,
     │                           # activity log + batcher, attention hub, paths,
@@ -51,7 +53,7 @@ src-tauri/                      # NEW — the Rust side
     ├── verql-driver-snowflake/ # Snowflake SQL REST API v2 over reqwest (ADR-0004)
     ├── verql-ssh-tunnel/       # russh local port-forward connection middleware
     ├── verql-formats/          # csv/json/jsonl/sql exporters+importers, formatters
-    ├── verql-themes/           # theme model, validation, 9 core themes (data)
+    ├── verql-themes/           # theme model, validation, 10 core themes (data)
     ├── verql-plugins/          # manifest model, discovery/validation/install,
     │                           # permission model, declarative plugin loading
     ├── verql-ai/               # providers (anthropic/openai/ollama via reqwest SSE),
