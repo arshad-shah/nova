@@ -1,61 +1,123 @@
-import React, { useCallback, useEffect, useRef } from 'react'
+import React, { forwardRef, useCallback, useEffect, useRef } from 'react'
 import { cva, type VariantProps } from 'class-variance-authority'
-import { AlertCircle, CheckCircle2, Info, AlertTriangle, X } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, Info, Loader2, X, XCircle } from 'lucide-react'
 import { cn } from '../utils/cn'
-import { Flex } from '../layout/Flex'
-import { Text } from '../typography/Text'
-import { IconButton } from '../forms/Button'
+import { Button, IconButton } from '../forms/Button'
+
+/**
+ * Toast: brief, non-blocking feedback about something that just happened.
+ *
+ * This is the whole toast — the surface, the icon, the text, the action, the
+ * dismiss and the auto-dismiss track. It used to be half of one:
+ * `ToastContainer` carried a second, complete copy (`ToastView`) with its own
+ * CSS block, and the primitive was imported by nothing but its own story. The
+ * two had already drifted — `warning` existed here but was unreachable from the
+ * store, and `info` resolved to a different colour in each. The container now
+ * renders this, and owns only what a container should: position, stacking and
+ * the enter/leave motion.
+ *
+ * Timing lives here, not in the container: a toast that pauses when you hover
+ * it has to know about its own hover, and splitting "when do I expire" from
+ * "am I being read" across two components is how they drifted the first time.
+ */
 
 const toastVariants = cva(
   cn(
-    'toast relative overflow-hidden border rounded-[var(--field-r-lg)] shadow-[var(--shadow-elevated)] toast-enter',
-    // density-aware padding; extra left padding clears the rail
-    'py-[calc(var(--field-gap)+2px)] pr-[calc(var(--field-px)+1px)] pl-[calc(var(--field-px)+5px)]',
+    // `group` so the track can pause on hover without a bespoke CSS selector.
+    'toast group pointer-events-auto relative flex items-start gap-2.5 overflow-hidden',
+    'rounded-[var(--field-r-lg)] border shadow-[var(--shadow-elevated)]',
+    // Density-aware, and even on both sides now there's no rail to clear.
+    'py-[calc(var(--field-gap)+4px)] px-[calc(var(--field-px)+2px)]',
+    // Tinted by the variant, not neutral: the border and the fill are washes of
+    // `--toast-vc` over the elevated surface, so the whole card carries the
+    // meaning rather than just the rail. Translucent + blurred so it reads as
+    // floating above the app rather than punched into it.
+    'border-[color-mix(in_srgb,var(--toast-vc)_26%,var(--color-border-default))]',
+    'bg-[color-mix(in_srgb,var(--toast-vc)_7%,color-mix(in_srgb,var(--color-bg-elevated)_88%,transparent))]',
+    'backdrop-blur-[10px]',
+    'transition-shadow duration-[var(--transition-fast)] hover:shadow-[var(--shadow-dropdown)]',
+    'motion-reduce:transition-none'
   ),
   {
     variants: {
+      /**
+       * `--toast-vc` is the variant's colour, and everything that carries it —
+       * the border, the fill, the icon, the action, the track — reads from it.
+       * One declaration per variant instead of five.
+       */
       variant: {
-        default: 'bg-bg-elevated border-border-default',
-        success:
-          '[--toast-vc:var(--color-success)] bg-[color-mix(in_srgb,var(--color-success)_6%,var(--color-bg-elevated))] border-[color-mix(in_srgb,var(--color-success)_26%,var(--color-border-default))]',
-        error:
-          '[--toast-vc:var(--color-error)] bg-[color-mix(in_srgb,var(--color-error)_6%,var(--color-bg-elevated))] border-[color-mix(in_srgb,var(--color-error)_26%,var(--color-border-default))]',
-        warning:
-          '[--toast-vc:var(--color-warning)] bg-[color-mix(in_srgb,var(--color-warning)_6%,var(--color-bg-elevated))] border-[color-mix(in_srgb,var(--color-warning)_26%,var(--color-border-default))]',
-        info:
-          '[--toast-vc:var(--color-info)] bg-[color-mix(in_srgb,var(--color-info)_6%,var(--color-bg-elevated))] border-[color-mix(in_srgb,var(--color-info)_26%,var(--color-border-default))]',
+        neutral: '[--toast-vc:var(--color-text-tertiary)] [--toast-glyph:#ffffff]',
+        success: '[--toast-vc:var(--color-success)] [--toast-glyph:#ffffff]',
+        info: '[--toast-vc:var(--color-info)] [--toast-glyph:#ffffff]',
+        // The one light fill: white on amber is ~1.7:1 and unreadable, so the
+        // glyph is knocked out in the page ground instead. Same reasoning as
+        // the action colour — the fill decides the glyph, not the palette.
+        warning: '[--toast-vc:var(--color-warning)] [--toast-glyph:var(--color-bg-primary)]',
+        error: '[--toast-vc:var(--color-error)] [--toast-glyph:#ffffff]',
       },
     },
-    defaultVariants: { variant: 'default' },
+    defaultVariants: { variant: 'neutral' },
   }
 )
 
-const variantIcons = {
-  default: null,
+/** Solid, not outline: the kit's marks are a filled shape with the glyph
+ *  knocked out of it, which reads at 15px where a hairline outline muddies. */
+const VARIANT_ICON = {
+  neutral: Info,
   success: CheckCircle2,
-  error: AlertCircle,
-  warning: AlertTriangle,
   info: Info,
+  warning: AlertTriangle,
+  error: XCircle,
 } as const
 
+export type ToastVariant = NonNullable<VariantProps<typeof toastVariants>['variant']>
+
+export interface ToastAction {
+  label: string
+  onClick: () => void
+}
+
 export interface ToastProps extends VariantProps<typeof toastVariants> {
-  message: string
-  onDismiss: () => void
+  /** The headline — what happened. */
+  title: string
+  /** The supporting line. Omit for a one-line toast. */
+  description?: string
   /**
-   * When set (ms), renders an auto-dismiss progress track that pauses while
-   * hovered and calls `onDismiss` when it elapses. Omit to let the toast
-   * manager own timing (no track is rendered).
+   * Auto-dismiss after this many ms, showing a progress track that pauses while
+   * hovered. Omit to make the toast persistent — then it stays until dismissed.
    */
   duration?: number
+  /** Called when the timer elapses or the close button is pressed. Omit to
+   *  render no close button — for a toast the caller dismisses itself. */
+  onDismiss?: () => void
+  /** One action. More than one and it isn't a toast, it's a dialog. */
+  action?: ToastAction
+  /** Swap the icon for a spinner — for work still in flight. */
+  loading?: boolean
+  dismissLabel?: string
   className?: string
 }
 
-export function Toast({ message, onDismiss, variant = 'default', duration, className }: ToastProps) {
-  const v = variant ?? 'default'
-  const IconComponent = variantIcons[v]
-  const showRail = v !== 'default'
+export const Toast = forwardRef<HTMLDivElement, ToastProps>(function Toast(
+  {
+    title,
+    description,
+    variant,
+    duration,
+    onDismiss,
+    action,
+    loading = false,
+    dismissLabel = 'Dismiss',
+    className,
+  },
+  ref
+) {
+  const v = variant ?? 'neutral'
+  const Icon = loading ? Loader2 : VARIANT_ICON[v]
 
-  // auto-dismiss with pause-on-hover — only active when `duration` is provided
+  // Auto-dismiss, pausing while the pointer is over the toast. `remaining` is
+  // what's left of `duration` — so a hover doesn't restart the clock, it holds
+  // it, and the toast resumes where it was.
   const remaining = useRef(duration ?? 0)
   const startedAt = useRef(0)
   const timer = useRef<number | null>(null)
@@ -69,7 +131,7 @@ export function Toast({ message, onDismiss, variant = 'default', duration, class
   }, [])
 
   const arm = useCallback(() => {
-    if (duration == null) return
+    if (duration == null || !onDismiss) return
     startedAt.current = Date.now()
     timer.current = window.setTimeout(onDismiss, Math.max(0, remaining.current))
   }, [duration, onDismiss])
@@ -80,8 +142,7 @@ export function Toast({ message, onDismiss, variant = 'default', duration, class
     paused.current = false
     arm()
     return clear
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [duration])
+  }, [duration, arm, clear])
 
   const handleMouseEnter = () => {
     if (duration == null || paused.current) return
@@ -97,40 +158,72 @@ export function Toast({ message, onDismiss, variant = 'default', duration, class
 
   return (
     <div
-      className={cn(toastVariants({ variant }), className)}
+      ref={ref}
+      // An error or a warning interrupts; everything else waits its turn.
       role={v === 'error' || v === 'warning' ? 'alert' : 'status'}
+      className={cn(toastVariants({ variant }), className)}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      {showRail && (
-        <span aria-hidden className="absolute inset-y-0 left-0 w-[3px] bg-[var(--toast-vc)]" />
+      {loading ? (
+        <Loader2 size={16} aria-hidden className="mt-px shrink-0 animate-spin text-[var(--toast-vc)]" />
+      ) : (
+        // `fill` paints the shape, `stroke` knocks the glyph out of it — a
+        // filled disc with a white tick, rather than lucide's default outline.
+        <Icon
+          size={16}
+          aria-hidden
+          fill="var(--toast-vc)"
+          stroke="var(--toast-glyph)"
+          strokeWidth={2}
+          className="mt-px shrink-0"
+        />
       )}
 
-      <Flex gap="sm" align="start">
-        {IconComponent && (
-          <IconComponent size={15} className="shrink-0 mt-px text-[var(--toast-vc)]" />
+      <div className="min-w-0 flex-1">
+        <p className="text-[length:var(--field-fs-md)] font-semibold leading-snug text-text-primary">
+          {title}
+        </p>
+        {description && (
+          <p className="mt-1 text-[length:var(--field-fs-sm)] leading-relaxed whitespace-pre-wrap break-words text-text-muted">
+            {description}
+          </p>
         )}
-        <Text size="sm" className="flex-1 min-w-0 leading-snug">
-          {message}
-        </Text>
+      </div>
+
+      {action && (
+        <Button
+          variant="bare"
+          size="none"
+          onClick={action.onClick}
+          // Coloured by the variant so the action reads as part of the message
+          // rather than a stray link. `self-center` keeps it on the title line
+          // for a one-liner and centred against both lines otherwise.
+          className="shrink-0 self-center px-1 text-[length:var(--field-fs-sm)] font-semibold text-[var(--toast-vc)] hover:brightness-125"
+        >
+          {action.label}
+        </Button>
+      )}
+
+      {onDismiss && (
         <IconButton
-          label="Dismiss"
+          label={dismissLabel}
           variant="ghost"
           size="xs"
           onClick={onDismiss}
-          className="shrink-0 -mr-1 -mt-0.5"
+          className="-mt-0.5 -mr-1 shrink-0 text-text-muted hover:text-text-primary"
         >
           <X size={14} />
         </IconButton>
-      </Flex>
+      )}
 
       {duration != null && (
         <span
           aria-hidden
-          className="toast-progress absolute inset-x-0 bottom-0 h-[2px] origin-left bg-[var(--toast-vc,var(--color-accent))]"
+          className="toast-progress absolute inset-x-0 bottom-0 h-[2px] origin-left bg-[var(--toast-vc)] opacity-85"
           style={{ animationDuration: `${duration}ms` }}
         />
       )}
     </div>
   )
-}
+})

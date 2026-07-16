@@ -197,47 +197,23 @@ dialog[open] { display: flex; flex-direction: column; }
 @keyframes toast-progress { from { transform: scaleX(1); } to { transform: scaleX(0); } }
 @media (prefers-reduced-motion: reduce) { .toast-progress { animation: none; } }
 
-/* Toast region — shell, rail, progress track, enter/leave motion (ToastContainer) */
-.vq-toast{
-  --vc: var(--color-accent);
+/* Toast stack motion — enter, leave and the gap between items.
+   The toast's own looks (surface, rail, icon, track) live in the Toast
+   primitive; this is only what a stack has to own. It replaces a `.vq-toast`
+   block that styled a second, duplicate toast implementation inside
+   ToastContainer — the primitive is the only toast now. */
+.toast-item{
   --toast-gap: calc(var(--field-gap) + 1px);
-  position: relative; overflow: hidden; pointer-events: auto;
-  padding: calc(var(--field-gap) + 2px) calc(var(--field-px) + 1px);
-  padding-left: calc(var(--field-px) + 5px);
-  border: 1px solid var(--color-border-default);
-  border-radius: var(--field-r-lg);
-  background: color-mix(in srgb, var(--color-bg-elevated) 86%, transparent);
-  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
-  box-shadow: var(--shadow-elevated);
   transition: opacity .24s ease, transform .24s cubic-bezier(.22,1,.36,1),
-              max-height .26s ease, margin .26s ease, padding .26s ease, border-width .26s ease;
+              max-height .26s ease, margin .26s ease;
 }
-.vq-toast.error   { --vc: var(--color-error); }
-.vq-toast.success { --vc: var(--color-success); }
-.vq-toast.info    { --vc: var(--color-accent); }
-/* tonal wash + tinted border (every type is colored; there is no neutral toast) */
-.vq-toast{ background: color-mix(in srgb, var(--vc) 7%, color-mix(in srgb, var(--color-bg-elevated) 86%, transparent));
-           border-color: color-mix(in srgb, var(--vc) 26%, var(--color-border-default)); }
-.vq-toast::before{ content:""; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--vc); }
-.vq-toast__icon{ color: var(--vc); }
-
 /* enter starts here, then the component drops .is-enter and CSS transitions in */
-.vq-toast.is-enter{ opacity:0; transform: translateX(16px) scale(.97); }
-/* leave: opacity/transform/margin/padding/border via class; max-height is set inline (measured) so it can collapse */
-.vq-toast.is-leaving{ opacity:0; transform: translateX(16px) scale(.97); margin-top:0; padding-top:0; padding-bottom:0; border-width:0; }
-
-.vq-toast__track{ position:absolute; left:0; bottom:0; height:2px; width:100%; background:var(--vc); opacity:.85; transform-origin:left; }
-.vq-toast.is-running .vq-toast__track{ animation: vq-toast-track var(--dur, 5000ms) linear forwards; }
-.vq-toast:hover .vq-toast__track{ animation-play-state: paused; }
-@keyframes vq-toast-track{ from{ transform: scaleX(1);} to{ transform: scaleX(0);} }
-
-.vq-toast__spin{ animation: vq-toast-spin 1s linear infinite; }
-@keyframes vq-toast-spin{ to{ transform: rotate(360deg); } }
+.toast-item.is-enter{ opacity:0; transform: translateX(16px) scale(.97); }
+/* leave: opacity/transform/margin via class; max-height is set inline (measured) so it can collapse */
+.toast-item.is-leaving{ opacity:0; transform: translateX(16px) scale(.97); margin-top:0; overflow:hidden; }
 
 @media (prefers-reduced-motion: reduce){
-  .vq-toast{ transition: none; }
-  .vq-toast.is-running .vq-toast__track{ animation: none; }
-  .vq-toast__spin{ animation: none; }
+  .toast-item{ transition: none; }
 }
 
 

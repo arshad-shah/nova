@@ -3,9 +3,13 @@ import { IPC_EVENTS } from '@shared/ipc'
 
 export interface Toast {
   id: string
-  type: 'error' | 'success' | 'info'
+  /** `warning` was renderable by the Toast primitive but unreachable from here,
+   *  so nothing could ever raise one. */
+  type: 'error' | 'success' | 'info' | 'warning'
   title: string
   message?: string
+  /** One action — Undo, Retry, View. More than one and it wants a dialog. */
+  action?: { label: string; onClick: () => void }
   /** If true, toast stays until manually dismissed or updated */
   persistent?: boolean
   /** Auto-dismiss time (ms) for non-persistent toasts. The ToastContainer owns
@@ -55,7 +59,10 @@ if (typeof window !== 'undefined' && window.electronAPI) {
     const { kind, title, message } = payload as { kind?: string; title?: string; message?: string }
     if (!title) return
     const type: Toast['type'] =
-      kind === 'error' ? 'error' : kind === 'success' ? 'success' : 'info'
+      kind === 'error' ? 'error'
+      : kind === 'success' ? 'success'
+      : kind === 'warning' ? 'warning'
+      : 'info'
     useToastStore.getState().addToast({ type, title, message })
   })
 }

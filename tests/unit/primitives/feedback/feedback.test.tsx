@@ -9,61 +9,86 @@ import { Banner } from '../../../../src/renderer/src/primitives/feedback/Banner'
 
 describe('Toast', () => {
   it('renders message', () => {
-    render(<Toast message="Saved successfully" onDismiss={() => {}} />)
+    render(<Toast title="Saved successfully" onDismiss={() => {}} />)
     expect(screen.getByText('Saved successfully')).toBeInTheDocument()
   })
 
   it('renders dismiss button with aria-label', () => {
-    render(<Toast message="Hello" onDismiss={() => {}} />)
+    render(<Toast title="Hello" onDismiss={() => {}} />)
     expect(screen.getByRole('button', { name: 'Dismiss' })).toBeInTheDocument()
   })
 
   it('calls onDismiss when dismiss button clicked', () => {
     const onDismiss = vi.fn()
-    render(<Toast message="Hello" onDismiss={onDismiss} />)
+    render(<Toast title="Hello" onDismiss={onDismiss} />)
     fireEvent.click(screen.getByRole('button', { name: 'Dismiss' }))
     expect(onDismiss).toHaveBeenCalledTimes(1)
   })
 
-  it('applies default variant classes', () => {
-    const { container } = render(<Toast message="Hello" onDismiss={() => {}} />)
-    expect(container.firstChild).toHaveClass('bg-bg-elevated')
-    expect(container.firstChild).toHaveClass('border-border-default')
+  it('defaults to the neutral variant', () => {
+    const { container } = render(<Toast title="Hello" onDismiss={() => {}} />)
+    expect(container.firstChild).toHaveClass('[--toast-vc:var(--color-text-tertiary)]')
+  })
+
+  it('renders a description under the title when given one', () => {
+    render(<Toast title="Saved" description="Your changes were kept." onDismiss={() => {}} />)
+    expect(screen.getByText('Saved')).toBeInTheDocument()
+    expect(screen.getByText('Your changes were kept.')).toBeInTheDocument()
+  })
+
+  it('renders an action and calls it', () => {
+    const onClick = vi.fn()
+    render(<Toast title="Saved" action={{ label: 'Undo', onClick }} onDismiss={() => {}} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Undo' }))
+    expect(onClick).toHaveBeenCalledTimes(1)
+  })
+
+  it('renders no dismiss button when onDismiss is omitted', () => {
+    render(<Toast title="Caller owns this one" />)
+    expect(screen.queryByRole('button', { name: 'Dismiss' })).toBeNull()
+  })
+
+  // error/warning interrupt; the rest wait their turn.
+  it('is an alert for error and a status otherwise', () => {
+    const { container: err } = render(<Toast title="x" variant="error" />)
+    expect(err.firstChild).toHaveAttribute('role', 'alert')
+    const { container: ok } = render(<Toast title="x" variant="success" />)
+    expect(ok.firstChild).toHaveAttribute('role', 'status')
   })
 
   // The variant colour now flows through a single `--toast-vc` custom property
   // (into the icon + left rail), not a flat border/bg tint of the whole toast.
   it('applies success variant classes', () => {
-    const { container } = render(<Toast message="Done" onDismiss={() => {}} variant="success" />)
+    const { container } = render(<Toast title="Done" onDismiss={() => {}} variant="success" />)
     expect(container.firstChild).toHaveClass('[--toast-vc:var(--color-success)]')
   })
 
   it('applies error variant classes', () => {
-    const { container } = render(<Toast message="Error!" onDismiss={() => {}} variant="error" />)
+    const { container } = render(<Toast title="Error!" onDismiss={() => {}} variant="error" />)
     expect(container.firstChild).toHaveClass('[--toast-vc:var(--color-error)]')
   })
 
   it('applies warning variant classes', () => {
-    const { container } = render(<Toast message="Warning" onDismiss={() => {}} variant="warning" />)
+    const { container } = render(<Toast title="Warning" onDismiss={() => {}} variant="warning" />)
     expect(container.firstChild).toHaveClass('[--toast-vc:var(--color-warning)]')
   })
 
   it('applies info variant classes', () => {
-    const { container } = render(<Toast message="Info" onDismiss={() => {}} variant="info" />)
+    const { container } = render(<Toast title="Info" onDismiss={() => {}} variant="info" />)
     expect(container.firstChild).toHaveClass('[--toast-vc:var(--color-info)]')
   })
 
   it('has base classes', () => {
-    const { container } = render(<Toast message="Hello" onDismiss={() => {}} />)
+    const { container } = render(<Toast title="Hello" onDismiss={() => {}} />)
     expect(container.firstChild).toHaveClass('toast')
     expect(container.firstChild).toHaveClass('border')
     expect(container.firstChild).toHaveClass('rounded-[var(--field-r-lg)]')
   })
 
   it('renders the progress track only when duration is set', () => {
-    const { container, rerender } = render(<Toast message="Hi" onDismiss={() => {}} />)
+    const { container, rerender } = render(<Toast title="Hi" onDismiss={() => {}} />)
     expect(container.querySelector('.toast-progress')).toBeNull()
-    rerender(<Toast message="Hi" onDismiss={() => {}} duration={3000} />)
+    rerender(<Toast title="Hi" onDismiss={() => {}} duration={3000} />)
     expect(container.querySelector('.toast-progress')).not.toBeNull()
   })
 
@@ -71,7 +96,7 @@ describe('Toast', () => {
     vi.useFakeTimers()
     try {
       const onDismiss = vi.fn()
-      render(<Toast message="Bye" onDismiss={onDismiss} duration={1000} />)
+      render(<Toast title="Bye" onDismiss={onDismiss} duration={1000} />)
       expect(onDismiss).not.toHaveBeenCalled()
       vi.advanceTimersByTime(1000)
       expect(onDismiss).toHaveBeenCalledTimes(1)
