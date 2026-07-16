@@ -1,9 +1,9 @@
-import { app, BrowserWindow, Menu, nativeImage, shell, type MenuItemConstructorOptions } from 'electron'
+import { app, BrowserWindow, nativeImage } from 'electron'
 import path from 'path'
 import fs from 'fs'
 import { registerIpcHandlers } from './ipc-handlers'
+import { buildAppMenu } from './app-menu'
 import { IPC_EVENTS } from '@shared/ipc'
-import { t } from '@shared/i18n'
 
 const isDev = !app.isPackaged
 const isMac = process.platform === 'darwin'
@@ -35,139 +35,6 @@ const APP_NAME = 'Verql'
 const STORAGE_NAME = 'verql'
 
 app.setName(STORAGE_NAME)
-
-// Help-menu destinations on the docs site (https://verql.arshadshah.com). The
-// user guide is the consumer-facing entry point; the SDK docs are for
-// developers building plugins.
-const GUIDE_URL = 'https://verql.arshadshah.com/guide/'
-const SDK_URL = 'https://verql.arshadshah.com/plugins/sdk/'
-const ISSUES_URL = 'https://github.com/arshad-shah/verql/issues'
-
-function buildAppMenu(): void {
-  // Populates the native About panel (macOS / Linux). The macOS app menu's
-  // `role: 'about'` reads from this; the Help menu links out to the docs.
-  app.setAboutPanelOptions({
-    applicationName: APP_NAME,
-    applicationVersion: app.getVersion(),
-    copyright: `© ${new Date().getFullYear()} Arshad Shah`,
-  })
-
-  const template: MenuItemConstructorOptions[] = [
-    ...(process.platform === 'darwin'
-      ? [
-          {
-            label: isDev ? `${APP_NAME} (Dev)` : APP_NAME,
-            submenu: [
-              { role: 'about' as const, label: `About ${APP_NAME}` },
-              { type: 'separator' as const },
-              { role: 'services' as const },
-              { type: 'separator' as const },
-              { role: 'hide' as const },
-              { role: 'hideOthers' as const },
-              { role: 'unhide' as const },
-              { type: 'separator' as const },
-              { role: 'quit' as const },
-            ],
-          },
-        ]
-      : []),
-    {
-      label: t('menu.file'),
-      submenu: [
-        {
-          label: t('menu.newQueryTab'),
-          accelerator: 'CmdOrCtrl+N',
-          click: (_, win) => (win as BrowserWindow | undefined)?.webContents.send(IPC_EVENTS.MENU_NEW_QUERY_TAB),
-        },
-        { type: 'separator' },
-        {
-          label: t('menu.newConnection'),
-          accelerator: 'CmdOrCtrl+Shift+N',
-          click: (_, win) => (win as BrowserWindow | undefined)?.webContents.send(IPC_EVENTS.MENU_NEW_CONNECTION),
-        },
-        { type: 'separator' },
-        process.platform === 'darwin'
-          ? { role: 'close' }
-          : { role: 'quit' },
-      ],
-    },
-    {
-      label: t('menu.edit'),
-      submenu: [
-        { role: 'undo' },
-        { role: 'redo' },
-        { type: 'separator' },
-        { role: 'cut' },
-        { role: 'copy' },
-        { role: 'paste' },
-        { role: 'selectAll' },
-      ],
-    },
-    {
-      label: t('menu.view'),
-      submenu: [
-        {
-          label: t('menu.commandPalette'),
-          accelerator: 'CmdOrCtrl+Shift+P',
-          click: (_, win) => (win as BrowserWindow | undefined)?.webContents.send(IPC_EVENTS.MENU_TOGGLE_COMMAND_PALETTE),
-        },
-        { type: 'separator' },
-        { role: 'togglefullscreen' },
-        ...(isDev
-          ? [
-              { type: 'separator' as const },
-              { role: 'reload' as const },
-              { role: 'forceReload' as const },
-              { role: 'toggleDevTools' as const },
-            ]
-          : []),
-      ],
-    },
-    {
-      label: t('menu.window'),
-      submenu: [
-        { role: 'minimize' },
-        { role: 'zoom' },
-        ...(process.platform === 'darwin'
-          ? [
-              { type: 'separator' as const },
-              { role: 'front' as const },
-            ]
-          : [{ role: 'close' as const }]),
-      ],
-    },
-    {
-      label: t('menu.help'),
-      role: 'help',
-      submenu: [
-        {
-          label: t('menu.userGuide', { appName: APP_NAME }),
-          click: () => { void shell.openExternal(GUIDE_URL) },
-        },
-        {
-          label: t('menu.buildPlugin'),
-          click: () => { void shell.openExternal(SDK_URL) },
-        },
-        {
-          label: t('menu.reportIssue'),
-          click: () => { void shell.openExternal(ISSUES_URL) },
-        },
-        { type: 'separator' },
-        // Non-macOS has no app menu, so surface About here. On macOS the
-        // native About lives in the app menu above.
-        ...(process.platform !== 'darwin'
-          ? [{ role: 'about' as const, label: t('menu.about', { appName: APP_NAME }) }]
-          : []),
-        {
-          label: t('menu.version', { appName: APP_NAME, version: app.getVersion() }),
-          enabled: false,
-        },
-      ],
-    },
-  ]
-
-  Menu.setApplicationMenu(Menu.buildFromTemplate(template))
-}
 
 /**
  * Resolves the app icon at runtime.
@@ -266,8 +133,10 @@ app.whenReady().then(() => {
     if (icon) app.dock.setIcon(icon)
   }
 
-  registerIpcHandlers()
-  buildAppMenu()
+  const ctx = registerIpcHandlers()
+  // Accelerators come from the user's saved keybindings; `settings:set`
+  // rebuilds the menu when they change.
+  buildAppMenu(ctx.configStore.getSettingsCategory('keybindings'))
   createWindow()
 
   app.on('activate', () => {

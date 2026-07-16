@@ -87,7 +87,7 @@ export function App() {
   // native-menu commands — lives in focused hooks (see ./hooks).
   useAppKeyboardShortcuts({ activeConnectionId, activeTabId, addQueryTab, closeTab, reopenTab })
   useFileDropForwarding()
-  useShellMenuEvents({ activeConnectionId, addQueryTab, openConnectionForm })
+  useShellMenuEvents()
 
   // Panel resize behavior (draft-during-drag, commit-on-release, collapse on
   // double-click) is shared across the three handles via usePanelResize.

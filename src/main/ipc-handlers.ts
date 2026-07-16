@@ -52,7 +52,9 @@ import { registerWindowHandlers } from './ipc/window'
 import { createUpdaterRegistry } from './updater'
 import { getSecretFieldKeys, SECRET_PLACEHOLDER } from './ipc/secrets'
 
-export function registerIpcHandlers(): void {
+/** Returns the wired context so startup code can read live settings — the app
+ *  menu builds its accelerators from the user's keybindings. */
+export function registerIpcHandlers(): IpcContext {
   const configPath = path.join(app.getPath('userData'), 'config.json')
   // KeyringService must be created before ConfigStore so it can be passed in.
   const keyring = new KeyringService()
@@ -319,4 +321,6 @@ export function registerIpcHandlers(): void {
       return { handled: false }
     }
   })
+
+  return ctx
 }

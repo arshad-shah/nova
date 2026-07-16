@@ -5,6 +5,7 @@ import type { DriverCapabilities, SessionOpts, RuntimeCapabilityOverlay } from '
 import type { ActivityEntry, ActivityQuery, ActivityKind, ActivityLevel } from './activity'
 import type { ConversationsSnapshot, StoredConversation, SavedQuery, QueryHistoryEntry, OpenTabsSnapshot, TabOp } from './appdata'
 import type { ExportFormatInfo, ImportFormatInfo } from './export-import'
+import type { MenuActionId } from './menus'
 
 // ─── Channel shapes ──────────────────────────────────────────────────────────
 //
@@ -959,12 +960,13 @@ export interface IpcEventShapes {
    *  the batch). The main process buffers entries and flushes them on a short
    *  timer / size threshold so a busy stream is one IPC round-trip, not N. */
   ACTIVITY_BATCH: [entries: ActivityEntry[]]
-  /** App menu accelerator: focus / create a new query tab. */
-  MENU_NEW_QUERY_TAB: []
-  /** App menu accelerator: open the new-connection form. */
-  MENU_NEW_CONNECTION: []
-  /** App menu accelerator: toggle the command palette. */
-  MENU_TOGGLE_COMMAND_PALETTE: []
+  /**
+   * The native application menu invoked a command (click or accelerator).
+   * One event for the whole menu: the renderer owns every command's
+   * implementation and looks it up by id, so the native menu and the app-drawn
+   * bar can't drift apart. The tree itself lives in `shared/menus.ts`.
+   */
+  MENU_ACTION: [action: MenuActionId]
   /** A plugin transitioned through its lifecycle. */
   PLUGINS_LIFECYCLE: [payload: { name: string; event: 'activated' | 'deactivated' | 'installed' | 'uninstalled' }]
   /** Plugin UI contributions have changed; renderer should refetch. */
@@ -1000,9 +1002,7 @@ export const IPC_EVENTS = {
   MCP_ACTIVITY_EVENT: 'mcp:activity-event',
   ACTIVITY_EVENT: 'activity:event',
   ACTIVITY_BATCH: 'activity:batch',
-  MENU_NEW_QUERY_TAB: 'menu:new-query-tab',
-  MENU_NEW_CONNECTION: 'menu:new-connection',
-  MENU_TOGGLE_COMMAND_PALETTE: 'menu:toggle-command-palette',
+  MENU_ACTION: 'menu:action',
   PLUGINS_LIFECYCLE: 'plugins:lifecycle',
   PLUGINS_UI_CONTRIBUTIONS_CHANGED: 'plugins:ui:contributions-changed',
   SETTINGS_CHANGED: 'settings:changed',
