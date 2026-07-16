@@ -118,10 +118,13 @@ export function Alert({
       className={cn(alertVariants({ tone, variant }), className)}
       {...props}
     >
+      {/* A touch larger than Toast's 16px. An alert sits in content and has to
+          be found by someone scrolling past it; a toast arrives in front of you
+          and doesn't. The mark is the thing that does the finding. */}
       {icon === undefined ? (
-        <SeverityIcon severity={v} className="mt-px" />
+        <SeverityIcon severity={v} size={18} />
       ) : (
-        icon !== null && <span className="mt-px shrink-0 text-[var(--fb-vc)]">{icon}</span>
+        icon !== null && <span className="shrink-0 text-[var(--fb-vc)]">{icon}</span>
       )}
 
       <div className="min-w-0 flex-1">
