@@ -76,11 +76,16 @@ export function ExportModal({ tableName, connectionId, onClose }: Props) {
           />
         </Box>
 
+        {/* A real <label>, not a click-to-toggle row. The row version worked,
+            but only by luck: its onClick and the box's own onChange both set the
+            same state, and it survived solely because onChange fires last and
+            sets an absolute value rather than toggling. A label lets the browser
+            forward the click to the input exactly once. */}
         {selected?.supportsSchema && (
-          <Flex direction="row" align="center" gap="sm" className="cursor-pointer" onClick={() => setIncludeSchema(v => !v)}>
+          <label className="flex cursor-pointer items-center gap-2 self-start">
             <Checkbox checked={includeSchema} onChange={e => setIncludeSchema(e.target.checked)} />
             <Text size="sm" color="secondary">{t('shell.exportModal.includeCreateTable')}</Text>
-          </Flex>
+          </label>
         )}
 
         {result && (
