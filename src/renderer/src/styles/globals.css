@@ -224,34 +224,37 @@ dialog[open] { display: flex; flex-direction: column; }
   50% { opacity: 1; }
 }
 
-/* UI Density scaling */
+/* ── UI density ─────────────────────────────────────────────────────────────
+   Density scales Tailwind's own theme vars, NOT the root font-size.
+
+   It used to set `font-size` on <html> (13/14/15px) as the lever. Tailwind's
+   scale is rem-based, so that silently shrank *everything* — at the default
+   (comfortable, 14px) `text-xs` rendered at 10.5px, `text-sm` at 12.25px,
+   `h-10` at 35px and `px-3` at 10.5px: 12.5% under what the class names say,
+   and below the macOS HIG (11px floor, 13px body) and Fluent (14px body)
+   desktop guidance. The root now stays at the 16px default so a rem means what
+   it says, and density moves the two vars every utility is built from:
+
+     --spacing  — the unit behind h-*, w-*, p-*, gap-* (default 0.25rem = 4px)
+     --text-*   — the type scale behind text-xs … text-base
+
+   Tailwind declares these in `@layer theme`, which unlayered rules always beat,
+   so overriding them here is enough. Controls size off the absolute --field-*
+   tokens below and are unaffected, which is why the per-utility `.px-3`/`.py-2`
+   patches that used to live here are gone — --spacing covers them all. */
 [data-density="compact"] {
-  --density-spacing: 1;
-  --density-font-scale: 1;
-  font-size: 13px;
+  --spacing: 0.21875rem;   /* 3.5px unit */
+  --text-xs: 0.6875rem;    /* 11px — the HIG floor */
+  --text-sm: 0.8125rem;    /* 13px */
+  --text-base: 0.875rem;   /* 14px */
 }
-[data-density="comfortable"] {
-  --density-spacing: 1.25;
-  --density-font-scale: 1.05;
-  font-size: 14px;
-}
+/* comfortable is the baseline: Tailwind's defaults (4px unit; 12/14/16px). */
 [data-density="spacious"] {
-  --density-spacing: 1.5;
-  --density-font-scale: 1.12;
-  font-size: 15px;
+  --spacing: 0.28125rem;   /* 4.5px unit */
+  --text-xs: 0.8125rem;    /* 13px */
+  --text-sm: 0.9375rem;    /* 15px */
+  --text-base: 1.0625rem;  /* 17px */
 }
-
-/* Apply density to common spacing patterns */
-[data-density="compact"] button { padding-top: 0.25rem; padding-bottom: 0.25rem; }
-[data-density="spacious"] button { padding-top: 0.5rem; padding-bottom: 0.5rem; }
-
-[data-density="compact"] .px-3 { padding-left: 0.625rem; padding-right: 0.625rem; }
-[data-density="compact"] .py-2 { padding-top: 0.4rem; padding-bottom: 0.4rem; }
-[data-density="compact"] .gap-sm, [data-density="compact"] .gap-md { gap: 0.4rem; }
-
-[data-density="spacious"] .py-2 { padding-top: 0.75rem; padding-bottom: 0.75rem; }
-[data-density="spacious"] .gap-sm { gap: 0.75rem; }
-[data-density="spacious"] .gap-md { gap: 1.125rem; }
 
 /* Shared control density tokens — Input, NumberInput, Textarea, Select… all
    size off these. One [data-density] flip rescales every field (height,
