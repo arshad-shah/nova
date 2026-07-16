@@ -212,6 +212,17 @@
   --color-selection-ring: var(--raw-vcyan-400);
   --color-selection-bg: rgba(0, 212, 255, 0.11);
 
+  /* Syntax — the semantic layer for highlighted code. Defaults to the
+     functional set, but themes MAY remap these to match their own editor
+     palette (see the `monaco` rules each theme ships): a theme that paints
+     keywords pink in the editor should paint them pink in a code block too.
+     Consumed by <CodeView> via the --vq-code-* bridge in globals.css. */
+  --color-syntax-keyword: var(--fn-syntax-kw);
+  --color-syntax-function: var(--fn-syntax-fn);
+  --color-syntax-string: var(--fn-syntax-str);
+  --color-syntax-number: var(--fn-syntax-num);
+  --color-syntax-comment: var(--fn-syntax-cm);
+
   /* Key badges — PK reads violet, FK follows the data accent (cyan), UNIQUE
      stays a neutral outline so it never competes with the two key kinds. */
   --color-key-pk: var(--raw-vpurple-200);
@@ -284,4 +295,10 @@
   --color-switch-track-off-hover: color-mix(in oklab, var(--color-text-primary) 42%, var(--color-bg-secondary));
   --color-switch-track-on: var(--color-accent);
   --color-switch-thumb: #ffffff;
+
+  /* Checkbox — the tick is drawn as an alpha mask over the box's own accent
+     fill, so this is the mark's colour, not the fill's. White reads on every
+     theme's accent (they're all mid-to-dark saturated hues); a theme with a
+     pale accent can override it the same way it can override the switch knob. */
+  --color-checkbox-mark: #ffffff;
 }

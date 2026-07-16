@@ -291,16 +291,22 @@ dialog[open] { display: flex; flex-direction: column; }
    ease. */
 .cb-mark::before {
   content: ""; position: absolute; inset: 0; pointer-events: none;
-  background: #fff; /* mark color on the accent fill — matches the old before:border-white */
-  -webkit-mask: var(--cb-check) center / 62% no-repeat;
-          mask: var(--cb-check) center / 62% no-repeat;
-  opacity: 0; transform: scale(0.5);
+  background: var(--color-checkbox-mark);
+  -webkit-mask: var(--cb-check) center / 64% no-repeat;
+          mask: var(--cb-check) center / 64% no-repeat;
+  /* The tick settles in from slightly small and low, so it reads as landing in
+     the box rather than popping at its centre. The spring overshoot is what
+     gives the tick its snap — keep the >1 third control point. */
+  opacity: 0; transform: scale(0.4) translateY(1px);
   transition: opacity var(--transition-fast) ease,
-              transform var(--transition-fast) cubic-bezier(.34, 1.4, .64, 1);
+              transform var(--transition-normal) cubic-bezier(.34, 1.56, .64, 1);
 }
-.cb-mark:checked::before { opacity: 1; transform: scale(1); }
+.cb-mark:checked::before { opacity: 1; transform: scale(1) translateY(0); }
+/* The dash is a state, not a gesture — it crossfades instead of springing, so
+   a tri-state row doesn't bounce every time it recalculates. */
 .cb-mark:indeterminate::before {
-  opacity: 1; transform: scale(1);
+  opacity: 1; transform: scale(1) translateY(0);
+  transition: opacity var(--transition-fast) ease;
   -webkit-mask-image: var(--cb-dash); mask-image: var(--cb-dash);
 }
 @media (prefers-reduced-motion: reduce) { .cb-mark::before { transition: none; } }
@@ -324,29 +330,6 @@ dialog[open] { display: flex; flex-direction: column; }
  * automatically render a visible skeleton without needing to opt in. A theme
  * can still override `--color-skeleton-base` / `--color-skeleton-highlight`
  * if it wants a custom tone. */
-/*
- * Shiki code blocks — see `primitives/data-display/CodeView.tsx`, which builds
- * a CSS-variables theme with this prefix. Pointing them at the functional
- * syntax set keeps <CodeView> and the Monaco editor in agreement: a keyword is
- * the same colour in a chat code block and in the query editor, on every theme.
- */
-:root {
-  --vq-code-foreground: var(--color-text-primary);
-  --vq-code-background: var(--color-bg-primary);
-  --vq-code-token-keyword: var(--fn-syntax-kw);
-  --vq-code-token-function: var(--fn-syntax-fn);
-  --vq-code-token-string: var(--fn-syntax-str);
-  --vq-code-token-string-expression: var(--fn-syntax-str);
-  --vq-code-token-constant: var(--fn-syntax-num);
-  --vq-code-token-comment: var(--fn-syntax-cm);
-  --vq-code-token-parameter: var(--color-text-primary);
-  --vq-code-token-punctuation: var(--color-text-secondary);
-  --vq-code-token-link: var(--color-data-accent);
-  --vq-code-token-inserted: var(--color-success);
-  --vq-code-token-deleted: var(--color-error);
-  --vq-code-token-changed: var(--color-warning);
-}
-
 .skeleton-token {
   background-color: var(--color-skeleton-base);
 }
@@ -376,4 +359,31 @@ dialog[open] { display: flex; flex-direction: column; }
 @media (prefers-reduced-motion: reduce) {
   .skeleton-token--shimmer::after { animation: none; display: none; }
   .skeleton-token--pulse { animation: none; }
+}
+
+/* ── Code blocks (Shiki) ──
+ * See `primitives/data-display/CodeView.tsx`, which builds a Shiki
+ * CSS-variables theme with this prefix.
+ *
+ * This is a BRIDGE, not a palette: every value resolves through a semantic
+ * token, so a code block is painted by whichever theme is active. A theme
+ * overrides `--color-syntax-*` (and the surface/text tokens) and its code
+ * blocks follow — including themes that don't exist yet, plugin-contributed
+ * ones included. Don't hardcode colours here; set `--color-syntax-*` in the
+ * theme instead. */
+:root {
+  --vq-code-foreground: var(--color-text-primary);
+  --vq-code-background: var(--color-bg-primary);
+  --vq-code-token-keyword: var(--color-syntax-keyword);
+  --vq-code-token-function: var(--color-syntax-function);
+  --vq-code-token-string: var(--color-syntax-string);
+  --vq-code-token-string-expression: var(--color-syntax-string);
+  --vq-code-token-constant: var(--color-syntax-number);
+  --vq-code-token-comment: var(--color-syntax-comment);
+  --vq-code-token-parameter: var(--color-text-primary);
+  --vq-code-token-punctuation: var(--color-text-secondary);
+  --vq-code-token-link: var(--color-data-accent);
+  --vq-code-token-inserted: var(--color-success);
+  --vq-code-token-deleted: var(--color-error);
+  --vq-code-token-changed: var(--color-warning);
 }

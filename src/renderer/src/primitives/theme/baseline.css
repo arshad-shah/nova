@@ -51,6 +51,12 @@
   --color-selection-ring: var(--raw-vcyan-400);
   --color-selection-bg: rgba(0, 212, 255, 0.11);
 
+  --color-syntax-keyword: var(--fn-syntax-kw);
+  --color-syntax-function: var(--fn-syntax-fn);
+  --color-syntax-string: var(--fn-syntax-str);
+  --color-syntax-number: var(--fn-syntax-num);
+  --color-syntax-comment: var(--fn-syntax-cm);
+
   --color-key-pk: var(--raw-vpurple-200);
   --color-key-pk-bg: rgba(167, 139, 250, 0.14);
   --color-key-pk-border: rgba(167, 139, 250, 0.35);

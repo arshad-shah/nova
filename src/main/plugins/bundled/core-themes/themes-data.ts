@@ -60,6 +60,13 @@ const NIGHTSHIFT_CSS = `
   --color-tab-active-fg: var(--raw-ink-50);
   --color-tab-inactive-fg: var(--raw-ink-200);
   --color-tab-hover-bg: rgba(232, 236, 243, 0.06);
+
+  /* Syntax — matches this theme's editor rules */
+  --color-syntax-keyword: #2BD9A3;
+  --color-syntax-function: #5CE0BD;
+  --color-syntax-string: #FFB23D;
+  --color-syntax-number: #FFC061;
+  --color-syntax-comment: #4A5468;
 }
 `.trim()
 
@@ -115,6 +122,13 @@ const LAB_CSS = `
   --color-tab-active-fg: var(--raw-paper-900);
   --color-tab-inactive-fg: var(--raw-paper-500);
   --color-tab-hover-bg: rgba(26, 26, 28, 0.05);
+
+  /* Syntax — matches this theme's editor rules */
+  --color-syntax-keyword: #115E59;
+  --color-syntax-function: #14716A;
+  --color-syntax-string: #B45309;
+  --color-syntax-number: #9A4F0B;
+  --color-syntax-comment: #6B6B68;
 }
 `.trim()
 
@@ -170,6 +184,13 @@ const INKPAPER_CSS = `
   --color-tab-active-fg: var(--raw-cream-900);
   --color-tab-inactive-fg: var(--raw-cream-500);
   --color-tab-hover-bg: rgba(20, 17, 15, 0.05);
+
+  /* Syntax — matches this theme's editor rules */
+  --color-syntax-keyword: #9E3022;
+  --color-syntax-function: #B23A2A;
+  --color-syntax-string: #6B4226;
+  --color-syntax-number: #8E5A1E;
+  --color-syntax-comment: #6D6759;
 }
 `.trim()
 
@@ -222,6 +243,13 @@ const DARK_CSS = `
   --color-tab-active-fg: #ffffff;
   --color-tab-inactive-fg: var(--raw-neutral-400);
   --color-tab-hover-bg: rgba(255, 255, 255, 0.06);
+
+  /* Syntax — matches this theme's editor rules */
+  --color-syntax-keyword: #c678dd;
+  --color-syntax-function: #e5c07b;
+  --color-syntax-string: #98c379;
+  --color-syntax-number: #d19a66;
+  --color-syntax-comment: #5c6370;
 }
 `.trim()
 
@@ -274,6 +302,13 @@ const LIGHT_CSS = `
   --color-tab-active-fg: var(--raw-neutral-900);
   --color-tab-inactive-fg: var(--raw-neutral-500);
   --color-tab-hover-bg: rgba(0, 0, 0, 0.05);
+
+  /* Syntax — matches this theme's editor rules */
+  --color-syntax-keyword: #a626a4;
+  --color-syntax-function: #c18401;
+  --color-syntax-string: #50a14f;
+  --color-syntax-number: #986801;
+  --color-syntax-comment: #a0a1a7;
 }
 `.trim()
 
@@ -321,6 +356,13 @@ const MIDNIGHT_CSS = `
   --color-tab-active-fg: #e0e0f0;
   --color-tab-inactive-fg: #7878a0;
   --color-tab-hover-bg: rgba(255, 255, 255, 0.05);
+
+  /* Syntax — matches this theme's editor rules */
+  --color-syntax-keyword: #c678dd;
+  --color-syntax-function: #e5c07b;
+  --color-syntax-string: #98c379;
+  --color-syntax-number: #d19a66;
+  --color-syntax-comment: #555578;
 }
 `.trim()
 
@@ -368,6 +410,13 @@ const DRACULA_CSS = `
   --color-tab-active-fg: #f8f8f2;
   --color-tab-inactive-fg: #6272a4;
   --color-tab-hover-bg: rgba(255, 255, 255, 0.05);
+
+  /* Syntax — matches this theme's editor rules */
+  --color-syntax-keyword: #ff79c6;
+  --color-syntax-function: #8be9fd;
+  --color-syntax-string: #f1fa8c;
+  --color-syntax-number: #bd93f9;
+  --color-syntax-comment: #6272a4;
 }
 `.trim()
 
@@ -415,6 +464,13 @@ const NORD_CSS = `
   --color-tab-active-fg: #eceff4;
   --color-tab-inactive-fg: #4c566a;
   --color-tab-hover-bg: rgba(255, 255, 255, 0.04);
+
+  /* Syntax — matches this theme's editor rules */
+  --color-syntax-keyword: #81a1c1;
+  --color-syntax-function: #8fbcbb;
+  --color-syntax-string: #a3be8c;
+  --color-syntax-number: #b48ead;
+  --color-syntax-comment: #4c566a;
 }
 `.trim()
 
@@ -462,6 +518,13 @@ const SOLARIZED_CSS = `
   --color-tab-active-fg: #fdf6e3;
   --color-tab-inactive-fg: #586e75;
   --color-tab-hover-bg: rgba(253, 246, 227, 0.05);
+
+  /* Syntax — matches this theme's editor rules */
+  --color-syntax-keyword: #859900;
+  --color-syntax-function: #b58900;
+  --color-syntax-string: #2aa198;
+  --color-syntax-number: #d33682;
+  --color-syntax-comment: #586e75;
 }
 `.trim()
 
@@ -509,6 +572,13 @@ const CATPPUCCIN_CSS = `
   --color-tab-active-fg: #cdd6f4;
   --color-tab-inactive-fg: #585b70;
   --color-tab-hover-bg: rgba(255, 255, 255, 0.04);
+
+  /* Syntax — matches this theme's editor rules */
+  --color-syntax-keyword: #cba6f7;
+  --color-syntax-function: #f9e2af;
+  --color-syntax-string: #a6e3a1;
+  --color-syntax-number: #fab387;
+  --color-syntax-comment: #585b70;
 }
 `.trim()
 
