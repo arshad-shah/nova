@@ -511,6 +511,16 @@ export interface IpcChannelShapes {
     args: []
     return: boolean
   }
+  /**
+   * Report the title bar's rendered height so macOS can centre its traffic
+   * lights in it. The OS draws those buttons and the app only positions them,
+   * so their offset has to come from the bar's *measured* height — which the
+   * UI density setting changes. No-op off macOS.
+   */
+  WINDOW_SET_TITLEBAR_HEIGHT: {
+    args: [height: number]
+    return: void
+  }
   /** Reload the renderer (View menu, dev builds). */
   WINDOW_RELOAD: {
     args: []
@@ -901,6 +911,7 @@ export const IPC_CHANNELS = {
   WINDOW_MENU_POPUP: 'window:menu:popup',
   WINDOW_EDIT_ROLE: 'window:edit-role',
   WINDOW_TOGGLE_FULLSCREEN: 'window:toggle-fullscreen',
+  WINDOW_SET_TITLEBAR_HEIGHT: 'window:set-titlebar-height',
   WINDOW_RELOAD: 'window:reload',
   WINDOW_TOGGLE_DEVTOOLS: 'window:toggle-devtools',
   WINDOW_OPEN_EXTERNAL: 'window:open-external',

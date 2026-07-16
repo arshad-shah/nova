@@ -8,6 +8,16 @@ import { IPC_CHANNELS } from '@shared/ipc'
  *  can route through Windows interop instead. */
 const IS_WSL = process.platform === 'linux' && /microsoft/i.test(os.release())
 
+/** macOS traffic-light geometry. The OS draws the buttons at a fixed 12px
+ *  regardless of our UI density — we only choose where the group sits. */
+export const TRAFFIC_LIGHT_SIZE = 12
+export const TRAFFIC_LIGHT_X = 15
+
+/** Vertically centre the traffic lights in a title bar of `height` px. */
+export function trafficLightY(height: number): number {
+  return Math.max(0, Math.round((height - TRAFFIC_LIGHT_SIZE) / 2))
+}
+
 function openExternalUrl(url: string): void {
   if (IS_WSL) {
     // Hand the URL to the Windows shell so it opens in the user's default
@@ -111,6 +121,15 @@ export function registerWindowHandlers(): void {
     const next = !win.isFullScreen()
     win.setFullScreen(next)
     return next
+  })
+
+  // Only macOS overlays OS-drawn window buttons on our title bar; elsewhere the
+  // renderer draws its own controls and there is nothing to position.
+  ipcMain.handle(IPC_CHANNELS.WINDOW_SET_TITLEBAR_HEIGHT, (event, height) => {
+    if (process.platform !== 'darwin') return
+    const win = windowFor(event)
+    if (!win || !Number.isFinite(height) || height <= 0) return
+    win.setWindowButtonPosition({ x: TRAFFIC_LIGHT_X, y: trafficLightY(height) })
   })
 
   ipcMain.handle(IPC_CHANNELS.WINDOW_RELOAD, (event) => {

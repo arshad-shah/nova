@@ -3,7 +3,12 @@ import path from 'path'
 import fs from 'fs'
 import { registerIpcHandlers } from './ipc-handlers'
 import { buildAppMenu } from './app-menu'
+import { TRAFFIC_LIGHT_X, trafficLightY } from './ipc/window'
 import { IPC_EVENTS } from '@shared/ipc'
+
+/** The title bar at the default (comfortable) density — `h-10` on a 4.5px
+ *  spacing unit. Only a first-paint value; the renderer reports the real one. */
+const DEFAULT_TITLEBAR_HEIGHT = 45
 
 const isDev = !app.isPackaged
 const isMac = process.platform === 'darwin'
@@ -70,7 +75,14 @@ function createWindow(): BrowserWindow {
     minWidth: 800,
     minHeight: 600,
     ...(isMac
-      ? { titleBarStyle: 'hiddenInset' as const, trafficLightPosition: { x: 15, y: 10 } }
+      ? {
+          titleBarStyle: 'hiddenInset' as const,
+          // A first-paint guess for the default (comfortable) bar. The renderer
+          // measures the bar and reports its real height over
+          // `window:set-titlebar-height`, which re-centres these — the height
+          // moves with the UI density setting, so it can't be a constant.
+          trafficLightPosition: { x: TRAFFIC_LIGHT_X, y: trafficLightY(DEFAULT_TITLEBAR_HEIGHT) },
+        }
       : isWindows
         ? { titleBarStyle: 'hidden' as const }
         : { frame: false }),
