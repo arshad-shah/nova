@@ -1,51 +1,32 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" fill="none">
   <!--
-    Verql app icon — Nightshift LIGHT variant.
-    Mirrors build/icon.svg geometry (five V-bars) but on a pale canvas so the
-    mark reads on light-mode dock, white documentation, paper print. The
-    central bar keeps the brand mint accent; outer bars use a deep midnight
-    fill so they hold contrast on a bright background.
+    Verql app icon — Ion LIGHT variant.
+    Mirrors build/icon.svg geometry (the ribbon mark) but on a pale canvas so
+    the mark reads on a light-mode dock, white documentation, paper print. The
+    ribbons keep their brand gradients — they hold contrast on #F2F4F7 — and
+    the purple ribbon keeps its drop shadow so the fold still reads at 16px.
 
     Always edit both files together — keep geometry identical, only swap
     the background/contrast layers.
   -->
   <defs>
-    <radialGradient id="bg" cx="50%" cy="42%" r="68%">
-      <stop offset="0%"   stop-color="#FFFFFF"/>
-      <stop offset="55%"  stop-color="#EEF2F8"/>
-      <stop offset="100%" stop-color="#D6DEEC"/>
-    </radialGradient>
-    <radialGradient id="glow" cx="50%" cy="62%" r="48%">
-      <stop offset="0%"   stop-color="#2BD9A3" stop-opacity="0.30"/>
-      <stop offset="60%"  stop-color="#00C990" stop-opacity="0"/>
-    </radialGradient>
-    <linearGradient id="frost" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%"   stop-color="#1A2030"/>
-      <stop offset="100%" stop-color="#3B4A6B"/>
+    <linearGradient id="vq-left" x1="298" y1="238" x2="520" y2="670" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#7A5CFF"/><stop offset="1" stop-color="#5B43F6"/>
     </linearGradient>
-    <linearGradient id="mint" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%"   stop-color="#5CE0BD"/>
-      <stop offset="100%" stop-color="#00C990"/>
+    <linearGradient id="vq-right" x1="726" y1="238" x2="512" y2="690" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00D4FF"/><stop offset="1" stop-color="#30B8FF"/>
     </linearGradient>
+    <linearGradient id="vq-fold" x1="512" y1="670" x2="512" y2="904" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#3F36D6"/><stop offset="0.12" stop-color="#4547E6"/>
+      <stop offset="1" stop-color="#3E8BF9"/>
+    </linearGradient>
+    <filter id="vq-shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="14" flood-color="#060A14" flood-opacity="0.38"/>
+    </filter>
   </defs>
 
-  <g transform="translate(512 512) scale(0.805) translate(-512 -512)">
-    <rect width="1024" height="1024" rx="224" fill="url(#bg)"/>
-    <circle cx="512" cy="640" r="420" fill="url(#glow)"/>
-
-    <!-- Five V-bars. All bottoms at y=860; tops descend toward the middle.
-         Centered: outer bars at x=183 / x=735 leave equal 183px margins. -->
-    <g>
-      <!-- bar 1 (left, tallest) -->
-      <rect x="183" y="220" width="106" height="640" rx="22" fill="url(#frost)"/>
-      <!-- bar 2 (faded) -->
-      <rect x="321" y="340" width="106" height="520" rx="22" fill="url(#frost)" opacity="0.78"/>
-      <!-- bar 3 (middle, shortest — MINT, the brand accent) -->
-      <rect x="459" y="500" width="106" height="360" rx="22" fill="url(#mint)"/>
-      <!-- bar 4 (faded, mirror) -->
-      <rect x="597" y="340" width="106" height="520" rx="22" fill="url(#frost)" opacity="0.78"/>
-      <!-- bar 5 (right, tallest) -->
-      <rect x="735" y="220" width="106" height="640" rx="22" fill="url(#frost)"/>
-    </g>
-  </g>
+  <rect width="1024" height="1024" rx="232" fill="#F2F4F7"/>
+  <polygon points="610,238 842,238 628,670 396,670" fill="url(#vq-right)"/>
+  <polygon points="182,238 414,238 628,670 396,670" fill="url(#vq-left)" filter="url(#vq-shadow)"/>
+  <path d="M396 670 H628 L527 873 Q512 904 497 873 Z" fill="url(#vq-fold)"/>
 </svg>
