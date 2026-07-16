@@ -7,7 +7,7 @@ const meta = {
   argTypes: {
     variant: {
       control: 'select',
-      options: ['default', 'accent', 'success', 'warning', 'error', 'info'],
+      options: ['default', 'accent', 'success', 'warning', 'error', 'info', 'pk', 'fk', 'unique'],
     },
     size: {
       control: 'select',
@@ -35,6 +35,23 @@ export const Variants: Story = {
           {(['default', 'accent', 'success', 'warning', 'error', 'info'] as const).map((variant) => (
             <Badge key={variant} variant={variant} size={size}>{variant}</Badge>
           ))}
+        </div>
+      ))}
+    </div>
+  ),
+}
+
+/** Key kinds — the constraint badges rendered beside a column. PK reads
+ *  violet, FK follows the data accent (cyan), and UNIQUE stays a neutral
+ *  outline so it never competes with the two key kinds. */
+export const KeyKinds: Story = {
+  render: () => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      {(['xs', 'sm', 'md'] as const).map((size) => (
+        <div key={size} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <Badge variant="pk" size={size}>PK</Badge>
+          <Badge variant="fk" size={size}>FK</Badge>
+          <Badge variant="unique" size={size}>UNIQUE</Badge>
         </div>
       ))}
     </div>

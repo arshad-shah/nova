@@ -3,7 +3,7 @@ import { useSelectionStore } from '@/stores/selection'
 import { useTabsStore } from '@/stores/tabs'
 import { useSchemaStore } from '@/stores/schema'
 import { useConnectionsStore } from '@/stores/connections'
-import { Box, Flex, Stack, Text, Divider } from '@/primitives'
+import { Box, Flex, Stack, Text, Divider, Badge } from '@/primitives'
 import type { QueryTab, FieldInfo } from '@shared/types'
 import { useTranslation } from '@/i18n/I18nProvider'
 
@@ -172,8 +172,8 @@ function TableSummary({ connectionId, schema, table }: { connectionId: string; s
             <Flex key={c.name} align="baseline" gap="sm" className="py-1 border-b border-border last:border-b-0">
               <Text size="xs" className="font-mono font-semibold">{c.name}</Text>
               <Text size="xs" color="muted">{c.dataType}</Text>
-              {c.isPrimaryKey && <Text size="xs" color="accent">{t('shell.inspector.primaryKey')}</Text>}
-              {c.isForeignKey && <Text size="xs" color="accent">{t('shell.inspector.foreignKey')}</Text>}
+              {c.isPrimaryKey && <Badge variant="pk" size="xs">{t('shell.inspector.primaryKey')}</Badge>}
+              {c.isForeignKey && <Badge variant="fk" size="xs">{t('shell.inspector.foreignKey')}</Badge>}
             </Flex>
           ))
         )}

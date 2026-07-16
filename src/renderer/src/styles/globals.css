@@ -51,6 +51,13 @@
   /* Grid selection — cyan ring + wash */
   --color-selection-ring: var(--color-selection-ring);
   --color-selection-bg: var(--color-selection-bg);
+  /* Key badges — PK violet, FK cyan, UNIQUE neutral outline */
+  --color-key-pk: var(--color-key-pk);
+  --color-key-pk-bg: var(--color-key-pk-bg);
+  --color-key-pk-border: var(--color-key-pk-border);
+  --color-key-fk: var(--color-key-fk);
+  --color-key-fk-bg: var(--color-key-fk-bg);
+  --color-key-fk-border: var(--color-key-fk-border);
   --color-success: var(--color-success);
   --color-warning: var(--color-warning);
   --color-error: var(--color-error);

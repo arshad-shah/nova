@@ -92,6 +92,7 @@
      Purple carries interface state, cyan carries data, violet is reserved
      for "an agent did this". `--raw-ink-900` (#0B0F16) is already the Ion
      app background — reused above rather than redefined here. */
+  --raw-vpurple-200: #B6A6FF;
   --raw-vpurple-300: #A78BFA;
   --raw-vpurple-500: #7A5CFF;
   --raw-vpurple-600: #5B43F6;
@@ -206,6 +207,15 @@
   /* Grid selection — cyan ring + wash */
   --color-selection-ring: var(--raw-vcyan-400);
   --color-selection-bg: rgba(0, 212, 255, 0.11);
+
+  /* Key badges — PK reads violet, FK follows the data accent (cyan), UNIQUE
+     stays a neutral outline so it never competes with the two key kinds. */
+  --color-key-pk: var(--raw-vpurple-200);
+  --color-key-pk-bg: rgba(167, 139, 250, 0.14);
+  --color-key-pk-border: rgba(167, 139, 250, 0.35);
+  --color-key-fk: var(--raw-vcyan-300);
+  --color-key-fk-bg: rgba(0, 212, 255, 0.11);
+  --color-key-fk-border: rgba(0, 212, 255, 0.30);
 
   /* Status — functional set, identical across themes */
   --color-success: var(--fn-ok);

@@ -13,6 +13,12 @@ const badgeVariants = cva(
         warning: 'bg-warning/10 text-warning',
         error: 'bg-error/10 text-error',
         info: 'bg-info/10 text-info',
+        // Key kinds — for the constraint badges on columns (PK/FK/UNIQUE).
+        // PK reads violet, FK follows the data accent, and UNIQUE stays a
+        // neutral outline so it never competes with the two key kinds.
+        pk: 'bg-key-pk-bg text-key-pk border border-key-pk-border',
+        fk: 'bg-key-fk-bg text-key-fk border border-key-fk-border',
+        unique: 'bg-transparent text-text-secondary border border-border-strong',
       },
       size: {
         xs: 'text-[10px] px-1 py-0',

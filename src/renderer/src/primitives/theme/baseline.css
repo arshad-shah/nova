@@ -50,6 +50,13 @@
   --color-selection-ring: var(--raw-vcyan-400);
   --color-selection-bg: rgba(0, 212, 255, 0.11);
 
+  --color-key-pk: var(--raw-vpurple-200);
+  --color-key-pk-bg: rgba(167, 139, 250, 0.14);
+  --color-key-pk-border: rgba(167, 139, 250, 0.35);
+  --color-key-fk: var(--raw-vcyan-300);
+  --color-key-fk-bg: rgba(0, 212, 255, 0.11);
+  --color-key-fk-border: rgba(0, 212, 255, 0.30);
+
   --color-success: var(--fn-ok);
   --color-warning: var(--fn-warn);
   --color-error: var(--fn-danger);

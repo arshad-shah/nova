@@ -20,9 +20,9 @@ function TableNodeComponent({ data }: NodeProps) {
         {columns.map((col) => (
           <Flex key={col.name} align="center" gap="xs" className="px-2.5 py-1 text-[11px]">
             {col.isPrimaryKey ? (
-              <Key size={10} className="text-warning shrink-0" />
+              <Key size={10} strokeWidth={1.8} className="text-key-pk shrink-0" />
             ) : col.isForeignKey ? (
-              <Link size={10} className="text-info shrink-0" />
+              <Link size={10} strokeWidth={1.8} className="text-key-fk shrink-0" />
             ) : (
               <Box as="span" className="w-2.5 shrink-0" />
             )}
