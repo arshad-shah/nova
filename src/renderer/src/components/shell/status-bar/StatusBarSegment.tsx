@@ -2,6 +2,7 @@ import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from 'react'
 import type React from 'react'
 import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/primitives/utils/cn'
+import { Box } from '@/primitives'
 
 const segmentVariants = cva(
   'inline-flex items-center gap-1.5 h-full px-2.5 text-[11px] leading-none whitespace-nowrap select-none transition-colors',
@@ -75,9 +76,9 @@ export const StatusBarSegment = forwardRef<HTMLElement, StatusBarSegmentProps>(
       )
     }
     return (
-      <div ref={ref as React.Ref<HTMLDivElement>} className={cls} {...(rest as React.HTMLAttributes<HTMLDivElement>)}>
+      <Box ref={ref as React.Ref<HTMLDivElement>} className={cls} {...(rest as React.HTMLAttributes<HTMLDivElement>)}>
         {children}
-      </div>
+      </Box>
     )
   }
 )

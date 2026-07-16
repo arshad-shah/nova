@@ -3,6 +3,7 @@ import { ChevronRight, ChevronDown, Table2 } from 'lucide-react'
 import { useUiStore } from '@/stores/ui'
 import { useSchemaStore } from '@/stores/schema'
 import { ContextMenu } from '@/primitives/surfaces/ContextMenu'
+import { Box, Text } from '@/primitives'
 import { ColumnRow } from './ColumnRow'
 import { HighlightedText } from './HighlightedText'
 import { TableHoverActions } from './TableHoverActions'
@@ -76,9 +77,9 @@ export function TableNode({
 
   const rowCountDisplay =
     rowCount !== undefined ? (
-      <span className="text-xs shrink-0 text-text-secondary">
+      <Box as="span" className="text-xs shrink-0 text-text-secondary">
         {formatCompactNumber(rowCount)}
-      </span>
+      </Box>
     ) : null
 
   // ── Collapsed view ─────────────────────────────────────────────────────────
@@ -93,12 +94,13 @@ export function TableNode({
         >
           {chevron}
           <Table2 size={14} className="text-accent shrink-0" strokeWidth={1.8} />
-          <span
+          <Box
+            as="span"
             className="flex-1 truncate min-w-0 text-xs text-text-primary"
             title={tableName}
           >
             <HighlightedText text={tableName} query={highlightQuery ?? ''} />
-          </span>
+          </Box>
           {rowCountDisplay}
 
           <TableHoverActions
@@ -117,7 +119,7 @@ export function TableNode({
 
   return (
     <ContextMenu items={menuItems}>
-      <div
+      <Box
         className="mb-1 rounded-lg overflow-hidden border border-border-default bg-bg-secondary"
         style={{
           marginLeft: paddingLeft,
@@ -137,26 +139,27 @@ export function TableNode({
         >
           {chevron}
           <Table2 size={14} className="text-accent shrink-0" strokeWidth={1.8} />
-          <span
+          <Box
+            as="span"
             className="flex-1 truncate min-w-0 text-xs font-medium text-text-primary"
             title={tableName}
           >
             <HighlightedText text={tableName} query={highlightQuery ?? ''} />
-          </span>
+          </Box>
 
           {/* Stat pills */}
-          <span className="flex items-center gap-1 shrink-0">
+          <Box as="span" className="flex items-center gap-1 shrink-0">
             {rowCount !== undefined && (
-              <span className="px-2 py-0.5 rounded-full text-[10px] bg-bg-elevated text-text-secondary">
+              <Box as="span" className="px-2 py-0.5 rounded-full text-[10px] bg-bg-elevated text-text-secondary">
                 {t('explorer.table.rows', { value: formatCompactNumber(rowCount), records: rowCount === 1 ? nouns.record.one : nouns.record.many })}
-              </span>
+              </Box>
             )}
             {tableIndexes.length > 0 && (
-              <span className="px-2 py-0.5 rounded-full text-[10px] bg-bg-elevated text-text-secondary">
+              <Box as="span" className="px-2 py-0.5 rounded-full text-[10px] bg-bg-elevated text-text-secondary">
                 {t('explorer.table.indexes', { value: tableIndexes.length, n: tableIndexes.length })}
-              </span>
+              </Box>
             )}
-          </span>
+          </Box>
 
           <TableHoverActions
             canViewData={canViewData}
@@ -168,23 +171,23 @@ export function TableNode({
         </button>
 
         {/* Column rows */}
-        <div className="py-1">
+        <Box className="py-1">
           {tableColumns.length === 0 ? (
-            <p className="px-3 py-1 text-xs text-text-secondary">
+            <Text as="p" className="px-3 py-1 text-xs text-text-secondary">
               {/* Distinguish "loaded, but this driver has no columns" (e.g. Redis)
                   from "still fetching" — otherwise schema-less drivers show a
                   perpetual "Loading columns…". */}
               {columns.has(cacheKey)
                 ? t('explorer.noColumns', { fields: nouns.field.many })
                 : t('explorer.loading.columns', { fields: nouns.field.many })}
-            </p>
+            </Text>
           ) : (
             tableColumns.map((col) => (
               <ColumnRow key={col.name} column={col} tableName={tableName} connectionId={connectionId} />
             ))
           )}
-        </div>
-      </div>
+        </Box>
+      </Box>
     </ContextMenu>
   )
 }

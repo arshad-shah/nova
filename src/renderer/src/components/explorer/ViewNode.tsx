@@ -8,6 +8,7 @@ import { useDataNouns } from '@/hooks/useDataNouns'
 import { initialAutoCommit } from '@/lib/initial-autocommit'
 import { ContextMenu } from '@/primitives/surfaces/ContextMenu'
 import { IconButton } from '@/primitives/forms/Button'
+import { Box, Text } from '@/primitives'
 import { ColumnRow } from './ColumnRow'
 import { HighlightedText } from './HighlightedText'
 import { IPC_CHANNELS } from '@shared/ipc'
@@ -82,7 +83,7 @@ export function ViewNode({ viewName, connectionId, schema, depth, highlightQuery
   if (!isExpanded) {
     return (
       <ContextMenu items={menuItems}>
-        <div
+        <Box
           className="group flex items-center gap-1 h-7 rounded cursor-pointer select-none min-w-0 pr-1 hover:bg-hover"
           style={{ paddingLeft }}
           onClick={handleToggle}
@@ -97,13 +98,15 @@ export function ViewNode({ viewName, connectionId, schema, depth, highlightQuery
             className="text-info shrink-0"
             strokeWidth={1.8}
           />
-          <span
+          <Box
+            as="span"
             className="flex-1 truncate min-w-0 text-xs text-text-primary"
             title={viewName}
           >
             <HighlightedText text={viewName} query={highlightQuery ?? ''} />
-          </span>
-          <span
+          </Box>
+          <Box
+            as="span"
             className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center"
             onClick={(e) => e.stopPropagation()}
           >
@@ -116,8 +119,8 @@ export function ViewNode({ viewName, connectionId, schema, depth, highlightQuery
             >
               <ExternalLink size={10} strokeWidth={1.8} />
             </IconButton>
-          </span>
-        </div>
+          </Box>
+        </Box>
       </ContextMenu>
     )
   }
@@ -125,7 +128,7 @@ export function ViewNode({ viewName, connectionId, schema, depth, highlightQuery
   // Expanded: contained card
   return (
     <ContextMenu items={menuItems}>
-      <div
+      <Box
         className="rounded my-0.5 overflow-hidden border border-border-default bg-bg-secondary"
         style={{
           marginLeft: paddingLeft,
@@ -133,7 +136,7 @@ export function ViewNode({ viewName, connectionId, schema, depth, highlightQuery
         }}
       >
         {/* Card header */}
-        <div
+        <Box
           className="flex items-center gap-1 h-7 px-2 cursor-pointer select-none bg-bg-tertiary hover:bg-hover"
           onClick={handleToggle}
         >
@@ -147,27 +150,28 @@ export function ViewNode({ viewName, connectionId, schema, depth, highlightQuery
             className="text-info shrink-0"
             strokeWidth={1.8}
           />
-          <span
+          <Box
+            as="span"
             className="flex-1 truncate min-w-0 text-xs font-medium text-text-primary"
             title={viewName}
           >
             <HighlightedText text={viewName} query={highlightQuery ?? ''} />
-          </span>
-        </div>
+          </Box>
+        </Box>
 
         {/* Column rows */}
-        <div className="py-0.5">
+        <Box className="py-0.5">
           {cols.length === 0 ? (
-            <p className="text-xs px-2 py-1.5 text-text-muted">
+            <Text as="p" className="text-xs px-2 py-1.5 text-text-muted">
               {t('explorer.loading.columns', { fields: nouns.field.many })}
-            </p>
+            </Text>
           ) : (
             cols.map((col) => (
               <ColumnRow key={col.name} column={col} tableName={viewName} connectionId={connectionId} />
             ))
           )}
-        </div>
-      </div>
+        </Box>
+      </Box>
     </ContextMenu>
   )
 }

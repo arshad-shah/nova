@@ -104,7 +104,7 @@ export function ReleaseNotesContent({ note }: { note: ReleaseNote }) {
                 onClick={() => openExternal(link.url)}
                 className="inline-flex items-center gap-2 rounded-md border border-border-default bg-bg-secondary px-3 py-1.5 text-sm text-text-secondary transition-colors hover:border-border-strong hover:bg-hover focus-visible:outline-none focus-visible:shadow-[var(--shadow-focus-glow)]"
               >
-                <span>{t(link.label)}</span>
+                <Box as="span">{t(link.label)}</Box>
                 <ExternalLink size={13} className="text-text-tertiary" />
               </button>
             ))}

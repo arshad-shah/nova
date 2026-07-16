@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react'
 import { Pencil, RotateCcw } from 'lucide-react'
-import { Stack, Text, Divider, Flex } from '@/primitives'
+import { Stack, Text, Divider, Flex, Box } from '@/primitives'
 import { SearchInput, Table, KbdGroup, Button, IconButton, Tooltip } from '@/primitives'
 import { useSettingsStore } from '@/stores/settings'
 import { usePluginCommands } from '@/stores/plugin-commands'
@@ -120,7 +120,7 @@ export function KeybindingsSettings() {
       />
 
       {Object.entries(builtinGrouped).map(([category, bindings]) => (
-        <div key={category}>
+        <Box key={category}>
           <Text size="xs" color="muted" className="uppercase tracking-wider font-semibold mb-2">
             {category}
           </Text>
@@ -178,11 +178,11 @@ export function KeybindingsSettings() {
             </Table.Body>
           </Table>
           <Divider className="my-2" />
-        </div>
+        </Box>
       ))}
 
       {Object.entries(pluginGrouped).map(([category, bindings]) => (
-        <div key={category}>
+        <Box key={category}>
           <Text size="xs" color="muted" className="uppercase tracking-wider font-semibold mb-2">
             {category}
           </Text>
@@ -205,7 +205,7 @@ export function KeybindingsSettings() {
             </Table.Body>
           </Table>
           <Divider className="my-2" />
-        </div>
+        </Box>
       ))}
 
       <Flex justify="end">

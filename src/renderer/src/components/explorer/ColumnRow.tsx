@@ -1,6 +1,7 @@
 import { Key, Link, Hash } from 'lucide-react'
 import { Badge } from '@/primitives/data-display/Badge'
 import { ContextMenu } from '@/primitives/surfaces/ContextMenu'
+import { Box } from '@/primitives'
 import { useClipboard } from '@/hooks/useClipboard'
 import { useDataNouns } from '@/hooks/useDataNouns'
 import type { SchemaColumn } from '@shared/types'
@@ -19,24 +20,24 @@ const ICON_BOX = 'inline-flex items-center justify-center rounded shrink-0 size-
 function ColumnIcon({ column }: { column: SchemaColumn }) {
   if (column.isPrimaryKey) {
     return (
-      <span className={`${ICON_BOX} bg-key-pk-bg text-key-pk`}>
+      <Box as="span" className={`${ICON_BOX} bg-key-pk-bg text-key-pk`}>
         <Key size={10} strokeWidth={1.8} />
-      </span>
+      </Box>
     )
   }
 
   if (column.isForeignKey) {
     return (
-      <span className={`${ICON_BOX} bg-key-fk-bg text-key-fk`}>
+      <Box as="span" className={`${ICON_BOX} bg-key-fk-bg text-key-fk`}>
         <Link size={10} strokeWidth={1.8} />
-      </span>
+      </Box>
     )
   }
 
   return (
-    <span className={`${ICON_BOX} bg-bg-tertiary/50 text-text-disabled`}>
+    <Box as="span" className={`${ICON_BOX} bg-bg-tertiary/50 text-text-disabled`}>
       <Hash size={10} strokeWidth={1.8} />
-    </span>
+    </Box>
   )
 }
 
@@ -76,19 +77,19 @@ export function ColumnRow({ column, tableName, connectionId }: ColumnRowProps) {
 
   return (
     <ContextMenu items={menuItems}>
-      <div className="flex items-center gap-1.5 px-2 py-0.5 rounded text-xs min-w-0 cursor-default group hover:bg-hover">
+      <Box className="flex items-center gap-1.5 px-2 py-0.5 rounded text-xs min-w-0 cursor-default group hover:bg-hover">
         <ColumnIcon column={column} />
 
-        <span className="flex-1 truncate min-w-0 text-text-primary">
+        <Box as="span" className="flex-1 truncate min-w-0 text-text-primary">
           {column.name}
-        </span>
+        </Box>
 
-        <span className="text-[10px] shrink-0 text-text-muted">
+        <Box as="span" className="text-[10px] shrink-0 text-text-muted">
           {column.dataType}
-        </span>
+        </Box>
 
         <ConstraintBadge column={column} />
-      </div>
+      </Box>
     </ContextMenu>
   )
 }

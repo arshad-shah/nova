@@ -2,6 +2,7 @@ import { Sparkles, Copy, Check, RotateCcw, AlertTriangle, GitBranch } from 'luci
 import { useClipboard } from '@/hooks/useClipboard'
 import type { AIChatMessage } from '@shared/ai-types'
 import { Text } from '@/primitives/typography/Text'
+import { Box } from '@/primitives/layout/Box'
 import { IconButton } from '@/primitives/forms/Button'
 import { Avatar } from '@/primitives/data-display/Avatar'
 import { useAIStore } from '@/stores/ai'
@@ -54,34 +55,34 @@ export function MessageBubble({ message }: MessageBubbleProps) {
 
   if (isUser) {
     return (
-      <div className="group flex justify-end mb-2.5">
-        <div className="max-w-[82%]">
+      <Box className="group flex justify-end mb-2.5">
+        <Box className="max-w-[82%]">
           {/* Tail toward the right edge (rounded-tr-sm) so it reads as the user's. */}
-          <div className="rounded-xl rounded-tr-sm bg-accent-emphasis px-3 py-2">
+          <Box className="rounded-xl rounded-tr-sm bg-accent-emphasis px-3 py-2">
             <Text size="sm" className="text-white whitespace-pre-wrap">{message.content}</Text>
-          </div>
-          <div className="flex justify-end gap-1 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          </Box>
+          <Box className="flex justify-end gap-1 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
             <BranchButton messageId={message.id} />
             <CopyButton content={message.content} />
-          </div>
-        </div>
-      </div>
+          </Box>
+        </Box>
+      </Box>
     )
   }
 
   const wide = !isError && isWideMessageContent(message.content)
 
   return (
-    <div className="group flex gap-2 mb-2.5">
+    <Box className="group flex gap-2 mb-2.5">
       <Avatar
         name={t('aiui.chat.assistant')}
         size="sm"
         icon={isError ? <AlertTriangle className="h-3.5 w-3.5" /> : <Sparkles className="h-3.5 w-3.5" />}
         className={isError ? 'shrink-0 mt-0.5 bg-error/10 text-error ring-error/30' : 'shrink-0 mt-0.5'}
       />
-      <div className={wide ? 'flex-1 min-w-0' : 'min-w-0 max-w-[82%]'}>
+      <Box className={wide ? 'flex-1 min-w-0' : 'min-w-0 max-w-[82%]'}>
         {/* Tail toward the avatar (rounded-tl-sm) so the bubble emanates from it. */}
-        <div
+        <Box
           className={`rounded-xl rounded-tl-sm border px-3 py-2 max-w-full ${wide ? 'block' : 'inline-block'} ${
             isError ? 'border-error/30 bg-error/10' : 'border-border-default bg-bg-secondary'
           }`}
@@ -91,15 +92,15 @@ export function MessageBubble({ message }: MessageBubbleProps) {
           ) : (
             <MarkdownContent content={message.content} />
           )}
-        </div>
-        <div className="flex gap-1 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        </Box>
+        <Box className="flex gap-1 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
           <CopyButton content={message.content} />
           <IconButton label={t('aiui.chat.retry')} variant="ghost" size="xs" disabled={isStreaming} onClick={retryLast}>
             <RotateCcw className="h-3 w-3" />
           </IconButton>
           {!isError && <BranchButton messageId={message.id} />}
-        </div>
-      </div>
-    </div>
+        </Box>
+      </Box>
+    </Box>
   )
 }

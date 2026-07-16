@@ -131,7 +131,7 @@ function ToastView({
   }
 
   return (
-    <div
+    <Box
       ref={ref}
       role={data.type === 'error' ? 'alert' : 'status'}
       onMouseEnter={handleMouseEnter}
@@ -166,7 +166,7 @@ function ToastView({
           <X size={14} />
         </IconButton>
       </Flex>
-      {!persistent && <span aria-hidden className="vq-toast__track" />}
-    </div>
+      {!persistent && <Box as="span" aria-hidden className="vq-toast__track" />}
+    </Box>
   )
 }

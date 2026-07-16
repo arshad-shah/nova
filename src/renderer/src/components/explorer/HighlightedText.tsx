@@ -1,5 +1,6 @@
 import { memo, useMemo } from 'react'
 import { fuzzyMatch } from '@/lib/fuzzy-match'
+import { Box } from '@/primitives'
 
 interface HighlightedTextProps {
   text: string
@@ -23,7 +24,7 @@ export const HighlightedText = memo(function HighlightedText({
   }, [text, query])
 
   if (!positions || positions.size === 0) {
-    return <span className={className}>{text}</span>
+    return <Box as="span" className={className}>{text}</Box>
   }
 
   const parts: { ch: string; hit: boolean }[] = []
@@ -40,7 +41,7 @@ export const HighlightedText = memo(function HighlightedText({
   }
 
   return (
-    <span className={className}>
+    <Box as="span" className={className}>
       {runs.map((r, i) =>
         r.hit ? (
           <mark
@@ -55,9 +56,9 @@ export const HighlightedText = memo(function HighlightedText({
             {r.text}
           </mark>
         ) : (
-          <span key={i}>{r.text}</span>
+          <Box as="span" key={i}>{r.text}</Box>
         )
       )}
-    </span>
+    </Box>
   )
 })

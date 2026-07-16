@@ -9,6 +9,7 @@ import { useDataNouns, titleCase } from '@/hooks/useDataNouns'
 import { ContextMenu } from '@/primitives/surfaces/ContextMenu'
 import { IconButton } from '@/primitives/forms/Button'
 import { Tooltip } from '@/primitives/surfaces/Tooltip'
+import { Box, Text } from '@/primitives'
 import { TableNode } from './TableNode'
 import { ViewNode } from './ViewNode'
 import { HighlightedText } from './HighlightedText'
@@ -132,7 +133,7 @@ export function SchemaNode({ schemaName, connectionId, databaseName, depth, onEx
 
   return (
     <ContextMenu items={menuItems}>
-      <div>
+      <Box>
         {/* Header row */}
         <button
           className="group w-full flex items-center gap-1.5 rounded text-left transition-colors duration-[var(--transition-fast)] hover:bg-hover"
@@ -145,18 +146,20 @@ export function SchemaNode({ schemaName, connectionId, databaseName, depth, onEx
             className="text-warning shrink-0"
             strokeWidth={1.8}
           />
-          <span
+          <Box
+            as="span"
             className="flex-1 truncate min-w-0 text-xs font-medium text-text-primary"
             title={schemaName}
           >
             <HighlightedText text={schemaName} query={filterText} />
-          </span>
+          </Box>
 
           {/* Hover actions */}
-          <span
+          <Box
+            as="span"
             className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5"
           >
-            <span onClick={(e) => { e.stopPropagation(); openErDiagram(connectionId, schemaName) }}>
+            <Box as="span" onClick={(e) => { e.stopPropagation(); openErDiagram(connectionId, schemaName) }}>
               <Tooltip content={t('explorer.tooltip.erDiagram')} side="top">
                 <IconButton
                   label={t('explorer.action.erDiagram')}
@@ -168,8 +171,8 @@ export function SchemaNode({ schemaName, connectionId, databaseName, depth, onEx
                   <GitFork size={10} strokeWidth={1.8} />
                 </IconButton>
               </Tooltip>
-            </span>
-            <span onClick={(e) => { e.stopPropagation(); handleRefresh() }}>
+            </Box>
+            <Box as="span" onClick={(e) => { e.stopPropagation(); handleRefresh() }}>
               <Tooltip content={t('explorer.tooltip.refreshSchema')} side="top">
                 <IconButton
                   label={t('explorer.action.refreshSchema')}
@@ -181,27 +184,29 @@ export function SchemaNode({ schemaName, connectionId, databaseName, depth, onEx
                   <RefreshCw size={10} strokeWidth={1.8} />
                 </IconButton>
               </Tooltip>
-            </span>
-          </span>
+            </Box>
+          </Box>
         </button>
 
         {/* Expanded content */}
         {isExpanded && (
-          <div>
+          <Box>
             {allTables.length === 0 ? (
-              <p
+              <Text
+                as="p"
                 className="py-1 text-xs text-text-muted"
                 style={{ paddingLeft: groupLabelPaddingLeft }}
               >
                 {t('explorer.loading.generic')}
-              </p>
+              </Text>
             ) : filteredTables.length === 0 && filteredViews.length === 0 ? (
-              <p
+              <Text
+                as="p"
                 className="py-1 text-xs text-text-muted"
                 style={{ paddingLeft: groupLabelPaddingLeft }}
               >
                 {t('explorer.status.noMatches')}
-              </p>
+              </Text>
             ) : (
               <>
                 <SchemaGroup
@@ -321,9 +326,9 @@ export function SchemaNode({ schemaName, connectionId, databaseName, depth, onEx
                 />
               </>
             )}
-          </div>
+          </Box>
         )}
-      </div>
+      </Box>
     </ContextMenu>
   )
 }

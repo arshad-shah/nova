@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Flex } from '@/primitives'
+import { Box, Flex } from '@/primitives'
 import { useConnectionsStore, useActiveProfile } from '@/stores/connections'
 import { usePluginUIStore, selectContributions } from '@/stores/plugin-ui'
 import { WidgetRenderer } from '@/components/plugin-ui/WidgetRenderer'
@@ -51,7 +51,7 @@ export function StatusBar() {
         <MultiConnectionSegment onClick={openSwitcher} />
       </Flex>
 
-      <div className="flex-1" />
+      <Box className="flex-1" />
 
       {/* Right cluster */}
       <Flex align="stretch" className="h-full">
@@ -62,9 +62,9 @@ export function StatusBar() {
                 c.meta.zone === 'right' && active?.type && c.pluginId.includes(active.type)
             )
             .map((c) => (
-              <div key={c.contributionId} className="flex items-center border-l border-border-default px-2">
+              <Box key={c.contributionId} className="flex items-center border-l border-border-default px-2">
                 <WidgetRenderer widgets={c.widgets} pluginId={c.pluginId} />
-              </div>
+              </Box>
             ))}
         {/* Plugin contributions that aren't tied to the active driver (e.g. AI) target this slot. */}
         <PluginSlot

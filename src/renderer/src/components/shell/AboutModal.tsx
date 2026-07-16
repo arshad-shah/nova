@@ -125,7 +125,7 @@ export function AboutModal({ open, onClose }: { open: boolean; onClose: () => vo
                 className="w-full justify-start gap-2 font-normal text-text-secondary"
               >
                 <Icon size={15} className="shrink-0 text-text-tertiary" />
-                <span className="truncate">{label}</span>
+                <Box as="span" className="truncate">{label}</Box>
               </Button>
             ))}
           </Box>

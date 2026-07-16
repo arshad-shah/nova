@@ -49,10 +49,10 @@ const MAX_RENDERED = 400
 /** A labelled field row in the detail drawer. */
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="flex gap-2">
-      <span className="w-20 shrink-0 text-[10px] uppercase tracking-wider text-text-muted">{label}</span>
-      <span className="flex-1 min-w-0 break-words font-mono text-[10px] text-text-secondary">{children}</span>
-    </div>
+    <Box className="flex gap-2">
+      <Box as="span" className="w-20 shrink-0 text-[10px] uppercase tracking-wider text-text-muted">{label}</Box>
+      <Box as="span" className="flex-1 min-w-0 break-words font-mono text-[10px] text-text-secondary">{children}</Box>
+    </Box>
   )
 }
 
@@ -87,26 +87,26 @@ function ActivityRow({ entry }: { entry: ActivityEntry }) {
       <Flex align="center" gap="sm" className="min-w-0">
         {expandable
           ? (open ? <ChevronDown size={11} className="shrink-0 text-text-muted" /> : <ChevronRight size={11} className="shrink-0 text-text-muted" />)
-          : <span className="w-[11px] shrink-0" />}
+          : <Box as="span" className="w-[11px] shrink-0" />}
         <Icon size={13} className={cn('shrink-0', LEVEL_CLASS[entry.level])} />
-        <span className="font-mono text-[10px] text-text-muted shrink-0 tabular-nums">
+        <Box as="span" className="font-mono text-[10px] text-text-muted shrink-0 tabular-nums">
           {formatClockTime(entry.ts)}
-        </span>
-        <span className={cn('truncate flex-1 min-w-0', entry.level === 'error' && 'text-error')}>
+        </Box>
+        <Box as="span" className={cn('truncate flex-1 min-w-0', entry.level === 'error' && 'text-error')}>
           {entry.title}
-        </span>
+        </Box>
         {entry.durationMs !== undefined && (
-          <span className="font-mono text-[10px] text-text-muted shrink-0 tabular-nums">{Math.round(entry.durationMs)}ms</span>
+          <Box as="span" className="font-mono text-[10px] text-text-muted shrink-0 tabular-nums">{Math.round(entry.durationMs)}ms</Box>
         )}
         {entry.source && (
-          <span className="text-[10px] text-text-muted shrink-0 max-w-[30%] truncate">
+          <Box as="span" className="text-[10px] text-text-muted shrink-0 max-w-[30%] truncate">
             {entry.source}
-          </span>
+          </Box>
         )}
       </Flex>
 
       {open && expandable && (
-        <div className="mt-2 ml-[24px] flex flex-col gap-1.5 pb-1">
+        <Box className="mt-2 ml-[24px] flex flex-col gap-1.5 pb-1">
           <Field label={t('shell.activity.fieldTime')}>{formatClockTimeWithMillis(entry.ts)}</Field>
           <Field label={t('shell.activity.fieldKind')}>{t(KIND_META[entry.kind].label)} · {entry.level}</Field>
           {entry.source && <Field label={t('shell.activity.fieldSource')}>{entry.source}</Field>}
@@ -115,7 +115,7 @@ function ActivityRow({ entry }: { entry: ActivityEntry }) {
           {entry.detail && <Pre text={entry.detail} />}
           {metaJson && <Pre text={metaJson} />}
           {entry.stack && <Pre text={entry.stack} tone="error" />}
-        </div>
+        </Box>
       )}
     </Box>
   )
@@ -304,15 +304,15 @@ export function ActivityList({ entries, onClear }: ActivityListProps) {
                   on ? 'bg-accent/15 text-accent' : 'text-text-muted hover:text-text-primary hover:bg-white/5',
                 )}
               >
-                <span className={cn('h-1.5 w-1.5 rounded-full bg-current', LEVEL_CLASS[level])} />
+                <Box as="span" className={cn('h-1.5 w-1.5 rounded-full bg-current', LEVEL_CLASS[level])} />
                 {t(label)}
               </button>
             )
           })}
           {paused && (
             <>
-              <span className="flex-1" />
-              <span className="text-[10px] text-warning">{t('shell.activity.paused')}</span>
+              <Box as="span" className="flex-1" />
+              <Box as="span" className="text-[10px] text-warning">{t('shell.activity.paused')}</Box>
             </>
           )}
         </Flex>

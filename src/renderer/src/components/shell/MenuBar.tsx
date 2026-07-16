@@ -3,7 +3,7 @@ import {
   useFloating, useDismiss, useRole, useInteractions, useTransitionStyles,
   offset, flip, shift, autoUpdate, FloatingPortal,
 } from '@floating-ui/react'
-import { KbdGroup } from '@/primitives'
+import { Box, KbdGroup } from '@/primitives'
 import { cn } from '@/primitives/utils/cn'
 import { useMenus, type MenuDef, type MenuItemDef } from './menu-model'
 
@@ -127,8 +127,8 @@ function TopMenu({
 
       {isMounted && (
         <FloatingPortal>
-          <div ref={refs.setFloating} style={{ ...floatingStyles, zIndex: 50 }} {...getFloatingProps({ onKeyDown: onMenuKeyDown })}>
-            <div
+          <Box ref={refs.setFloating} style={{ ...floatingStyles, zIndex: 50 }} {...getFloatingProps({ onKeyDown: onMenuKeyDown })}>
+            <Box
               role="menu"
               aria-label={menu.label}
               className="min-w-[15rem] bg-bg-elevated border border-border-default rounded-lg shadow-dropdown py-1.5 px-1.5"
@@ -137,8 +137,8 @@ function TopMenu({
               {menu.items.map((item, k) => (
                 <MenuRow key={k} item={item} onRun={() => onClose(false)} />
               ))}
-            </div>
-          </div>
+            </Box>
+          </Box>
         </FloatingPortal>
       )}
     </>
@@ -147,7 +147,7 @@ function TopMenu({
 
 function MenuRow({ item, onRun }: { item: MenuItemDef; onRun: () => void }) {
   if (item.kind === 'separator') {
-    return <div role="separator" className="h-px bg-border-default my-1.5 mx-1" />
+    return <Box role="separator" className="h-px bg-border-default my-1.5 mx-1" />
   }
   const disabled = item.enabled ? !item.enabled() : false
   const Icon = item.icon
@@ -163,7 +163,7 @@ function MenuRow({ item, onRun }: { item: MenuItemDef; onRun: () => void }) {
       )}
     >
       {Icon && <Icon size={15} className={cn('shrink-0', item.danger ? 'text-error' : 'text-text-tertiary')} aria-hidden="true" />}
-      <span className="flex-1">{item.label}</span>
+      <Box as="span" className="flex-1">{item.label}</Box>
       {item.accelerator && <KbdGroup accelerator={item.accelerator} size="sm" className="shrink-0" />}
     </button>
   )

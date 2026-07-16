@@ -1,4 +1,4 @@
-import { Flex, Button, Badge, Select } from '@/primitives'
+import { Flex, Button, Badge, Select, Box } from '@/primitives'
 import { Switch } from '@/primitives/forms/Switch'
 import type { DriverCapabilities } from '@/stores/driver-capabilities'
 import type { QueryTabTxnState } from '@shared/types'
@@ -58,7 +58,7 @@ export function TransactionToolbar({
             checked={txn.autoCommit}
             onChange={(e) => onToggleAutoCommit(e.target.checked)}
           />
-          <span className="text-xs text-text-secondary">{t('query.txn.autoCommit')}</span>
+          <Box as="span" className="text-xs text-text-secondary">{t('query.txn.autoCommit')}</Box>
         </label>
       )}
 
@@ -87,7 +87,7 @@ export function TransactionToolbar({
             onChange={(e) => onReadOnlyChange?.(e.target.checked)}
             disabled={isActive}
           />
-          <span className="text-xs text-text-secondary">{t('query.txn.readOnly')}</span>
+          <Box as="span" className="text-xs text-text-secondary">{t('query.txn.readOnly')}</Box>
         </label>
       )}
 

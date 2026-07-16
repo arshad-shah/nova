@@ -1,5 +1,5 @@
 import { Fragment, useMemo } from 'react'
-import { Flex, Text, KbdGroup } from '@/primitives'
+import { Box, Flex, Text, KbdGroup } from '@/primitives'
 import { VerqlMark } from '@/components/brand/VerqlMark'
 
 interface ShortcutHint {
@@ -22,14 +22,14 @@ export function WelcomeScreen() {
         {/* Watermark — large, dim glyph in the page foreground color so it
             tints with the active theme but reads as decorative chrome. */}
         <VerqlMark size={240} className="opacity-25" />
-        <div className="grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-2">
+        <Box className="grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-2">
           {shortcuts.map(({ keys, label }) => (
             <Fragment key={label}>
               <Text size="base" color="muted" className="justify-self-end">{label}</Text>
               <KbdGroup size="lg" keys={keys} className="justify-self-start" />
             </Fragment>
           ))}
-        </div>
+        </Box>
       </Flex>
     </Flex>
   )

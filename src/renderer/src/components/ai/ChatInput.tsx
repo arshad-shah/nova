@@ -4,7 +4,7 @@ import { useAIStore } from '@/stores/ai'
 import { useConnectionsStore, useActiveProfile } from '@/stores/connections'
 import { IconButton } from '@/primitives/forms/Button'
 import { Card } from '@/primitives/surfaces/Card'
-import { Text } from '@/primitives/typography/Text'
+import { Text, Box } from '@/primitives'
 import { SchemaAutocomplete } from './SchemaAutocomplete'
 import { ModelPicker } from './ModelPicker'
 import { useTranslation } from '@/i18n/I18nProvider'
@@ -108,7 +108,7 @@ export function ChatInput() {
   const hasInput = input.trim().length > 0
 
   return (
-    <div className="relative p-3 border-t border-border-default">
+    <Box className="relative p-3 border-t border-border-default">
       {showAutocomplete && (
         <SchemaAutocomplete
           triggerText={autocompleteFilter}
@@ -144,7 +144,7 @@ export function ChatInput() {
           rows={2}
           disabled={isStreaming}
         />
-        <div className="flex items-center justify-between px-2 pb-2">
+        <Box className="flex items-center justify-between px-2 pb-2">
           <button
             onClick={() => setShowModelPicker(!showModelPicker)}
             className="flex items-center gap-1 rounded px-1.5 py-0.5 hover:bg-hover transition-colors"
@@ -173,8 +173,8 @@ export function ChatInput() {
               <ArrowUp className="h-3.5 w-3.5" />
             </IconButton>
           )}
-        </div>
+        </Box>
       </Card>
-    </div>
+    </Box>
   )
 }

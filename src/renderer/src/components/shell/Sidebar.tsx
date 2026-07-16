@@ -94,9 +94,9 @@ export function Sidebar() {
         {panelContributions
           .filter((c) => activePanel === `plugin:${c.contributionId}`)
           .map((c) => (
-            <div key={c.contributionId} className="p-3 space-y-2">
+            <Box key={c.contributionId} className="p-3 space-y-2">
               <WidgetRenderer widgets={c.widgets} pluginId={c.pluginId} />
-            </div>
+            </Box>
           ))}
       </ScrollArea>
 

@@ -4,6 +4,7 @@ import { useConnectionsStore } from '@/stores/connections'
 import { useSchemaStore } from '@/stores/schema'
 import { EmptyState } from '@/primitives/data-display/EmptyState'
 import { Text } from '@/primitives/typography/Text'
+import { Box } from '@/primitives/layout/Box'
 import { SearchFilter } from './SearchFilter'
 import { DatabaseNode } from './DatabaseNode'
 import { SchemaNode } from './SchemaNode'
@@ -83,24 +84,24 @@ export function ExplorerTree({ onExportTable }: ExplorerTreeProps) {
     : allTables.filter((t) => t.type === 'view'))
 
   return (
-    <div className="flex flex-col h-full min-h-0">
+    <Box className="flex flex-col h-full min-h-0">
       {/* Connection selection lives in the secondary sidebar's Connections
           panel (and as a quick-swap in the StatusBar). The Explorer just
           shows the active connection's tree — keeps one source of truth
           for who's connected and which connection is "active". */}
       {!isConnected ? (
-        <div className="flex-1 flex items-center justify-center p-4">
+        <Box className="flex-1 flex items-center justify-center p-4">
           <EmptyState
             title={t('explorer.empty.noConnection.title')}
             description={t('explorer.empty.noConnection.description')}
             icon={<Database size={32} strokeWidth={1.8} className="text-[var(--color-text-disabled)]" />}
           />
-        </div>
+        </Box>
       ) : !hierarchyLoaded ? (
         /* Show loading while databases/schemas are being fetched */
-        <div className="flex-1 flex items-center justify-center p-4">
+        <Box className="flex-1 flex items-center justify-center p-4">
           <Loader2 size={20} strokeWidth={1.8} className="animate-spin text-text-muted" />
-        </div>
+        </Box>
       ) : (
         <>
           <SearchFilter
@@ -111,7 +112,7 @@ export function ExplorerTree({ onExportTable }: ExplorerTreeProps) {
 
           {/* Flat: single-DB + single-schema (e.g. SQLite) */}
           {isFlat && (
-            <div className="py-1 flex-1 overflow-y-auto min-h-0">
+            <Box className="py-1 flex-1 overflow-y-auto min-h-0">
               {filteredTables.length === 0 && filteredViews.length === 0 && (
                 <Text size="xs" color="muted" className="px-4 py-2">
                   {allTables.length === 0
@@ -122,7 +123,7 @@ export function ExplorerTree({ onExportTable }: ExplorerTreeProps) {
                 </Text>
               )}
               {filteredTables.length > 0 && (
-                <div>
+                <Box>
                   <Text
                     size="xs"
                     color="muted"
@@ -142,10 +143,10 @@ export function ExplorerTree({ onExportTable }: ExplorerTreeProps) {
                       highlightQuery={filterText}
                     />
                   ))}
-                </div>
+                </Box>
               )}
               {filteredViews.length > 0 && (
-                <div>
+                <Box>
                   <Text
                     size="xs"
                     color="muted"
@@ -164,14 +165,14 @@ export function ExplorerTree({ onExportTable }: ExplorerTreeProps) {
                       highlightQuery={filterText}
                     />
                   ))}
-                </div>
+                </Box>
               )}
-            </div>
+            </Box>
           )}
 
           {/* Single-DB + multiple schemas */}
           {isSingleDb && !isSingleSchema && (
-            <div className="py-1 flex-1 overflow-y-auto min-h-0">
+            <Box className="py-1 flex-1 overflow-y-auto min-h-0">
               {schemaList.map((s) => (
                 <SchemaNode
                   key={s}
@@ -181,12 +182,12 @@ export function ExplorerTree({ onExportTable }: ExplorerTreeProps) {
                   onExportTable={onExportTable}
                 />
               ))}
-            </div>
+            </Box>
           )}
 
           {/* Multiple databases */}
           {!isSingleDb && (
-            <div className="py-1 flex-1 overflow-y-auto min-h-0">
+            <Box className="py-1 flex-1 overflow-y-auto min-h-0">
               {databaseList.filter(Boolean).map((db) => (
                 <DatabaseNode
                   key={db}
@@ -196,10 +197,10 @@ export function ExplorerTree({ onExportTable }: ExplorerTreeProps) {
                   onExportTable={onExportTable}
                 />
               ))}
-            </div>
+            </Box>
           )}
         </>
       )}
-    </div>
+    </Box>
   )
 }

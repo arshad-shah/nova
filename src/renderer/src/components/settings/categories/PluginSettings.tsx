@@ -129,9 +129,9 @@ export function PluginSettings() {
         const ownSettings = (bundle?.schema ?? []).filter(s => !s.category || s.category === 'plugin')
         const isActive = plugin.status.state === 'active' || plugin.status.state === 'degraded'
         return (
-          <div key={plugin.name}>
+          <Box key={plugin.name}>
             <Flex direction="row" align="start" justify="between" className="py-2">
-              <div className="flex-1 min-w-0 mr-4">
+              <Box className="flex-1 min-w-0 mr-4">
                 <Flex direction="row" align="center" gap="sm">
                   <Text size="sm" weight="semibold">{plugin.displayName}</Text>
                   <Text size="xs" color="muted">{t('settings.plugins.version', { version: plugin.version })}</Text>
@@ -157,7 +157,7 @@ export function PluginSettings() {
                 {plugin.status.error && (
                   <Text size="xs" color="error" className="mt-1">{plugin.status.error}</Text>
                 )}
-              </div>
+              </Box>
               <Switch
                 label={t('settings.plugins.toggleAria', { plugin: plugin.displayName })}
                 checked={isActive}
@@ -178,7 +178,7 @@ export function PluginSettings() {
               </Box>
             )}
             <Divider />
-          </div>
+          </Box>
         )
       })}
     </Stack>

@@ -3,6 +3,7 @@ import { ChevronDown, ChevronRight, CheckCircle2, XCircle, ShieldQuestion, Loade
 import type { AIChatMessage } from '@shared/ai-types'
 import { useAIStore } from '@/stores/ai'
 import { Text } from '@/primitives/typography/Text'
+import { Box } from '@/primitives/layout/Box'
 import { appActions } from '@/lib/app-actions/registry'
 import { CodeBlock } from './CodeBlock'
 import { useTranslation } from '@/i18n/I18nProvider'
@@ -85,7 +86,7 @@ export function ToolCallCard({ message, result }: ToolCallCardProps) {
   const isExecuting = !result && pendingApproval === null
 
   return (
-    <div className="mb-2.5 mx-2 rounded-lg border border-border-default border-l-2 border-l-warning overflow-hidden">
+    <Box className="mb-2.5 mx-2 rounded-lg border border-border-default border-l-2 border-l-warning overflow-hidden">
       {/* Header */}
       <button
         onClick={() => setShowCode(s => !s)}
@@ -100,17 +101,17 @@ export function ToolCallCard({ message, result }: ToolCallCardProps) {
         ) : (
           <XCircle size={12} className="text-[var(--color-error)] shrink-0" />
         )}
-        <span className="flex-1 text-xs font-medium text-[var(--color-text)]">{label}</span>
+        <Box as="span" className="flex-1 text-xs font-medium text-[var(--color-text)]">{label}</Box>
         {isWaitingApproval && (
-          <span className="text-[10px] text-warning">{t('aiui.tool.awaitingApproval')}</span>
+          <Box as="span" className="text-[10px] text-warning">{t('aiui.tool.awaitingApproval')}</Box>
         )}
         {isExecuting && (
-          <span className="text-[10px] text-[var(--color-text-tertiary)]">{t('aiui.tool.running')}</span>
+          <Box as="span" className="text-[10px] text-[var(--color-text-tertiary)]">{t('aiui.tool.running')}</Box>
         )}
         {parsed && (
-          <span className={`text-[10px] ${parsed.success ? 'text-[var(--color-success)]' : 'text-[var(--color-error)]'}`}>
+          <Box as="span" className={`text-[10px] ${parsed.success ? 'text-[var(--color-success)]' : 'text-[var(--color-error)]'}`}>
             {parsed.success ? t('aiui.tool.done') : t('aiui.tool.failed')}
-          </span>
+          </Box>
         )}
         {showCode ? (
           <ChevronDown size={12} className="text-[var(--color-text-tertiary)] shrink-0" />
@@ -121,19 +122,19 @@ export function ToolCallCard({ message, result }: ToolCallCardProps) {
 
       {/* Query code */}
       {showCode && query && (
-        <div className="px-3 pt-2">
+        <Box className="px-3 pt-2">
           <CodeBlock code={query} language={guessLanguage(query)} alwaysShowInsert />
-        </div>
+        </Box>
       )}
 
       {/* Result */}
       {parsed && (
-        <div className="px-3 py-2">
+        <Box className="px-3 py-2">
           <Text size="xs" color={parsed.success ? 'secondary' : 'error'}>
             {toolCall.name === 'perform_app_action' && parsed.success ? label : parsed.summary}
           </Text>
-        </div>
+        </Box>
       )}
-    </div>
+    </Box>
   )
 }

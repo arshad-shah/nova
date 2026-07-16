@@ -1,6 +1,6 @@
 import { useRef } from 'react'
 import type { AIProviderInfo, AIModelInfo } from '@shared/ai-types'
-import { Text } from '@/primitives/typography/Text'
+import { Text, Box } from '@/primitives'
 import { Card } from '@/primitives/surfaces/Card'
 import { ScrollArea } from '@/primitives/layout/ScrollArea'
 import { useClickOutside } from '@/hooks/useClickOutside'
@@ -22,11 +22,11 @@ export function ModelPicker({ providers, models, activeModel, onSelect, onSelect
   useClickOutside(ref, onDismiss)
 
   return (
-    <div ref={ref} className="absolute bottom-full left-3 right-3 mb-1 z-50">
+    <Box ref={ref} className="absolute bottom-full left-3 right-3 mb-1 z-50">
       <Card padding="sm" className="shadow-[var(--shadow-dropdown)]">
         <ScrollArea direction="vertical" className="max-h-64">
           {providers.map(provider => (
-            <div key={provider.id}>
+            <Box key={provider.id}>
               <button
                 onClick={() => onSelectProvider(provider)}
                 className="w-full text-left px-2 py-1 hover:bg-hover rounded transition-colors"
@@ -50,15 +50,15 @@ export function ModelPicker({ providers, models, activeModel, onSelect, onSelect
                   </Text>
                 </button>
               ))}
-            </div>
+            </Box>
           ))}
           {providers.length === 0 && (
-            <div className="px-2 py-3">
+            <Box className="px-2 py-3">
               <Text size="xs" color="muted">{t('aiui.chat.providersEmpty')}</Text>
-            </div>
+            </Box>
           )}
         </ScrollArea>
       </Card>
-    </div>
+    </Box>
   )
 }

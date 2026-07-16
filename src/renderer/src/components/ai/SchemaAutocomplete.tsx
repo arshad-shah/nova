@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback, type KeyboardEvent, type RefObject } from 'react'
 import { useSchemaStore } from '@/stores/schema'
 import { useConnectionsStore } from '@/stores/connections'
+import { Box } from '@/primitives'
 
 interface SchemaItem {
   label: string
@@ -133,7 +134,7 @@ export function SchemaAutocomplete({ triggerText, onSelect, onDismiss, anchorRef
   if (items.length === 0) return null
 
   return (
-    <div
+    <Box
       ref={listRef}
       className="absolute bottom-full left-0 mb-1 w-64 max-h-48 overflow-y-auto rounded-lg border border-border bg-bg-primary shadow-lg z-50"
     >
@@ -149,13 +150,13 @@ export function SchemaAutocomplete({ triggerText, onSelect, onDismiss, anchorRef
           }}
           onMouseEnter={() => setSelectedIndex(i)}
         >
-          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+          <Box as="span" className={`w-1.5 h-1.5 rounded-full shrink-0 ${
             item.type === 'table' ? 'bg-blue-400' : 'bg-green-400'
           }`} />
-          <span className="text-text-primary font-medium truncate">{item.label}</span>
-          <span className="text-text-muted ml-auto shrink-0">{item.detail}</span>
+          <Box as="span" className="text-text-primary font-medium truncate">{item.label}</Box>
+          <Box as="span" className="text-text-muted ml-auto shrink-0">{item.detail}</Box>
         </button>
       ))}
-    </div>
+    </Box>
   )
 }

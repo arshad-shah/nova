@@ -2,7 +2,7 @@ import { useEffect, useState, type ComponentType, type ReactNode } from 'react'
 import { Sparkles, Loader2, Settings, Maximize2, Minimize2, Eye, Shield, Zap } from 'lucide-react'
 import { Popover } from '@/primitives/surfaces/Popover'
 import { Switch } from '@/primitives/forms/Switch'
-import { Text } from '@/primitives/typography/Text'
+import { Text, Box } from '@/primitives'
 import { useAIStore } from '@/stores/ai'
 import { useUiStore } from '@/stores/ui'
 import { useTabsStore } from '@/stores/tabs'
@@ -73,47 +73,47 @@ export function AIStatusSegment() {
   )
 
   const popoverContent = (
-    <div className="min-w-[260px] p-1 space-y-2">
-      <div className="flex items-center gap-2 px-1">
+    <Box className="min-w-[260px] p-1 space-y-2">
+      <Box className="flex items-center gap-2 px-1">
         <Sparkles size={12} className="text-accent" />
         <Text size="xs" weight="medium">{t('aiui.status.title')}</Text>
-        <span className={`ml-auto inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] ${statusTone}`}>
-          <span className="h-1.5 w-1.5 rounded-full bg-current" />
+        <Box as="span" className={`ml-auto inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] ${statusTone}`}>
+          <Box as="span" className="h-1.5 w-1.5 rounded-full bg-current" />
           {statusLabel}
-        </span>
-      </div>
+        </Box>
+      </Box>
 
       <Row label={t('aiui.status.provider')} value={activeProvider?.name ?? t('aiui.status.none')} />
       <Row label={t('aiui.status.model')}    value={models.find((m) => m.id === activeModelId)?.name ?? activeModelId ?? t('aiui.status.none')} />
       <Row label={t('aiui.status.mode')} valueNode={
-        <span className="inline-flex items-center gap-1 text-text-primary">
+        <Box as="span" className="inline-flex items-center gap-1 text-text-primary">
           <ModeIcon size={10} /> {modeLabel}
-        </span>
+        </Box>
       } />
 
       {contextWindow != null ? (
-        <div className="rounded bg-bg-secondary p-2 space-y-1">
-          <div className="flex items-center justify-between text-[10px] uppercase tracking-wide text-accent">
-            <span>{t('aiui.status.contextWindow')}</span>
-            <span className="font-mono text-text-primary text-[10.5px] normal-case tracking-normal">
+        <Box className="rounded bg-bg-secondary p-2 space-y-1">
+          <Box className="flex items-center justify-between text-[10px] uppercase tracking-wide text-accent">
+            <Box as="span">{t('aiui.status.contextWindow')}</Box>
+            <Box as="span" className="font-mono text-text-primary text-[10.5px] normal-case tracking-normal">
               {formatCompactNumber(totalTokens)} / {formatCompactNumber(contextWindow)}
-            </span>
-          </div>
-          <div className="h-1 rounded bg-bg-tertiary overflow-hidden">
-            <div
+            </Box>
+          </Box>
+          <Box className="h-1 rounded bg-bg-tertiary overflow-hidden">
+            <Box
               className={pct >= 90 ? 'h-full bg-error' : pct >= 70 ? 'h-full bg-warning' : 'h-full bg-accent'}
               style={{ width: `${pct}%` }}
             />
-          </div>
+          </Box>
           <Text size="xs" weight="medium" className={`block text-right ${pct >= 90 ? 'text-error' : pct >= 70 ? 'text-warning' : 'text-success'}`}>
             {t('aiui.status.tokensRemaining', { remaining: formatCompactNumber(remaining) })}
           </Text>
-        </div>
+        </Box>
       ) : null}
 
       <Row label={t('aiui.status.toolCalls')} value={String(stats.toolCallCount)} />
       <Row label={t('aiui.status.inlineCompletion')} valueNode={
-        <div className="inline-flex items-center gap-2">
+        <Box className="inline-flex items-center gap-2">
           <Text size="xs" color="muted">
             {inlineEnabled ? (inlineState === 'thinking' ? t('aiui.status.inlineThinking') : t('aiui.status.inlineOn')) : t('aiui.status.inlineOff')}
           </Text>
@@ -126,15 +126,15 @@ export function AIStatusSegment() {
               setInlineEnabled(next)
             }}
           />
-        </div>
+        </Box>
       } />
 
-      <div className="flex gap-1 pt-1 border-t border-border-default">
+      <Box className="flex gap-1 pt-1 border-t border-border-default">
         <ActionBtn icon={Minimize2} label={t('aiui.status.compact')}   onClick={() => { void compact() }} />
         <ActionBtn icon={Maximize2} label={t('aiui.status.openChat')} onClick={() => setSecondaryActivePanel('plugin:ai-chat')} />
         <ActionBtn icon={Settings}  label={t('aiui.status.settings')}  onClick={() => openSettings(SETTINGS_CATEGORY.AI)} />
-      </div>
-    </div>
+      </Box>
+    </Box>
   )
 
   return <Popover trigger={trigger} content={popoverContent} placement="top" />
@@ -142,10 +142,10 @@ export function AIStatusSegment() {
 
 function Row({ label, value, valueNode }: { label: string; value?: string; valueNode?: ReactNode }) {
   return (
-    <div className="flex items-center justify-between px-1 py-0.5 text-[10.5px]">
+    <Box className="flex items-center justify-between px-1 py-0.5 text-[10.5px]">
       <Text size="xs" color="muted">{label}</Text>
       {valueNode ? valueNode : <Text size="xs" className="truncate max-w-[160px]">{value}</Text>}
-    </div>
+    </Box>
   )
 }
 

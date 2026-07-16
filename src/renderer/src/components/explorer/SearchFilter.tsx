@@ -39,7 +39,7 @@ export function SearchFilter({ resultCount }: SearchFilterProps) {
 
   return (
     <Box className="px-2 py-1.5 border-b border-border-default">
-      <div className="relative">
+      <Box className="relative">
         <SearchInput
           ref={inputRef}
           size="sm"
@@ -49,7 +49,8 @@ export function SearchFilter({ resultCount }: SearchFilterProps) {
           onClear={handleClear}
         />
         {filterText && resultCount !== undefined && (
-          <span
+          <Box
+            as="span"
             className="pointer-events-none absolute right-7 top-1/2 -translate-y-1/2 text-[10px] tabular-nums px-1.5 py-0.5 rounded"
             style={{
               background: 'var(--color-bg-elevated)',
@@ -57,9 +58,9 @@ export function SearchFilter({ resultCount }: SearchFilterProps) {
             }}
           >
             {resultCount}
-          </span>
+          </Box>
         )}
-      </div>
+      </Box>
     </Box>
   )
 }

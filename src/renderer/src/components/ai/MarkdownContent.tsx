@@ -1,6 +1,7 @@
 import { type ReactNode, Children, isValidElement } from 'react'
 import Markdown, { defaultUrlTransform } from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import { Box, Text } from '@/primitives'
 import { CodeBlock } from './CodeBlock'
 import { ActionChip } from './ActionChip'
 import { parseActionHref } from '@/lib/app-actions/parse'
@@ -53,11 +54,11 @@ export function MarkdownContent({ content }: Props) {
           )
         },
         table: ({ children }) => (
-          <div className="overflow-x-auto my-1">
+          <Box className="overflow-x-auto my-1">
             <table className="w-full text-xs border-collapse border border-[var(--color-border)]">
               {children}
             </table>
-          </div>
+          </Box>
         ),
         thead: ({ children }) => (
           <thead className="bg-[var(--color-bg-inset)]">{children}</thead>
@@ -72,7 +73,7 @@ export function MarkdownContent({ content }: Props) {
             {children}
           </td>
         ),
-        p: ({ children }) => <p className="mb-1 last:mb-0">{children}</p>,
+        p: ({ children }) => <Text as="p" className="mb-1 last:mb-0">{children}</Text>,
         ul: ({ children }) => <ul className="list-disc pl-4 mb-1">{children}</ul>,
         ol: ({ children }) => <ol className="list-decimal pl-4 mb-1">{children}</ol>,
         li: ({ children }) => <li className="mb-0.5">{children}</li>,

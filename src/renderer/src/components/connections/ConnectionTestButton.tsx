@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { ConnectionProfile } from '@shared/types'
-import { Stack, Button, Spinner, Alert } from '@/primitives'
+import { Stack, Button, Spinner, Alert, Box } from '@/primitives'
 import { IPC_CHANNELS } from '@shared/ipc'
 import { useTranslation } from '@/i18n/I18nProvider'
 
@@ -34,7 +34,7 @@ export function ConnectionTestButton({ profile }: Props) {
 
   return (
     <Stack gap="sm">
-      <div>
+      <Box>
         <Button
           variant="outline"
           size="lg"
@@ -45,7 +45,7 @@ export function ConnectionTestButton({ profile }: Props) {
           {status === 'testing' ? <Spinner size="xs" /> : null}
           {t('connections.test.button')}
         </Button>
-      </div>
+      </Box>
       {status === 'success' && (
         <Alert variant="success" title={t('connections.test.successTitle')}>{message}</Alert>
       )}

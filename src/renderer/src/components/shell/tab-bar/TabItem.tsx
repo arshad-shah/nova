@@ -1,7 +1,7 @@
 import { useState, type DragEvent } from 'react'
 import { X } from 'lucide-react'
 import type { Tab } from '@shared/types'
-import { Flex, Text, Tooltip, ContextMenu, cn, IconButton } from '@/primitives'
+import { Box, Flex, Text, Tooltip, ContextMenu, cn, IconButton } from '@/primitives'
 import { getTabIcon } from './tab-icons'
 import { useTranslation } from '@/i18n/I18nProvider'
 import './tab-bar.css'
@@ -97,7 +97,8 @@ export function TabItem({
           onMouseLeave={() => setCloseHovered(false)}
         >
           {isDirty && !closeHovered ? (
-            <span
+            <Box
+              as="span"
               className="block h-1.75 w-1.75 rounded-full bg-warning"
               aria-label={t('shell.tabBar.unsavedChanges')}
             />

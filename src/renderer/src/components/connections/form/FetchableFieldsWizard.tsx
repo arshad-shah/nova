@@ -37,12 +37,12 @@ export function FetchableFieldsWizard({
             'border-border-subtle'
         }`}>
         <Flex direction="row" align="center" gap="sm" className="px-4 py-3">
-          <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold ${authStatus === 'authenticated' ? 'bg-bg-success text-text-on-solid' :
+          <Box className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold ${authStatus === 'authenticated' ? 'bg-bg-success text-text-on-solid' :
               authStatus === 'authenticating' ? 'bg-bg-accent text-text-on-solid' :
                 'bg-bg-tertiary text-text-muted'
             }`}>
             {authStatus === 'authenticated' ? <Check size={14} /> : '1'}
-          </div>
+          </Box>
           <Text size="sm" weight="semibold">
             {t('connections.wizard.stepAuthenticate')}
           </Text>
@@ -60,7 +60,7 @@ export function FetchableFieldsWizard({
               <Text size="sm" color="muted">
                 {t('connections.wizard.authIntro')}
               </Text>
-              <div>
+              <Box>
                 <Button
                   type="button"
                   variant="solid"
@@ -72,7 +72,7 @@ export function FetchableFieldsWizard({
                   {authStatus === 'authenticating' ? <Spinner size="xs" /> : null}
                   {authStatus === 'authenticating' ? t('connections.wizard.authenticating') : t('connections.wizard.authenticate')}
                 </Button>
-              </div>
+              </Box>
             </>
           )}
           {authStatus === 'error' && (
@@ -102,12 +102,12 @@ export function FetchableFieldsWizard({
               }`}
           >
             <Flex direction="row" align="center" gap="sm" className="px-4 py-3">
-              <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold ${isCompleted ? 'bg-bg-success text-text-on-solid' :
+              <Box className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold ${isCompleted ? 'bg-bg-success text-text-on-solid' :
                   isActive ? 'bg-bg-accent text-text-on-solid' :
                     'bg-bg-tertiary text-text-muted'
                 }`}>
                 {isCompleted ? <Check size={14} /> : stepIndex + 2}
-              </div>
+              </Box>
               <Text size="sm" weight="semibold" color={isPending ? 'muted' : 'primary'}>
                 {t('connections.wizard.stepLabel', { n: stepIndex + 2, label: stepLabel })}
               </Text>
@@ -128,7 +128,7 @@ export function FetchableFieldsWizard({
                   ))}
                 </Grid>
                 {isActive && !isCompleted && (
-                  <div>
+                  <Box>
                     <Button
                       type="button"
                       variant="solid"
@@ -137,7 +137,7 @@ export function FetchableFieldsWizard({
                     >
                       {t('connections.wizard.continue')}
                     </Button>
-                  </div>
+                  </Box>
                 )}
               </Stack>
             )}

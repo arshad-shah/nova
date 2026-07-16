@@ -12,7 +12,7 @@ import {
   Copy,
   Check,
 } from 'lucide-react'
-import { Flex, Text, Button, EmptyState } from '@/primitives'
+import { Box, Flex, Text, Button, EmptyState } from '@/primitives'
 import { cn } from '@/primitives/utils/cn'
 import { formatRelativeTime } from '@/lib/format-time'
 import { useClipboard } from '@/hooks/useClipboard'
@@ -62,7 +62,7 @@ function NotificationItem({ notification }: { notification: Notification }) {
   }
 
   return (
-    <div
+    <Box
       role="button"
       tabIndex={0}
       onClick={() => !notification.read && markRead(notification.id)}
@@ -80,21 +80,21 @@ function NotificationItem({ notification }: { notification: Notification }) {
     >
       {/* Unread indicator bar */}
       {!notification.read && (
-        <div className="absolute left-0 top-2.5 bottom-2.5 w-0.5 rounded-r bg-accent" />
+        <Box className="absolute left-0 top-2.5 bottom-2.5 w-0.5 rounded-r bg-accent" />
       )}
 
       {/* Type icon */}
-      <div
+      <Box
         className={cn(
           'mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded',
           typeBgColors[notification.type]
         )}
       >
         <Icon size={12} className={typeColors[notification.type]} />
-      </div>
+      </Box>
 
       {/* Content */}
-      <div className="min-w-0 flex-1">
+      <Box className="min-w-0 flex-1">
         <Text
           size="xs"
           weight={notification.read ? 'normal' : 'medium'}
@@ -105,7 +105,7 @@ function NotificationItem({ notification }: { notification: Notification }) {
         </Text>
 
         {notification.message && (
-          <div
+          <Box
             className={cn(
               'mt-0.5 leading-snug break-words text-text-muted text-xs',
               isError
@@ -115,7 +115,7 @@ function NotificationItem({ notification }: { notification: Notification }) {
             onClick={isError ? (e) => e.stopPropagation() : undefined}
           >
             {notification.message}
-          </div>
+          </Box>
         )}
 
         <Flex align="center" gap="xs" className="mt-1">
@@ -128,14 +128,14 @@ function NotificationItem({ notification }: { notification: Notification }) {
               >
                 {notification.source.label}
               </Text>
-              <span className="text-text-disabled text-[10px]">·</span>
+              <Box as="span" className="text-text-disabled text-[10px]">·</Box>
             </>
           )}
           <Text size="xs" color="disabled" className="text-[10px] shrink-0">
             {formatRelativeTime(notification.timestamp)}
           </Text>
         </Flex>
-      </div>
+      </Box>
 
       {/* Action buttons — copy for errors (always visible), dismiss on hover */}
       <Flex direction="column" gap="xs" className="mt-0.5 shrink-0">
@@ -168,7 +168,7 @@ function NotificationItem({ notification }: { notification: Notification }) {
           <X size={12} />
         </button>
       </Flex>
-    </div>
+    </Box>
   )
 }
 
@@ -179,7 +179,7 @@ export function NotificationsSidebar() {
   const unread = unreadCount()
 
   return (
-    <div className="flex flex-col h-full">
+    <Box className="flex flex-col h-full">
       {/* Actions bar */}
       {notifications.length > 0 && (
         <Flex
@@ -220,12 +220,12 @@ export function NotificationsSidebar() {
           className="py-12 px-4"
         />
       ) : (
-        <div className="flex-1 divide-y divide-white/[0.04]">
+        <Box className="flex-1 divide-y divide-white/[0.04]">
           {notifications.map((n) => (
             <NotificationItem key={n.id} notification={n} />
           ))}
-        </div>
+        </Box>
       )}
-    </div>
+    </Box>
   )
 }

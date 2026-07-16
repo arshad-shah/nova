@@ -257,11 +257,9 @@ dialog[open] { display: flex; flex-direction: column; }
   --field-fs-xs:11px; --field-fs-sm:12px; --field-fs-md:13px; --field-fs-lg:14px; --field-fs-xl:16px;
   --field-r-sm:6px; --field-r-md:8px; --field-r-lg:10px;
   --field-px:10px; --field-gap:7px; --ta-py:9px;
-  /* Checkbox box-size tokens (fallback = comfortable). */
+  /* Checkbox box-size tokens (fallback = comfortable). The mark itself is a
+     real SVG in the component's companion element — see forms/Checkbox.tsx. */
   --check-sm:14px; --check-md:16px; --check-lg:20px;
-  /* Checkbox mark silhouettes — used as an alpha mask so the box's own fill shows through. */
-  --cb-check:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8.4 6.5 11.4 12.5 4.6' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  --cb-dash:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4.2 8 11.8 8' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round'/%3E%3C/svg%3E");
 }
 [data-density="compact"] {
   --field-h-xs:22px; --field-h-sm:26px; --field-h-md:30px; --field-h-lg:34px; --field-h-xl:40px;
@@ -284,32 +282,6 @@ dialog[open] { display: flex; flex-direction: column; }
   --field-px:13px; --field-gap:9px; --ta-py:12px;
   --check-sm:16px; --check-md:18px; --check-lg:22px;
 }
-
-/* Checkbox masked mark — the component carries the `cb-mark` base class; the
-   box's own accent fill shows through this alpha mask. Lives here (not as
-   Tailwind arbitrary utilities) because of the vendor-prefixed mask + spring
-   ease. */
-.cb-mark::before {
-  content: ""; position: absolute; inset: 0; pointer-events: none;
-  background: var(--color-checkbox-mark);
-  -webkit-mask: var(--cb-check) center / 64% no-repeat;
-          mask: var(--cb-check) center / 64% no-repeat;
-  /* The tick settles in from slightly small and low, so it reads as landing in
-     the box rather than popping at its centre. The spring overshoot is what
-     gives the tick its snap — keep the >1 third control point. */
-  opacity: 0; transform: scale(0.4) translateY(1px);
-  transition: opacity var(--transition-fast) ease,
-              transform var(--transition-normal) cubic-bezier(.34, 1.56, .64, 1);
-}
-.cb-mark:checked::before { opacity: 1; transform: scale(1) translateY(0); }
-/* The dash is a state, not a gesture — it crossfades instead of springing, so
-   a tri-state row doesn't bounce every time it recalculates. */
-.cb-mark:indeterminate::before {
-  opacity: 1; transform: scale(1) translateY(0);
-  transition: opacity var(--transition-fast) ease;
-  -webkit-mask-image: var(--cb-dash); mask-image: var(--cb-dash);
-}
-@media (prefers-reduced-motion: reduce) { .cb-mark::before { transition: none; } }
 
 /* Honour the appearance.animations toggle. When off, kill all transitions/
    animations app-wide so settings → UI is consistent. The exception list

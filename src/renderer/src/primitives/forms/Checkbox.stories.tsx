@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { fn, expect, userEvent } from 'storybook/test'
 import { Checkbox } from './Checkbox'
@@ -33,6 +34,32 @@ export const Sizes: Story = {
       ))}
     </div>
   ),
+}
+
+/** Indeterminate is a DOM property, not an attribute — it can only be set via a
+ *  ref. It represents "some but not all children selected" and takes precedence
+ *  over `checked`, so the dash shows even on a checked box. */
+export const Indeterminate: Story = {
+  render: () => {
+    function Tri({ checked, label }: { checked: boolean; label: string }) {
+      const ref = useRef<HTMLInputElement>(null)
+      useEffect(() => {
+        if (ref.current) ref.current.indeterminate = true
+      }, [])
+      return (
+        <label className="flex items-center gap-2 text-sm text-text-primary cursor-pointer">
+          <Checkbox ref={ref} defaultChecked={checked} aria-label={label} />
+          {label}
+        </label>
+      )
+    }
+    return (
+      <div className="flex flex-col gap-3">
+        <Tri checked={false} label="Indeterminate" />
+        <Tri checked label="Indeterminate wins over checked" />
+      </div>
+    )
+  },
 }
 
 export const States: Story = {
