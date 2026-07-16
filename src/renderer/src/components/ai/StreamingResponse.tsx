@@ -27,7 +27,7 @@ export function StreamingResponse() {
         name={t('aiui.chat.assistant')}
         size="sm"
         icon={<Sparkles className="h-3.5 w-3.5" />}
-        className="shrink-0 mt-0.5"
+        className="mt-0.5"
       />
       <Box className="min-w-0 max-w-[88%] flex-1">
         <Box className="rounded-xl rounded-tl-sm border border-border-default bg-bg-secondary px-3 py-2">

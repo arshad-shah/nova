@@ -77,8 +77,9 @@ export function MessageBubble({ message }: MessageBubbleProps) {
       <Avatar
         name={t('aiui.chat.assistant')}
         size="sm"
+        tone={isError ? 'error' : 'accent'}
         icon={isError ? <AlertTriangle className="h-3.5 w-3.5" /> : <Sparkles className="h-3.5 w-3.5" />}
-        className={isError ? 'shrink-0 mt-0.5 bg-error/10 text-error ring-error/30' : 'shrink-0 mt-0.5'}
+        className="mt-0.5"
       />
       <Box className={wide ? 'flex-1 min-w-0' : 'min-w-0 max-w-[82%]'}>
         {/* Tail toward the avatar (rounded-tl-sm) so the bubble emanates from it. */}

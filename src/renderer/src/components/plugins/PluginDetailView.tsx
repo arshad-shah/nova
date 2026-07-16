@@ -131,7 +131,7 @@ export function PluginDetailView({ pluginName }: Props) {
       {/* Compact Header */}
       <Box className="px-6 py-5 border-b border-border-default shrink-0">
         <Flex direction="row" align="center" gap="md">
-          <PluginIcon plugin={plugin} size={48} />
+          <PluginIcon plugin={plugin} size="lg" />
           <Box className="flex-1 min-w-0">
             <Flex direction="row" align="center" gap="sm" className="flex-wrap">
               <Text size="lg" weight="semibold" color="primary">{plugin.displayName}</Text>

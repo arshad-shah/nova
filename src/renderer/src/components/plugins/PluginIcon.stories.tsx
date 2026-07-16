@@ -43,6 +43,24 @@ export const GradientInitial: Story = {
 export const Large: Story = {
   args: {
     plugin: basePlugin,
-    size: 48,
+    size: 'lg',
   },
+}
+
+/** The colour is seeded on the plugin's id, so it's stable per plugin and
+ *  spreads across the identity palette rather than repeating. */
+export const IdentityColours: Story = {
+  render: () => (
+    <div style={{ display: 'flex', gap: 10 }}>
+      {['postgresql', 'mysql', 'sqlite', 'mongodb', 'redis', 'snowflake', 'db-tools', 'core-themes'].map(
+        (name) => (
+          <PluginIcon
+            key={name}
+            size="lg"
+            plugin={{ ...basePlugin, name, displayName: name.replace(/-/g, ' ') }}
+          />
+        )
+      )}
+    </div>
+  ),
 }

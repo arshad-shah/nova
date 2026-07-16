@@ -75,6 +75,16 @@
   --color-error-emphasis: var(--color-error-emphasis);
   --color-error-emphasis-hover: var(--color-error-emphasis-hover, var(--color-error));
   --color-error-fg: var(--color-error-fg, #ffffff);
+  /* Identity — decorative, for name-derived entity colours. Never semantic;
+     see the note in tokens.css for why this isn't a hash over the status hues. */
+  --color-identity-1: var(--color-identity-1);
+  --color-identity-2: var(--color-identity-2);
+  --color-identity-3: var(--color-identity-3);
+  --color-identity-4: var(--color-identity-4);
+  --color-identity-5: var(--color-identity-5);
+  --color-identity-6: var(--color-identity-6);
+  --color-identity-7: var(--color-identity-7);
+  --color-identity-8: var(--color-identity-8);
   --color-info: var(--color-info);
   --color-text-primary: var(--color-text-primary);
   --color-text-secondary: var(--color-text-secondary);

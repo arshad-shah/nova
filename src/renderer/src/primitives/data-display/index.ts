@@ -7,8 +7,11 @@ export type { BadgeIndicatorProps } from './BadgeIndicator'
 export { Tag } from './Tag'
 export type { TagProps } from './Tag'
 
-export { Avatar } from './Avatar'
-export type { AvatarProps } from './Avatar'
+export { Avatar, identityIndex } from './Avatar'
+export type { AvatarProps, AvatarStatus, AvatarVariants } from './Avatar'
+
+export { AvatarLabel } from './AvatarLabel'
+export type { AvatarLabelProps } from './AvatarLabel'
 
 export { Skeleton } from './Skeleton'
 export type { SkeletonProps } from './Skeleton'

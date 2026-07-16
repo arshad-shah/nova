@@ -1,46 +1,37 @@
-import { Flex, Box } from '@/primitives'
+import { Avatar } from '@/primitives'
+import type { AvatarProps } from '@/primitives'
 import type { PluginInfo } from './PluginsPanel'
 
-export const ICON_GRADIENTS = [
-  'from-blue-500 to-blue-600',
-  'from-emerald-500 to-emerald-600',
-  'from-purple-500 to-purple-600',
-  'from-red-500 to-red-600',
-  'from-amber-500 to-amber-600',
-  'from-cyan-500 to-cyan-600',
-  'from-pink-500 to-pink-600',
-  'from-indigo-500 to-indigo-600',
-]
-
-export function hashToIndex(str: string, max: number): number {
-  let hash = 0
-  for (let i = 0; i < str.length; i++) {
-    hash = (hash * 31 + str.charCodeAt(i)) | 0
-  }
-  return Math.abs(hash) % max
-}
-
-export function PluginIcon({ plugin, size = 28 }: { plugin: PluginInfo; size?: number }) {
-  if (plugin.icon) {
-    return (
-      <Box
-        as="img"
-        src={plugin.icon}
-        alt={plugin.displayName}
-        className="rounded-lg object-cover shrink-0"
-        style={{ width: size, height: size }}
-      />
-    )
-  }
-  const gradient = ICON_GRADIENTS[hashToIndex(plugin.name, ICON_GRADIENTS.length)]
+/**
+ * A plugin's tile: its own logo when the manifest ships one, otherwise a letter
+ * on a colour derived from its name.
+ *
+ * This used to be a whole second avatar implementation, forked from the
+ * primitive for one reason: Avatar hardcoded `rounded-full` and a plugin is not
+ * a person, so it needed a squircle. Now that Avatar has a `shape` axis, the
+ * only thing left here is the plugin-to-avatar mapping — which is domain
+ * knowledge and belongs in the plugins component, not in a primitive.
+ *
+ * The old version's gradients were Tailwind palette literals (`from-blue-500`),
+ * which no theme could touch; Avatar's identity tones are tokens.
+ */
+export function PluginIcon({
+  plugin,
+  size = 'md',
+}: {
+  plugin: PluginInfo
+  size?: AvatarProps['size']
+}) {
   return (
-    <Flex
-      align="center"
-      justify="center"
-      className={`bg-gradient-to-br ${gradient} rounded-lg text-white font-bold shrink-0`}
-      style={{ width: size, height: size, fontSize: size * 0.43 }}
-    >
-      {plugin.displayName.charAt(0).toUpperCase()}
-    </Flex>
+    <Avatar
+      name={plugin.displayName}
+      // Seeded on the id, not the display name: renaming a plugin in its
+      // manifest shouldn't change the colour users recognise it by.
+      colorSeed={plugin.name}
+      src={plugin.icon}
+      size={size}
+      shape="squircle"
+      tone="identity"
+    />
   )
 }

@@ -286,6 +286,28 @@
   --color-error-fg: #ffffff;
   --color-info: var(--raw-vcyan-400);
 
+  /* Identity — a decorative palette for telling entities apart when they have
+     no icon of their own (a plugin's letter tile, and anything else that needs
+     a stable colour derived from a name).
+
+     Deliberately its OWN scale rather than a hash across the semantic tokens.
+     Hashing over success/warning/error would paint a perfectly healthy plugin
+     red, and those hues are reserved: `--color-accent` is interface state,
+     data-accent marks a data source, agent-accent marks agent activity. An
+     identity colour means only "this is a different thing from that thing", so
+     it must not borrow a hue that already means something.
+
+     Ion's values are the eight the plugin list already used; a theme can
+     remap them to its own palette. */
+  --color-identity-1: #3B82F6;
+  --color-identity-2: #10B981;
+  --color-identity-3: #A855F7;
+  --color-identity-4: #EF4444;
+  --color-identity-5: #F59E0B;
+  --color-identity-6: #06B6D4;
+  --color-identity-7: #EC4899;
+  --color-identity-8: #6366F1;
+
   /* Interactive */
   --color-hover: rgba(203, 213, 225, 0.05);
   --color-active: rgba(203, 213, 225, 0.1);

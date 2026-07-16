@@ -153,7 +153,7 @@ function PluginRow({ plugin, isSelected, onClick }: { plugin: PluginInfo; isSele
           : 'hover:bg-white/5'
       )}
     >
-      <PluginIcon plugin={plugin} size={28} />
+      <PluginIcon plugin={plugin} size="md" />
       <Text size="xs" weight="medium" color="primary" truncate className="flex-1 min-w-0">
         {plugin.displayName}
       </Text>
