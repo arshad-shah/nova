@@ -125,9 +125,9 @@ export function SchemaNode({ schemaName, connectionId, databaseName, depth, onEx
   const childDepth = depth + 2
 
   const chevron = isExpanded ? (
-    <ChevronDown size={12} style={{ color: 'var(--color-text-tertiary)', flexShrink: 0 }} />
+    <ChevronDown size={12} className="text-text-muted shrink-0" strokeWidth={1.8} />
   ) : (
-    <ChevronRight size={12} style={{ color: 'var(--color-text-tertiary)', flexShrink: 0 }} />
+    <ChevronRight size={12} className="text-text-muted shrink-0" strokeWidth={1.8} />
   )
 
   return (
@@ -135,20 +135,18 @@ export function SchemaNode({ schemaName, connectionId, databaseName, depth, onEx
       <div>
         {/* Header row */}
         <button
-          className="group w-full flex items-center gap-1.5 rounded text-left transition-colors duration-[var(--transition-fast)]"
+          className="group w-full flex items-center gap-1.5 rounded text-left transition-colors duration-[var(--transition-fast)] hover:bg-hover"
           style={{ paddingLeft, paddingRight: 4, paddingTop: 2, paddingBottom: 2 }}
-          onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--color-hover)')}
-          onMouseLeave={(e) => (e.currentTarget.style.background = '')}
           onClick={handleToggle}
         >
           {chevron}
           <FolderOpen
             size={14}
-            style={{ color: 'var(--color-warning)', flexShrink: 0 }}
+            className="text-warning shrink-0"
+            strokeWidth={1.8}
           />
           <span
-            className="flex-1 truncate min-w-0 text-xs font-medium"
-            style={{ color: 'var(--color-text-primary)' }}
+            className="flex-1 truncate min-w-0 text-xs font-medium text-text-primary"
             title={schemaName}
           >
             <HighlightedText text={schemaName} query={filterText} />
@@ -167,7 +165,7 @@ export function SchemaNode({ schemaName, connectionId, databaseName, depth, onEx
                   className="h-5 w-5"
                   tabIndex={-1}
                 >
-                  <GitFork size={10} />
+                  <GitFork size={10} strokeWidth={1.8} />
                 </IconButton>
               </Tooltip>
             </span>
@@ -180,7 +178,7 @@ export function SchemaNode({ schemaName, connectionId, databaseName, depth, onEx
                   className="h-5 w-5"
                   tabIndex={-1}
                 >
-                  <RefreshCw size={10} />
+                  <RefreshCw size={10} strokeWidth={1.8} />
                 </IconButton>
               </Tooltip>
             </span>
@@ -192,15 +190,15 @@ export function SchemaNode({ schemaName, connectionId, databaseName, depth, onEx
           <div>
             {allTables.length === 0 ? (
               <p
-                className="py-1 text-xs"
-                style={{ paddingLeft: groupLabelPaddingLeft, color: 'var(--color-text-tertiary)' }}
+                className="py-1 text-xs text-text-muted"
+                style={{ paddingLeft: groupLabelPaddingLeft }}
               >
                 {t('explorer.loading.generic')}
               </p>
             ) : filteredTables.length === 0 && filteredViews.length === 0 ? (
               <p
-                className="py-1 text-xs"
-                style={{ paddingLeft: groupLabelPaddingLeft, color: 'var(--color-text-tertiary)' }}
+                className="py-1 text-xs text-text-muted"
+                style={{ paddingLeft: groupLabelPaddingLeft }}
               >
                 {t('explorer.status.noMatches')}
               </p>
@@ -210,7 +208,7 @@ export function SchemaNode({ schemaName, connectionId, databaseName, depth, onEx
                   storageKey={`${tableCacheKey}:tables`}
                   label={titleCase(nouns.object.many)}
                   count={filteredTables.length}
-                  icon={<Table2 size={12} style={{ color: 'var(--color-accent)', flexShrink: 0 }} />}
+                  icon={<Table2 size={12} className="text-accent shrink-0" strokeWidth={1.8} />}
                   headerPaddingLeft={groupLabelPaddingLeft}
                   defaultExpanded
                 >
@@ -231,7 +229,7 @@ export function SchemaNode({ schemaName, connectionId, databaseName, depth, onEx
                   storageKey={`${tableCacheKey}:views`}
                   label={t('explorer.group.views')}
                   count={filteredViews.length}
-                  icon={<Eye size={12} style={{ color: 'var(--color-info)', flexShrink: 0 }} />}
+                  icon={<Eye size={12} className="text-info shrink-0" strokeWidth={1.8} />}
                   headerPaddingLeft={groupLabelPaddingLeft}
                 >
                   {filteredViews.map((v) => (
@@ -250,7 +248,7 @@ export function SchemaNode({ schemaName, connectionId, databaseName, depth, onEx
                   storageKey={`${tableCacheKey}:mvs`}
                   label={t('explorer.group.materializedViews')}
                   items={matViews.map((o) => ({ key: o.name, label: o.name }))}
-                  icon={<Layers size={12} style={{ color: 'var(--color-accent)', flexShrink: 0 }} />}
+                  icon={<Layers size={12} className="text-accent shrink-0" strokeWidth={1.8} />}
                   headerPaddingLeft={groupLabelPaddingLeft}
                   itemPaddingLeft={groupItemPaddingLeft}
                 />
@@ -266,7 +264,7 @@ export function SchemaNode({ schemaName, connectionId, databaseName, depth, onEx
                         : t('explorer.object.indexOn', { parent: o.parent })
                       : o.returnType ?? undefined
                   }))}
-                  icon={<KeySquare size={12} style={{ color: 'var(--color-warning)', flexShrink: 0 }} />}
+                  icon={<KeySquare size={12} className="text-warning shrink-0" strokeWidth={1.8} />}
                   headerPaddingLeft={groupLabelPaddingLeft}
                   itemPaddingLeft={groupItemPaddingLeft}
                 />
@@ -278,7 +276,7 @@ export function SchemaNode({ schemaName, connectionId, databaseName, depth, onEx
                     label: `${o.name}${o.signature ?? ''}`,
                     sub: o.returnType ? t('explorer.object.functionReturns', { type: o.returnType }) : undefined,
                   }))}
-                  icon={<FunctionSquare size={12} style={{ color: 'var(--color-info)', flexShrink: 0 }} />}
+                  icon={<FunctionSquare size={12} className="text-info shrink-0" strokeWidth={1.8} />}
                   headerPaddingLeft={groupLabelPaddingLeft}
                   itemPaddingLeft={groupItemPaddingLeft}
                 />
@@ -289,7 +287,7 @@ export function SchemaNode({ schemaName, connectionId, databaseName, depth, onEx
                     key: `${o.name}${o.signature ?? ''}`,
                     label: `${o.name}${o.signature ?? ''}`,
                   }))}
-                  icon={<Workflow size={12} style={{ color: 'var(--color-info)', flexShrink: 0 }} />}
+                  icon={<Workflow size={12} className="text-info shrink-0" strokeWidth={1.8} />}
                   headerPaddingLeft={groupLabelPaddingLeft}
                   itemPaddingLeft={groupItemPaddingLeft}
                 />
@@ -301,7 +299,7 @@ export function SchemaNode({ schemaName, connectionId, databaseName, depth, onEx
                     label: o.name,
                     sub: o.parent ? t('explorer.object.triggerOn', { parent: o.parent }) : undefined,
                   }))}
-                  icon={<Zap size={12} style={{ color: 'var(--color-warning)', flexShrink: 0 }} />}
+                  icon={<Zap size={12} className="text-warning shrink-0" strokeWidth={1.8} />}
                   headerPaddingLeft={groupLabelPaddingLeft}
                   itemPaddingLeft={groupItemPaddingLeft}
                 />
@@ -309,7 +307,7 @@ export function SchemaNode({ schemaName, connectionId, databaseName, depth, onEx
                   storageKey={`${tableCacheKey}:sequences`}
                   label={t('explorer.group.sequences')}
                   items={sequences.map((o) => ({ key: o.name, label: o.name }))}
-                  icon={<Hash size={12} style={{ color: 'var(--color-text-tertiary)', flexShrink: 0 }} />}
+                  icon={<Hash size={12} className="text-text-muted shrink-0" strokeWidth={1.8} />}
                   headerPaddingLeft={groupLabelPaddingLeft}
                   itemPaddingLeft={groupItemPaddingLeft}
                 />
@@ -317,7 +315,7 @@ export function SchemaNode({ schemaName, connectionId, databaseName, depth, onEx
                   storageKey={`${tableCacheKey}:extensions`}
                   label={t('explorer.group.extensions')}
                   items={extensions.map((o) => ({ key: o.name, label: o.name }))}
-                  icon={<Package size={12} style={{ color: 'var(--color-text-tertiary)', flexShrink: 0 }} />}
+                  icon={<Package size={12} className="text-text-muted shrink-0" strokeWidth={1.8} />}
                   headerPaddingLeft={groupLabelPaddingLeft}
                   itemPaddingLeft={groupItemPaddingLeft}
                 />

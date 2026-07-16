@@ -93,13 +93,13 @@ export function ExplorerTree({ onExportTable }: ExplorerTreeProps) {
           <EmptyState
             title={t('explorer.empty.noConnection.title')}
             description={t('explorer.empty.noConnection.description')}
-            icon={<Database size={32} className="text-[var(--color-text-disabled)]" />}
+            icon={<Database size={32} strokeWidth={1.8} className="text-[var(--color-text-disabled)]" />}
           />
         </div>
       ) : !hierarchyLoaded ? (
         /* Show loading while databases/schemas are being fetched */
         <div className="flex-1 flex items-center justify-center p-4">
-          <Loader2 size={20} className="animate-spin" style={{ color: 'var(--color-text-tertiary)' }} />
+          <Loader2 size={20} strokeWidth={1.8} className="animate-spin text-text-muted" />
         </div>
       ) : (
         <>

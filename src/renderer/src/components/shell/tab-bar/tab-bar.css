@@ -6,6 +6,23 @@
  * background and then masks out a quarter-circle so the visible result is a
  * concave fillet. Pure CSS; no extra DOM and no SVG.
  */
+/*
+ * Active-tab accent strip. The brand gradient is reserved — an active-tab
+ * accent is one of the surfaces it's allowed on (see the design laws in
+ * primitives/theme/tokens.css). Radius matches the tab's rounded-t-[10px]
+ * so the strip follows the corners rather than overhanging them.
+ */
+.tab-accent-strip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--vq-gradient);
+  border-radius: 10px 10px 0 0;
+  pointer-events: none;
+}
+
 .tab-skirt-left,
 .tab-skirt-right {
   --skirt-size: 8px;

@@ -61,9 +61,11 @@ export function TabItem({
       >
         {/* Active-tab skirt: concave fillets that visually attach the tab to
             the workspace surface (Chrome-style). Rendered only for the active
-            tab so inactive tabs stay flat. */}
+            tab so inactive tabs stay flat. The accent strip is one of the few
+            surfaces the brand gradient is reserved for. */}
         {isActive && (
           <>
+            <span className="tab-accent-strip" aria-hidden="true" />
             <span className="tab-skirt-left" aria-hidden="true" />
             <span className="tab-skirt-right" aria-hidden="true" />
           </>

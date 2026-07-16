@@ -7,11 +7,13 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        solid: 'bg-accent-emphasis text-text-inverse hover:bg-accent shadow-[inset_0_1px_0_var(--color-button-highlight),0_1px_2px_var(--color-overlay-soft)] hover:shadow-[inset_0_1px_0_var(--color-button-highlight),0_2px_4px_var(--color-overlay-soft)] active:shadow-[inset_0_2px_4px_var(--color-overlay-strong)]',
+        // Repeated actions (Run, Save, Connect…) are solid and functional:
+        // the same action blue on every theme, white label, never gradient.
+        solid: 'bg-action text-action-fg hover:bg-action-hover shadow-[inset_0_1px_0_var(--color-button-highlight),0_1px_2px_var(--color-overlay-soft)] hover:shadow-[inset_0_1px_0_var(--color-button-highlight),0_2px_4px_var(--color-overlay-soft)] active:shadow-[inset_0_2px_4px_var(--color-overlay-strong)]',
         outline:
           'border border-border-default bg-transparent hover:bg-hover hover:border-border-strong text-text-primary',
         ghost: 'bg-transparent hover:bg-hover text-text-primary',
-        error: 'bg-error-emphasis text-text-inverse hover:bg-error shadow-[inset_0_1px_0_var(--color-button-highlight),0_1px_2px_var(--color-overlay-soft)]',
+        error: 'bg-error-emphasis text-action-fg hover:bg-error shadow-[inset_0_1px_0_var(--color-button-highlight),0_1px_2px_var(--color-overlay-soft)]',
       },
       size: {
         xs: 'h-7 px-2 text-xs rounded',
@@ -53,7 +55,7 @@ const iconButtonVariants = cva(
   {
     variants: {
       variant: {
-        solid: 'bg-accent-emphasis text-text-inverse hover:bg-accent shadow-[inset_0_1px_0_var(--color-button-highlight),0_1px_2px_var(--color-overlay-soft)]',
+        solid: 'bg-action text-action-fg hover:bg-action-hover shadow-[inset_0_1px_0_var(--color-button-highlight),0_1px_2px_var(--color-overlay-soft)]',
         outline: 'border border-border-default bg-transparent hover:bg-hover hover:border-border-strong text-text-primary',
         ghost: 'bg-transparent hover:bg-hover text-text-primary',
         'tab-action': 'bg-transparent hover:bg-hover text-text-tertiary hover:text-text-primary rounded-full',

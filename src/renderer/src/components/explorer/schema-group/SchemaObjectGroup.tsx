@@ -44,15 +44,15 @@ export function SchemaObjectGroup({
       {showExpanded && items.map((it) => (
         <div
           key={it.key}
-          className="flex items-center gap-1.5 text-xs py-0.5 min-w-0"
-          style={{ paddingLeft: itemPaddingLeft, color: 'var(--color-text-secondary)' }}
+          className="flex items-center gap-1.5 text-xs py-0.5 min-w-0 text-text-secondary"
+          style={{ paddingLeft: itemPaddingLeft }}
           title={it.sub ? `${it.label} ${it.sub}` : it.label}
         >
           <span className="truncate min-w-0">
             <HighlightedText text={it.label} query={filterText} />
           </span>
           {it.sub && (
-            <span className="opacity-50 truncate text-[10px] shrink min-w-0" style={{ fontStyle: 'italic' }}>
+            <span className="opacity-50 truncate text-[10px] shrink min-w-0 italic">
               {it.sub}
             </span>
           )}

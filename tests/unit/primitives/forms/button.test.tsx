@@ -11,7 +11,9 @@ describe('Button', () => {
 
   it('applies solid variant by default', () => {
     const { container } = render(<Button>Solid</Button>)
-    expect(container.firstChild).toHaveClass('bg-accent-emphasis')
+    // Repeated actions are the functional action colour, not the theme accent.
+    expect(container.firstChild).toHaveClass('bg-action')
+    expect(container.firstChild).toHaveClass('text-action-fg')
   })
 
   it('applies ghost variant', () => {
@@ -111,7 +113,7 @@ describe('IconButton', () => {
 
   it('applies solid variant', () => {
     const { container } = render(<IconButton label="Icon" variant="solid">X</IconButton>)
-    expect(container.firstChild).toHaveClass('bg-accent-emphasis')
+    expect(container.firstChild).toHaveClass('bg-action')
   })
 
   it('forwards ref', () => {

@@ -55,13 +55,15 @@ export function ActivityBar() {
           variant="ghost"
           onClick={() => setActivePanel(id)}
           className={cn(
-            'rounded-lg transition-colors',
+            'relative rounded-lg transition-colors',
             isActive
-              ? 'bg-accent/10 text-accent hover:bg-accent/10'
-              : 'text-text-muted hover:text-text-primary hover:bg-white/5'
+              // The rail indicator is one of the surfaces the brand gradient
+              // is reserved for.
+              ? 'bg-accent/10 text-accent hover:bg-accent/10 before:absolute before:left-0 before:top-1.5 before:bottom-1.5 before:w-0.5 before:rounded-full before:bg-[image:var(--vq-gradient)]'
+              : 'text-text-muted hover:text-text-primary hover:bg-hover'
           )}
         >
-          <Icon size={20} />
+          <Icon size={20} strokeWidth={1.8} />
         </IconButton>
       </Tooltip>
     )

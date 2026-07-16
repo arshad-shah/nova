@@ -76,8 +76,7 @@ export function InstallPluginTab() {
     <Flex
       align="center"
       justify="center"
-      className="h-full"
-      style={{ background: 'var(--color-bg-primary)' }}
+      className="h-full bg-bg-primary"
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
@@ -87,13 +86,9 @@ export function InstallPluginTab() {
           direction="column"
           align="center"
           gap="md"
-          className="rounded-xl py-12 px-8 transition-colors duration-150"
-          style={{
-            border: `2px dashed ${isOver ? 'var(--color-accent)' : 'var(--color-border-default)'}`,
-            background: isOver
-              ? 'color-mix(in srgb, var(--color-accent) 5%, transparent)'
-              : 'var(--color-bg-secondary)',
-          }}
+          className={`rounded-xl py-12 px-8 transition-colors duration-150 border-2 border-dashed ${
+            isOver ? 'border-accent bg-accent/5' : 'border-border-default bg-bg-secondary'
+          }`}
         >
           {isInstalling ? (
             <>
@@ -105,23 +100,12 @@ export function InstallPluginTab() {
           ) : (
             <>
               <Box
-                className="rounded-full p-4"
-                style={{
-                  background: isOver
-                    ? 'color-mix(in srgb, var(--color-accent) 10%, transparent)'
-                    : 'var(--color-bg-tertiary)',
-                }}
+                className={`rounded-full p-4 ${isOver ? 'bg-accent/10' : 'bg-bg-tertiary'}`}
               >
                 {isOver ? (
-                  <Upload
-                    size={32}
-                    style={{ color: 'var(--color-accent)' }}
-                  />
+                  <Upload size={32} strokeWidth={1.8} className="text-accent" />
                 ) : (
-                  <Package
-                    size={32}
-                    style={{ color: 'var(--color-text-disabled)' }}
-                  />
+                  <Package size={32} strokeWidth={1.8} className="text-text-disabled" />
                 )}
               </Box>
               <Flex direction="column" align="center" gap="xs">
@@ -146,12 +130,7 @@ export function InstallPluginTab() {
 
         {state === 'error' && errorMessage && (
           <Box
-            className="mt-3 rounded-lg px-3 py-2 text-xs"
-            style={{
-              background: 'color-mix(in srgb, var(--color-error) 10%, transparent)',
-              color: 'var(--color-error)',
-              border: '1px solid color-mix(in srgb, var(--color-error) 20%, transparent)',
-            }}
+            className="mt-3 rounded-lg px-3 py-2 text-xs bg-error/10 text-error border border-error/20"
           >
             {errorMessage}
           </Box>
