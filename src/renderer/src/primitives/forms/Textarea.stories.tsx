@@ -53,3 +53,25 @@ export const States: Story = {
     </div>
   ),
 }
+
+/** `surface` decides whether the field paints its own chrome.
+ *  - `field` (default) — the standard bordered input surface.
+ *  - `bare` — no border, fill or focus ring, for a field inside a surface that
+ *    already owns the frame (e.g. the AI composer inside its Card). The
+ *    surrounding box below stands in for that Card. */
+export const Surface: Story = {
+  render: () => (
+    <div className="flex flex-col gap-4" style={{ width: 320 }}>
+      <div>
+        <p className="mb-1 text-xs text-text-muted">surface=&quot;field&quot; (default)</p>
+        <Textarea size="md" rows={2} surface="field" placeholder="Bordered" aria-label="Field surface" />
+      </div>
+      <div>
+        <p className="mb-1 text-xs text-text-muted">surface=&quot;bare&quot;, inside an owning surface</p>
+        <div className="rounded-md border border-border-default bg-bg-tertiary">
+          <Textarea size="md" rows={2} surface="bare" resize="none" placeholder="Chrome-less" aria-label="Bare surface" />
+        </div>
+      </div>
+    </div>
+  ),
+}
