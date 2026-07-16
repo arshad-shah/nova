@@ -1,15 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" fill="currentColor" stroke="none" aria-hidden="true">
   <!--
-    Verql mark — "V-bars". Five vertical bars whose top edges trace a V.
-    Reads as data, structure, and (loosely) the letter V. The mark inherits
-    `currentColor` so it picks up the surrounding text or accent color
-    depending on context (sidebar item, toolbar, splash).
+    Verql mark — flat silhouette of the ribbon V. Inherits `currentColor` so it
+    picks up the surrounding text or accent color. For the brand-color and
+    pre-tinted mono variants, use verql-mark-{color,mono-light,mono-dark}.svg.
+
+    Geometry is identical to verql-mark-color.svg — keep them in sync.
   -->
-  <g>
-    <rect x="2"     y="4"  width="2.6" height="18" rx="0.6"/>
-    <rect x="6.35"  y="10" width="2.6" height="12" rx="0.6" opacity="0.82"/>
-    <rect x="10.7"  y="16" width="2.6" height="6"  rx="0.6"/>
-    <rect x="15.05" y="10" width="2.6" height="12" rx="0.6" opacity="0.82"/>
-    <rect x="19.4"  y="4"  width="2.6" height="18" rx="0.6"/>
-  </g>
+  <polygon points="610,238 842,238 628,670 396,670" opacity="0.82"/>
+  <polygon points="182,238 414,238 628,670 396,670"/>
+  <path d="M396 670 H628 L527 873 Q512 904 497 873 Z" opacity="0.66"/>
 </svg>

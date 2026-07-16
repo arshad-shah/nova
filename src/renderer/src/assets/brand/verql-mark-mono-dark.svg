@@ -1,13 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#1A2030" aria-hidden="true">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" fill="none" aria-hidden="true">
   <!--
     Verql mark — midnight (dark) silhouette. For use on light surfaces.
-    Transparent background. Concrete fill, safe to drop into <img>.
+    Same geometry as verql-mark-color.svg with flat fills, no gradients.
+    Transparent background. Concrete fills, safe to drop into <img>.
   -->
-  <g>
-    <rect x="2"     y="4"  width="2.6" height="18" rx="0.6"/>
-    <rect x="6.35"  y="10" width="2.6" height="12" rx="0.6" opacity="0.82"/>
-    <rect x="10.7"  y="16" width="2.6" height="6"  rx="0.6"/>
-    <rect x="15.05" y="10" width="2.6" height="12" rx="0.6" opacity="0.82"/>
-    <rect x="19.4"  y="4"  width="2.6" height="18" rx="0.6"/>
-  </g>
+  <polygon points="610,238 842,238 628,670 396,670" fill="#252E3F"/>
+  <polygon points="182,238 414,238 628,670 396,670" fill="#111827"/>
+  <path d="M396 670 H628 L527 873 Q512 904 497 873 Z" fill="#0B0F16"/>
 </svg>

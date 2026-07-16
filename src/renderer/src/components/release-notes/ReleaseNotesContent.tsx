@@ -60,7 +60,7 @@ export function ReleaseNotesContent({ note }: { note: ReleaseNote }) {
       <GradientSurface tone="accent" intensity="bold" className="rounded-2xl border border-border-default">
         <Stack gap="md" className="p-8">
           <Flex align="center" gap="sm">
-            <VerqlHero size={40} className="text-accent" />
+            <VerqlHero size={40} />
             <Text size="xs" weight="semibold" color="accent" className="uppercase tracking-wider">
               {t('shell.releaseNotes.eyebrow')}
             </Text>

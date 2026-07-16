@@ -1,15 +1,24 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="currentColor" stroke="none" aria-hidden="true">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" fill="none" aria-hidden="true">
   <!--
-    Verql hero — empty-state / splash variant. The "V-bars" mark sized up.
-    Inherits `currentColor`; opacity layers do the contrast lifting under masking.
-  -->
+    Verql hero — splash / welcome / empty-state variant. The ribbon mark sized
+    up, carrying the brand gradient rather than `currentColor`: the hero is a
+    brand moment, one of the few surfaces the gradient is reserved for.
 
-  <!-- Bars (V shape, top edges descend toward middle) -->
-  <g>
-    <rect x="56"  y="50"  width="14" height="100" rx="2.5"/>
-    <rect x="78"  y="78"  width="14" height="72"  rx="2.5" opacity="0.78"/>
-    <rect x="100" y="106" width="14" height="44"  rx="2.5"/>
-    <rect x="122" y="78"  width="14" height="72"  rx="2.5" opacity="0.78"/>
-    <rect x="144" y="50"  width="14" height="100" rx="2.5"/>
-  </g>
+    Geometry is identical to verql-mark-color.svg — keep them in sync.
+  -->
+  <defs>
+    <linearGradient id="vqh-left" x1="298" y1="238" x2="520" y2="670" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#7A5CFF"/><stop offset="1" stop-color="#5B43F6"/>
+    </linearGradient>
+    <linearGradient id="vqh-right" x1="726" y1="238" x2="512" y2="690" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00D4FF"/><stop offset="1" stop-color="#30B8FF"/>
+    </linearGradient>
+    <linearGradient id="vqh-fold" x1="512" y1="670" x2="512" y2="904" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#3F36D6"/><stop offset="0.12" stop-color="#4547E6"/>
+      <stop offset="1" stop-color="#3E8BF9"/>
+    </linearGradient>
+  </defs>
+  <polygon points="610,238 842,238 628,670 396,670" fill="url(#vqh-right)"/>
+  <polygon points="182,238 414,238 628,670 396,670" fill="url(#vqh-left)"/>
+  <path d="M396 670 H628 L527 873 Q512 904 497 873 Z" fill="url(#vqh-fold)"/>
 </svg>

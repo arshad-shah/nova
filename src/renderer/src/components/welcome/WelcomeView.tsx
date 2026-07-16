@@ -171,7 +171,7 @@ export function WelcomeView() {
         {/* Hero */}
         <GradientSurface tone="accent" intensity="subtle" className="rounded-2xl border border-border-default">
           <Flex align="center" gap="lg" className="p-8 max-sm:flex-col max-sm:text-center">
-            <VerqlHero size={84} className="shrink-0 text-accent" />
+            <VerqlHero size={84} className="shrink-0" />
             <Stack gap="xs" className="min-w-0">
               <Flex align="center" gap="sm" className="max-sm:justify-center">
                 <Text size="xs" weight="semibold" color="accent" className="uppercase tracking-wider">
