@@ -138,9 +138,16 @@ if (!CHECK) {
     rasterise('build/icon.svg', `build/icons/png/${s}x${s}.png`, s)
   }
 
-  // ── 5 · Microsoft Store tiles — upload-ready, no hand-editing ──────────────
-  // electron-builder uses build/appx/ verbatim when present; without it, it
-  // auto-derives tiles from icon.ico, which is what the Store rejects.
+  // ── 5 · Microsoft Store ────────────────────────────────────────────────────
+  // build/appx/ is the MSIX PACKAGE payload. electron-builder copies it
+  // verbatim when present; without it, it auto-derives tiles from icon.ico,
+  // which doesn't satisfy the Store's asset set.
+  //
+  // Filenames here are not free-form — electron-builder maps specific ones into
+  // the manifest (see app-builder-lib AppxTarget). Note the two odd ones:
+  // the 310x310 large tile must be called LargeTile.png and the 71x71 small
+  // tile SmallTile.png; a file literally named Square310x310Logo.png is
+  // ignored and the tile silently goes missing from the manifest.
   const APPX = [
     ['Square44x44Logo.png', 44], ['Square44x44Logo.scale-125.png', 55],
     ['Square44x44Logo.scale-150.png', 66], ['Square44x44Logo.scale-200.png', 88],
@@ -148,10 +155,20 @@ if (!CHECK) {
     ['Square150x150Logo.png', 150], ['Square150x150Logo.scale-125.png', 188],
     ['Square150x150Logo.scale-150.png', 225], ['Square150x150Logo.scale-200.png', 300],
     ['Square150x150Logo.scale-400.png', 600],
-    ['Square71x71Logo.png', 71], ['Square310x310Logo.png', 310],
+    ['SmallTile.png', 71],   // → Square71x71Logo in the manifest
+    ['LargeTile.png', 310],  // → Square310x310Logo in the manifest
     ['StoreLogo.png', 50], ['StoreLogo.scale-200.png', 100],
   ]
   for (const [name, size] of APPX) rasterise('build/icon.svg', `build/appx/${name}`, size)
+
+  // ── 6 · Partner Center listing images ─────────────────────────────────────
+  // A different thing from the package tiles above: these are uploaded to the
+  // store LISTING by hand, so they live outside build/appx (anything in there
+  // gets packaged). 300x300 is the listing logo Partner Center asks for — it
+  // is NOT the 310x310 large tile and does not replace it.
+  for (const [name, size] of [['StoreLogo-300x300.png', 300], ['StoreLogo-2160x2160.png', 2160]]) {
+    rasterise('build/icon.svg', `build/store-listing/${name}`, size)
+  }
 
   // Wide + splash are not square: the mark is CENTRED on the tile, never
   // stretched. Fit the artwork bbox (221..1087 × 240..951 = 866 × 711) inside
