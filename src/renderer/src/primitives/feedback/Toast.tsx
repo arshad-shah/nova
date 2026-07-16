@@ -42,11 +42,13 @@ const toastVariants = cva(
   {
     variants: {
       /**
-       * `--fb-vc` is the variant's colour, and everything that carries it —
-       * the border, the fill, the icon, the action, the track — reads from it.
-       * One declaration per variant instead of five.
+       * What it means. Toast has no weight axis — it's always the same neutral
+       * card, and only the mark is coloured.
+       *
+       * `--fb-vc` is the tone's colour, and everything that carries it — the
+       * mark and the track — reads from it. One declaration per tone.
        */
-      variant: {
+      tone: {
         neutral: SEVERITY_TONE.neutral,
         success: SEVERITY_TONE.success,
         info: SEVERITY_TONE.info,
@@ -54,11 +56,11 @@ const toastVariants = cva(
         error: SEVERITY_TONE.error,
       },
     },
-    defaultVariants: { variant: 'neutral' },
+    defaultVariants: { tone: 'neutral' },
   }
 )
 
-export type ToastVariant = NonNullable<VariantProps<typeof toastVariants>['variant']>
+export type ToastTone = NonNullable<VariantProps<typeof toastVariants>['tone']>
 
 export interface ToastAction {
   label: string
@@ -90,7 +92,7 @@ export const Toast = forwardRef<HTMLDivElement, ToastProps>(function Toast(
   {
     title,
     description,
-    variant,
+    tone,
     duration,
     onDismiss,
     action,
@@ -100,7 +102,7 @@ export const Toast = forwardRef<HTMLDivElement, ToastProps>(function Toast(
   },
   ref
 ) {
-  const v = variant ?? 'neutral'
+  const v = tone ?? 'neutral'
 
   // Auto-dismiss, pausing while the pointer is over the toast. `remaining` is
   // what's left of `duration` — so a hover doesn't restart the clock, it holds
@@ -171,7 +173,7 @@ export const Toast = forwardRef<HTMLDivElement, ToastProps>(function Toast(
       ref={ref}
       // An error or a warning interrupts; everything else waits its turn.
       role={v === 'error' || v === 'warning' ? 'alert' : 'status'}
-      className={cn(toastVariants({ variant }), className)}
+      className={cn(toastVariants({ tone }), className)}
       onMouseEnter={pause}
       onMouseLeave={resume}
     >
@@ -182,7 +184,7 @@ export const Toast = forwardRef<HTMLDivElement, ToastProps>(function Toast(
           {title}
         </p>
         {description && (
-          <p className="mt-1 text-[length:var(--field-fs-xs)] leading-relaxed whitespace-pre-wrap break-words text-text-muted">
+          <p className="mt-1 text-[length:var(--field-fs-sm)] leading-relaxed whitespace-pre-wrap break-words text-text-secondary">
             {description}
           </p>
         )}

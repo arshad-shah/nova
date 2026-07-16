@@ -118,19 +118,19 @@ export function ConnectionListItem({
 
       <Flex direction="column" className="flex-1 min-w-0">
         <Flex align="center" gap="xs">
-          <Badge variant={chip.tone} size="sm" className="font-mono text-[9px] leading-none px-1.5 py-0.5 shrink-0">
+          <Badge tone={chip.tone} size="sm" className="font-mono text-[9px] leading-none px-1.5 py-0.5 shrink-0">
             {chip.label}
           </Badge>
           <Text size="xs" weight={active ? 'medium' : 'normal'} truncate className="flex-1">
             {connection.name}
           </Text>
           {connected && !active && (
-            <Badge variant="success" size="sm" className="text-[9px] uppercase tracking-wider shrink-0">
+            <Badge tone="success" size="sm" className="text-[9px] uppercase tracking-wider shrink-0">
               {t('connections.active.badgeLive')}
             </Badge>
           )}
           {active && (
-            <Badge variant="accent" size="sm" className="text-[9px] uppercase tracking-wider shrink-0">
+            <Badge tone="accent" size="sm" className="text-[9px] uppercase tracking-wider shrink-0">
               {t('connections.active.badgeActive')}
             </Badge>
           )}

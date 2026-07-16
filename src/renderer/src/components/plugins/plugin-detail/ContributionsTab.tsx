@@ -16,7 +16,7 @@ export function ContributionsTab({ contributions }: { contributions: string[] })
           const variant = CONTRIBUTION_BADGE_VARIANTS[type] ?? 'default'
           return (
             <Flex key={i} direction="row" align="center" gap="sm" className="py-1">
-              <Badge size="sm" variant={variant} className="w-20 text-center justify-center shrink-0">{type}</Badge>
+              <Badge size="sm" tone={variant} className="w-20 text-center justify-center shrink-0">{type}</Badge>
               <Text size="sm" color="secondary">{name}</Text>
             </Flex>
           )

@@ -129,7 +129,7 @@ export function InstallPluginTab() {
         </Flex>
 
         {state === 'error' && errorMessage && (
-          <Alert variant="error" className="mt-3">
+          <Alert tone="error" className="mt-3">
             {errorMessage}
           </Alert>
         )}

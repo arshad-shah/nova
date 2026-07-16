@@ -51,7 +51,7 @@ export function TitleBar({ platform = detectedPlatform }: TitleBarProps = {}) {
             {t('shell.titleBar.appName')}
           </Text>
           {isDev && (
-            <Badge variant="warning" size="sm" className="text-[9px] leading-none">
+            <Badge tone="warning" size="sm" className="text-[9px] leading-none">
               {t('shell.statusBar.dev')}
             </Badge>
           )}

@@ -46,7 +46,7 @@ export function TransactionToolbar({
   return (
     <Flex direction="row" align="center" gap="sm" className="flex-wrap">
       {/* Status badge */}
-      <Badge variant={statusBadgeVariant} size="sm">
+      <Badge tone={statusBadgeVariant} size="sm">
         {statusText}
       </Badge>
 

@@ -2,13 +2,13 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import { fn, expect, userEvent } from 'storybook/test'
 import { Toast } from './Toast'
 
-const VARIANTS = ['success', 'info', 'warning', 'error', 'neutral'] as const
+const TONES = ['success', 'info', 'warning', 'error', 'neutral'] as const
 
 const meta = {
   title: 'Primitives/Feedback/Toast',
   component: Toast,
   argTypes: {
-    variant: { control: 'select', options: VARIANTS },
+    tone: { control: 'select', options: TONES },
     title: { control: 'text' },
     description: { control: 'text' },
     duration: { control: 'number' },
@@ -22,7 +22,7 @@ type Story = StoryObj<typeof meta>
 
 export const Default: Story = {
   args: {
-    variant: 'success',
+    tone: 'success',
     title: 'Changes saved',
     description: 'Your profile has been updated.',
     onDismiss: fn(),
@@ -40,18 +40,18 @@ export const Default: Story = {
  *  your attention, and five stacked in five different colours is a fruit
  *  salad. Both read their tone from `feedback/severity.ts`, so a warning is
  *  the same warning in each — they differ in how much of it they wear. */
-export const Variants: Story = {
+export const Tones: Story = {
   args: { title: '' },
   render: () => (
     <div className="flex flex-col gap-2">
       {([
-        { variant: 'success', title: 'Query executed successfully' },
-        { variant: 'info', title: 'New version available' },
-        { variant: 'warning', title: 'SSL certificate expires in 7 days' },
-        { variant: 'error', title: 'Connection failed', description: 'Check your credentials and try again.' },
-        { variant: 'neutral', title: 'Data has been updated.' },
+        { tone: 'success', title: 'Query executed successfully' },
+        { tone: 'info', title: 'New version available' },
+        { tone: 'warning', title: 'SSL certificate expires in 7 days' },
+        { tone: 'error', title: 'Connection failed', description: 'Check your credentials and try again.' },
+        { tone: 'neutral', title: 'Data has been updated.' },
       ] as const).map((t) => (
-        <Toast key={t.variant} {...t} onDismiss={fn()} />
+        <Toast key={t.tone} {...t} onDismiss={fn()} />
       ))}
     </div>
   ),
@@ -65,22 +65,22 @@ export const Anatomy: Story = {
   args: { title: '' },
   render: () => (
     <div className="flex flex-col gap-2">
-      <Toast variant="success" title="Title only" onDismiss={fn()} />
+      <Toast tone="success" title="Title only" onDismiss={fn()} />
       <Toast
-        variant="success"
+        tone="success"
         title="Title message"
         description="Supporting description goes here."
         onDismiss={fn()}
       />
       <Toast
-        variant="success"
+        tone="success"
         title="With an action"
         description="Your changes were saved."
         action={{ label: 'Undo', onClick: fn() }}
         onDismiss={fn()}
       />
       {/* No onDismiss -> no close button. For a toast the caller owns. */}
-      <Toast variant="info" title="No dismiss button" description="The caller controls this one." />
+      <Toast tone="info" title="No dismiss button" description="The caller controls this one." />
     </div>
   ),
 }
@@ -91,10 +91,10 @@ export const WithAction: Story = {
   args: { title: '' },
   render: () => (
     <div className="flex flex-col gap-2">
-      <Toast variant="success" title="Changes saved" action={{ label: 'Undo', onClick: fn() }} onDismiss={fn()} />
-      <Toast variant="error" title="Something went wrong" action={{ label: 'Retry', onClick: fn() }} onDismiss={fn()} />
-      <Toast variant="warning" title="Your session will expire soon" action={{ label: 'Extend', onClick: fn() }} onDismiss={fn()} />
-      <Toast variant="info" title="Maintenance scheduled for tonight" action={{ label: 'Learn more', onClick: fn() }} onDismiss={fn()} />
+      <Toast tone="success" title="Changes saved" action={{ label: 'Undo', onClick: fn() }} onDismiss={fn()} />
+      <Toast tone="error" title="Something went wrong" action={{ label: 'Retry', onClick: fn() }} onDismiss={fn()} />
+      <Toast tone="warning" title="Your session will expire soon" action={{ label: 'Extend', onClick: fn() }} onDismiss={fn()} />
+      <Toast tone="info" title="Maintenance scheduled for tonight" action={{ label: 'Learn more', onClick: fn() }} onDismiss={fn()} />
     </div>
   ),
   play: async ({ canvas }) => {
@@ -108,7 +108,7 @@ export const WithAction: Story = {
 export const AutoDismiss: Story = {
   name: 'Auto-dismiss (hover to pause)',
   args: {
-    variant: 'success',
+    tone: 'success',
     title: 'Saved',
     description: 'Auto-dismisses in 6s. Hover to pause the countdown.',
     duration: 6000,
@@ -120,9 +120,9 @@ export const Persistent: Story = {
   args: { title: '' },
   render: () => (
     <div className="flex flex-col gap-2">
-      <Toast variant="error" title="Persistent" description="No duration — no track, no timer." onDismiss={fn()} />
+      <Toast tone="error" title="Persistent" description="No duration — no track, no timer." onDismiss={fn()} />
       <Toast
-        variant="info"
+        tone="info"
         loading
         title="Uploading 3 files…"
         description="2.4 MB of 5 MB"
@@ -139,21 +139,21 @@ export const RealExamples: Story = {
   render: () => (
     <div className="flex flex-col gap-2">
       <Toast
-        variant="success"
+        tone="success"
         title="Connected"
         description="prod-replica · app@10.2.0.4:5432/orders"
         duration={5000}
         onDismiss={fn()}
       />
       <Toast
-        variant="error"
+        tone="error"
         title="Query failed"
         description={'syntax error at or near "SELCT"\nLINE 1: SELCT * FROM orders'}
         onDismiss={fn()}
       />
-      <Toast variant="info" loading title="Restoring 12 tabs…" onDismiss={fn()} />
+      <Toast tone="info" loading title="Restoring 12 tabs…" onDismiss={fn()} />
       <Toast
-        variant="warning"
+        tone="warning"
         title="Plugin needs a restart"
         description="db-tools was deactivated."
         action={{ label: 'Restart', onClick: fn() }}

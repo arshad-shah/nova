@@ -1,8 +1,8 @@
 export { Toast } from './Toast'
-export type { ToastProps, ToastVariant, ToastAction } from './Toast'
+export type { ToastProps, ToastTone, ToastAction } from './Toast'
 
 export { Alert } from './Alert'
-export type { AlertProps, AlertVariant, AlertType, AlertAction } from './Alert'
+export type { AlertProps, AlertTone, AlertVariant, AlertAction } from './Alert'
 
 export { Progress } from './Progress'
 export type { ProgressProps } from './Progress'

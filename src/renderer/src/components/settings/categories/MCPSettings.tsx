@@ -97,7 +97,7 @@ export function MCPSettings() {
       {status.running && status.autoSelectedPort && (
         <Text size="xs" color="muted">{t('settings.mcp.autoSelectedPort', { requested: mcp.port, actual: status.port })}</Text>
       )}
-      {error && <Alert variant={'error'}>{error}</Alert>}
+      {error && <Alert tone={'error'}>{error}</Alert>}
 
       <SettingRow label={t('settings.mcp.port.label')} description={t('settings.mcp.port.description')}>
         <Input type="number" value={mcp.port} onChange={(e) => setSetting('mcp.port', parseInt(e.target.value) || 3100)} size="sm" className="w-28" min={1024} max={65535} disabled={status.running} aria-label={t('settings.mcp.port.aria')} />

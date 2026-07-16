@@ -45,11 +45,11 @@ function ColumnIcon({ column }: { column: SchemaColumn }) {
 
 function ConstraintBadge({ column }: { column: SchemaColumn }) {
   if (column.isPrimaryKey) {
-    return <Badge variant="pk" size="xs" className="font-semibold leading-4 shrink-0">PK</Badge>
+    return <Badge tone="pk" size="xs" className="font-semibold leading-4 shrink-0">PK</Badge>
   }
 
   if (column.isForeignKey) {
-    return <Badge variant="fk" size="xs" className="font-semibold leading-4 shrink-0">FK</Badge>
+    return <Badge tone="fk" size="xs" className="font-semibold leading-4 shrink-0">FK</Badge>
   }
 
   return null

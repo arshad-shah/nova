@@ -16,8 +16,8 @@ export function ApprovalCardContent({ approval, onRespond }: ApprovalCardContent
     // The hand-drawn warning triangle is the severity mark now, and the two
     // buttons are why `action` still takes a node.
     <Alert
-      variant="warning"
-      type="filled"
+      tone="warning"
+      variant="filled"
       className="mx-2 mb-3"
       action={
         <>

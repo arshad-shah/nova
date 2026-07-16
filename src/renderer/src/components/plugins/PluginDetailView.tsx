@@ -136,7 +136,7 @@ export function PluginDetailView({ pluginName }: Props) {
             <Flex direction="row" align="center" gap="sm" className="flex-wrap">
               <Text size="lg" weight="semibold" color="primary">{plugin.displayName}</Text>
               <Text size="xs" color="muted">{t('plugins.detail.version', { version: plugin.version })}</Text>
-              <Badge size="sm" variant={stateConfig.variant}>{t(stateConfig.labelKey)}</Badge>
+              <Badge size="sm" tone={stateConfig.variant}>{t(stateConfig.labelKey)}</Badge>
               {plugin.bundled && <Badge size="sm">{t('plugins.detail.builtIn')}</Badge>}
             </Flex>
             <Text size="sm" color="secondary" as="p" className="mt-1 leading-relaxed">{plugin.description}</Text>

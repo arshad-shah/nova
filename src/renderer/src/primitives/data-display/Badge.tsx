@@ -6,7 +6,13 @@ const badgeVariants = cva(
   'inline-flex items-center font-medium rounded-full shadow-[inset_0_1px_0_var(--color-button-highlight)]',
   {
     variants: {
-      variant: {
+      /**
+       * What the badge means. Every value here is a meaning — a weight would be
+       * `variant`, and Badge has none. Named `tone` to match the rest of the
+       * system: `tone` is what a thing means, `variant` is how much of itself
+       * it wears.
+       */
+      tone: {
         default: 'bg-bg-elevated text-text-secondary',
         accent: 'bg-accent/10 text-accent-hover',
         success: 'bg-success/10 text-success',
@@ -29,7 +35,7 @@ const badgeVariants = cva(
       },
     },
     defaultVariants: {
-      variant: 'default',
+      tone: 'default',
       size: 'md',
     },
   }
@@ -39,10 +45,10 @@ export interface BadgeProps
   extends React.HTMLAttributes<HTMLSpanElement>,
     VariantProps<typeof badgeVariants> {}
 
-export function Badge({ className, variant, size, ...props }: BadgeProps) {
+export function Badge({ className, tone, size, ...props }: BadgeProps) {
   return (
     <span
-      className={cn(badgeVariants({ variant, size }), className)}
+      className={cn(badgeVariants({ tone, size }), className)}
       {...props}
     />
   )

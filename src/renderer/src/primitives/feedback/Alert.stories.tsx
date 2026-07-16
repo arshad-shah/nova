@@ -4,14 +4,14 @@ import { Alert } from './Alert'
 import { Button } from '../forms/Button'
 import { Badge } from '../data-display/Badge'
 
-const VARIANTS = ['info', 'success', 'warning', 'error', 'neutral', 'update'] as const
+const TONES = ['info', 'success', 'warning', 'error', 'neutral', 'update'] as const
 
 const meta = {
   title: 'Primitives/Feedback/Alert',
   component: Alert,
   argTypes: {
-    variant: { control: 'select', options: VARIANTS },
-    type: { control: 'inline-radio', options: ['default', 'filled'] },
+    tone: { control: 'select', options: TONES },
+    variant: { control: 'inline-radio', options: ['default', 'filled', 'outlined'] },
     title: { control: 'text' },
   },
   decorators: [(Story) => <div className="w-125"><Story /></div>],
@@ -22,7 +22,7 @@ type Story = StoryObj<typeof meta>
 
 export const Default: Story = {
   args: {
-    variant: 'info',
+    tone: 'info',
     title: 'Information',
     children: 'Here is some information.',
     onClose: fn(),
@@ -33,7 +33,8 @@ export const Default: Story = {
   },
 }
 
-/** Six tones, resolved from `feedback/severity.ts` — the same table Toast reads
+/** Six tones — `tone` is what it MEANS. `variant` (below) is how much of
+ *  itself it wears. Resolved from `feedback/severity.ts` — the same table Toast reads
  *  from, so a warning is the same warning in both. Before that table existed,
  *  Alert tinted `info` with the accent (purple) while its own border used
  *  `--color-info` (cyan). */
@@ -41,8 +42,8 @@ export const Variants: Story = {
   args: { children: null },
   render: () => (
     <div className="flex flex-col gap-2">
-      {VARIANTS.map((variant) => (
-        <Alert key={variant} variant={variant} title={variant}>
+      {TONES.map((tone) => (
+        <Alert key={tone} tone={tone} title={tone}>
           Here is some information.
         </Alert>
       ))}
@@ -50,7 +51,7 @@ export const Variants: Story = {
   ),
 }
 
-/** `type="filled"` is what used to be a whole second primitive.
+/** `variant="filled"` is what used to be a whole second primitive.
  *
  *  `Banner` was Alert with different padding and no title. It had zero app
  *  usages while AutoCompactBanner hand-rolled a worse copy of it, and the two
@@ -60,15 +61,15 @@ export const Filled: Story = {
   args: { children: null },
   render: () => (
     <div className="flex flex-col gap-2">
-      {VARIANTS.map((variant) => (
+      {TONES.map((tone) => (
         <Alert
-          key={variant}
-          variant={variant}
-          type="filled"
+          key={tone}
+          tone={tone}
+          variant="filled"
           action={{ label: 'Learn more', onClick: fn() }}
           onClose={fn()}
         >
-          {variant === 'update'
+          {tone === 'update'
             ? "We've updated our Terms of Service."
             : 'Scheduled maintenance on May 25, 2:00 AM UTC.'}
         </Alert>
@@ -85,11 +86,11 @@ export const TitleAndBody: Story = {
   args: { children: null },
   render: () => (
     <div className="flex flex-col gap-2">
-      <Alert variant="error">Plugin failed to activate: missing entry point.</Alert>
-      <Alert variant="error" title="Plugin failed to activate">
+      <Alert tone="error">Plugin failed to activate: missing entry point.</Alert>
+      <Alert tone="error" title="Plugin failed to activate">
         Missing entry point.
       </Alert>
-      <Alert variant="info" title="Information">
+      <Alert tone="info" title="Information">
         Your plan includes 10GB of storage. You&apos;ve used 6.2GB (62%).
       </Alert>
     </div>
@@ -102,15 +103,15 @@ export const Actions: Story = {
   args: { children: null },
   render: () => (
     <div className="flex flex-col gap-2">
-      <Alert variant="info" title="Information" action={{ label: 'View details', onClick: fn() }}>
+      <Alert tone="info" title="Information" action={{ label: 'View details', onClick: fn() }}>
         Here is some information.
       </Alert>
-      <Alert variant="error" title="Error" action={{ label: 'Try again', onClick: fn() }}>
+      <Alert tone="error" title="Error" action={{ label: 'Try again', onClick: fn() }}>
         Something went wrong.
       </Alert>
       <Alert
-        variant="warning"
-        type="filled"
+        tone="warning"
+        variant="filled"
         action={
           <>
             <Button size="xs" variant="solid">Run</Button>
@@ -134,7 +135,7 @@ export const Actions: Story = {
 export const RichBody: Story = {
   args: { children: null },
   render: () => (
-    <Alert variant="error" title='syntax error at or near "SELCT"'>
+    <Alert tone="error" title='syntax error at or near "SELCT"'>
       <p className="leading-relaxed">The driver rejected the statement before it ran.</p>
       <div className="mt-2 rounded-md bg-bg-inset px-3 py-2">
         <p className="text-text-secondary">Did you mean SELECT?</p>
@@ -151,7 +152,7 @@ export const RichBody: Story = {
 
 export const Dismissible: Story = {
   args: {
-    variant: 'success',
+    tone: 'success',
     title: 'Success',
     children: 'Your changes were saved.',
     onClose: fn(),

@@ -33,7 +33,7 @@ export const Variants: Story = {
       {(['sm', 'md', 'lg'] as const).map((size) => (
         <div key={size} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           {(['default', 'accent', 'success', 'warning', 'error', 'info'] as const).map((variant) => (
-            <Badge key={variant} variant={variant} size={size}>{variant}</Badge>
+            <Badge key={variant} tone={variant} size={size}>{variant}</Badge>
           ))}
         </div>
       ))}
@@ -49,9 +49,9 @@ export const KeyKinds: Story = {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       {(['xs', 'sm', 'md'] as const).map((size) => (
         <div key={size} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          <Badge variant="pk" size={size}>PK</Badge>
-          <Badge variant="fk" size={size}>FK</Badge>
-          <Badge variant="unique" size={size}>UNIQUE</Badge>
+          <Badge tone="pk" size={size}>PK</Badge>
+          <Badge tone="fk" size={size}>FK</Badge>
+          <Badge tone="unique" size={size}>UNIQUE</Badge>
         </div>
       ))}
     </div>
@@ -62,7 +62,7 @@ export const Sizes: Story = {
   render: () => (
     <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
       {(['xs', 'sm', 'md', 'lg', 'xl'] as const).map((size) => (
-        <Badge key={size} variant="accent" size={size}>{size}</Badge>
+        <Badge key={size} tone="accent" size={size}>{size}</Badge>
       ))}
     </div>
   ),

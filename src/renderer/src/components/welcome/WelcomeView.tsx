@@ -181,7 +181,7 @@ export function WelcomeView() {
                 <Text size="xs" weight="semibold" color="accent" className="uppercase tracking-wider">
                   {t('shell.welcomeTab.eyebrow')}
                 </Text>
-                {version && <Badge variant="accent" size="sm">{t('shell.welcomeTab.versionBadge', { version })}</Badge>}
+                {version && <Badge tone="accent" size="sm">{t('shell.welcomeTab.versionBadge', { version })}</Badge>}
               </Flex>
               <Heading level={1}>{t('shell.welcomeTab.title')}</Heading>
               <Text size="base" color="secondary" className="leading-relaxed">

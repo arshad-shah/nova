@@ -80,7 +80,7 @@ export function ReleaseNotesContent({ note }: { note: ReleaseNote }) {
           <Box key={group.title}>
             <Flex align="center" gap="sm">
               <Heading level={4}>{t(group.title)}</Heading>
-              <Badge variant={TONE_VARIANT[group.tone]} size="sm">{toneLabel(group.tone)}</Badge>
+              <Badge tone={TONE_VARIANT[group.tone]} size="sm">{toneLabel(group.tone)}</Badge>
             </Flex>
             <Stack gap="sm" className="mt-4">
               {group.highlights.map((h) => (

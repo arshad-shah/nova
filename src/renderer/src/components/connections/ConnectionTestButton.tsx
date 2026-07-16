@@ -47,10 +47,10 @@ export function ConnectionTestButton({ profile }: Props) {
         </Button>
       </Box>
       {status === 'success' && (
-        <Alert variant="success" title={t('connections.test.successTitle')}>{message}</Alert>
+        <Alert tone="success" title={t('connections.test.successTitle')}>{message}</Alert>
       )}
       {status === 'error' && (
-        <Alert variant="error" title={t('connections.test.failedTitle')}>{message}</Alert>
+        <Alert tone="error" title={t('connections.test.failedTitle')}>{message}</Alert>
       )}
     </Stack>
   )

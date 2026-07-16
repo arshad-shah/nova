@@ -21,27 +21,27 @@ describe('Badge', () => {
   })
 
   it('applies accent variant classes', () => {
-    const { container } = render(<Badge variant="accent">Accent</Badge>)
+    const { container } = render(<Badge tone="accent">Accent</Badge>)
     expect(container.firstChild).toHaveClass('text-accent-hover')
   })
 
   it('applies success variant classes', () => {
-    const { container } = render(<Badge variant="success">Success</Badge>)
+    const { container } = render(<Badge tone="success">Success</Badge>)
     expect(container.firstChild).toHaveClass('text-success')
   })
 
   it('applies warning variant classes', () => {
-    const { container } = render(<Badge variant="warning">Warning</Badge>)
+    const { container } = render(<Badge tone="warning">Warning</Badge>)
     expect(container.firstChild).toHaveClass('text-warning')
   })
 
   it('applies error variant classes', () => {
-    const { container } = render(<Badge variant="error">Error</Badge>)
+    const { container } = render(<Badge tone="error">Error</Badge>)
     expect(container.firstChild).toHaveClass('text-error')
   })
 
   it('applies info variant classes', () => {
-    const { container } = render(<Badge variant="info">Info</Badge>)
+    const { container } = render(<Badge tone="info">Info</Badge>)
     expect(container.firstChild).toHaveClass('text-info')
   })
 

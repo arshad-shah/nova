@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useToastStore } from '@/stores/toast'
 import { Stack, Toast, Box, cn } from '@/primitives'
-import type { ToastVariant } from '@/primitives'
+import type { ToastTone } from '@/primitives'
 import { useTranslation } from '@/i18n/I18nProvider'
 
 const LEAVE_MS = 300
@@ -23,8 +23,8 @@ type ToastData = {
 }
 type RenderToast = ToastData & { leaving?: boolean }
 
-/** The store speaks in kinds; the primitive speaks in variants. */
-const VARIANT: Record<ToastData['type'], ToastVariant> = {
+/** The store speaks in kinds; the primitive speaks in tones. */
+const TONE: Record<ToastData['type'], ToastTone> = {
   error: 'error',
   success: 'success',
   info: 'info',
@@ -140,7 +140,7 @@ function ToastItem({
       )}
     >
       <Toast
-        variant={VARIANT[data.type]}
+        tone={TONE[data.type]}
         title={data.title}
         description={data.message}
         action={data.action}

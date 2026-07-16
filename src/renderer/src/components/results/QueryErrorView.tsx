@@ -31,7 +31,7 @@ export function QueryErrorView({ error, dbType }: Props) {
 
   return (
     <Box className="p-4 overflow-auto h-full">
-      <Alert variant="error" title={parsed.title} className="max-w-2xl">
+      <Alert tone="error" title={parsed.title} className="max-w-2xl">
         <Flex direction="column" gap="sm">
           {/* Friendly message — primary action signal. */}
           <Text size="sm" as="p" className="leading-relaxed">{parsed.message}</Text>
@@ -48,7 +48,7 @@ export function QueryErrorView({ error, dbType }: Props) {
           {/* Footer: stable code chip (analytics + bug reports) + raw disclosure. */}
           <Flex align="center" justify="between" gap="sm" className="pt-1">
             {!isUnknown && (
-              <Badge variant="default" size="sm" className="font-mono text-[10px] uppercase">
+              <Badge tone="default" size="sm" className="font-mono text-[10px] uppercase">
                 {parsed.code}
               </Badge>
             )}

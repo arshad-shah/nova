@@ -172,8 +172,8 @@ function TableSummary({ connectionId, schema, table }: { connectionId: string; s
             <Flex key={c.name} align="baseline" gap="sm" className="py-1 border-b border-border last:border-b-0">
               <Text size="xs" className="font-mono font-semibold">{c.name}</Text>
               <Text size="xs" color="muted">{c.dataType}</Text>
-              {c.isPrimaryKey && <Badge variant="pk" size="xs">{t('shell.inspector.primaryKey')}</Badge>}
-              {c.isForeignKey && <Badge variant="fk" size="xs">{t('shell.inspector.foreignKey')}</Badge>}
+              {c.isPrimaryKey && <Badge tone="pk" size="xs">{t('shell.inspector.primaryKey')}</Badge>}
+              {c.isForeignKey && <Badge tone="fk" size="xs">{t('shell.inspector.foreignKey')}</Badge>}
             </Flex>
           ))
         )}

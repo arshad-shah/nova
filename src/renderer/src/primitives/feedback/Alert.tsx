@@ -17,10 +17,12 @@ import { SEVERITY_SURFACE, SEVERITY_TONE } from './severity'
  * zero usages in the app while `AutoCompactBanner` hand-rolled a worse copy of
  * it, which is the clearest sign it wasn't earning a file.
  *
- * `type` is the difference that remains, and it's the only one that mattered:
+ * The axes follow the system: `tone` is what it MEANS, `variant` is how much of
+ * itself it WEARS. (MUI reached the same split via `severity` + `variant`.)
  * - `default` — bordered, lightly washed. It belongs to nearby content.
  * - `filled` — solid, with a rail. The banner case: it spans a region and is
  *   about the whole app, so it has to hold its own against everything below it.
+ * - `outlined` — the tone in the border only, for an already-busy surface.
  *
  * `Toast` stays separate. It floats, it's transient, it expires on a timer —
  * different job, different look. What it shares is `./severity`, so the family
@@ -28,7 +30,8 @@ import { SEVERITY_SURFACE, SEVERITY_TONE } from './severity'
  */
 const alertVariants = cva('relative flex w-full items-start gap-2.5 border', {
   variants: {
-    variant: {
+    /** What it means. */
+    tone: {
       neutral: SEVERITY_TONE.neutral,
       info: SEVERITY_TONE.info,
       success: SEVERITY_TONE.success,
@@ -39,11 +42,10 @@ const alertVariants = cva('relative flex w-full items-start gap-2.5 border', {
       update: SEVERITY_TONE.update,
     },
     /**
-     * How much of its colour the alert wears. Three weights, which is the split
-     * MUI arrived at too (`standard` / `filled` / `outlined`) — worth matching,
-     * because it's the vocabulary most people already have.
+     * How much of its colour it wears. Three weights, matching the vocabulary
+     * MUI already taught everyone (`standard` / `filled` / `outlined`).
      */
-    type: {
+    variant: {
       default: cn(SEVERITY_SURFACE.subtle, 'rounded-lg px-3.5 py-3 shadow-[var(--shadow-card)]'),
       // Tighter and denser than `default`: a banner is a strip across a region,
       // not a card in a column, so it doesn't want a card's padding.
@@ -59,11 +61,11 @@ const alertVariants = cva('relative flex w-full items-start gap-2.5 border', {
       ),
     },
   },
-  defaultVariants: { variant: 'neutral', type: 'default' },
+  defaultVariants: { tone: 'neutral', variant: 'default' },
 })
 
+export type AlertTone = NonNullable<VariantProps<typeof alertVariants>['tone']>
 export type AlertVariant = NonNullable<VariantProps<typeof alertVariants>['variant']>
-export type AlertType = NonNullable<VariantProps<typeof alertVariants>['type']>
 
 export interface AlertAction {
   label: string
@@ -71,7 +73,7 @@ export interface AlertAction {
 }
 
 export interface AlertProps
-  extends Omit<React.HTMLAttributes<HTMLDivElement>, 'title' | 'type'>,
+  extends Omit<React.HTMLAttributes<HTMLDivElement>, 'title'>,
     VariantProps<typeof alertVariants> {
   /** The headline. Optional — most alerts are one line, and then the body takes
    *  the headline's weight rather than being a muted afterthought under nothing. */
@@ -96,8 +98,8 @@ function isAction(a: unknown): a is AlertAction {
 
 export function Alert({
   className,
-  variant = 'neutral',
-  type,
+  tone = 'neutral',
+  variant,
   title,
   icon,
   action,
@@ -106,14 +108,14 @@ export function Alert({
   children,
   ...props
 }: AlertProps) {
-  const v = variant ?? 'neutral'
+  const v = tone ?? 'neutral'
 
   return (
     <div
       // `alert` interrupts a screen reader; `status` waits its turn. An error or
       // a warning has earned the interruption, an announcement hasn't.
       role={v === 'error' || v === 'warning' ? 'alert' : 'status'}
-      className={cn(alertVariants({ variant, type }), className)}
+      className={cn(alertVariants({ tone, variant }), className)}
       {...props}
     >
       {icon === undefined ? (
@@ -124,7 +126,7 @@ export function Alert({
 
       <div className="min-w-0 flex-1">
         {title && (
-          <p className="text-[length:var(--field-fs-sm)] font-semibold leading-snug text-text-primary">
+          <p className="text-[length:var(--field-fs-md)] font-semibold leading-snug text-text-primary">
             {title}
           </p>
         )}
@@ -139,6 +141,9 @@ export function Alert({
           // *under* a title is a supporting line, and gets muted.
           <div
             className={cn(
+              // Same type and colour as Toast's description — see the note
+              // there. These are the same two roles in both components, so
+              // they get the same two values.
               'text-[length:var(--field-fs-sm)] leading-relaxed',
               // `secondary`, not `muted`. An Alert is something you're meant to
               // read, and muted is the app's dimmest text — it's for metadata
