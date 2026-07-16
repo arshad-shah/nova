@@ -22,7 +22,7 @@ const meta: Meta<typeof VerqlMark> = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-/** Full brand palette (frost + mint). Intended for dark surfaces. */
+/** Full brand palette (violet + cyan ribbons). Works on any surface. */
 export const Color: Story = {
   args: { variant: 'color' },
 }

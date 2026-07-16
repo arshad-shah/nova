@@ -1,19 +1,17 @@
 /*
  * Verql brand theme for Starlight.
  *
- * Maps the app's "Nightshift" palette onto Starlight's color tokens:
- *   accent  → electric mint  (#00c990 / #5ce0bd)
+ * Maps the brand palette onto Starlight's color tokens:
+ *   accent  → ribbon blue (#25a2f8 / #41c0ff — the mark's cyan stroke)
  *   gray    → cool ink neutrals (bluer than Starlight's defaults)
  *   surface → deep midnight ink for dark, warm white for light
- *
- * Mirrors src/renderer/src/primitives/theme/tokens.css in the app.
  */
 
 :root {
-  /* Mint accent — same scale the app uses for the central V-bar. */
-  --sl-color-accent-low: #00352a;
-  --sl-color-accent: #00c990;
-  --sl-color-accent-high: #9fe9d4;
+  /* Ribbon-blue accent — drawn from the mark's cyan stroke. */
+  --sl-color-accent-low: #0b2a4a;
+  --sl-color-accent: #2fa9f9;
+  --sl-color-accent-high: #bfe5ff;
 
   /* Cool ink neutrals (dark theme). */
   --sl-color-white: #f3f6fb;
@@ -33,14 +31,14 @@
   --sl-color-hairline-shade: #1a2030;
 
   /* Brand gradient used by the splash hero. */
-  --verql-glow: radial-gradient(60% 60% at 50% 30%, rgba(43, 217, 163, 0.18), transparent 70%);
+  --verql-glow: radial-gradient(60% 60% at 50% 30%, rgba(76, 110, 250, 0.2), transparent 70%);
 }
 
 :root[data-theme='light'] {
-  /* Mint darkened for AA contrast on warm white. */
-  --sl-color-accent-low: #c7f0e3;
-  --sl-color-accent: #008f68;
-  --sl-color-accent-high: #00352a;
+  /* Ribbon blue darkened for AA contrast on warm white. */
+  --sl-color-accent-low: #cce7ff;
+  --sl-color-accent: #0b69c7;
+  --sl-color-accent-high: #072f52;
 
   --sl-color-white: #0b0f16;
   --sl-color-gray-1: #161b26;
@@ -58,7 +56,7 @@
   --sl-color-bg-inline-code: #eef1f6;
   --sl-color-hairline-shade: #e2e7ef;
 
-  --verql-glow: radial-gradient(60% 60% at 50% 30%, rgba(0, 143, 104, 0.12), transparent 70%);
+  --verql-glow: radial-gradient(60% 60% at 50% 30%, rgba(37, 99, 235, 0.1), transparent 70%);
 }
 
 /* ── Splash / landing polish ── */
@@ -77,21 +75,21 @@
   z-index: -1;
 }
 
-/* Hero V-bars icon: lift it off the page with a soft mint halo. */
+/* Hero ribbon-V icon: lift it off the page with a soft blue halo. */
 .hero img {
-  filter: drop-shadow(0 24px 60px rgba(0, 201, 144, 0.22));
+  filter: drop-shadow(0 24px 60px rgba(65, 120, 250, 0.25));
 }
 
-/* Primary CTA in brand mint with readable ink text. */
+/* Primary CTA in brand ribbon blue with readable ink text. */
 .hero .actions a.sl-link-button.primary {
-  background: linear-gradient(180deg, #5ce0bd, #00c990);
+  background: linear-gradient(180deg, #41c0ff, #25a2f8);
   border-color: transparent;
-  color: #06221a;
+  color: #06263e;
   font-weight: 600;
 }
 
 .hero .actions a.sl-link-button.primary:hover {
-  background: linear-gradient(180deg, #6fe8c8, #11d49b);
+  background: linear-gradient(180deg, #55c9ff, #37acf9);
 }
 
 /* ── CardGrid accents ── */

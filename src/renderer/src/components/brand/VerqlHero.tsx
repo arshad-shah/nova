@@ -1,7 +1,7 @@
 import heroUrl from '@/assets/brand/verql-hero.svg?url'
 
 /**
- * Hero variant — V-bars framed by a soft ring + tonal halo. Stays in
+ * Hero variant — the ribbon-V mark sized up. Stays in
  * `currentColor` since it's used inside themed surfaces (welcome page,
  * empty states). Imported as a URL and consumed as `<img>` for the same
  * "no tricks" reason as the mark.

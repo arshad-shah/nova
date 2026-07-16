@@ -32,7 +32,7 @@ done
 ```
 
 The MSIX itself already carries the tile/logo assets electron-builder generates
-from `build/icon.ico` + the `backgroundColor` (`#1e1e2e`) in `package.json`
+from `build/icon.ico` + the `backgroundColor` (`#0B1220`) in `package.json`
 `build.appx`.
 
 ### Suggested screenshots (tell a story in order)
@@ -48,6 +48,6 @@ Capture on a clean profile with the dark theme, a seeded demo database (see
 
 ## To do
 
-- [ ] Export a 300×300 store logo PNG
+- [x] Export a 300×300 store logo PNG
 - [ ] Capture the screenshot set above
 - [ ] (Optional) design promotional/hero images
