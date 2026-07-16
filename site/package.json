@@ -13,6 +13,7 @@
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
+    "prebuild": "node ../scripts/brand/build-brand.mjs",
     "build": "astro build && pnpm run build:storybook",
     "build:storybook": "cd .. && pnpm install --frozen-lockfile --ignore-scripts && pnpm exec storybook build -o site/dist/storybook",
     "preview": "astro preview",

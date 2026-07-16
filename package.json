@@ -27,7 +27,9 @@
     "build:mac": "npm run build && electron-builder --mac",
     "build:win": "npm run build && electron-builder --win",
     "build:linux": "npm run build && electron-builder --linux",
-    "build:icons": "rsvg-convert -w 1024 -h 1024 build/icon.svg -o build/icon.png && rsvg-convert -w 1024 -h 1024 build/icon-light.svg -o build/icon-light.png && npx --yes png2icons build/icon.png build/icon -all",
+    "brand:build": "node scripts/brand/build-brand.mjs && npx --yes png2icons build/icon.png build/icon -all",
+    "brand:check": "node scripts/brand/build-brand.mjs --check",
+    "build:icons": "pnpm run brand:build",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
   },
