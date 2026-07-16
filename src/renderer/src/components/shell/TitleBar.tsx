@@ -1,5 +1,5 @@
-import { Text, Badge } from '@/primitives'
-import appIconUrl from '@brand/icon-light.svg?url'
+import { Text, Badge, Box } from '@/primitives'
+import { VerqlMark } from '@/components/brand/VerqlMark'
 import { useTranslation } from '@/i18n/I18nProvider'
 import { platform as detectedPlatform } from '@/lib/platform'
 import { WindowControls } from './WindowControls'
@@ -40,8 +40,14 @@ export function TitleBar({ platform = detectedPlatform }: TitleBarProps = {}) {
         style={{ marginLeft: 'env(titlebar-area-x, 0px)', width: 'env(titlebar-area-width, 100%)' }}
       >
         <div className={`no-drag flex items-center gap-2 ${isMac ? 'pl-20' : 'pl-4'}`}>
-          <img src={appIconUrl} width={24} height={24} alt="" aria-hidden="true" />
-          <Text size="sm" weight="semibold" color="primary" className="tracking-wide">
+          {/* The bare mark, not the tiled app icon — the tile is for OS surfaces
+              (dock, taskbar) that need a container; in-app the mark sits
+              directly on the title bar. */}
+          <VerqlMark size={24} variant="color" />
+          {/* Wordmark: lowercase, tight tracking. Lowercased in CSS rather than
+              in the catalogue so the translated app name stays a proper noun
+              everywhere else it's used. */}
+          <Text size="sm" weight="semibold" color="primary" className="lowercase tracking-[-0.02em]">
             {t('shell.titleBar.appName')}
           </Text>
           {isDev && (

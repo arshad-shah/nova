@@ -4,6 +4,7 @@ import type { AIChatMessage } from '@shared/ai-types'
 import { useAIStore } from '@/stores/ai'
 import { Text } from '@/primitives/typography/Text'
 import { Box } from '@/primitives/layout/Box'
+import { Button } from '@/primitives/forms/Button'
 import { appActions } from '@/lib/app-actions/registry'
 import { CodeBlock } from './CodeBlock'
 import { useTranslation } from '@/i18n/I18nProvider'
@@ -88,7 +89,9 @@ export function ToolCallCard({ message, result }: ToolCallCardProps) {
   return (
     <Box className="mb-2.5 mx-2 rounded-lg border border-border-default border-l-2 border-l-warning overflow-hidden">
       {/* Header */}
-      <button
+      <Button
+        variant="bare"
+        size="none"
         onClick={() => setShowCode(s => !s)}
         className="w-full flex items-center gap-2 px-3 py-2 bg-[var(--color-bg-tertiary)] border-b border-[var(--color-border)] hover:bg-[var(--color-hover)] transition-colors text-left"
       >
@@ -118,7 +121,7 @@ export function ToolCallCard({ message, result }: ToolCallCardProps) {
         ) : (
           <ChevronRight size={12} className="text-[var(--color-text-tertiary)] shrink-0" />
         )}
-      </button>
+      </Button>
 
       {/* Query code */}
       {showCode && query && (

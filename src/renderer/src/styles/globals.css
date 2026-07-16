@@ -25,6 +25,9 @@
   --color-bg-secondary: var(--color-bg-secondary);
   --color-bg-tertiary: var(--color-bg-tertiary);
   --color-bg-elevated: var(--color-bg-elevated);
+  /* Recessed surface. Falls back to the theme's floor so a theme that predates
+     this token (or a plugin theme) still paints something sensible. */
+  --color-bg-inset: var(--color-bg-inset, var(--color-bg-primary));
   --color-border: var(--color-border-default);
   --color-border-default: var(--color-border-default);
   --color-border-subtle: var(--color-border-subtle);

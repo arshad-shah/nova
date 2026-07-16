@@ -24,8 +24,21 @@ const textareaRootVariants = cva(
         true: 'border-error focus-within:shadow-[var(--shadow-error-ring),var(--shadow-input-inset)]',
         false: 'border-border-default hover:border-border-strong',
       },
+      /**
+       * Whether the field paints its own chrome.
+       * - `field` (default): the standard bordered input surface.
+       * - `bare`: no border, fill or focus ring. For a textarea that already
+       *   sits inside a surface which owns the frame and focus affordance (the
+       *   AI composer inside its Card) — without this, such callers drop to a
+       *   native <textarea> and lose autoResize/limit/clearable.
+       * Declared last so twMerge resolves its border/bg against `error`.
+       */
+      surface: {
+        field: '',
+        bare: 'border-transparent bg-none bg-transparent shadow-none focus-within:border-transparent focus-within:shadow-none hover:border-transparent',
+      },
     },
-    defaultVariants: { size: 'md', error: false },
+    defaultVariants: { size: 'md', error: false, surface: 'field' },
   }
 )
 
@@ -64,6 +77,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
       style,
       size,
       error,
+      surface,
       rows = 3,
       autoResize,
       maxRows,
@@ -211,7 +225,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
         ref={rootRef}
         style={style}
         className={cn(
-          textareaRootVariants({ size, error: invalid }),
+          textareaRootVariants({ size, error: invalid, surface }),
           disabled && 'opacity-50 pointer-events-none',
           dragging && 'select-none',
           className

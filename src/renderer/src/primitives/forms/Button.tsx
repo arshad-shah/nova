@@ -14,6 +14,11 @@ const buttonVariants = cva(
           'border border-border-default bg-transparent hover:bg-hover hover:border-border-strong text-text-primary',
         ghost: 'bg-transparent hover:bg-hover text-text-primary',
         error: 'bg-error-emphasis text-action-fg hover:bg-error shadow-[inset_0_1px_0_var(--color-button-highlight),0_1px_2px_var(--color-overlay-soft)]',
+        // Chrome-less: no fill, no text colour, no hover of its own. For
+        // buttons whose look is fully owned by the caller (a clickable row, a
+        // tab, a bespoke chip) — it exists so those don't have to drop to a
+        // native <button> and escape the design system. Pair with size="none".
+        bare: '',
       },
       size: {
         xs: 'h-7 px-2 text-xs rounded',
@@ -21,6 +26,8 @@ const buttonVariants = cva(
         md: 'h-9 px-3 text-sm rounded-md',
         lg: 'h-10 px-4 text-sm rounded-md',
         xl: 'h-12 px-5 text-base rounded-lg',
+        // No height, padding or radius — the caller supplies the box.
+        none: '',
       },
     },
     defaultVariants: {

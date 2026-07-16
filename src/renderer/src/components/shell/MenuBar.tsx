@@ -3,7 +3,7 @@ import {
   useFloating, useDismiss, useRole, useInteractions, useTransitionStyles,
   offset, flip, shift, autoUpdate, FloatingPortal,
 } from '@floating-ui/react'
-import { Box, KbdGroup } from '@/primitives'
+import { Box, KbdGroup, Button } from '@/primitives'
 import { cn } from '@/primitives/utils/cn'
 import { useMenus, type MenuDef, type MenuItemDef } from './menu-model'
 
@@ -105,7 +105,9 @@ function TopMenu({
 
   return (
     <>
-      <button
+      <Button
+        variant="bare"
+        size="none"
         ref={(el) => { refs.setReference(el); setRef(el) }}
         type="button"
         role="menuitem"
@@ -123,7 +125,7 @@ function TopMenu({
         })}
       >
         {menu.label}
-      </button>
+      </Button>
 
       {isMounted && (
         <FloatingPortal>
@@ -152,7 +154,9 @@ function MenuRow({ item, onRun }: { item: MenuItemDef; onRun: () => void }) {
   const disabled = item.enabled ? !item.enabled() : false
   const Icon = item.icon
   return (
-    <button
+    <Button
+      variant="bare"
+      size="none"
       role="menuitem"
       disabled={disabled}
       onClick={() => { item.run(); onRun() }}
@@ -165,6 +169,6 @@ function MenuRow({ item, onRun }: { item: MenuItemDef; onRun: () => void }) {
       {Icon && <Icon size={15} className={cn('shrink-0', item.danger ? 'text-error' : 'text-text-tertiary')} aria-hidden="true" />}
       <Box as="span" className="flex-1">{item.label}</Box>
       {item.accelerator && <KbdGroup accelerator={item.accelerator} size="sm" className="shrink-0" />}
-    </button>
+    </Button>
   )
 }

@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { ChevronDown, ChevronRight } from 'lucide-react'
+import { Button } from '@/primitives'
 
 /** Collapsible header row shared by every schema sub-category group. */
 export function GroupHeader({
@@ -18,7 +19,9 @@ export function GroupHeader({
   paddingLeft: number
 }) {
   return (
-    <button
+    <Button
+      variant="bare"
+      size="none"
       type="button"
       onClick={onToggle}
       className="group w-full flex items-center gap-1.5 py-0.5 text-left transition-colors duration-[var(--transition-fast)] hover:bg-hover"
@@ -38,6 +41,6 @@ export function GroupHeader({
       >
         {count}
       </span>
-    </button>
+    </Button>
   )
 }

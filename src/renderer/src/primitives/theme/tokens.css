@@ -172,6 +172,11 @@
   --color-bg-secondary: var(--raw-dark-900);
   --color-bg-tertiary: var(--raw-dark-800);
   --color-bg-elevated: var(--raw-dark-800);
+  /* Recessed surface — a well sunk into a card (code blocks, log output,
+     read-only detail panes). Defaults to the app's own floor, which reads as
+     "below" whatever surface it sits on for light and dark themes alike, so
+     plugin themes get it for free. Override per-theme for a custom tone. */
+  --color-bg-inset: var(--color-bg-primary);
 
   /* Text */
   --color-text-primary: var(--raw-light-100);

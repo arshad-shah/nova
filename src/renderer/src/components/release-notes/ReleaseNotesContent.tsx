@@ -1,5 +1,5 @@
 import { ExternalLink, type LucideIcon } from 'lucide-react'
-import { Flex, Box, Stack, Text, Heading, Badge, GradientSurface } from '@/primitives'
+import { Flex, Box, Stack, Text, Heading, Badge, GradientSurface, Button } from '@/primitives'
 import { VerqlHero } from '@/components/brand/VerqlHero'
 import { useTranslation } from '@/i18n/I18nProvider'
 import { IPC_CHANNELS } from '@shared/ipc'
@@ -99,14 +99,16 @@ export function ReleaseNotesContent({ note }: { note: ReleaseNote }) {
           </Text>
           <Flex gap="sm" wrap className="mt-3">
             {note.links.map((link) => (
-              <button
+              <Button
+                variant="bare"
+                size="none"
                 key={link.url}
                 onClick={() => openExternal(link.url)}
                 className="inline-flex items-center gap-2 rounded-md border border-border-default bg-bg-secondary px-3 py-1.5 text-sm text-text-secondary transition-colors hover:border-border-strong hover:bg-hover focus-visible:outline-none focus-visible:shadow-[var(--shadow-focus-glow)]"
               >
                 <Box as="span">{t(link.label)}</Box>
                 <ExternalLink size={13} className="text-text-tertiary" />
-              </button>
+              </Button>
             ))}
           </Flex>
         </Box>

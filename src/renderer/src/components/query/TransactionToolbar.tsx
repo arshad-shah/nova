@@ -1,4 +1,4 @@
-import { Flex, Button, Badge, Select, Box } from '@/primitives'
+import { Flex, Button, Badge, Select, Box, Label } from '@/primitives'
 import { Switch } from '@/primitives/forms/Switch'
 import type { DriverCapabilities } from '@/stores/driver-capabilities'
 import type { QueryTabTxnState } from '@shared/types'
@@ -52,14 +52,14 @@ export function TransactionToolbar({
 
       {/* Auto-commit toggle */}
       {caps.autoCommit && (
-        <label className="flex items-center gap-1.5 cursor-pointer select-none">
+        <Label className="flex items-center gap-1.5 cursor-pointer select-none">
           <Switch
             label={t('query.txn.autoCommit')}
             checked={txn.autoCommit}
             onChange={(e) => onToggleAutoCommit(e.target.checked)}
           />
           <Box as="span" className="text-xs text-text-secondary">{t('query.txn.autoCommit')}</Box>
-        </label>
+        </Label>
       )}
 
       {/* Isolation level select — disabled while a transaction is active because
@@ -80,7 +80,7 @@ export function TransactionToolbar({
       {/* Read-only toggle — disabled while a transaction is active for the same
           reason: it only applies at the next BEGIN. */}
       {caps.readOnly && (
-        <label className="flex items-center gap-1.5 cursor-pointer select-none">
+        <Label className="flex items-center gap-1.5 cursor-pointer select-none">
           <Switch
             label={t('query.txn.readOnly')}
             checked={txn.readOnly}
@@ -88,7 +88,7 @@ export function TransactionToolbar({
             disabled={isActive}
           />
           <Box as="span" className="text-xs text-text-secondary">{t('query.txn.readOnly')}</Box>
-        </label>
+        </Label>
       )}
 
       {/* Commit / Rollback */}

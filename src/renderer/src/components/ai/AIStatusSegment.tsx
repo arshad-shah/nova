@@ -2,7 +2,7 @@ import { useEffect, useState, type ComponentType, type ReactNode } from 'react'
 import { Sparkles, Loader2, Settings, Maximize2, Minimize2, Eye, Shield, Zap } from 'lucide-react'
 import { Popover } from '@/primitives/surfaces/Popover'
 import { Switch } from '@/primitives/forms/Switch'
-import { Text, Box } from '@/primitives'
+import { Text, Box, Button } from '@/primitives'
 import { useAIStore } from '@/stores/ai'
 import { useUiStore } from '@/stores/ui'
 import { useTabsStore } from '@/stores/tabs'
@@ -151,12 +151,14 @@ function Row({ label, value, valueNode }: { label: string; value?: string; value
 
 function ActionBtn({ icon: Icon, label, onClick }: { icon: ComponentType<{ size?: number }>; label: string; onClick: () => void }) {
   return (
-    <button
+    <Button
+      variant="bare"
+      size="none"
       type="button"
       onClick={onClick}
       className="flex-1 inline-flex items-center justify-center gap-1 rounded border border-border-default bg-bg-primary px-1.5 py-1 text-[10px] text-text-secondary hover:bg-bg-tertiary hover:text-text-primary"
     >
       <Icon size={10} /> {label}
-    </button>
+    </Button>
   )
 }

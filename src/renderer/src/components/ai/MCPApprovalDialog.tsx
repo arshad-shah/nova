@@ -1,6 +1,6 @@
 import { useAIStore } from '@/stores/ai'
 import { AlertTriangle } from 'lucide-react'
-import { CodeView, Box, Text } from '@/primitives'
+import { CodeView, Box, Text, Button } from '@/primitives'
 import { useTranslation } from '@/i18n/I18nProvider'
 
 export function MCPApprovalDialog() {
@@ -30,8 +30,8 @@ export function MCPApprovalDialog() {
           </Box>
         </Box>
         <Box className="flex justify-end gap-2 px-4 py-3 border-t border-border">
-          <button onClick={() => respond(req.requestId, false)} className="px-4 py-1.5 text-sm rounded-md border border-border text-text-secondary hover:bg-hover transition-colors">{t('aiui.approval.reject')}</button>
-          <button onClick={() => respond(req.requestId, true)} className="px-4 py-1.5 text-sm rounded-md bg-accent text-white hover:opacity-90 transition-colors">{t('aiui.approval.approve')}</button>
+          <Button variant="bare" size="none" onClick={() => respond(req.requestId, false)} className="px-4 py-1.5 text-sm rounded-md border border-border text-text-secondary hover:bg-hover transition-colors">{t('aiui.approval.reject')}</Button>
+          <Button variant="bare" size="none" onClick={() => respond(req.requestId, true)} className="px-4 py-1.5 text-sm rounded-md bg-accent text-white hover:opacity-90 transition-colors">{t('aiui.approval.approve')}</Button>
         </Box>
       </Box>
     </Box>

@@ -15,7 +15,7 @@ export function SaveQueryDialog({ open, name, onNameChange, onClose, onConfirm }
   const { t } = useTranslation()
   return (
     <Modal open={open} onClose={onClose}>
-      <form
+      <Box as="form"
         onSubmit={(e) => { e.preventDefault(); onConfirm() }}
         className="p-4 flex flex-col gap-3"
       >
@@ -42,7 +42,7 @@ export function SaveQueryDialog({ open, name, onNameChange, onClose, onConfirm }
             {t('query.save.save')}
           </Button>
         </Box>
-      </form>
+      </Box>
     </Modal>
   )
 }

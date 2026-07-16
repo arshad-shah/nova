@@ -3,7 +3,7 @@ import {
   Database, FilePlus, Puzzle, Compass, Sparkles, SlidersHorizontal,
   BookOpen, Bug, PartyPopper, ChevronRight, type LucideIcon,
 } from 'lucide-react'
-import { Flex, Box, Stack, Text, Heading, Badge, Switch, GradientSurface, ScrollArea } from '@/primitives'
+import { Flex, Box, Stack, Text, Heading, Badge, Switch, GradientSurface, ScrollArea, Button } from '@/primitives'
 import { VerqlHero } from '@/components/brand/VerqlHero'
 import { useTranslation } from '@/i18n/I18nProvider'
 import { useConnectionsStore, getActiveProfile } from '@/stores/connections'
@@ -39,7 +39,9 @@ function ActionTile({ icon: Icon, label, hint, onClick }: {
   icon: LucideIcon; label: string; hint: string; onClick: () => void
 }) {
   return (
-    <button
+    <Button
+      variant="bare"
+      size="none"
       onClick={onClick}
       className="group flex items-center gap-3 rounded-lg border border-border-default bg-bg-secondary px-4 py-3 text-left transition-colors hover:border-border-strong hover:bg-hover focus-visible:outline-none focus-visible:shadow-[var(--shadow-focus-glow)]"
     >
@@ -51,7 +53,7 @@ function ActionTile({ icon: Icon, label, hint, onClick }: {
         <Text size="xs" color="muted" truncate>{hint}</Text>
       </Flex>
       <ChevronRight size={16} className="shrink-0 text-text-muted transition-transform group-hover:translate-x-0.5" />
-    </button>
+    </Button>
   )
 }
 
@@ -60,7 +62,9 @@ function ResourceLink({ icon: Icon, label, hint, onClick }: {
   icon: LucideIcon; label: string; hint: string; onClick: () => void
 }) {
   return (
-    <button
+    <Button
+      variant="bare"
+      size="none"
       onClick={onClick}
       className="group flex w-full items-center gap-3 rounded-md px-2 py-2 text-left transition-colors hover:bg-hover focus-visible:outline-none focus-visible:shadow-[var(--shadow-focus-glow)]"
     >
@@ -69,7 +73,7 @@ function ResourceLink({ icon: Icon, label, hint, onClick }: {
         <Text size="sm" weight="medium" color="secondary">{label}</Text>
         <Text size="xs" color="muted" truncate>{hint}</Text>
       </Flex>
-    </button>
+    </Button>
   )
 }
 

@@ -1,4 +1,4 @@
-import { Flex } from '@/primitives'
+import { Flex, Box } from '@/primitives'
 import type { PluginInfo } from './PluginsPanel'
 
 export const ICON_GRADIENTS = [
@@ -23,7 +23,8 @@ export function hashToIndex(str: string, max: number): number {
 export function PluginIcon({ plugin, size = 28 }: { plugin: PluginInfo; size?: number }) {
   if (plugin.icon) {
     return (
-      <img
+      <Box
+        as="img"
         src={plugin.icon}
         alt={plugin.displayName}
         className="rounded-lg object-cover shrink-0"

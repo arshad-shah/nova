@@ -140,7 +140,9 @@ function NotificationItem({ notification }: { notification: Notification }) {
       {/* Action buttons — copy for errors (always visible), dismiss on hover */}
       <Flex direction="column" gap="xs" className="mt-0.5 shrink-0">
         {isError && (
-          <button
+          <Button
+            variant="bare"
+            size="none"
             onClick={handleCopy}
             className={cn(
               'flex h-5 w-5 items-center justify-center rounded',
@@ -151,9 +153,11 @@ function NotificationItem({ notification }: { notification: Notification }) {
             title={copied ? t('shell.notifications.copied') : t('shell.notifications.copyErrorDetails')}
           >
             {copied ? <Check size={12} className="text-success" /> : <Copy size={12} />}
-          </button>
+          </Button>
         )}
-        <button
+        <Button
+          variant="bare"
+          size="none"
           onClick={(e) => {
             e.stopPropagation()
             removeNotification(notification.id)
@@ -166,7 +170,7 @@ function NotificationItem({ notification }: { notification: Notification }) {
           aria-label={t('shell.notifications.dismiss')}
         >
           <X size={12} />
-        </button>
+        </Button>
       </Flex>
     </Box>
   )

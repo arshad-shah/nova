@@ -4,6 +4,7 @@ import { useAIStore } from '@/stores/ai'
 import { useConnectionsStore, useActiveProfile } from '@/stores/connections'
 import { ScrollArea } from '@/primitives/layout/ScrollArea'
 import { Box } from '@/primitives/layout/Box'
+import { Button } from '@/primitives/forms/Button'
 import { Text } from '@/primitives/typography/Text'
 import { MessageBubble } from './MessageBubble'
 import { ToolCallCard } from './ToolCallCard'
@@ -42,14 +43,16 @@ function EmptyState() {
         {SUGGESTIONS.map(key => {
           const text = t(key)
           return (
-            <button
+            <Button
+              variant="bare"
+              size="none"
               key={key}
               type="button"
               onClick={() => ask(text)}
               className="rounded-md border border-border-default px-2 py-1 text-xs text-text-secondary hover:bg-hover hover:text-text-primary transition-colors"
             >
               {text}
-            </button>
+            </Button>
           )
         })}
       </Box>

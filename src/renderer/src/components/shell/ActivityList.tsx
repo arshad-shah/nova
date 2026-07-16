@@ -1,9 +1,9 @@
-import { useMemo, useRef, useState } from 'react'
+import React, { useMemo, useRef, useState } from 'react'
 import {
   Database, Wrench, Plug, Bell, Globe, ScrollText, Trash2, Search, Download, Pause, Play,
   Cable, Puzzle, Layers, Gauge, ChevronRight, ChevronDown, AlertCircle, TriangleAlert,
 } from 'lucide-react'
-import { Flex, Box, Text, cn } from '@/primitives'
+import { Flex, Box, Text, cn, Button } from '@/primitives'
 import type { ActivityEntry, ActivityKind, ActivityLevel } from '@shared/activity'
 import { useTranslation } from '@/i18n/I18nProvider'
 import type { MessageKey } from '@shared/i18n'
@@ -58,12 +58,12 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 function Pre({ text, tone }: { text: string; tone?: 'error' }) {
   return (
-    <pre className={cn(
+    <Box as="pre" className={cn(
       'mt-1 whitespace-pre-wrap break-words font-mono text-[10px] rounded p-2 max-h-56 overflow-auto bg-bg-inset',
       tone === 'error' ? 'text-error/90' : 'text-text-secondary',
     )}>
       {text}
-    </pre>
+    </Box>
   )
 }
 
@@ -202,34 +202,41 @@ export function ActivityList({ entries, onClear }: ActivityListProps) {
             className="flex-1 min-w-0 rounded bg-bg-inset px-1.5 py-0.5"
           >
             <Search size={12} className="text-text-muted shrink-0" />
-            <input
+            <Box
+              as="input"
               type="text"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
               placeholder={t('shell.activity.search')}
               className="flex-1 min-w-0 bg-transparent text-[11px] text-text-primary placeholder:text-text-muted outline-none"
             />
           </Flex>
           {/* Session severity summary — click to filter that level. */}
           {errorCount > 0 && (
-            <button
+            <Button
+              variant="bare"
+              size="none"
               type="button"
               onClick={() => setLevels((p) => toggle(p, 'error'))}
               className={cn('flex items-center gap-0.5 rounded px-1 py-0.5 text-[10px]', levels.has('error') ? 'bg-error/15 text-error' : 'text-error hover:bg-white/5')}
             >
               <AlertCircle size={11} />{errorCount}
-            </button>
+            </Button>
           )}
           {warnCount > 0 && (
-            <button
+            <Button
+              variant="bare"
+              size="none"
               type="button"
               onClick={() => setLevels((p) => toggle(p, 'warn'))}
               className={cn('flex items-center gap-0.5 rounded px-1 py-0.5 text-[10px]', levels.has('warn') ? 'bg-warning/15 text-warning' : 'text-warning hover:bg-white/5')}
             >
               <TriangleAlert size={11} />{warnCount}
-            </button>
+            </Button>
           )}
-          <button
+          <Button
+            variant="bare"
+            size="none"
             type="button"
             onClick={toggleVerbose}
             title={t('shell.activity.verbose')}
@@ -239,8 +246,10 @@ export function ActivityList({ entries, onClear }: ActivityListProps) {
             )}
           >
             <Gauge size={13} />
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="bare"
+            size="none"
             type="button"
             onClick={togglePause}
             title={t(paused ? 'shell.activity.resume' : 'shell.activity.pause')}
@@ -250,8 +259,10 @@ export function ActivityList({ entries, onClear }: ActivityListProps) {
             )}
           >
             {paused ? <Play size={13} /> : <Pause size={13} />}
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="bare"
+            size="none"
             type="button"
             onClick={() => downloadEntries(matched)}
             disabled={matched.length === 0}
@@ -259,22 +270,26 @@ export function ActivityList({ entries, onClear }: ActivityListProps) {
             className="flex items-center rounded p-1 text-text-muted hover:text-text-primary hover:bg-white/5 disabled:opacity-40 disabled:hover:bg-transparent"
           >
             <Download size={13} />
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="bare"
+            size="none"
             type="button"
             onClick={onClear}
             title={t('shell.activity.clear')}
             className="flex items-center rounded p-1 text-text-muted hover:text-error hover:bg-white/5"
           >
             <Trash2 size={13} />
-          </button>
+          </Button>
         </Flex>
         <Flex align="center" gap="xs" className="px-2 pb-1 flex-wrap">
           {ALL_KINDS.map((kind) => {
             const on = kinds.has(kind)
             const { icon: Icon, label } = KIND_META[kind]
             return (
-              <button
+              <Button
+                variant="bare"
+                size="none"
                 key={kind}
                 type="button"
                 onClick={() => setKinds((prev) => toggle(prev, kind))}
@@ -286,7 +301,7 @@ export function ActivityList({ entries, onClear }: ActivityListProps) {
               >
                 <Icon size={12} />
                 {t(label)}
-              </button>
+              </Button>
             )
           })}
         </Flex>
@@ -294,7 +309,9 @@ export function ActivityList({ entries, onClear }: ActivityListProps) {
           {LEVEL_META.map(({ level, label }) => {
             const on = levels.has(level)
             return (
-              <button
+              <Button
+                variant="bare"
+                size="none"
                 key={level}
                 type="button"
                 onClick={() => setLevels((prev) => toggle(prev, level))}
@@ -306,7 +323,7 @@ export function ActivityList({ entries, onClear }: ActivityListProps) {
               >
                 <Box as="span" className={cn('h-1.5 w-1.5 rounded-full bg-current', LEVEL_CLASS[level])} />
                 {t(label)}
-              </button>
+              </Button>
             )
           })}
           {paused && (

@@ -3,7 +3,7 @@ import { ChevronRight, ChevronDown, Table2 } from 'lucide-react'
 import { useUiStore } from '@/stores/ui'
 import { useSchemaStore } from '@/stores/schema'
 import { ContextMenu } from '@/primitives/surfaces/ContextMenu'
-import { Box, Text } from '@/primitives'
+import { Box, Text, Button } from '@/primitives'
 import { ColumnRow } from './ColumnRow'
 import { HighlightedText } from './HighlightedText'
 import { TableHoverActions } from './TableHoverActions'
@@ -87,7 +87,9 @@ export function TableNode({
   if (!isExpanded) {
     return (
       <ContextMenu items={menuItems}>
-        <button
+        <Button
+          variant="bare"
+          size="none"
           className="group w-full flex items-center gap-1.5 rounded text-left transition-colors duration-[var(--transition-fast)] hover:bg-hover"
           style={{ paddingLeft, paddingRight: 4, paddingTop: 2, paddingBottom: 2 }}
           onClick={handleToggle}
@@ -110,7 +112,7 @@ export function TableNode({
             objectNoun={nouns.object.one}
             onCopySampleQuery={copySampleQuery}
           />
-        </button>
+        </Button>
       </ContextMenu>
     )
   }
@@ -127,7 +129,9 @@ export function TableNode({
         }}
       >
         {/* Card header button */}
-        <button
+        <Button
+          variant="bare"
+          size="none"
           className="group w-full flex items-center gap-1.5 text-left transition-colors duration-[var(--transition-fast)] bg-bg-tertiary border-b border-border-default hover:bg-[color-mix(in_srgb,var(--color-hover)_60%,var(--color-bg-tertiary))]"
           style={{
             paddingLeft: 8,
@@ -168,7 +172,7 @@ export function TableNode({
             objectNoun={nouns.object.one}
             onExportTable={onExportTable ? () => onExportTable(tableName) : undefined}
           />
-        </button>
+        </Button>
 
         {/* Column rows */}
         <Box className="py-1">

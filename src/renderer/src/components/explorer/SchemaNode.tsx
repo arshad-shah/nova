@@ -9,7 +9,7 @@ import { useDataNouns, titleCase } from '@/hooks/useDataNouns'
 import { ContextMenu } from '@/primitives/surfaces/ContextMenu'
 import { IconButton } from '@/primitives/forms/Button'
 import { Tooltip } from '@/primitives/surfaces/Tooltip'
-import { Box, Text } from '@/primitives'
+import { Box, Text, Button } from '@/primitives'
 import { TableNode } from './TableNode'
 import { ViewNode } from './ViewNode'
 import { HighlightedText } from './HighlightedText'
@@ -135,7 +135,9 @@ export function SchemaNode({ schemaName, connectionId, databaseName, depth, onEx
     <ContextMenu items={menuItems}>
       <Box>
         {/* Header row */}
-        <button
+        <Button
+          variant="bare"
+          size="none"
           className="group w-full flex items-center gap-1.5 rounded text-left transition-colors duration-[var(--transition-fast)] hover:bg-hover"
           style={{ paddingLeft, paddingRight: 4, paddingTop: 2, paddingBottom: 2 }}
           onClick={handleToggle}
@@ -186,7 +188,7 @@ export function SchemaNode({ schemaName, connectionId, databaseName, depth, onEx
               </Tooltip>
             </Box>
           </Box>
-        </button>
+        </Button>
 
         {/* Expanded content */}
         {isExpanded && (

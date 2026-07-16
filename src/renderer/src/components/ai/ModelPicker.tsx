@@ -1,6 +1,6 @@
 import { useRef } from 'react'
 import type { AIProviderInfo, AIModelInfo } from '@shared/ai-types'
-import { Text, Box } from '@/primitives'
+import { Text, Box, Button } from '@/primitives'
 import { Card } from '@/primitives/surfaces/Card'
 import { ScrollArea } from '@/primitives/layout/ScrollArea'
 import { useClickOutside } from '@/hooks/useClickOutside'
@@ -27,17 +27,21 @@ export function ModelPicker({ providers, models, activeModel, onSelect, onSelect
         <ScrollArea direction="vertical" className="max-h-64">
           {providers.map(provider => (
             <Box key={provider.id}>
-              <button
+              <Button
+                variant="bare"
+                size="none"
                 onClick={() => onSelectProvider(provider)}
                 className="w-full text-left px-2 py-1 hover:bg-hover rounded transition-colors"
               >
                 <Text size="xs" color="muted" weight="medium" className="uppercase tracking-wider">
                   {provider.name}
                 </Text>
-              </button>
+              </Button>
               {models.map(model => (
-                <button
+                <Button
                   key={model.id}
+                  variant="bare"
+                  size="none"
                   onClick={() => onSelect(model.id)}
                   className={`w-full text-left px-2 py-1.5 rounded transition-colors ${
                     model.id === activeModel
@@ -48,7 +52,7 @@ export function ModelPicker({ providers, models, activeModel, onSelect, onSelect
                   <Text size="xs" color={model.id === activeModel ? 'accent' : 'primary'}>
                     {model.name}
                   </Text>
-                </button>
+                </Button>
               ))}
             </Box>
           ))}

@@ -44,7 +44,7 @@ export const HighlightedText = memo(function HighlightedText({
     <Box as="span" className={className}>
       {runs.map((r, i) =>
         r.hit ? (
-          <mark
+          <Box as="mark"
             key={i}
             className="rounded-[2px] px-[1px]"
             style={{
@@ -54,7 +54,7 @@ export const HighlightedText = memo(function HighlightedText({
             }}
           >
             {r.text}
-          </mark>
+          </Box>
         ) : (
           <Box as="span" key={i}>{r.text}</Box>
         )

@@ -20,6 +20,7 @@
   --color-bg-secondary: var(--raw-dark-900);
   --color-bg-tertiary: var(--raw-dark-800);
   --color-bg-elevated: var(--raw-dark-800);
+  --color-bg-inset: var(--color-bg-primary);
 
   --color-text-primary: var(--raw-light-100);
   --color-text-secondary: var(--raw-dark-300);

@@ -8,11 +8,11 @@ const meta: Meta<typeof Button> = {
   argTypes: {
     variant: {
       control: 'select',
-      options: ['solid', 'outline', 'ghost', 'error'],
+      options: ['solid', 'outline', 'ghost', 'error', 'bare'],
     },
     size: {
       control: 'select',
-      options: ['xs', 'sm', 'md', 'lg', 'xl'],
+      options: ['xs', 'sm', 'md', 'lg', 'xl', 'none'],
     },
     disabled: { control: 'boolean' },
   },
@@ -42,6 +42,31 @@ export const Variants: Story = {
           ))}
         </div>
       ))}
+    </div>
+  ),
+}
+
+/** `bare` + `size="none"` strips every bit of chrome — no fill, no text
+ *  colour, no height/padding/radius — so the caller owns the whole look. It
+ *  exists so a bespoke clickable (a row, a tab, a chip) can stay inside the
+ *  design system instead of dropping to a native `<button>`, and still get the
+ *  focus ring and disabled handling for free. */
+export const Bare: Story = {
+  render: () => (
+    <div className="flex items-center gap-4">
+      <Button variant="bare" size="none" className="text-xs text-text-muted hover:text-text-primary">
+        bare + none
+      </Button>
+      <Button
+        variant="bare"
+        size="none"
+        className="flex items-center gap-2 rounded-lg border border-border-default bg-bg-secondary px-3 py-2 text-xs text-text-primary hover:bg-hover"
+      >
+        caller-owned chrome
+      </Button>
+      <Button variant="bare" size="none" disabled className="text-xs text-text-primary">
+        disabled
+      </Button>
     </div>
   ),
 }

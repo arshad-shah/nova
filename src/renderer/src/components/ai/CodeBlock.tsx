@@ -1,5 +1,5 @@
 import { useCallback } from 'react'
-import { CodeView } from '@/primitives'
+import { CodeView, Button } from '@/primitives'
 import { useTabsStore } from '@/stores/tabs'
 import { useConnectionsStore } from '@/stores/connections'
 import { useTranslation } from '@/i18n/I18nProvider'
@@ -36,13 +36,15 @@ export function CodeBlock({ code, language, showInsert = true }: CodeBlockProps)
       code={code}
       language={language}
       actions={showInsert ? (
-        <button
+        <Button
+          variant="bare"
+          size="none"
           type="button"
           onClick={insertIntoEditor}
           className="px-1.5 py-0.5 rounded text-[10px] text-[var(--color-text-secondary)] hover:text-[var(--color-accent)] hover:bg-[var(--color-hover)]"
         >
           {t('aiui.chat.insert')}
-        </button>
+        </Button>
       ) : undefined}
     />
   )

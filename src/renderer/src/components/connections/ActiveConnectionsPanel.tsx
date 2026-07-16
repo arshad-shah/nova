@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Database, Plus } from 'lucide-react'
-import { Box, Flex, IconButton, Stack, Text, Tooltip, EmptyState } from '@/primitives'
+import { Box, Flex, IconButton, Stack, Text, Tooltip, EmptyState, Button } from '@/primitives'
 import { useConnectionsStore } from '@/stores/connections'
 import { useTabsStore } from '@/stores/tabs'
 import { notifyError } from '@/lib/notify-error'
@@ -57,12 +57,14 @@ export function ActiveConnectionsPanel() {
           title={t('connections.active.emptyTitle')}
           description={t('connections.active.emptyDescription')}
           action={
-            <button
+            <Button
+              variant="bare"
+              size="none"
               onClick={() => openConnectionForm()}
               className="text-xs text-accent hover:underline"
             >
               {t('connections.active.newConnection')}
-            </button>
+            </Button>
           }
         />
       </Box>

@@ -1,7 +1,7 @@
 import { Eye, Shield, Zap } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { Flex } from '@/primitives/layout/Flex'
-import { Text, Box } from '@/primitives'
+import { Text, Box, Button } from '@/primitives'
 import { useAIStore } from '@/stores/ai'
 import { useTranslation } from '@/i18n/I18nProvider'
 import type { MessageKey } from '@shared/i18n'
@@ -33,7 +33,9 @@ export function PermissionModeRow() {
           const Icon = m.icon
           const active = profile === m.id
           return (
-            <button
+            <Button
+              variant="bare"
+              size="none"
               key={m.id}
               type="button"
               onClick={() => { if (!active) void setProfile(m.id) }}
@@ -42,7 +44,7 @@ export function PermissionModeRow() {
             >
               <Icon size={10} />
               {t(m.label)}
-            </button>
+            </Button>
           )
         })}
       </Box>
