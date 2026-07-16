@@ -2,7 +2,7 @@ export { Button, IconButton } from './Button'
 export type { ButtonVariants, ButtonProps, IconButtonProps } from './Button'
 
 export { Input } from './Input'
-export type { InputProps } from './Input'
+export type { InputProps, InputState } from './Input'
 
 export { Textarea } from './Textarea'
 export type { TextareaProps } from './Textarea'

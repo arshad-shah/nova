@@ -321,6 +321,9 @@
   --shadow-dropdown: 0 8px 24px rgba(0, 0, 0, 0.5);
   --shadow-focus-glow: 0 0 0 3px rgba(122, 92, 255, 0.22);
   --shadow-error-ring: 0 0 0 3px color-mix(in oklch, var(--color-error), transparent 75%);
+  /* The error ring's twin, for a field that has passed validation. Derived the
+     same way so the two read as one family at different meanings. */
+  --shadow-success-ring: 0 0 0 3px color-mix(in oklch, var(--color-success), transparent 75%);
 
   /* Transitions */
   --transition-fast: 150ms ease;
