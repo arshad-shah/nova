@@ -6,14 +6,14 @@ sidebar:
 ---
 
 **Verql** is a fast, cross-platform desktop database client. You connect to your
-databases, browse their structure, write and run SQL, visualise results, and
+databases, browse their structure, write and run queries, visualise results, and
 move data in and out — all from one app. It runs on macOS, Linux, and Windows,
 and it's open source ([MIT](https://github.com/arshad-shah/verql/blob/main/LICENSE),
 by Arshad Shah).
 
 Out of the box, Verql speaks **PostgreSQL**, **MySQL**, and **SQLite**, with
 **MongoDB**, **Redis**, and **Snowflake** added by bundled plugins. It includes a
-SQL editor with autocomplete, an interactive results grid, ER diagrams, charts,
+query editor with autocomplete, an interactive results grid, ER diagrams, charts,
 import/export tools, and a built-in AI assistant — and it can be extended further
 with plugins.
 
@@ -27,7 +27,7 @@ with plugins.
 |------|----------------|
 | [Installation](/guide/installation/) | Installing on macOS, Linux, and Windows; verifying your download; auto-updates. |
 | [Connecting to a database](/guide/connecting/) | Creating connection profiles, supported databases, SSH tunnels, and how your credentials are kept safe. |
-| [Running queries](/guide/querying/) | The SQL editor, autocomplete, the results grid, transactions, and the command palette. |
+| [Running queries](/guide/querying/) | The query editor, autocomplete, the results grid, transactions, and the command palette. |
 | [Exploring your schema](/guide/exploring-schema/) | The schema browser, ER diagrams, table previews, the inspector, and charts. |
 | [Importing & exporting data](/guide/import-export/) | Moving data in and out as CSV, JSON, SQL, and JSON-Lines. |
 | [The AI assistant](/guide/ai-assistant/) | Using OpenAI, Anthropic, or Ollama, tool-call approvals, and the built-in MCP server. |

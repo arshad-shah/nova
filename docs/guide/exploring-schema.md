@@ -24,24 +24,25 @@ connect. Pan and zoom to explore large schemas.
 
 ## Table previews
 
-To peek at a table's contents without writing SQL, open a **table preview**.
-Verql asks the active driver for a sensible sample of rows and shows them in the
-same results grid you get from queries — so you can sort, select, and inspect
-just like query output.
+To peek at a table's contents without writing a query, open a **table
+preview** from the schema browser. Verql asks the active driver's own reader —
+the same one export uses — for the table's rows and shows them in the same
+results grid you get from queries, so you can sort, select, and inspect just
+like query output.
 
 ## The inspector panel
 
-The **inspector** reflects whatever you currently have selected — a row, a
-column, or a schema object — and lays out its details in a readable form. Select
-a row in any grid to see its full set of values, which is handy when a row is too
-wide to read comfortably across the grid.
+The **inspector** reflects whatever you currently have selected — a row or a
+schema object — and lays out its details in a readable form. Select a row in
+any grid to see its full set of values, which is handy when a row is too wide
+to read comfortably across the grid.
 
 ## Chart panel
 
-The **chart panel**, built with [Recharts](https://recharts.org/), turns query
-results into a quick visualisation — a fast way to eyeball trends or
-distributions without leaving the app. Run a query, then send its results to the
-chart panel to plot them.
+The **chart panel**, built with [swift-chart](https://www.npmjs.com/package/@arshad-shah/swift-chart),
+turns query results into a quick visualisation — a fast way to eyeball trends
+or distributions without leaving the app. Run a query, then send its results
+to the chart panel to plot them.
 
 ---
 

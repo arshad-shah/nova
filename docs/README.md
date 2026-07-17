@@ -6,7 +6,7 @@ Three audiences, three sections.
 
 End-user documentation for the Verql app — installing, connecting, querying,
 and managing plugins. Start at **[guide/README.md](./guide/README.md)**. The
-in-app **Help → Verql User Guide** menu links here.
+in-app **Help → User Guide** menu links here.
 
 ## For plugin developers
 
@@ -30,7 +30,8 @@ in-app **Help → Verql User Guide** menu links here.
 | [notifications.md](./notifications.md) | The notifications subsystem: the host **attention seam** (a delivery-agnostic relay approval flows publish to) and the bundled `os-notifications` plugin. Read before touching approval surfacing. |
 | [activity.md](./activity.md) | The activity & logging subsystem: the unified in-memory activity stream (queries, tool calls, connections, notifications, network, `log` diagnostics) for users and devs, the `logger` service, IPC **batching** + renderer **pause** for performance, and the filter/search/export **Activity panel**. |
 | [tab-persistence.md](./tab-persistence.md) | Restore-on-startup for open query tabs: the incremental, per-tab engine (pure `select` + `diff`, a debounced/coalesced write loop, IPC transport, one-time localStorage migration) backed by the SQLite app-data `open_tabs` table. Diagram-rich. |
-| [plugin-audit.md](./plugin-audit.md) | How the plugin permission/capability audit works and what it checks. |
+| [onboarding.md](./onboarding.md) | First-run onboarding & release notes: the Welcome "Get Started" tab and the per-version What's New release-notes tab, the `settings.onboarding` state + pure startup decision, the curated release registry, and how to author a release-notes page. |
+| [plugin-audit.md](./plugin-audit.md) | A status audit of every plugin extension point — which are fully wired, partly wired, or still aspirational — plus a quick guide to writing a plugin. |
 
 **Design records** live in [proposals/](./proposals/): the internal app-data
 store, the DB-boundary renderer→plugin migration (plan parsing, error

@@ -8,9 +8,9 @@ All downloads are published on the
 
 | Platform | Format | Notes |
 |----------|--------|-------|
-| macOS | Homebrew cask **or** `.dmg` (Intel + Apple Silicon) | Signed and notarised. |
-| Linux | `.AppImage` | Portable, no installer needed. |
-| Windows | `.exe` (NSIS installer) | **Unsigned** — SmartScreen will warn the first time. |
+| macOS | Homebrew cask **or** `.dmg` (Intel + Apple Silicon) | Currently ad-hoc signed, not notarised (a Developer ID cert isn't wired in yet). |
+| Linux | Homebrew formula **or** `.AppImage` | Portable, no installer needed either way. |
+| Windows | Microsoft Store (MSIX) | Signed and updated by the Store — no separate download. |
 
 [← Back to the User Guide](./README.md)
 
@@ -22,11 +22,13 @@ If you use [Homebrew](https://brew.sh/), this is the easiest path and keeps Verq
 up to date alongside your other tools:
 
 ```bash
-brew install --cask verql
+brew install --cask arshad-shah/verql/verql
 ```
 
-The cask `verql` lives in the tap `arshad-shah/homebrew-verql`; Homebrew resolves
-the tap automatically. To update later:
+The cask `verql` lives in the tap `arshad-shah/homebrew-verql`. The
+`user/repo/name` form above auto-taps it for you in one step; if you'd rather
+tap explicitly first, `brew tap arshad-shah/homebrew-verql` followed by
+`brew install --cask verql` works too. To update later:
 
 ```bash
 brew upgrade --cask verql
@@ -39,11 +41,31 @@ brew upgrade --cask verql
 2. Open the `.dmg` and drag **Verql** into your Applications folder.
 3. Launch it from Applications.
 
-The macOS build is signed and notarised, so Gatekeeper should let it open
-normally. If you do see a warning, see
-[Troubleshooting → macOS Gatekeeper](./troubleshooting.md#macos-gatekeeper).
+The macOS build is currently ad-hoc signed rather than signed with a Developer
+ID and notarised, so Gatekeeper will likely warn the first time you open it.
+See [Troubleshooting → macOS Gatekeeper](./troubleshooting.md#macos-gatekeeper)
+for how to get past that warning.
 
 ## Linux
+
+### Option A: Homebrew (recommended)
+
+Homebrew on Linux has no casks, so Verql ships as a **formula** that installs
+the AppImage plus a `verql` launcher on your `PATH`:
+
+```bash
+brew install arshad-shah/verql/verql
+```
+
+The `user/repo/name` form auto-taps `arshad-shah/homebrew-verql` for you; a
+bare `brew install verql` only works if you've already tapped it. To update
+later:
+
+```bash
+brew upgrade verql
+```
+
+### Option B: Download the `.AppImage`
 
 1. Download the `.AppImage` from the
    [Releases page](https://github.com/arshad-shah/verql/releases).
@@ -61,31 +83,44 @@ can register it for you.
 
 ## Windows
 
-1. Download the `.exe` (NSIS installer) from the
-   [Releases page](https://github.com/arshad-shah/verql/releases).
-2. Run it and follow the installer.
+Verql for Windows is distributed exclusively as an MSIX package through the
+**Microsoft Store** — there is no standalone `.exe` installer.
 
-> **Heads up: the Windows build is unsigned.** The first time you run the
-> installer, Microsoft Defender SmartScreen will likely show a blue
-> "Windows protected your PC" warning. This is expected for an unsigned app — it
-> does not mean the file is malicious. To proceed, click **More info**, then
-> **Run anyway**. To be sure you have a genuine download, verify the checksum as
-> described below. See also
-> [Troubleshooting → Windows SmartScreen](./troubleshooting.md#windows-smartscreen).
+1. Open the Microsoft Store app on Windows.
+2. Search for **Verql** and install it.
+3. The Store keeps it updated automatically — see
+   [Keeping Verql updated](./updating.md).
+
+Because the package is signed and distributed by the Store, there's no
+Gatekeeper/SmartScreen-style warning to click through, and no separate checksum
+to verify.
 
 ## Verifying your download
 
-Each release publishes a `sha256sums.txt` listing the checksum of every asset,
-plus a detached GPG signature `sha256sums.txt.sig`. Verifying is a two-step check:
-first confirm the checksum file is genuinely signed, then confirm your download
+Downloads from the [Releases page](https://github.com/arshad-shah/verql/releases)
+(the macOS `.dmg`s and the Linux `.AppImage`) are covered by a `sha256sums.txt`
+listing the checksum of every asset, signed keylessly with
+[cosign](https://docs.sigstore.dev/) (Sigstore) via a short-lived GitHub Actions
+OIDC token — there's no long-lived signing key. The release publishes
+`sha256sums.txt.sig` (the signature) and `sha256sums.txt.pem` (the signing
+certificate) alongside it. The Windows build isn't part of the GitHub release at
+all — it ships only through the Microsoft Store, which handles its own signing
+and integrity checks. Verifying a release download is a two-step check: first
+confirm the checksum file is genuinely signed, then confirm your download
 matches its listed checksum.
 
 ```bash
-# Download your asset, sha256sums.txt, and sha256sums.txt.sig from the release page,
-# then from the folder containing all three:
+# Install cosign once: brew install cosign  /  apt install cosign
+# Download your asset, sha256sums.txt, sha256sums.txt.sig, and sha256sums.txt.pem
+# from the release page, then from the folder containing all four:
 
-# 1. Verify the checksum file's GPG signature
-gpg --verify sha256sums.txt.sig sha256sums.txt
+# 1. Verify the checksum file's cosign signature
+cosign verify-blob \
+  --certificate sha256sums.txt.pem \
+  --signature   sha256sums.txt.sig \
+  --certificate-identity-regexp 'https://github.com/arshad-shah/verql/' \
+  --certificate-oidc-issuer 'https://token.actions.githubusercontent.com' \
+  sha256sums.txt
 
 # 2. Verify your downloaded asset against the checksum list
 sha256sum -c sha256sums.txt --ignore-missing
@@ -102,13 +137,16 @@ your asset's filename.
 
 How you update depends on how you installed:
 
-- **Homebrew (macOS):** run `brew upgrade --cask verql`. Verql can also detect
-  when it's running from a Homebrew-managed install and offer to update from
-  inside the app — when you accept, it triggers the `brew upgrade` for you and
-  then restarts to apply.
-- **`.dmg` / `.AppImage` / `.exe`:** download the newer version from the
+- **Homebrew (macOS or Linux):** run `brew upgrade --cask verql` (macOS) or
+  `brew upgrade verql` (Linux). On macOS, Verql can also detect when it's
+  running from a Homebrew-managed install and offer to update from inside the
+  app — when you accept, it triggers the `brew upgrade` for you and then
+  restarts to apply.
+- **`.dmg` / `.AppImage`:** download the newer version from the
   [Releases page](https://github.com/arshad-shah/verql/releases) and reinstall
   over the top.
+- **Windows (Microsoft Store):** the Store updates it automatically, the same
+  as any other Store app.
 
 See [Keeping Verql updated](./updating.md) for the full picture.
 

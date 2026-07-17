@@ -294,7 +294,8 @@ Remaining, in rough priority order:
 - Review the **Permissions** tab before granting. A formatter or theme that
   asks for `keyring` or `network` is a red flag.
 - Bundled plugins are part of Verql itself and are trusted; you can disable but
-  not uninstall them.
+  not uninstall them (one, `db-tools`, is essential and can't even be
+  disabled — the query/schema tools it provides are load-bearing).
 
 ## Tests
 
