@@ -5,7 +5,7 @@ import { useSchemaStore } from '@/stores/schema'
 import { useTabsStore } from '@/stores/tabs'
 import { useDriverCapabilitiesStore } from '@/stores/driver-capabilities'
 import { pickDefaultSchema } from '@/lib/pick-default-schema'
-import { Button, Text, Divider, ScrollArea, Flex, Box } from '@/primitives'
+import { Button, Text, Divider, ScrollArea, Flex, Box, ConnectionDot } from '@/primitives'
 import { IPC_CHANNELS } from '@shared/ipc'
 import { useTranslation } from '@/i18n/I18nProvider'
 
@@ -124,7 +124,7 @@ export function ConnectionSelector({ tabId, connectionId, database, schema }: Pr
       >
         {activeConn ? (
           <>
-            <Box className="w-2 h-2 rounded-full" style={{ backgroundColor: activeConn.color ?? 'var(--color-accent)' }} />
+            <ConnectionDot size="sm" state="neutral" color={activeConn.color} />
             <Text size="xs" color="primary" truncate className="max-w-28">{activeConn.name}</Text>
           </>
         ) : (
@@ -192,7 +192,7 @@ export function ConnectionSelector({ tabId, connectionId, database, schema }: Pr
                 connectionId === conn.id ? 'text-accent' : 'text-text-secondary'
               }`}
             >
-              <Box className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: conn.color ?? 'var(--color-accent)' }} />
+              <ConnectionDot size="sm" state="neutral" color={conn.color} />
               <Text size="xs" truncate>{conn.name}</Text>
               <Text size="xs" color="muted" className="ml-auto">{conn.database}</Text>
             </Button>
@@ -215,7 +215,7 @@ export function ConnectionSelector({ tabId, connectionId, database, schema }: Pr
                   }}
                   className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-text-muted hover:bg-hover transition-colors rounded-none border-0 h-auto"
                 >
-                  <Box className="w-2 h-2 rounded-full shrink-0 bg-text-muted" />
+                  <ConnectionDot size="sm" state="neutral" color="var(--color-text-muted)" />
                   <Text size="xs" truncate>{conn.name}</Text>
                   <Text size="xs" color="muted" className="ml-auto text-[10px]">{t('query.connection.clickToConnect')}</Text>
                 </Button>
