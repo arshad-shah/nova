@@ -116,6 +116,44 @@ export function createSqlExporter(config: {
 }
 
 /**
+ * Build the default `generateMigrationDdl` for a relational driver — a
+ * `generateCreateTable` that drops FK metadata (a fresh table's columns carry
+ * no cross-table references). Identical across Postgres/MySQL/Snowflake; drivers
+ * with dialect quirks (e.g. SQLite's `INTEGER PRIMARY KEY` rowid alias) keep a
+ * custom implementation instead.
+ */
+export function createMigrationDdl(
+  quoteChar: string,
+): (tableName: string, columns: SchemaColumn[]) => Promise<string> {
+  return async (tableName, columns) =>
+    generateCreateTable(
+      tableName,
+      columns.map(c => ({ ...c, isForeignKey: false, references: undefined })),
+      quoteChar,
+    )
+}
+
+/**
+ * Build a `sampleQuery` that emits `SELECT * FROM <qualified> LIMIT <n>`. The
+ * schema is included in the qualified name when present and `qualifySchema`
+ * accepts it (SQLite passes `(s) => s !== 'main'` to skip its implicit schema).
+ */
+export function createSampleQuery(
+  quoteChar: string,
+  options?: { limit?: number; qualifySchema?: (schema: string) => boolean },
+): (table: string, schema?: string) => Promise<string> {
+  const limit = options?.limit ?? 100
+  const qualifySchema = options?.qualifySchema ?? (() => true)
+  return async (table, schema) => {
+    const qualified =
+      schema && qualifySchema(schema)
+        ? quoteIdentifier([schema, table], quoteChar)
+        : quoteIdentifier(table, quoteChar)
+    return `SELECT * FROM ${qualified} LIMIT ${limit};`
+  }
+}
+
+/**
  * Build a `sql`-format importer that runs each statement through the active
  * adapter. Identical across every SQL dialect (split → execute → collect
  * per-statement errors), so drivers supply only the descriptor labels.
