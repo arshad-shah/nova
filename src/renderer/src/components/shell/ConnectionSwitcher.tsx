@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { matchesFilter } from '@/lib/fuzzy-match'
 import { useConnectionsStore } from '@/stores/connections'
 import { Search, Plus, Check } from 'lucide-react'
-import { Button, Input, Text, Box, Flex, ScrollArea } from '@/primitives'
+import { Button, Input, Text, Box, Flex, ScrollArea, StatusDot } from '@/primitives'
 import { cn } from '@/primitives/utils/cn'
 import { useClickOutside } from '@/hooks/useClickOutside'
 import { useEscapeKey } from '@/hooks/useEscapeKey'
@@ -83,11 +83,10 @@ export function ConnectionSwitcher({ isOpen, onClose, onNewConnection }: Connect
           !isLive && 'opacity-50'
         )}
       >
-        <div
-          className={cn(
-            'h-1.75 w-1.75 shrink-0 rounded-full',
-            isLive ? 'bg-success shadow-[0_0_4px_rgba(40,200,64,0.4)]' : 'bg-text-tertiary'
-          )}
+        <StatusDot
+          size="sm"
+          tone={isLive ? 'success' : 'muted'}
+          className={isLive ? 'shadow-[0_0_4px_rgba(40,200,64,0.4)]' : undefined}
         />
         <Box className="min-w-0 flex-1">
           <Flex align="center" gap="xs">
