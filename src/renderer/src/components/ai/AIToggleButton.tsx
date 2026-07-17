@@ -1,5 +1,5 @@
 import { Sparkles } from 'lucide-react'
-import { Tooltip, IconButton, cn } from '@/primitives'
+import { Tooltip, IconButton } from '@/primitives'
 import { useAIStore } from '@/stores/ai'
 import { useUiStore } from '@/stores/ui'
 import { useTranslation } from '@/i18n/I18nProvider'
@@ -21,14 +21,10 @@ export function AIToggleButton() {
       <IconButton
         label={t('aiui.toggle.label')}
         size="lg"
-        variant="ghost"
+        variant="nav"
+        active={open}
         onClick={toggle}
-        className={cn(
-          'rounded-lg transition-colors',
-          open
-            ? 'bg-accent/10 text-accent hover:bg-accent/10'
-            : 'text-text-muted hover:text-text-primary hover:bg-hover'
-        )}
+        className="rounded-lg"
       >
         <Sparkles size={20} />
       </IconButton>

@@ -52,15 +52,15 @@ export function ActivityBar() {
         <IconButton
           label={label}
           size="lg"
-          variant="ghost"
+          variant="nav"
+          active={isActive}
           onClick={() => setActivePanel(id)}
           className={cn(
-            'relative rounded-lg transition-colors',
-            isActive
-              // The rail indicator is one of the surfaces the brand gradient
-              // is reserved for.
-              ? 'bg-accent/10 text-accent hover:bg-accent/10 before:absolute before:left-0 before:top-1.5 before:bottom-1.5 before:w-0.5 before:rounded-full before:bg-[image:var(--vq-gradient)]'
-              : 'text-text-muted hover:text-text-primary hover:bg-hover'
+            'relative rounded-lg',
+            // The rail indicator is one of the surfaces the brand gradient
+            // is reserved for.
+            isActive &&
+              'before:absolute before:left-0 before:top-1.5 before:bottom-1.5 before:w-0.5 before:rounded-full before:bg-[image:var(--vq-gradient)]'
           )}
         >
           <Icon size={20} strokeWidth={1.8} />
@@ -103,14 +103,10 @@ export function ActivityBar() {
         <IconButton
           label={t('shell.activityBar.settings')}
           size="lg"
-          variant="ghost"
+          variant="nav"
+          active={activeTabType === 'settings'}
           onClick={() => openSettings()}
-          className={cn(
-            'rounded-lg transition-colors',
-            activeTabType === 'settings'
-              ? 'bg-accent/10 text-accent hover:bg-accent/10'
-              : 'text-text-muted hover:text-text-primary hover:bg-hover'
-          )}
+          className="rounded-lg"
         >
           <Settings size={20} />
         </IconButton>
