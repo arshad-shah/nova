@@ -32,7 +32,7 @@ so a subsystem doesn't have to thread the log through its constructor.
 | **`Logger`** (host glue) | mirrors a log line to the console **and** records it as a `log` entry; provided as the `logger` service | `src/main/logging/logger.ts` |
 | **Activity sink** (host glue) | process-wide handle to the one `ActivityLog`, wired once in `ipc-handlers.ts`; lets any main-side subsystem record without threading the log through its constructor | `src/main/activity/recorder.ts` |
 | **`tracedFetch`** (host glue) | a `fetch()` wrapper that records a `network` entry (method, host+path, status, timing — never bodies or auth headers) | `src/main/activity/net.ts` |
-| **Recorders** | call `recordActivity(...)` / `activityLog.record(...)` where things happen (db queries, connect/disconnect, tool calls, notifications, network, IPC calls, plugin boot, renderer store mutations, perf) | `src/main/ipc/db.ts`, `ipc-handlers.ts`, `src/main/ipc/context.ts`, `src/main/plugins/plugin-host.ts`, `src/main/mcp/server.ts`, … |
+| **Recorders** | call `recordActivity(...)` / `activityLog.record(...)` where things happen (db queries, connect/disconnect, tool calls, notifications, network, IPC calls, plugin boot, renderer store mutations, perf) | `src/main/ipc/db.ts`, `ipc-handlers.ts`, `src/main/ipc/context.ts`, `src/main/plugins/plugin-host.ts`, `src/main/activity/net.ts`, … |
 | **Renderer diagnostics** | renderer-side recorder (`recordActivity` over `activity:record`) + verbose flag; verbose-gated store-mutation + long-task capture | `src/renderer/src/lib/diagnostics.ts`, `src/renderer/src/lib/store-diagnostics.ts` |
 | **Renderer store** | mirrors the stream (cap 1000), applies each IPC batch in one update | `src/renderer/src/stores/activity.ts` |
 | **Activity panel** | filter (kind + level), search, pause, export, severity summary, verbose toggle, expand-detail drawer | `src/renderer/src/components/shell/ActivityList.tsx` (presentational), `ActivityPanel.tsx` (container) |
@@ -193,7 +193,7 @@ interface ActivityEntry {
 | IPC channels / events | `shared/ipc.ts` (`activity:list`, `activity:clear`, `activity:record`, `activity:batch`) |
 | Renderer store | `src/renderer/src/stores/activity.ts` |
 | Activity panel UI | `src/renderer/src/components/shell/ActivityList.tsx`, `ActivityPanel.tsx` |
-| Tests | `tests/unit/activity-log.test.ts`, `tests/unit/activity-batcher.test.ts`, `tests/unit/logger.test.ts`, `tests/unit/components/shell/activity-list.test.tsx` |
+| Tests | `tests/unit/activity-log.test.ts`, `tests/unit/activity-batcher.test.ts`, `tests/unit/activity-tool-and-recorder.test.ts`, `tests/unit/logger.test.ts`, `tests/unit/components/shell/activity-list.test.tsx` |
 
 See also: [notifications.md](./notifications.md) for the **attention seam** (a
 separate concern — "your response is needed", not a passive record), and

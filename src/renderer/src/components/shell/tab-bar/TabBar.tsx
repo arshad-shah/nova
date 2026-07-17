@@ -5,6 +5,7 @@ import { requestCloseTab, requestCloseTabs } from '@/stores/tab-actions'
 import { useConnectionsStore, useActiveProfile } from '@/stores/connections'
 import { initialAutoCommit } from '@/lib/initial-autocommit'
 import { Flex, IconButton, Tooltip, cn } from '@/primitives'
+import type { MenuNode } from '@/primitives/surfaces/menu/types'
 import { TabItem } from './TabItem'
 import { useClipboard } from '@/hooks/useClipboard'
 import { useTabScroll } from './useTabScroll'
@@ -47,26 +48,40 @@ export function TabBar() {
     }
   }, [activeTabId, scrollIntoView])
 
-  const getContextMenuItems = (tabId: string, index: number) => {
+  const getContextMenuItems = (tabId: string, index: number): MenuNode[] => {
     const tab = tabs.find(item => item.id === tabId)
     return [
-      { label: t('shell.tabBar.close'), onSelect: () => requestCloseTab(tabId, closeTab) },
+      { kind: 'item', id: 'close', label: t('shell.tabBar.close'), onSelect: () => requestCloseTab(tabId, closeTab) },
       {
+        kind: 'item',
+        id: 'close-others',
         label: t('shell.tabBar.closeOthers'),
         onSelect: () => requestCloseTabs(tabs.filter(x => x.id !== tabId).map(x => x.id), closeTab),
         disabled: tabs.length <= 1,
       },
       {
+        kind: 'item',
+        id: 'close-to-right',
         label: t('shell.tabBar.closeToRight'),
         onSelect: () => requestCloseTabs(tabs.slice(index + 1).map(x => x.id), closeTab),
         disabled: index >= tabs.length - 1,
       },
       {
+        kind: 'item',
+        id: 'close-all',
         label: t('shell.tabBar.closeAll'),
         onSelect: () => requestCloseTabs(tabs.map(x => x.id), closeTab),
       },
-      { label: t('shell.tabBar.duplicate'), onSelect: () => duplicateTab(tabId), disabled: tab?.type !== 'query' },
       {
+        kind: 'item',
+        id: 'duplicate',
+        label: t('shell.tabBar.duplicate'),
+        onSelect: () => duplicateTab(tabId),
+        disabled: tab?.type !== 'query',
+      },
+      {
+        kind: 'item',
+        id: 'copy-title',
         label: t('shell.tabBar.copyTitle'),
         onSelect: () => copy(tab?.title ?? ''),
       },

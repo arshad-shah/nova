@@ -8,6 +8,7 @@ const meta = {
     value: { control: { type: 'range', min: 0, max: 100, step: 1 } },
     max: { control: 'number' },
     size: { control: 'inline-radio', options: ['sm', 'md', 'lg'] },
+    tone: { control: 'inline-radio', options: ['default', 'accent', 'success', 'warning', 'error'] },
   },
 } satisfies Meta<typeof Progress>
 
@@ -43,6 +44,19 @@ export const Sizes: Story = {
         <div key={size}>
           <div style={{ fontSize: 11, color: 'var(--color-text-secondary)', marginBottom: 4 }}>{size}</div>
           <Progress value={60} size={size} aria-label={`Progress ${size}`} />
+        </div>
+      ))}
+    </div>
+  ),
+}
+
+export const Tones: Story = {
+  render: () => (
+    <div style={{ width: 320, display: 'flex', flexDirection: 'column', gap: 12 }}>
+      {(['default', 'accent', 'success', 'warning', 'error'] as const).map((tone) => (
+        <div key={tone}>
+          <div style={{ fontSize: 11, color: 'var(--color-text-secondary)', marginBottom: 4 }}>{tone}</div>
+          <Progress value={60} tone={tone} aria-label={`Progress ${tone}`} />
         </div>
       ))}
     </div>

@@ -58,7 +58,7 @@ interface Tool {
   id: string
   name: string
   description: string
-  inputSchema: z.ZodObject     // validated + converted to JSON Schema for the LLM
+  inputSchema: JsonSchemaObject   // authors build this with toJsonSchema(z.object({ … }))
   permission: 'read' | 'write'
   surfaces?: Array<'ai' | 'mcp'>   // omitted = both
   execute(params, ctx: ToolContext): Promise<ToolResult>
@@ -123,9 +123,9 @@ stays a permissive `string`.
 The AI learns the catalog because the renderer sends `appActions.describeForPrompt()`
 on every `ai:chat:start`, and `ConversationManager.assembleSystemMessage()`
 appends it with usage rules. See `builtins.ts` for the full list (connect /
-disconnect / switch connection, open a query tab, scaffold DDL, export results,
-open a chart, reveal a table, open a saved query, ER diagram, insert into the
-editor, settings, notifications, …).
+disconnect / switch connection, open a query tab, export results, open a
+chart, reveal a table, open a saved query, ER diagram, insert into the editor,
+settings, notifications, …).
 
 ## The orchestration loop
 
@@ -177,8 +177,9 @@ interface Conversation {
 ```
 
 - `newConversation` / `switchConversation` / `deleteConversation` /
-  `renameConversation` / `branchConversation` manage the list; `ConversationMenu`
-  is the switcher at the top of the panel.
+  `renameConversation` / `branchConversation` manage the list; the history
+  dropdown built into `ChatPanelHeader` (at the top of the panel) is the
+  switcher.
 - **Branching** (`branchConversation(messageId)`, surfaced as the branch button
   on a message) forks a new conversation containing the history up to that
   message, leaving the original intact.
@@ -186,6 +187,13 @@ interface Conversation {
   the live message/stat state and writes it through to the app-data store
   (`appdata:conversations:upsert`) — only the active conversation, not the whole
   list. `hydrate()` loads the set (and runs the one-time migration) on app boot.
+- **Compaction** (`compactConversation`, exposed as a Compact button in
+  `ChatPanelHeader`) summarizes every message except the last two turns into a
+  single system message via `ai:conversation:summarize` (an LLM call, see
+  Enhancements below), replacing the older history in place; `undoLastCompact`
+  restores the pre-compaction snapshot. `AutoCompactBanner` watches token usage
+  against the active model's context window and prompts to compact automatically
+  once usage crosses 80% (a 5s countdown, skippable), forcing the prompt at 95%.
 
 Because the main process starts each launch with no history, the renderer pushes
 the relevant transcript to main via **`ai:messages:set`** (→
@@ -195,16 +203,15 @@ only the new message and lose context.
 
 ## Enhancements
 
-Separate from tool-calling chat, `internal/enhancements.ts` exposes three direct
-one-shot provider calls used by the editor and results UI:
+Separate from tool-calling chat, `internal/enhancements.ts` exposes direct
+one-shot provider calls that don't go through the conversation loop or tools:
 
 | Channel | Used by | Purpose |
 |---------|---------|---------|
-| `ai:generate-sql` | `NLInputBar` | natural language → SQL |
-| `ai:complete-sql` | inline completion provider | ghost-text completion |
-| `ai:explain-results` | results panel | explain a result set |
-
-These don't go through the conversation loop or tools.
+| `ai:generate-sql` | none currently | natural language → SQL (`generateSql`); the IPC channel and handler exist but no renderer component calls it today |
+| `ai:complete-sql` | `lib/monaco-ai-completion.ts`'s inline completions provider, registered directly in `QueryEditor`'s `onMount` (SQL language only); the `useAIInlineSuggest` hook is separate — it just mounts the status pill/accept-reject overlay that reflects the same module's state | ghost-text completion |
+| `ai:explain-results` | none currently | one-shot "explain a result set" (`explainResults`); superseded in the UI by the streaming variant below — no renderer caller remains |
+| `ai:conversation:summarize` | `stores/ai.ts`'s `compactConversation` | summarizes older turns into one system message for conversation compaction (see Conversation history) |
 
 ### Streaming explain results
 
@@ -224,28 +231,32 @@ Components in `components/ai/`:
 
 | Component | Role |
 |-----------|------|
-| `ChatPanel` | panel shell: `ConversationMenu` + `SessionInfo` + `MessageThread` + `ChatInput` |
-| `ConversationMenu` | conversation switcher: new / switch / rename / delete |
+| `ChatPanel` | panel shell: `ChatPanelHeader` + `AutoCompactBanner` + `MessageThread` + `ActionZone` |
+| `ChatPanelHeader` | conversation switcher (new / switch / rename / delete), active model name, and a context-window usage bar; hosts the manual Compact action |
+| `AutoCompactBanner` | watches token usage against the model's context window and drives the auto-compact countdown/forced prompt (see Conversation history) |
 | `MessageThread` | renders the message list + empty-state suggestion chips |
+| `ActionZone` | sticky area above the composer: pending `ApprovalCard`, `PermissionModeRow`, and `ChatInput` |
 | `MessageBubble` | a user/assistant bubble; hosts copy / retry / branch actions |
 | `ToolCallCard` | a tool call's status, arguments, and result (resolves `perform_app_action` ids to titles) |
 | `ApprovalCard` | approval prompt for `write` tools |
+| `PermissionModeRow` | read-only / ask-write / auto permission-profile picker |
 | `MarkdownContent` | assistant markdown; intercepts `verql://action/*` → `ActionChip` |
 | `ActionChip` | clickable deep-link pill backed by an `AppAction` |
-| `SessionInfo` | message / tool-call / token counts for the active conversation |
 
 ## File map
 
 ```
 src/main/plugins/bundled/ai/
 ├── index.ts                      # plugin activate(): wires deps → startAIModule
+├── prompts/                      # chat-system.md, chat-fragments.md, generate-query.md,
+│                                  # inline-complete.md, explain.md, summarize.md + index.ts
 └── internal/
     ├── index.ts                  # startAIModule: providers, IPC handlers, perform_app_action tool
     ├── conversation-manager.ts   # system prompt + the tool loop + context trimming
     ├── token-estimate.ts         # estimateTokens + trimMessagesToBudget
     ├── provider-registry.ts      # active provider/model
     ├── permission-manager.ts     # approval requests for write tools
-    ├── enhancements.ts           # generate / complete / explain SQL
+    ├── enhancements.ts           # generate / complete / explain SQL + conversation summarize
     ├── pick-cheapest-model.ts
     └── providers/{openai,anthropic,ollama}.ts
 
@@ -253,7 +264,7 @@ src/renderer/src/
 ├── stores/ai.ts                  # useAIStore: messages, conversations, persistence
 ├── lib/app-actions/
 │   ├── types.ts  registry.ts  builtins.ts  parse.ts  bridge.ts  resolve.ts
-└── components/ai/                # ChatPanel, ConversationMenu, MessageBubble, …
+└── components/ai/                # ChatPanel, ChatPanelHeader, AutoCompactBanner, MessageBubble, …
 
 shared/ai-types.ts                # AIChatMessage, AIStreamEvent, AIChatStartRequest, …
 ```

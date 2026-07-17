@@ -6,6 +6,7 @@ import type { ActivityEntry, ActivityQuery, ActivityKind, ActivityLevel } from '
 import type { ConversationsSnapshot, StoredConversation, SavedQuery, QueryHistoryEntry, OpenTabsSnapshot, TabOp } from './appdata'
 import type { ExportFormatInfo, ImportFormatInfo } from './export-import'
 import type { MenuActionId } from './menus'
+import type { ToolPermission } from './mcp'
 
 // ─── Channel shapes ──────────────────────────────────────────────────────────
 //
@@ -432,7 +433,7 @@ export interface IpcChannelShapes {
   }
   AI_TOOLS_LIST: {
     args: []
-    return: { id: string; name: string; description: string; permission: 'read' | 'write' }[]
+    return: { id: string; name: string; description: string; permission: ToolPermission }[]
   }
   AI_KEYS_HAS: {
     args: [provider: 'openai' | 'anthropic']

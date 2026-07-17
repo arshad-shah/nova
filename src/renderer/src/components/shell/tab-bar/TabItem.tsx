@@ -1,7 +1,8 @@
 import { useState, type DragEvent, type MouseEvent } from 'react'
 import { X } from 'lucide-react'
 import type { Tab } from '@shared/types'
-import { Box, Flex, Text, Tooltip, ContextMenu, cn, iconButtonVariants } from '@/primitives'
+import { Box, Flex, Text, Tooltip, ContextMenu, cn, iconButtonVariants, StatusDot } from '@/primitives'
+import type { MenuNode } from '@/primitives/surfaces/menu/types'
 import { getTabIcon } from './tab-icons'
 import { useTranslation } from '@/i18n/I18nProvider'
 import './tab-bar.css'
@@ -11,7 +12,7 @@ interface TabItemProps {
   isActive: boolean
   isDragged: boolean
   isDropTarget: boolean
-  contextMenuItems: { label: string; onSelect: () => void; disabled?: boolean }[]
+  contextMenuItems: MenuNode[]
   onActivate: () => void
   onClose: () => void
   onDragStart: (e: DragEvent) => void
@@ -144,10 +145,11 @@ export function TabItem({
           onMouseLeave={() => setCloseHovered(false)}
         >
           {isDirty && !closeHovered ? (
-            <Box
-              as="span"
-              className="block h-1.75 w-1.75 rounded-full bg-warning"
-              aria-label={t('shell.tabBar.unsavedChanges')}
+            <StatusDot
+              size="sm"
+              tone="warning"
+              className="block"
+              label={t('shell.tabBar.unsavedChanges')}
             />
           ) : (
             <X

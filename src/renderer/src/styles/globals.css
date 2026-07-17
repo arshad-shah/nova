@@ -118,6 +118,12 @@
   --color-tab-active-fg: var(--color-tab-active-fg);
   --color-tab-inactive-fg: var(--color-tab-inactive-fg);
   --color-tab-hover-bg: var(--color-tab-hover-bg);
+  /* Neutral chip/row washes — see tokens.css for the color-mix derivation.
+     Replace ad-hoc `bg-white/NN` overlays, which don't invert on light
+     themes. */
+  --color-chip-fill: var(--color-chip-fill);
+  --color-chip-fill-subtle: var(--color-chip-fill-subtle);
+  --color-row-tint: var(--color-row-tint);
 }
 
 body {

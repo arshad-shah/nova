@@ -263,6 +263,16 @@ describe('Progress', () => {
     expect(container.firstChild).toHaveClass('rounded-full')
     expect(container.firstChild).toHaveClass('overflow-hidden')
   })
+
+  it('defaults the fill to the accent tone', () => {
+    const { container } = render(<Progress value={50} />)
+    expect(container.querySelector('[style]')).toHaveClass('bg-accent')
+  })
+
+  it('applies the requested fill tone', () => {
+    const { container } = render(<Progress value={50} tone="error" />)
+    expect(container.querySelector('[style]')).toHaveClass('bg-error')
+  })
 })
 
 describe('Spinner', () => {

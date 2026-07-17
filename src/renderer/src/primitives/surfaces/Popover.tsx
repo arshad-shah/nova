@@ -15,6 +15,16 @@ type PopoverProps = {
   className?: string
   /** Side the panel prefers to open on. Defaults to 'top'. */
   placement?: Placement
+  /**
+   * Controlled open state. Omit to let the Popover own it.
+   *
+   * Pair with {@link PopoverProps.onOpenChange}: a caller that owns `open` must
+   * be told when the Popover wants to close (outside click, Escape, trigger
+   * click) or the panel will refuse to shut.
+   */
+  open?: boolean
+  /** Called whenever the Popover wants to open or close. Required if `open` is passed. */
+  onOpenChange?: (open: boolean) => void
 }
 
 /**
@@ -23,9 +33,31 @@ type PopoverProps = {
  * onClick chain. Panel renders inline (as a sibling) with `position: fixed`
  * so it escapes overflow constraints without leaving the React tree, which
  * keeps tests and Storybook queries simple.
+ *
+ * Uncontrolled by default; pass `open` + `onOpenChange` to drive it. Callers
+ * needing to close it on selection should use the controlled form rather than
+ * remounting it.
  */
-export function Popover({ trigger, content, className, placement = 'top' }: PopoverProps) {
-  const [open, setOpen] = useState(false)
+export function Popover({
+  trigger,
+  content,
+  className,
+  placement = 'top',
+  open: controlledOpen,
+  onOpenChange,
+}: PopoverProps) {
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false)
+  const isControlled = controlledOpen !== undefined
+  const open = isControlled ? controlledOpen : uncontrolledOpen
+
+  const setOpen = useCallback(
+    (next: boolean | ((prev: boolean) => boolean)) => {
+      const resolved = typeof next === 'function' ? next(open) : next
+      if (!isControlled) setUncontrolledOpen(resolved)
+      onOpenChange?.(resolved)
+    },
+    [isControlled, onOpenChange, open]
+  )
   const [pos, setPos] = useState<{ top: number; left: number } | null>(null)
   const triggerRef = useRef<HTMLElement | null>(null)
   const panelRef = useRef<HTMLDivElement>(null)

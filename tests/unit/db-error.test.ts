@@ -137,9 +137,46 @@ describe('parseDbError — host rules (no dbType needed)', () => {
     ['Error while decrypting the ciphertext', 'KEYRING_DECRYPT_FAILED'],
     ['429 too many requests', 'AI_RATE_LIMITED'],
     ['ENOENT: no such file or directory', 'FILE_NOT_FOUND'],
+    ['permission denied for table users', 'PERMISSION_DENIED'],
+    ['query was cancelled', 'QUERY_CANCELLED'],
+    ['No OpenAI API key configured', 'AI_KEY_MISSING'],
+    ['You have exceeded your current quota', 'AI_QUOTA_EXCEEDED'],
+    ['OpenAI provider error: 503 Service Unavailable', 'AI_PROVIDER_ERROR'],
   ]
   it.each(cases)('classifies %s without a dbType', (msg, code) => {
     expect(parseDbError(msg).code).toBe(code)
+  })
+})
+
+describe('parseDbError — driver rule edge cases', () => {
+  it('skips a rule whose code has no DRIVER_RENDERERS entry and falls through to UNKNOWN', () => {
+    useDriverCapabilitiesStore.setState((s) => ({
+      byType: {
+        ...s.byType,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        weird: { errorRules: [{ code: 'SOME_UNRENDERED_CODE', pattern: 'boom' }] } as any,
+      },
+    }))
+    const r = parseDbError('boom happened', 'weird')
+    expect(r.code).toBe('UNKNOWN')
+  })
+
+  it('skips a rule with an invalid regex pattern instead of throwing', () => {
+    useDriverCapabilitiesStore.setState((s) => ({
+      byType: {
+        ...s.byType,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        broken: {
+          errorRules: [
+            { code: 'TABLE_NOT_FOUND', pattern: '(unterminated[' }, // invalid regex — must not throw
+            { code: 'COLUMN_NOT_FOUND', pattern: 'field ([^ ]+) missing' },
+          ],
+        } as any,
+      },
+    }))
+    expect(() => parseDbError('field email missing', 'broken')).not.toThrow()
+    const r = parseDbError('field email missing', 'broken')
+    expect(r.code).toBe('COLUMN_NOT_FOUND')
   })
 })
 

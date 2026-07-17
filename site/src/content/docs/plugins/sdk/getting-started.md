@@ -74,8 +74,11 @@ export default definePlugin({
   activate(ctx) {
     // ctx.exporters.register(id, exporter) — id is namespaced to your plugin.
     ctx.exporters.register('markdown', {
+      format: 'markdown',
+      extension: 'md',
+      displayName: 'Markdown Table',
       // `rows` and `columns` come from the active result grid.
-      async export({ rows, columns }) {
+      execute(rows, columns) {
         const header = `| ${columns.map((c) => c.name).join(' | ')} |`
         const sep = `| ${columns.map(() => '---').join(' | ')} |`
         const body = rows
@@ -88,9 +91,10 @@ export default definePlugin({
 })
 ```
 
-> The exporter's exact option/return shape is `RegisteredExporter` /
-> `ExporterFn` / `ExporterOptions` (all exported as types). Your editor will
-> autocomplete the real fields — lean on the types rather than this sketch.
+> The exporter's exact shape is `RegisteredExporter` (`format`, `extension`,
+> `displayName`, `execute`) and `ExporterFn` / `ExporterOptions` (all exported
+> as types). Your editor will autocomplete the real fields — lean on the types
+> rather than this sketch.
 
 ## 4. Build
 

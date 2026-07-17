@@ -2,27 +2,13 @@ import { useState, useEffect, useRef } from 'react'
 import { matchesFilter } from '@/lib/fuzzy-match'
 import { useConnectionsStore } from '@/stores/connections'
 import { Search, Plus, Check } from 'lucide-react'
-import { Button, Input, Text, Box, Flex, ScrollArea } from '@/primitives'
+import { Button, Input, Text, Box, Flex, ScrollArea, StatusDot } from '@/primitives'
 import { cn } from '@/primitives/utils/cn'
 import { useClickOutside } from '@/hooks/useClickOutside'
 import { useEscapeKey } from '@/hooks/useEscapeKey'
 import { useTranslation } from '@/i18n/I18nProvider'
-
-const DB_ABBREVIATIONS: Record<string, string> = {
-  postgresql: 'PG',
-  mysql: 'MY',
-  sqlite: 'SL',
-  mongodb: 'MG',
-  redis: 'RD',
-}
-
-const DB_TYPE_COLORS: Record<string, string> = {
-  postgresql: 'text-accent',
-  mysql: 'text-warning',
-  sqlite: 'text-info',
-  mongodb: 'text-data-accent',
-  redis: 'text-error',
-}
+import { useDriverPresentation } from '@/hooks/useDriverPresentation'
+import { DRIVER_TONE_TEXT } from '@/lib/driver-presentation'
 
 interface ConnectionSwitcherProps {
   isOpen: boolean
@@ -37,6 +23,10 @@ export function ConnectionSwitcher({ isOpen, onClose, onNewConnection }: Connect
   const [filter, setFilter] = useState('')
   const panelRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+
+  // Each driver declares its own chip label and tone; pre-fetch for every type
+  // in the list so the lookup is synchronous while rendering rows.
+  const presentationOf = useDriverPresentation(connections.map((c) => c.type))
 
   useEffect(() => {
     if (isOpen) {
@@ -68,8 +58,8 @@ export function ConnectionSwitcher({ isOpen, onClose, onNewConnection }: Connect
   }
 
   const renderConnection = (c: typeof connections[0], isActive: boolean) => {
-    const abbr = DB_ABBREVIATIONS[c.type] ?? c.type.slice(0, 2).toUpperCase()
-    const color = DB_TYPE_COLORS[c.type] ?? 'text-text-primary'
+    const { abbreviation: abbr, tone } = presentationOf(c.type)
+    const color = DRIVER_TONE_TEXT[tone]
     const isLive = connectedIds.has(c.id)
 
     return (
@@ -83,11 +73,10 @@ export function ConnectionSwitcher({ isOpen, onClose, onNewConnection }: Connect
           !isLive && 'opacity-50'
         )}
       >
-        <div
-          className={cn(
-            'h-1.75 w-1.75 shrink-0 rounded-full',
-            isLive ? 'bg-success shadow-[0_0_4px_rgba(40,200,64,0.4)]' : 'bg-text-tertiary'
-          )}
+        <StatusDot
+          size="sm"
+          tone={isLive ? 'success' : 'muted'}
+          className={isLive ? 'shadow-[0_0_4px_rgba(40,200,64,0.4)]' : undefined}
         />
         <Box className="min-w-0 flex-1">
           <Flex align="center" gap="xs">

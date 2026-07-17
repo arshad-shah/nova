@@ -75,7 +75,7 @@ function NotificationItem({ notification }: { notification: Notification }) {
       className={cn(
         'group relative flex gap-2.5 px-3 py-2.5 cursor-default transition-colors',
         'hover:bg-hover',
-        !notification.read && 'bg-white/[0.02]'
+        !notification.read && 'bg-row-tint'
       )}
     >
       {/* Unread indicator bar */}

@@ -1,14 +1,17 @@
-import { useCallback, useRef, useState } from 'react'
+import { useState } from 'react'
 import {
   History, Plus, Trash2, Pencil, Check, X, Sparkles,
   Minimize2, MoreHorizontal, ChevronDown,
 } from 'lucide-react'
 import { Spinner } from '@/primitives/feedback/Spinner'
+import { Progress } from '@/primitives/feedback/Progress'
 import { useAIStore } from '@/stores/ai'
-import { Flex, Text, Input, IconButton, ScrollArea, Box, Button } from '@/primitives'
+import { Flex, Text, Input, IconButton, Box, Button } from '@/primitives'
 import { Tooltip } from '@/primitives/surfaces/Tooltip'
+import { DropdownMenu } from '@/primitives/surfaces/DropdownMenu'
+import { Menu } from '@/primitives/surfaces/menu'
+import type { MenuNode } from '@/primitives/surfaces/menu/types'
 import { formatCompactNumber } from '@/lib/format'
-import { useClickOutside } from '@/hooks/useClickOutside'
 import { useTranslation } from '@/i18n/I18nProvider'
 
 /**
@@ -35,8 +38,6 @@ export function ChatPanelHeader() {
   const [historyOpen, setHistoryOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [draft, setDraft] = useState('')
-  const [moreOpen, setMoreOpen] = useState(false)
-  const ref = useRef<HTMLDivElement>(null)
 
   const active = conversations.find((c) => c.id === activeId)
   const sorted = [...conversations].sort((a, b) => b.updatedAt - a.updatedAt)
@@ -47,43 +48,147 @@ export function ChatPanelHeader() {
   const pct = contextWindow && contextWindow > 0
     ? Math.min(100, Math.round((totalTokens / contextWindow) * 100))
     : 0
-  const tone = pct >= 90 ? 'bg-error' : pct >= 70 ? 'bg-warning' : 'bg-accent'
+  const contextTone = pct >= 90 ? 'error' : pct >= 70 ? 'warning' : 'accent'
   const remainingTone = pct >= 90 ? 'text-error' : pct >= 70 ? 'text-warning' : 'text-text-secondary'
 
   const canCompact = messages.length >= 6 && !isCompacting
-
-  const closeMenus = useCallback(() => {
-    setHistoryOpen(false)
-    setMoreOpen(false)
-  }, [])
-  useClickOutside(ref, closeMenus, { enabled: historyOpen || moreOpen })
 
   const commitEdit = () => {
     if (editingId) renameConversation(editingId, draft)
     setEditingId(null)
   }
 
+  // "Rename" opens the history menu with the active row already in edit
+  // mode — driving History's `open` here (rather than letting it own its
+  // own state) is what makes that cross-menu handoff possible.
+  const moreMenuItems: MenuNode[] = active
+    ? [
+        {
+          kind: 'item',
+          id: 'rename',
+          label: t('aiui.header.renameAction'),
+          icon: <Pencil size={12} />,
+          onSelect: () => { setEditingId(active.id); setDraft(active.title); setHistoryOpen(true) },
+        },
+        {
+          kind: 'item',
+          id: 'compact',
+          label: t('aiui.header.compactAction'),
+          icon: <Minimize2 size={12} />,
+          onSelect: () => { void compactConversation() },
+          disabled: !canCompact,
+        },
+        {
+          kind: 'item',
+          id: 'delete',
+          label: t('aiui.header.deleteAction'),
+          icon: <Trash2 size={12} />,
+          onSelect: () => { void deleteConversation(active.id) },
+          tone: 'danger',
+        },
+      ]
+    : []
+
   return (
-    <Box ref={ref} className="relative border-b border-border-default bg-bg-secondary">
+    <Box className="border-b border-border-default bg-bg-secondary">
       {/* Row 1: title + actions */}
       <Flex align="center" gap="xs" className="px-3 pt-2 pb-1.5">
-        <Button
-          variant="bare"
-          size="none"
-          type="button"
-          onClick={() => { setHistoryOpen((o) => !o); setMoreOpen(false) }}
-          className="flex items-center gap-1.5 flex-1 min-w-0 text-left rounded-md px-1.5 py-1 hover:bg-hover transition-colors"
+        <DropdownMenu
           aria-label={t('aiui.header.conversationHistory')}
-          aria-expanded={historyOpen}
+          className="w-72"
+          open={historyOpen}
+          onOpenChange={setHistoryOpen}
+          trigger={
+            <Button
+              variant="bare"
+              size="none"
+              type="button"
+              className="flex items-center gap-1.5 flex-1 min-w-0 text-left rounded-md px-1.5 py-1 hover:bg-hover transition-colors"
+              aria-label={t('aiui.header.conversationHistory')}
+            >
+              <History size={13} className="text-text-tertiary shrink-0" />
+              <Text size="sm" weight="medium" truncate className="flex-1">
+                {active?.title ?? t('aiui.header.newChatTitle')}
+              </Text>
+              <ChevronDown size={12} className="text-text-tertiary shrink-0" />
+            </Button>
+          }
         >
-          <History size={13} className="text-text-tertiary shrink-0" />
-          <Text size="sm" weight="medium" truncate className="flex-1">
-            {active?.title ?? t('aiui.header.newChatTitle')}
-          </Text>
-          <ChevronDown size={12} className="text-text-tertiary shrink-0" />
-        </Button>
+          {sorted.map((c) => (
+              <Menu.RadioItem
+                key={c.id}
+                label={c.title}
+                checked={c.id === activeId}
+                onSelect={() => { if (editingId !== c.id) void switchConversation(c.id) }}
+              >
+                {editingId === c.id ? (
+                  <Flex
+                    align="center"
+                    gap="xs"
+                    className="flex-1 min-w-0"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Input
+                      value={draft}
+                      onChange={(e) => setDraft(e.target.value)}
+                      size="xs"
+                      autoFocus
+                      onClick={(e) => e.stopPropagation()}
+                      onKeyDown={(e) => {
+                        e.stopPropagation()
+                        if (e.key === 'Enter') commitEdit()
+                        if (e.key === 'Escape') setEditingId(null)
+                      }}
+                      className="flex-1"
+                    />
+                    <IconButton
+                      label={t('aiui.header.saveName')}
+                      size="xs"
+                      variant="ghost"
+                      onClick={(e) => { e.stopPropagation(); commitEdit() }}
+                    >
+                      <Check size={12} />
+                    </IconButton>
+                    <IconButton
+                      label={t('aiui.header.cancelRename')}
+                      size="xs"
+                      variant="ghost"
+                      onClick={(e) => { e.stopPropagation(); setEditingId(null) }}
+                    >
+                      <X size={12} />
+                    </IconButton>
+                  </Flex>
+                ) : (
+                  <Flex align="center" gap="xs" className="group flex-1 min-w-0">
+                    <Text size="xs" truncate className="flex-1">{c.title}</Text>
+                    <Box
+                      className="hidden group-hover:flex items-center gap-0.5"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <IconButton
+                        label={t('aiui.header.rename')}
+                        size="xs"
+                        variant="ghost"
+                        onClick={(e) => { e.stopPropagation(); setEditingId(c.id); setDraft(c.title) }}
+                      >
+                        <Pencil size={11} />
+                      </IconButton>
+                      <IconButton
+                        label={t('aiui.header.delete')}
+                        size="xs"
+                        variant="ghost"
+                        onClick={(e) => { e.stopPropagation(); void deleteConversation(c.id) }}
+                      >
+                        <Trash2 size={11} />
+                      </IconButton>
+                    </Box>
+                  </Flex>
+                )}
+              </Menu.RadioItem>
+          ))}
+        </DropdownMenu>
         <Tooltip content={t('aiui.header.newChat')} side="bottom">
-          <IconButton label={t('aiui.header.newChat')} size="xs" variant="ghost" onClick={() => { newConversation(); setHistoryOpen(false) }}>
+          <IconButton label={t('aiui.header.newChat')} size="xs" variant="ghost" onClick={() => newConversation()}>
             <Plus size={14} />
           </IconButton>
         </Tooltip>
@@ -101,14 +206,16 @@ export function ChatPanelHeader() {
             {isCompacting ? <Spinner size="xs" className="text-current" /> : <Minimize2 size={13} />}
           </IconButton>
         </Tooltip>
-        <IconButton
-          label={t('aiui.header.more')}
-          size="xs"
-          variant="ghost"
-          onClick={() => { setMoreOpen((o) => !o); setHistoryOpen(false) }}
-        >
-          <MoreHorizontal size={14} />
-        </IconButton>
+        <DropdownMenu
+          aria-label={t('aiui.header.more')}
+          className="w-48"
+          items={moreMenuItems}
+          trigger={
+            <IconButton label={t('aiui.header.more')} size="xs" variant="ghost">
+              <MoreHorizontal size={14} />
+            </IconButton>
+          }
+        />
       </Flex>
 
       {/* Row 2: model + context window bar (prominent) */}
@@ -125,9 +232,12 @@ export function ChatPanelHeader() {
 
         {contextWindow != null ? (
           <>
-            <Box className="h-1.5 rounded-full bg-bg-tertiary overflow-hidden">
-              <Box className={`h-full transition-[width] ${tone}`} style={{ width: `${pct}%` }} />
-            </Box>
+            <Progress
+              value={pct}
+              tone={contextTone}
+              className="bg-bg-tertiary shadow-none"
+              aria-label={t('aiui.header.used', { used: formatCompactNumber(totalTokens), total: formatCompactNumber(contextWindow) })}
+            />
             <Flex align="center" justify="between" className="text-[10px]">
               <Text size="xs" color="muted">
                 {t('aiui.header.used', { used: formatCompactNumber(totalTokens), total: formatCompactNumber(contextWindow) })}
@@ -141,90 +251,6 @@ export function ChatPanelHeader() {
           <Text size="xs" color="muted">{t('aiui.header.noContextWindow')}</Text>
         )}
       </Box>
-
-      {/* History dropdown */}
-      {historyOpen && (
-        <Box className="absolute left-2 right-2 top-full z-50 mt-1 rounded-lg border border-border-default bg-bg-elevated shadow-dropdown overflow-hidden">
-          <ScrollArea direction="vertical" className="max-h-64 py-1">
-            {sorted.map((c) => (
-              <Box
-                key={c.id}
-                className={`group flex items-center gap-1 px-2 py-1.5 cursor-pointer hover:bg-hover ${c.id === activeId ? 'bg-accent/10' : ''}`}
-                onClick={() => { if (editingId !== c.id) { void switchConversation(c.id); setHistoryOpen(false) } }}
-              >
-                {editingId === c.id ? (
-                  <>
-                    <Input
-                      value={draft}
-                      onChange={(e) => setDraft(e.target.value)}
-                      size="xs"
-                      autoFocus
-                      onClick={(e) => e.stopPropagation()}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') commitEdit()
-                        if (e.key === 'Escape') setEditingId(null)
-                      }}
-                      className="flex-1"
-                    />
-                    <IconButton label={t('aiui.header.saveName')} size="xs" variant="ghost" onClick={(e) => { e.stopPropagation(); commitEdit() }}>
-                      <Check size={12} />
-                    </IconButton>
-                    <IconButton label={t('aiui.header.cancelRename')} size="xs" variant="ghost" onClick={(e) => { e.stopPropagation(); setEditingId(null) }}>
-                      <X size={12} />
-                    </IconButton>
-                  </>
-                ) : (
-                  <>
-                    <Text size="xs" truncate className="flex-1">{c.title}</Text>
-                    <Box className="hidden group-hover:flex items-center gap-0.5">
-                      <IconButton label={t('aiui.header.rename')} size="xs" variant="ghost" onClick={(e) => { e.stopPropagation(); setEditingId(c.id); setDraft(c.title) }}>
-                        <Pencil size={11} />
-                      </IconButton>
-                      <IconButton label={t('aiui.header.delete')} size="xs" variant="ghost" onClick={(e) => { e.stopPropagation(); void deleteConversation(c.id) }}>
-                        <Trash2 size={11} />
-                      </IconButton>
-                    </Box>
-                  </>
-                )}
-              </Box>
-            ))}
-          </ScrollArea>
-        </Box>
-      )}
-
-      {/* More menu */}
-      {moreOpen && active && (
-        <Box className="absolute right-2 top-full z-50 mt-1 w-48 rounded-lg border border-border-default bg-bg-elevated shadow-dropdown overflow-hidden py-1">
-          <Button
-            variant="bare"
-            size="none"
-            type="button"
-            className="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-hover text-left text-xs"
-            onClick={() => { setEditingId(active.id); setDraft(active.title); setHistoryOpen(true); setMoreOpen(false) }}
-          >
-            <Pencil size={12} /> {t('aiui.header.renameAction')}
-          </Button>
-          <Button
-            variant="bare"
-            size="none"
-            type="button"
-            disabled={!canCompact}
-            className="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-hover text-left text-xs disabled:opacity-50 disabled:cursor-not-allowed"
-            onClick={() => { setMoreOpen(false); void compactConversation() }}
-          >
-            <Minimize2 size={12} /> {t('aiui.header.compactAction')}
-          </Button>
-          <Button
-            variant="bare"
-            size="none"
-            type="button"
-            className="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-hover text-left text-xs text-error"
-            onClick={() => { setMoreOpen(false); void deleteConversation(active.id) }}
-          >
-            <Trash2 size={12} /> {t('aiui.header.deleteAction')}
-          </Button>
-        </Box>
-      )}
     </Box>
   )
 }

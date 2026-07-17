@@ -1,6 +1,13 @@
 import { create } from 'zustand'
 import { useSettingsStore } from './settings'
 import { SETTINGS_CATEGORY, type SettingsCategoryId } from '@/lib/settings-categories'
+import { CONFIG_KEY } from '@shared/settings'
+
+// Namespace prefix plugin-contributed panel ids are given, e.g. `plugin:ai-chat`
+// (built from a contribution's `contributionId`). Centralised because both the
+// construction (`${PLUGIN_PANEL_PREFIX}${id}`) and the parsing
+// (`startsWith`/`slice`) sides are repeated across the shell.
+export const PLUGIN_PANEL_PREFIX = 'plugin:' as const
 
 // Built-in panel ids, centralised so call sites stop repeating literals (the
 // types stay open with `string & {}` because plugins contribute their own
@@ -79,7 +86,7 @@ export const useUiStore = create<UiState>((set) => ({
   toggleSidebar: () => set((state) => ({ sidebarVisible: !state.sidebarVisible })),
   setSidebarWidth: (width) => {
     const clamped = Math.min(480, Math.max(180, width))
-    useSettingsStore.getState().set('appearance.sidebarWidth', clamped)
+    useSettingsStore.getState().set(CONFIG_KEY.APPEARANCE_SIDEBAR_WIDTH, clamped)
   },
   toggleTreeNode: (path) =>
     set((state) => {

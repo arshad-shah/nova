@@ -10,10 +10,15 @@ import type { MCPApprovalRequest } from '@shared/mcp'
 import { IPC_CHANNELS, IPC_EVENTS } from '@shared/ipc'
 import { parseAppError } from '@/lib/db-error'
 import { notifyError } from '@/lib/notify-error'
-import { useUiStore } from './ui'
+import { useUiStore, PLUGIN_PANEL_PREFIX } from './ui'
 import { useConnectionsStore, getActiveProfile } from './connections'
 import { useNotificationsStore } from './notifications'
 import { appActions } from '@/lib/app-actions/registry'
+
+// The AI plugin's secondary-sidebar panel id. `SecondaryPanelId` (stores/ui.ts)
+// stays open (`string & {}`) precisely so plugin-namespaced ids like this one
+// can be used — centralised here (not stores/ui.ts) since the AI plugin owns it.
+export const AI_CHAT_PANEL_ID = `${PLUGIN_PANEL_PREFIX}ai-chat` as const
 
 interface SessionStats {
   totalInputTokens: number
@@ -224,7 +229,7 @@ export const useAIStore = create<AIState>((set, get) => ({
 
   togglePanel: () => {
     const ui = useUiStore.getState()
-    const target = 'plugin:ai-chat'
+    const target = AI_CHAT_PANEL_ID
     const isActive = ui.secondaryActivePanel === target && ui.secondarySidebarVisible
     if (isActive) {
       ui.toggleSecondarySidebar()
@@ -235,7 +240,7 @@ export const useAIStore = create<AIState>((set, get) => ({
   },
 
   openPanel: () => {
-    useUiStore.getState().setSecondaryActivePanel('plugin:ai-chat')
+    useUiStore.getState().setSecondaryActivePanel(AI_CHAT_PANEL_ID)
     set({ panelOpen: true })
   },
 

@@ -124,3 +124,57 @@ jobs:
 
       - name: electron-vite build
         run: pnpm exec electron-vite build
+
+  # Package the Microsoft Store artifact on every push, not just at release.
+  # This runs the SAME command release.yml uses (`electron-builder --win appx
+  # --publish=never`) so a config/asset regression that would break a Store
+  # submission is caught here instead of surfacing when a tag is cut. The Store
+  # signs the package on ingestion, so we build it unsigned and never publish.
+  windows-package:
+    name: Windows Store package
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@a3252b78c470c02df07e9d59298aecedc3ccdd6d # v4
+        with:
+          version: 11.1.2
+
+      - name: Setup Node
+        uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a # v4.2.0
+        with:
+          node-version: 22.x
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: electron-vite build
+        run: pnpm exec electron-vite build
+
+      - name: Package appx (unsigned, matches release.yml)
+        run: pnpm exec electron-builder --win appx --publish=never
+
+      # Fail loudly if the appx wasn't emitted — a silent no-op would let a
+      # broken Store artifact through. `msstore publish` in release.yml consumes
+      # exactly this file.
+      - name: Verify the appx artifact exists
+        shell: bash
+        run: |
+          appx=$(ls dist/*.appx 2>/dev/null | head -n1)
+          if [ -z "$appx" ]; then
+            echo "::error::No .appx was produced — the Windows Store artifact would fail to build at release time."
+            exit 1
+          fi
+          echo "Produced Store package: $appx"
+          ls -la "$appx"
+
+      - name: Upload appx for inspection
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
+        with:
+          name: verql-appx-ci
+          path: dist/*.appx
+          if-no-files-found: error
+          retention-days: 7

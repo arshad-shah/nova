@@ -29,4 +29,16 @@ export const CONTRIBUTION_BADGE_VARIANTS: Record<string, 'accent' | 'info' | 'su
   setting: 'default',
 }
 
-export const DETAIL_TAB_IDS = ['overview', 'permissions', 'contributions', 'errors', 'settings'] as const
+// Centralised because `PluginDetailView.tsx` both drives the `Tabs` widget off
+// this set and branches on the active tab id to pick which tab body to render
+// — the same ids were re-typed as bare string literals at every branch.
+export const DETAIL_TAB = {
+  OVERVIEW: 'overview',
+  PERMISSIONS: 'permissions',
+  CONTRIBUTIONS: 'contributions',
+  ERRORS: 'errors',
+  SETTINGS: 'settings',
+} as const
+export type DetailTabId = (typeof DETAIL_TAB)[keyof typeof DETAIL_TAB]
+
+export const DETAIL_TAB_IDS = Object.values(DETAIL_TAB) as DetailTabId[]

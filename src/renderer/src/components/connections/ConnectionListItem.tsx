@@ -1,25 +1,11 @@
 import { MoreHorizontal } from 'lucide-react'
-import { Badge, Flex, IconButton, Text } from '@/primitives'
+import { Badge, ConnectionDot, Flex, IconButton, Text } from '@/primitives'
 import { DropdownMenu } from '@/primitives/surfaces/DropdownMenu'
+import type { MenuNode } from '@/primitives/surfaces/menu/types'
 import type { ConnectionProfile } from '@shared/types'
 import { useTranslation } from '@/i18n/I18nProvider'
-
-/**
- * Two-letter chips for the most common engines. Anything not listed falls
- * back to the first two letters of the type id (uppercased), so a future
- * plugin-contributed driver still renders sensibly without a code change.
- */
-const TYPE_BADGE: Record<string, { label: string; tone: 'accent' | 'warning' | 'info' | 'error' | 'default' | 'success' }> = {
-  postgresql: { label: 'PG', tone: 'accent'  },
-  mysql:      { label: 'MY', tone: 'warning' },
-  sqlite:     { label: 'SL', tone: 'info'    },
-  mongodb:    { label: 'MG', tone: 'success' },
-  redis:      { label: 'RD', tone: 'error'   },
-  snowflake:  { label: 'SF', tone: 'info'    },
-}
-function typeChip(type: string) {
-  return TYPE_BADGE[type] ?? { label: type.slice(0, 2).toUpperCase(), tone: 'default' as const }
-}
+import { useDriverPresentation } from '@/hooks/useDriverPresentation'
+import { DRIVER_TONE_BADGE } from '@/lib/driver-presentation'
 
 /**
  * Builds the muted one-line summary under the connection name. Skips empty
@@ -75,19 +61,20 @@ export function ConnectionListItem({
   onDelete,
 }: ConnectionListItemProps) {
   const { t } = useTranslation()
-  const chip = typeChip(connection.type)
+  // The driver declares its own chip; the renderer only maps the tone.
+  const presentationOf = useDriverPresentation([connection.type])
+  const { abbreviation, tone } = presentationOf(connection.type)
   const summary = describe(connection)
-  const dotColor = connection.color ?? (connected ? 'var(--color-success)' : 'var(--color-text-disabled)')
 
   // All row actions live in an overflow menu so the row stays uncluttered and
   // destructive actions (delete) aren't a stray click away.
-  const menuItems = [
+  const menuItems: MenuNode[] = [
     connected
-      ? { label: t('connections.active.menuDisconnect'), onSelect: onDisconnect }
-      : { label: t('connections.active.menuConnect'), onSelect: onConnect },
-    ...(connected ? [{ label: t('connections.active.menuOpenQueryTab'), onSelect: onOpenQueryTab }] : []),
-    { label: t('connections.active.menuEdit'), onSelect: onEdit },
-    { label: t('connections.active.menuDelete'), onSelect: onDelete },
+      ? { kind: 'item', id: 'disconnect', label: t('connections.active.menuDisconnect'), onSelect: onDisconnect }
+      : { kind: 'item', id: 'connect', label: t('connections.active.menuConnect'), onSelect: onConnect },
+    ...(connected ? [{ kind: 'item' as const, id: 'open-query-tab', label: t('connections.active.menuOpenQueryTab'), onSelect: onOpenQueryTab }] : []),
+    { kind: 'item', id: 'edit', label: t('connections.active.menuEdit'), onSelect: onEdit },
+    { kind: 'item', id: 'delete', label: t('connections.active.menuDelete'), onSelect: onDelete, tone: 'danger' },
   ]
 
   return (
@@ -104,22 +91,17 @@ export function ConnectionListItem({
       onClick={onActivate}
     >
       {/* Status dot — full colour + halo when connected, faded ring when not. */}
-      <span
-        className="shrink-0 inline-block w-2.5 h-2.5 rounded-full"
-        style={{
-          backgroundColor: dotColor,
-          opacity: connected ? 1 : 0.45,
-          boxShadow: connected
-            ? `0 0 0 1.5px color-mix(in srgb, ${dotColor} 35%, transparent), 0 0 6px color-mix(in srgb, ${dotColor} 50%, transparent)`
-            : 'inset 0 0 0 1px var(--color-border-strong)',
-        }}
-        aria-label={connected ? t('connections.active.statusConnected') : t('connections.active.statusDisconnected')}
+      <ConnectionDot
+        size="md"
+        state={connected ? 'connected' : 'disconnected'}
+        color={connection.color}
+        label={connected ? t('connections.active.statusConnected') : t('connections.active.statusDisconnected')}
       />
 
       <Flex direction="column" className="flex-1 min-w-0">
         <Flex align="center" gap="xs">
-          <Badge tone={chip.tone} size="sm" className="font-mono text-[9px] leading-none px-1.5 py-0.5 shrink-0">
-            {chip.label}
+          <Badge tone={DRIVER_TONE_BADGE[tone]} size="sm" className="font-mono text-[9px] leading-none px-1.5 py-0.5 shrink-0">
+            {abbreviation}
           </Badge>
           <Text size="xs" weight={active ? 'medium' : 'normal'} truncate className="flex-1">
             {connection.name}

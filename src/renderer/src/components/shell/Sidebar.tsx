@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useUiStore, ACTIVITY_PANEL } from '@/stores/ui'
+import { useUiStore, ACTIVITY_PANEL, PLUGIN_PANEL_PREFIX } from '@/stores/ui'
 import { useConnectionsStore } from '@/stores/connections'
 import { usePluginUIStore, selectContributions } from '@/stores/plugin-ui'
 import { WidgetRenderer } from '@/components/plugin-ui/WidgetRenderer'
@@ -37,7 +37,7 @@ export function Sidebar() {
     [ACTIVITY_PANEL.SETTINGS]: t('shell.sidebar.settings'),
   }
   const pluginTitles = Object.fromEntries(
-    panelContributions.map((c) => [`plugin:${c.contributionId}`, c.pluginName])
+    panelContributions.map((c) => [`${PLUGIN_PANEL_PREFIX}${c.contributionId}`, c.pluginName])
   )
   const allTitles: Record<string, string> = { ...titles, ...pluginTitles }
 
@@ -92,7 +92,7 @@ export function Sidebar() {
         {activePanel === ACTIVITY_PANEL.PLUGINS && <PluginsPanel />}
         {/* Plugin-contributed panels */}
         {panelContributions
-          .filter((c) => activePanel === `plugin:${c.contributionId}`)
+          .filter((c) => activePanel === `${PLUGIN_PANEL_PREFIX}${c.contributionId}`)
           .map((c) => (
             <Box key={c.contributionId} className="p-3 space-y-2">
               <WidgetRenderer widgets={c.widgets} pluginId={c.pluginId} />

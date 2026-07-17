@@ -139,6 +139,13 @@ export const iconButtonVariants = cva(
         ghost: 'bg-transparent hover:bg-hover text-text-primary',
         error: 'bg-error-emphasis text-error-fg hover:bg-error-emphasis-hover shadow-[inset_0_1px_0_var(--color-button-highlight),0_1px_2px_var(--color-overlay-soft)]',
         'tab-action': 'bg-transparent hover:bg-hover text-text-tertiary hover:text-text-primary rounded-full',
+        // The shell rails (ActivityBar, SecondaryActivityBar, the AI toggle,
+        // NotificationBell, …): a muted icon that steps up to full text
+        // colour on hover, plus a selected/current-panel state driven by
+        // `active` — the accent wash `bg-accent/10 text-accent` the rail
+        // indicator is reserved for. One definition instead of the same
+        // className cluster re-supplied at every call site.
+        nav: 'text-text-muted hover:text-text-primary hover:bg-hover data-[active]:bg-accent/10 data-[active]:text-accent data-[active]:hover:bg-accent/10',
         bare: '',
       },
       size: {
@@ -189,11 +196,16 @@ export interface IconButtonProps
   label: string
   /** Swap the icon for a spinner and stop accepting clicks. */
   loading?: boolean
+  /** Only meaningful with `variant="nav"` — this is the current/selected
+   *  rail item. Exposed as `data-active` (matching `MenuItem`'s convention)
+   *  rather than baked into a className string, so the accent wash lives in
+   *  the CVA, not at each call site. */
+  active?: boolean
 }
 
 export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
   (
-    { className, variant, size, shape, label, loading = false, disabled, children, ...props },
+    { className, variant, size, shape, label, loading = false, active, disabled, children, ...props },
     ref
   ) => {
     return (
@@ -202,6 +214,7 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
         aria-label={label}
         disabled={disabled || loading}
         aria-busy={loading || undefined}
+        data-active={active || undefined}
         className={cn(iconButtonVariants({ variant, size, shape }), className)}
         {...props}
       >

@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { Flex, Box, Text } from '@/primitives'
-import { useUiStore, SECONDARY_PANEL } from '@/stores/ui'
+import { useUiStore, SECONDARY_PANEL, PLUGIN_PANEL_PREFIX } from '@/stores/ui'
 import { usePluginUIStore, selectContributions } from '@/stores/plugin-ui'
 import { InspectorPanel } from '@/components/inspector/InspectorPanel'
 import { PluginPanelMount } from '@/components/plugins/PluginPanelMount'
@@ -61,8 +61,8 @@ export function SecondarySidebar() {
     )
   }
 
-  if (active.startsWith('plugin:')) {
-    const contributionId = active.slice('plugin:'.length)
+  if (active.startsWith(PLUGIN_PANEL_PREFIX)) {
+    const contributionId = active.slice(PLUGIN_PANEL_PREFIX.length)
     const contribution = contributions.find(c => c.contributionId === contributionId)
     const hostWidget = contribution?.widgets.find(w => w.type === 'host-component') as { type: 'host-component'; componentId: string } | undefined
     const componentId = hostWidget?.componentId ?? contributionId

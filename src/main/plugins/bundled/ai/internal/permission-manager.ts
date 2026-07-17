@@ -1,5 +1,5 @@
 import { randomUUID } from 'crypto'
-import type { Tool } from '../../../sdk/types'
+import type { Tool, ToolPermission } from '../../../sdk/types'
 import { isWriteToolCall } from '../../../sdk/tool-schema'
 
 export type PermissionProfile = 'read-only' | 'ask-write' | 'auto'
@@ -13,7 +13,7 @@ interface PendingApproval {
 }
 
 export class PermissionManager {
-  private overrides = new Map<string, 'read' | 'write'>()
+  private overrides = new Map<string, ToolPermission>()
   private pending = new Map<string, PendingApproval>()
   private profile: PermissionProfile = 'ask-write'
 
@@ -53,7 +53,7 @@ export class PermissionManager {
     return this.isEffectiveWrite(tool, params)
   }
 
-  setOverride(toolId: string, permission: 'read' | 'write'): void {
+  setOverride(toolId: string, permission: ToolPermission): void {
     this.overrides.set(toolId, permission)
   }
 

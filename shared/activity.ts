@@ -8,17 +8,24 @@
  * notifications, outbound network). Entries are deliberately free of secrets.
  */
 
-export type ActivityKind =
-  | 'query'        // a SQL query the app ran
-  | 'tool-call'    // an AI/MCP agent tool execution
-  | 'connection'   // connect / disconnect / failed
-  | 'notification' // something surfaced to the user
-  | 'network'      // an outbound request the app initiated (AI providers, …)
-  | 'ipc'          // a renderer→main IPC call (channel, timing, ok/err)
-  | 'plugin'       // a plugin lifecycle event (boot/activate/deactivate/error)
-  | 'store'        // a renderer state-store mutation (which keys changed)
-  | 'perf'         // a performance signal (long task, slow render)
-  | 'log'          // a diagnostic log line from the app/glue (for devs)
+// Centralised so every recording call site (main + renderer, crossing the IPC
+// boundary via `IPC_CHANNELS.ACTIVITY_RECORD`) references the same values
+// instead of re-typing the tag by hand — mirrors how `IPC_CHANNELS` centralises
+// channel names.
+export const ACTIVITY_KIND = {
+  QUERY: 'query',               // a SQL query the app ran
+  TOOL_CALL: 'tool-call',       // an AI/MCP agent tool execution
+  CONNECTION: 'connection',     // connect / disconnect / failed
+  NOTIFICATION: 'notification', // something surfaced to the user
+  NETWORK: 'network',           // an outbound request the app initiated (AI providers, …)
+  IPC: 'ipc',                   // a renderer→main IPC call (channel, timing, ok/err)
+  PLUGIN: 'plugin',             // a plugin lifecycle event (boot/activate/deactivate/error)
+  STORE: 'store',               // a renderer state-store mutation (which keys changed)
+  PERF: 'perf',                 // a performance signal (long task, slow render)
+  LOG: 'log',                   // a diagnostic log line from the app/glue (for devs)
+} as const
+
+export type ActivityKind = (typeof ACTIVITY_KIND)[keyof typeof ACTIVITY_KIND]
 
 export type ActivityLevel = 'debug' | 'info' | 'success' | 'warn' | 'error'
 

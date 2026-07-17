@@ -6,11 +6,13 @@ import { generateToken, validateAuth, isAllowedMcpHost } from './auth'
 import { findFreePort } from './find-port'
 import { isWriteToolCall, jsonSchemaToZodShape } from '../plugins/sdk/tool-schema'
 import type { Tool, ToolRegistry } from '../plugins/sdk/types'
+import { TOOL_PERMISSION, TOOL_SURFACE } from '../plugins/sdk/types'
 import type { AttentionHub } from '../attention/attention-hub'
 import { IPC_EVENTS } from '@shared/ipc'
 import { broadcast } from '../ipc/broadcast'
 import { errorMessage } from '@shared/errors'
-import type { MCPServerStatus, MCPStartResult, MCPActivityEntry, MCPApprovalRequest } from '@shared/mcp'
+import { MCP_ACTIVITY_STATUS, type MCPServerStatus, type MCPStartResult, type MCPActivityEntry, type MCPApprovalRequest } from '@shared/mcp'
+import { CONFIG_KEY } from '@shared/settings'
 
 interface MCPGate { disabledTools: string[]; readOnly: boolean }
 
@@ -49,8 +51,8 @@ export interface MCPServerInstance {
 export function selectExposedTools(tools: Tool[], gate: MCPGate): Tool[] {
   return tools.filter(t =>
     !gate.disabledTools.includes(t.id) &&
-    !(gate.readOnly && t.permission === 'write') &&
-    (t.surfaces === undefined || t.surfaces.includes('mcp'))
+    !(gate.readOnly && t.permission === TOOL_PERMISSION.WRITE) &&
+    (t.surfaces === undefined || t.surfaces.includes(TOOL_SURFACE.MCP))
   )
 }
 
@@ -78,8 +80,8 @@ export function createMCPServer(deps: MCPServerDeps): MCPServerInstance {
 
   function gate(): MCPGate {
     return {
-      disabledTools: (deps.settingsStore.get('mcp.disabledTools') as string[]) ?? [],
-      readOnly: (deps.settingsStore.get('mcp.readOnly') as boolean) ?? false,
+      disabledTools: (deps.settingsStore.get(CONFIG_KEY.MCP_DISABLED_TOOLS) as string[]) ?? [],
+      readOnly: (deps.settingsStore.get(CONFIG_KEY.MCP_READ_ONLY) as boolean) ?? false,
     }
   }
 
@@ -134,13 +136,13 @@ export function createMCPServer(deps: MCPServerDeps): MCPServerInstance {
         const startedAt = Date.now()
         const connectionId = deps.getActiveConnectionId()
         if (!connectionId) {
-          record({ id: crypto.randomUUID(), timestamp: startedAt, toolId: tool.id, paramsSummary: summarizeParams(args), status: 'error', durationMs: 0 })
+          record({ id: crypto.randomUUID(), timestamp: startedAt, toolId: tool.id, paramsSummary: summarizeParams(args), status: MCP_ACTIVITY_STATUS.ERROR, durationMs: 0 })
           return { content: [{ type: 'text', text: 'Error: No active database connection in Verql' }], isError: true }
         }
         if (needsApprovalForCall(tool, args)) {
           const approved = await requestApproval(tool, args)
           if (!approved) {
-            record({ id: crypto.randomUUID(), timestamp: startedAt, toolId: tool.id, paramsSummary: summarizeParams(args), status: 'rejected', durationMs: Date.now() - startedAt })
+            record({ id: crypto.randomUUID(), timestamp: startedAt, toolId: tool.id, paramsSummary: summarizeParams(args), status: MCP_ACTIVITY_STATUS.REJECTED, durationMs: Date.now() - startedAt })
             return { content: [{ type: 'text', text: 'Query rejected by user in Verql' }], isError: true }
           }
         }
@@ -149,10 +151,10 @@ export function createMCPServer(deps: MCPServerDeps): MCPServerInstance {
           // activity recorder logs MCP tool calls in the unified activity log,
           // exactly like the AI loop does.
           const result = await deps.toolRegistry.execute(tool.id, args, { connectionId, abortSignal: new AbortController().signal })
-          record({ id: crypto.randomUUID(), timestamp: startedAt, toolId: tool.id, paramsSummary: summarizeParams(args), status: result.success ? 'ok' : 'error', durationMs: Date.now() - startedAt })
+          record({ id: crypto.randomUUID(), timestamp: startedAt, toolId: tool.id, paramsSummary: summarizeParams(args), status: result.success ? MCP_ACTIVITY_STATUS.OK : MCP_ACTIVITY_STATUS.ERROR, durationMs: Date.now() - startedAt })
           return { content: [{ type: 'text', text: JSON.stringify(result.data, null, 2) }], isError: !result.success }
         } catch (err) {
-          record({ id: crypto.randomUUID(), timestamp: startedAt, toolId: tool.id, paramsSummary: summarizeParams(args), status: 'error', durationMs: Date.now() - startedAt })
+          record({ id: crypto.randomUUID(), timestamp: startedAt, toolId: tool.id, paramsSummary: summarizeParams(args), status: MCP_ACTIVITY_STATUS.ERROR, durationMs: Date.now() - startedAt })
           return { content: [{ type: 'text', text: `Error: ${errorMessage(err)}` }], isError: true }
         }
       })

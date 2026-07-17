@@ -1,5 +1,5 @@
 import { X } from 'lucide-react'
-import { Box, Flex, cn, Button } from '@/primitives'
+import { Box, Flex, cn, Button, IconButton } from '@/primitives'
 import { useTranslation } from '@/i18n/I18nProvider'
 
 export interface BottomTab {
@@ -36,16 +36,15 @@ export function BottomDockTabs({ tabs, activeId, onSelect, onClose }: Props) {
         </Button>
       ))}
       <Box className="flex-1" />
-      <Button
-        variant="bare"
-        size="none"
-        type="button"
-        aria-label={t('shell.bottomDock.hide')}
+      <IconButton
+        variant="nav"
+        size="xs"
+        label={t('shell.bottomDock.hide')}
         onClick={onClose}
-        className="h-7 w-7 inline-flex items-center justify-center text-text-muted hover:text-text-primary hover:bg-hover rounded-sm"
+        className="rounded-sm"
       >
         <X size={14} />
-      </Button>
+      </IconButton>
     </Flex>
   )
 }

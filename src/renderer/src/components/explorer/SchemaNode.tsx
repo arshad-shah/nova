@@ -7,6 +7,7 @@ import { useToastStore } from '@/stores/toast'
 import { useClipboard } from '@/hooks/useClipboard'
 import { useDataNouns, titleCase } from '@/hooks/useDataNouns'
 import { ContextMenu } from '@/primitives/surfaces/ContextMenu'
+import type { MenuNode } from '@/primitives/surfaces/menu/types'
 import { IconButton } from '@/primitives/forms/Button'
 import { Tooltip } from '@/primitives/surfaces/Tooltip'
 import { Box, Text, Button } from '@/primitives'
@@ -17,6 +18,8 @@ import { SchemaGroup } from './schema-group/SchemaGroup'
 import { SchemaObjectGroup } from './schema-group/SchemaObjectGroup'
 import { fuzzyMatch } from '@/lib/fuzzy-match'
 import { useTranslation } from '@/i18n/I18nProvider'
+import { SCHEMA_OBJECT_KIND } from '@shared/types'
+import { treeIndent } from '@/lib/math'
 
 interface SchemaNodeProps {
   schemaName: string
@@ -93,10 +96,10 @@ export function SchemaNode({ schemaName, connectionId, databaseName, depth, onEx
     copy(schemaName, { toast: 'explorer.toast.copiedSchemaName' })
   }
 
-  const menuItems = [
-    { label: t('explorer.menu.openErDiagram'), onSelect: () => openErDiagram(connectionId, schemaName) },
-    { label: t('explorer.menu.refresh'), onSelect: handleRefresh },
-    { label: t('explorer.menu.copySchemaName'), onSelect: handleCopySchemaName },
+  const menuItems: MenuNode[] = [
+    { kind: 'item', id: 'open-er-diagram', label: t('explorer.menu.openErDiagram'), onSelect: () => openErDiagram(connectionId, schemaName) },
+    { kind: 'item', id: 'refresh', label: t('explorer.menu.refresh'), onSelect: handleRefresh },
+    { kind: 'item', id: 'copy-schema-name', label: t('explorer.menu.copySchemaName'), onSelect: handleCopySchemaName },
   ]
 
   const matches = (name: string) => !filterText || fuzzyMatch(filterText, name) !== null
@@ -108,15 +111,15 @@ export function SchemaNode({ schemaName, connectionId, databaseName, depth, onEx
   }
   const filteredTables = allTables.filter((t) => t.type === 'table' && matches(t.name)).sort(byScore)
   const filteredViews = allTables.filter((t) => t.type === 'view' && matches(t.name)).sort(byScore)
-  const matViews = allObjects.filter((o) => o.kind === 'materialized_view' && matches(o.name)).sort(byScore)
-  const functions = allObjects.filter((o) => o.kind === 'function' && matches(o.name)).sort(byScore)
-  const procedures = allObjects.filter((o) => o.kind === 'procedure' && matches(o.name)).sort(byScore)
-  const triggers = allObjects.filter((o) => o.kind === 'trigger' && matches(o.name)).sort(byScore)
-  const sequences = allObjects.filter((o) => o.kind === 'sequence' && matches(o.name)).sort(byScore)
-  const indexes = allObjects.filter((o) => o.kind === 'index' && matches(o.name)).sort(byScore)
-  const extensions = allObjects.filter((o) => o.kind === 'extension' && matches(o.name)).sort(byScore)
+  const matViews = allObjects.filter((o) => o.kind === SCHEMA_OBJECT_KIND.MATERIALIZED_VIEW && matches(o.name)).sort(byScore)
+  const functions = allObjects.filter((o) => o.kind === SCHEMA_OBJECT_KIND.FUNCTION && matches(o.name)).sort(byScore)
+  const procedures = allObjects.filter((o) => o.kind === SCHEMA_OBJECT_KIND.PROCEDURE && matches(o.name)).sort(byScore)
+  const triggers = allObjects.filter((o) => o.kind === SCHEMA_OBJECT_KIND.TRIGGER && matches(o.name)).sort(byScore)
+  const sequences = allObjects.filter((o) => o.kind === SCHEMA_OBJECT_KIND.SEQUENCE && matches(o.name)).sort(byScore)
+  const indexes = allObjects.filter((o) => o.kind === SCHEMA_OBJECT_KIND.INDEX && matches(o.name)).sort(byScore)
+  const extensions = allObjects.filter((o) => o.kind === SCHEMA_OBJECT_KIND.EXTENSION && matches(o.name)).sort(byScore)
 
-  const paddingLeft = 8 + depth * 16
+  const paddingLeft = treeIndent(depth)
   // One indent step in from the schema row, so group headers sit clearly under it.
   const groupLabelPaddingLeft = paddingLeft + 16
   // Items inside a group nest one step further in (matches TableNode/ViewNode depth+2).
@@ -148,13 +151,16 @@ export function SchemaNode({ schemaName, connectionId, databaseName, depth, onEx
             className="text-warning shrink-0"
             strokeWidth={1.8}
           />
-          <Box
+          <Text
             as="span"
-            className="flex-1 truncate min-w-0 text-xs font-medium text-text-primary"
+            truncate
+            size="xs"
+            weight="medium"
+            className="flex-1 min-w-0"
             title={schemaName}
           >
             <HighlightedText text={schemaName} query={filterText} />
-          </Box>
+          </Text>
 
           {/* Hover actions */}
           <Box

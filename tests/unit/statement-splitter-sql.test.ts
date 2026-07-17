@@ -1,5 +1,6 @@
-import { describe, it, expect } from 'vitest'
-import { splitSqlStatements } from '@/lib/statement-contributions/sql'
+import { describe, it, expect, vi } from 'vitest'
+import { splitSqlStatements, sqlStatementContribution } from '@/lib/statement-contributions/sql'
+import { tabActions } from '@/stores/tab-actions'
 
 describe('splitSqlStatements', () => {
   it('returns empty for empty/whitespace input', () => {
@@ -68,5 +69,73 @@ describe('splitSqlStatements', () => {
     const r = splitSqlStatements('SELECT 1\nWITH cte AS (SELECT 1) SELECT * FROM cte')
     expect(r).toHaveLength(2)
     expect(r[1].text.startsWith('WITH')).toBe(true)
+  })
+
+  it('skips indentation whitespace before a keyword that starts a new statement on its own line', () => {
+    const r = splitSqlStatements('SELECT 1\n  SELECT 2')
+    expect(r.map((s) => s.text)).toEqual(['SELECT 1', 'SELECT 2'])
+    expect(r[1].startColumn).toBe(3)
+  })
+
+  it('tracks line numbers across a multi-line block comment', () => {
+    const r = splitSqlStatements('SELECT 1 /* line one\nline two\nline three */ + 2')
+    expect(r).toHaveLength(1)
+    expect(r[0].endLine).toBe(3)
+  })
+
+  it('treats a backslash-escaped quote inside a string as part of the string, not its terminator', () => {
+    const r = splitSqlStatements("SELECT 'it\\'s fine'; SELECT 2")
+    expect(r.map((s) => s.text)).toEqual(["SELECT 'it\\'s fine'", 'SELECT 2'])
+  })
+
+  it('tracks line numbers across a newline embedded in a string literal', () => {
+    const r = splitSqlStatements("SELECT 'line one\nline two'; SELECT 2")
+    const stmts = r
+    expect(stmts).toHaveLength(2)
+    expect(stmts[0].endLine).toBe(2)
+    expect(stmts[1].startLine).toBe(2)
+  })
+})
+
+describe('sqlStatementContribution', () => {
+  it('splitStatements filters out statements that are only comments', () => {
+    const src = '-- just a comment\nSELECT 1'
+    const r = sqlStatementContribution.splitStatements(src)
+    expect(r).toHaveLength(1)
+    expect(r[0].text).toBe('SELECT 1')
+  })
+
+  it('splitStatements drops a block-comment-only statement too', () => {
+    const src = 'SELECT 1;\n/* nothing but a comment */\nSELECT 2'
+    const r = sqlStatementContribution.splitStatements(src)
+    expect(r.map((s) => s.text)).toEqual(['SELECT 1', 'SELECT 2'])
+  })
+
+  it('the "run" lens action runs the statement text against the owning tab', () => {
+    const spy = vi.spyOn(tabActions, 'runStatement').mockImplementation(() => {})
+    const action = sqlStatementContribution.lensActions?.find((a) => a.id === 'run')
+    action!.handler({ tabId: 't1', stmt: { text: 'SELECT 1' } } as never)
+    expect(spy).toHaveBeenCalledWith('t1', 'SELECT 1')
+    spy.mockRestore()
+  })
+
+  it('classifyDestructive flags a DELETE/DROP/TRUNCATE statement', () => {
+    expect(sqlStatementContribution.classifyDestructive('DELETE FROM users')).toEqual({ messageKey: 'query.destructive.deleteDropTruncate' })
+  })
+
+  it('classifyDestructive flags an UPDATE with no WHERE clause', () => {
+    expect(sqlStatementContribution.classifyDestructive('UPDATE users SET active = false')).toEqual({ messageKey: 'query.destructive.updateNoWhere' })
+  })
+
+  it('classifyDestructive is null for a plain SELECT', () => {
+    expect(sqlStatementContribution.classifyDestructive('SELECT * FROM users')).toBeNull()
+  })
+
+  it('the "explain" lens action explains the statement text against the owning tab', () => {
+    const spy = vi.spyOn(tabActions, 'explainStatement').mockImplementation(() => {})
+    const action = sqlStatementContribution.lensActions?.find((a) => a.id === 'explain')
+    action!.handler({ tabId: 't1', stmt: { text: 'SELECT 1' } } as never)
+    expect(spy).toHaveBeenCalledWith('t1', 'SELECT 1')
+    spy.mockRestore()
   })
 })

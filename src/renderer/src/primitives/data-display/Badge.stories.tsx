@@ -11,7 +11,7 @@ const meta = {
     },
     size: {
       control: 'select',
-      options: ['xs', 'sm', 'md', 'lg', 'xl'],
+      options: ['xs', 'pill', 'sm', 'md', 'lg', 'xl'],
     },
   },
 } satisfies Meta<typeof Badge>
@@ -61,9 +61,19 @@ export const KeyKinds: Story = {
 export const Sizes: Story = {
   render: () => (
     <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-      {(['xs', 'sm', 'md', 'lg', 'xl'] as const).map((size) => (
+      {(['xs', 'pill', 'sm', 'md', 'lg', 'xl'] as const).map((size) => (
         <Badge key={size} tone="accent" size={size}>{size}</Badge>
       ))}
     </div>
   ),
+}
+
+/** `pill` — the standalone metadata/status pill scale (10px text, roomier
+ *  padding than `xs`): row/index counts on a table node, an AI status pill. */
+export const Pill: Story = {
+  args: {
+    tone: 'default',
+    size: 'pill',
+    children: '42 rows',
+  },
 }

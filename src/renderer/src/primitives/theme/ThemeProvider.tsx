@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useSettingsStore } from '@/stores/settings'
 import { useThemesStore } from '@/stores/themes'
-import type { AppearanceMode } from '@shared/settings'
+import { CONFIG_KEY, DEFAULT_THEME_ID, type AppearanceMode } from '@shared/settings'
 
 export type Theme = string
 
@@ -60,11 +60,11 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       themes.filter((t) => !t.validation || t.validation.ok).map((t) => t.id),
     )
     const safe = (id: string, fallback: string) => (selectable.has(id) ? id : fallback)
-    if (appearanceMode === 'light') return safe(lightTheme, 'lab')
-    if (appearanceMode === 'dark') return safe(darkTheme, 'ion')
+    if (appearanceMode === 'light') return safe(lightTheme, DEFAULT_THEME_ID.LIGHT)
+    if (appearanceMode === 'dark') return safe(darkTheme, DEFAULT_THEME_ID.DARK)
     // system
     const wantDark = systemPrefersDark
-    return wantDark ? safe(darkTheme, 'ion') : safe(lightTheme, 'lab')
+    return wantDark ? safe(darkTheme, DEFAULT_THEME_ID.DARK) : safe(lightTheme, DEFAULT_THEME_ID.LIGHT)
   }, [appearanceMode, lightTheme, darkTheme, systemPrefersDark, themes])
 
   // Mirror the resolved theme back into `appearance.theme` so other code
@@ -72,7 +72,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   // source of truth without re-implementing the mode logic.
   useEffect(() => {
     if (appearance.theme !== resolvedTheme) {
-      setSetting('appearance.theme', resolvedTheme)
+      setSetting(CONFIG_KEY.APPEARANCE_THEME, resolvedTheme)
     }
   }, [resolvedTheme, appearance.theme, setSetting])
 
@@ -127,7 +127,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     }
     const side: 'lightTheme' | 'darkTheme' = meta?.type === 'light' ? 'lightTheme' : 'darkTheme'
     setSetting(`appearance.${side}`, newTheme)
-    setSetting('appearance.theme', newTheme)
+    setSetting(CONFIG_KEY.APPEARANCE_THEME, newTheme)
     // If the user is in a fixed mode that doesn't match this theme's type,
     // flip the mode too — picking a light theme while stuck in dark mode is
     // clearly unintended.

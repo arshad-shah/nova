@@ -1,85 +1,86 @@
-import React, { useState } from 'react'
-import { cva, type VariantProps } from 'class-variance-authority'
-import { cn } from '../utils/cn'
+import React, { useCallback, useRef, useState } from 'react'
+import { FloatingTree, useFloatingParentNodeId, type VirtualElement } from '@floating-ui/react'
+import { MenuLevel } from './menu/MenuLevel'
+import { renderNodes } from './menu/render-nodes'
+import type { MenuNode } from './menu/types'
+import type { MenuSize } from './menu/menu-context'
 
-type MenuItem = {
-  label: string
-  onSelect: () => void
-  disabled?: boolean
-}
-
-const menuItemVariants = cva(
-  'w-full text-left whitespace-nowrap hover:bg-hover focus:bg-hover disabled:opacity-50 disabled:pointer-events-none transition-colors duration-[var(--transition-fast)]',
-  {
-    variants: {
-      size: {
-        sm: 'text-xs py-1 px-2',
-        md: 'text-sm py-1.5 px-3',
-        lg: 'text-base py-2 px-4',
-      },
-    },
-    defaultVariants: {
-      size: 'md',
-    },
-  }
-)
-
-type ContextMenuProps = VariantProps<typeof menuItemVariants> & {
-  items: MenuItem[]
+/**
+ * A menu opened by right-clicking its children.
+ *
+ * Anchored to a virtual reference at the cursor, so it gets the same `flip` /
+ * `shift` collision handling as every other menu — the previous implementation
+ * positioned with raw `top`/`left` and overflowed the viewport on a right-click
+ * near a screen edge.
+ */
+export type ContextMenuProps = {
+  /** Declarative tree. Mutually exclusive with `menu`. */
+  items?: MenuNode[]
+  /** Compound content. */
+  menu?: React.ReactNode
+  size?: MenuSize
   className?: string
   children: React.ReactNode
+  'aria-label'?: string
 }
 
-type Position = { x: number; y: number }
+function ContextMenuImpl({
+  items,
+  menu,
+  size = 'md',
+  className,
+  children,
+  'aria-label': ariaLabel,
+}: ContextMenuProps) {
+  const [open, setOpen] = useState(false)
+  const positionRef = useRef({ x: 0, y: 0 })
 
-export function ContextMenu({ items, size, className, children }: ContextMenuProps) {
-  const [position, setPosition] = useState<Position | null>(null)
+  // A zero-size rect at the cursor. Recreated per open so floating-ui re-reads
+  // the position; `getBoundingClientRect` closes over the latest coordinates.
+  const [positionReference, setPositionReference] = useState<VirtualElement | null>(null)
 
-  function handleContextMenu(e: React.MouseEvent) {
+  const handleContextMenu = useCallback((e: React.MouseEvent) => {
     e.preventDefault()
+    // Nested targets each have their own ContextMenu; only the innermost should
+    // open. Without this, right-clicking a column would also open the table's menu.
     e.stopPropagation()
-    setPosition({ x: e.clientX, y: e.clientY })
-  }
-
-  function close() {
-    setPosition(null)
-  }
+    positionRef.current = { x: e.clientX, y: e.clientY }
+    setPositionReference({
+      getBoundingClientRect() {
+        const { x, y } = positionRef.current
+        return { width: 0, height: 0, x, y, top: y, left: x, right: x, bottom: y } as DOMRect
+      },
+    })
+    setOpen(true)
+  }, [])
 
   return (
-    <div onContextMenu={handleContextMenu}>
-      {children}
-      {position && (
-        <>
-          <div
-            className="fixed inset-0 z-40"
-            onClick={close}
-            aria-hidden="true"
-          />
-          <div
-            role="menu"
-            className={cn(
-              'fixed z-50 bg-bg-elevated border border-border-default rounded-lg py-1 min-w-[7rem] shadow-[var(--shadow-dropdown)]',
-              className
-            )}
-            style={{ top: position.y, left: position.x }}
-          >
-            {items.map((item) => (
-              <button
-                key={item.label}
-                role="menuitem"
-                disabled={item.disabled}
-                className={menuItemVariants({ size })}
-                onClick={() => {
-                  item.onSelect()
-                  close()
-                }}
-              >
-                {item.label}
-              </button>
-            ))}
-          </div>
-        </>
-      )}
-    </div>
+    <>
+      <div onContextMenu={handleContextMenu} className="contents">
+        {children}
+      </div>
+      <MenuLevel
+        triggerMode="none"
+        open={open}
+        onOpenChange={setOpen}
+        placement="right-start"
+        size={size}
+        className={className}
+        aria-label={ariaLabel}
+        positionReference={positionReference}
+      >
+        {items ? renderNodes(items) : menu}
+      </MenuLevel>
+    </>
+  )
+}
+
+export function ContextMenu(props: ContextMenuProps) {
+  const parentId = useFloatingParentNodeId()
+  if (parentId != null) return <ContextMenuImpl {...props} />
+  return (
+    <FloatingTree>
+      <ContextMenuImpl {...props} />
+    </FloatingTree>
   )
 }
