@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { ChevronLeft, ChevronRight, Plus } from 'lucide-react'
 import { useTabsStore } from '@/stores/tabs'
-import { requestCloseTab } from '@/stores/tab-actions'
+import { requestCloseTab, requestCloseTabs } from '@/stores/tab-actions'
 import { useConnectionsStore, useActiveProfile } from '@/stores/connections'
 import { initialAutoCommit } from '@/lib/initial-autocommit'
 import { Flex, IconButton, Tooltip, cn } from '@/primitives'
@@ -19,9 +19,6 @@ export function TabBar() {
     activeTabId,
     setActiveTab,
     closeTab,
-    closeOtherTabs,
-    closeTabsToRight,
-    closeAllTabs,
     addQueryTab,
     reorderTabs,
     duplicateTab,
@@ -46,9 +43,20 @@ export function TabBar() {
     const tab = tabs.find(item => item.id === tabId)
     return [
       { label: t('shell.tabBar.close'), onSelect: () => requestCloseTab(tabId, closeTab) },
-      { label: t('shell.tabBar.closeOthers'), onSelect: () => closeOtherTabs(tabId), disabled: tabs.length <= 1 },
-      { label: t('shell.tabBar.closeToRight'), onSelect: () => closeTabsToRight(tabId), disabled: index >= tabs.length - 1 },
-      { label: t('shell.tabBar.closeAll'), onSelect: () => closeAllTabs() },
+      {
+        label: t('shell.tabBar.closeOthers'),
+        onSelect: () => requestCloseTabs(tabs.filter(x => x.id !== tabId).map(x => x.id), closeTab),
+        disabled: tabs.length <= 1,
+      },
+      {
+        label: t('shell.tabBar.closeToRight'),
+        onSelect: () => requestCloseTabs(tabs.slice(index + 1).map(x => x.id), closeTab),
+        disabled: index >= tabs.length - 1,
+      },
+      {
+        label: t('shell.tabBar.closeAll'),
+        onSelect: () => requestCloseTabs(tabs.map(x => x.id), closeTab),
+      },
       { label: t('shell.tabBar.duplicate'), onSelect: () => duplicateTab(tabId), disabled: tab?.type !== 'query' },
       {
         label: t('shell.tabBar.copyTitle'),

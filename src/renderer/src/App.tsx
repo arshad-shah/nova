@@ -80,8 +80,10 @@ export function App() {
   const aboutModalOpen = useUiStore(s => s.aboutModalOpen)
   // Shared across every close site (tab-bar X, Cmd+W, context menu). The
   // store gives us a single pending tab id; setting it raises the dialog.
-  const pendingCloseId = usePendingClose(s => s.pendingId)
-  const clearPendingClose = usePendingClose(s => s.clear)
+  const pendingTxnQueue = usePendingClose(s => s.txnQueue)
+  const pendingDirtyBatch = usePendingClose(s => s.dirtyBatch)
+  const resolvePendingHead = usePendingClose(s => s.resolveHead)
+  const clearPendingBatch = usePendingClose(s => s.clearBatch)
 
   // Global shell behaviour — keyboard shortcuts, dropped-file forwarding and
   // native-menu commands — lives in focused hooks (see ./hooks).
@@ -220,8 +222,10 @@ export function App() {
         <PluginRestartBanner />
       </SectionErrorBoundary>
       <TabCloseGuard
-        pendingCloseId={pendingCloseId}
-        clearPendingClose={clearPendingClose}
+        txnQueue={pendingTxnQueue}
+        dirtyBatch={pendingDirtyBatch}
+        resolveHead={resolvePendingHead}
+        clearBatch={clearPendingBatch}
         closeTab={closeTab}
       />
     </Flex>

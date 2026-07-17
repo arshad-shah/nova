@@ -148,7 +148,10 @@ export const shell = {
   confirmClose: {
     unsavedTitle: 'Unsaved changes',
     unsavedMessage: '{label} has unsaved changes. Close anyway?',
+    unsavedTitleMany: 'Unsaved changes in {count, plural, one {# tab} other {# tabs}}',
+    unsavedMessageMany: '{labels} have unsaved changes. Close anyway?',
     discardChanges: 'Discard changes',
+    discardChangesMany: 'Discard all',
     keepEditing: 'Keep editing',
     thisTab: 'this tab',
   },
