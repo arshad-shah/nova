@@ -2,6 +2,7 @@ import { useCallback, useEffect } from 'react'
 import { Sparkles, Copy, RefreshCcw, MessageSquarePlus, Square, AlertCircle } from 'lucide-react'
 import { Button } from '@/primitives/forms/Button'
 import { Text, Box } from '@/primitives'
+import { Skeleton } from '@/primitives/data-display/Skeleton'
 import { Flex } from '@/primitives/layout/Flex'
 import { MarkdownContent } from '@/components/ai/MarkdownContent'
 import { useTabsStore } from '@/stores/tabs'
@@ -104,9 +105,9 @@ function ErrorRow({ message }: { message: string }) {
 function SkeletonBody() {
   return (
     <Box className="space-y-1.5 py-1">
-      <Box className="h-3 rounded bg-bg-tertiary animate-pulse w-[90%]" />
-      <Box className="h-3 rounded bg-bg-tertiary animate-pulse w-[75%]" />
-      <Box className="h-3 rounded bg-bg-tertiary animate-pulse w-[60%]" />
+      <Skeleton animation="pulse" className="h-3 w-[90%]" />
+      <Skeleton animation="pulse" className="h-3 w-[75%]" />
+      <Skeleton animation="pulse" className="h-3 w-[60%]" />
     </Box>
   )
 }

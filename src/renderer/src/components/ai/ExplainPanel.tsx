@@ -1,5 +1,6 @@
 import { useCallback } from 'react'
-import { Sparkles, Loader2 } from 'lucide-react'
+import { Sparkles } from 'lucide-react'
+import { Spinner } from '@/primitives/feedback/Spinner'
 import type { QueryResult } from '@shared/types'
 import { Button } from '@/primitives/forms/Button'
 import { useExplainStore } from '@/stores/explain'
@@ -51,7 +52,7 @@ export function ExplainPanel({ tabId, sql, results, explanation }: Props) {
       disabled={loading}
     >
       {loading
-        ? <Loader2 size={10} className="animate-spin text-accent" />
+        ? <Spinner size="xs" />
         : <Sparkles size={10} className={explanation ? 'text-accent' : 'text-text-muted'} />}
       {t('aiui.explain.explain')}
     </Button>

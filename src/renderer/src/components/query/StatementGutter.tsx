@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import type { editor } from 'monaco-editor'
-import { Check, AlertCircle, Loader2 } from 'lucide-react'
+import { Check, AlertCircle } from 'lucide-react'
+import { Spinner } from '@/primitives/feedback/Spinner'
 import { Button } from '@/primitives/forms/Button'
 import { Text } from '@/primitives/typography/Text'
 import {
@@ -178,7 +179,7 @@ function StatusChip({ status }: { status: StatementStatus }) {
   if (status.kind === 'running') {
     return (
       <Text as="span" size="xs" color="muted" className="ml-2 inline-flex items-center gap-1">
-        <Loader2 size={10} className="animate-spin" />
+        <Spinner size="xs" className="text-current" />
         {t('query.statement.running')}
       </Text>
     )
