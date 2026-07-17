@@ -11,6 +11,41 @@ const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(file
 export default defineConfig({
   plugins: [react()],
   test: {
+    // Coverage is a RATCHET, not a target. `thresholds` are pinned to the
+    // measured floor at the time of writing; CI fails if a change drops below
+    // them. When you raise coverage, raise the floor in the same PR so it can
+    // never silently slide back.
+    //
+    // Measured against the `unit` project only (`pnpm test:coverage`), which is
+    // what CI gates on. The `storybook` project renders components in a real
+    // browser and is not counted here — so component numbers understate reality.
+    //
+    // A threshold is not a goal. Percentage is trivially gamed by tests that
+    // render code without asserting behaviour; prefer a smaller number of tests
+    // that fail when the logic breaks.
+    coverage: {
+      provider: 'v8',
+      include: ['src/**/*.{ts,tsx}', 'shared/**/*.{ts,tsx}'],
+      exclude: [
+        '**/*.stories.{ts,tsx}',
+        '**/*.d.ts',
+        // Process entry points / bootstrap: no logic worth asserting, and they
+        // pull Electron's runtime into the jsdom project when instrumented.
+        'src/renderer/src/main.tsx',
+        'src/preload/**',
+      ],
+      reporter: ['text-summary', 'json-summary', 'html'],
+      reportsDirectory: 'coverage',
+      // Floor measured 2026-07-17: 1646 passing tests across 180 files.
+      // statements 33.52 · branches 28.95 · functions 28.40 · lines 35.34
+      thresholds: {
+        statements: 33.5,
+        branches: 28.9,
+        functions: 28.4,
+        lines: 35.3,
+        autoUpdate: false,
+      },
+    },
     projects: [{
       extends: true,
       test: {

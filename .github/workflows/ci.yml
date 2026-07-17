@@ -47,8 +47,11 @@ jobs:
       - name: Rebuild native modules for Node
         run: pnpm rebuild better-sqlite3
 
-      - name: Run unit tests
-        run: pnpm exec vitest run --project unit
+      # Coverage thresholds in vitest.config.ts are a ratchet pinned to the
+      # measured floor: this step fails if a change drops coverage below it.
+      # Raising coverage means raising the floor in the same PR.
+      - name: Run unit tests with coverage
+        run: pnpm test:coverage
 
   typecheck:
     name: TypeScript
