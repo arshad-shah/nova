@@ -200,6 +200,60 @@ describe('menu — ARIA roles and state', () => {
     expect(radios.filter((r) => r.getAttribute('aria-checked') === 'true')).toHaveLength(1)
   })
 
+  it('wraps a run of radio rows in a role=group container named after the group', async () => {
+    // ARIA requires menuitemradio rows to live inside a `group`; that container
+    // is what makes them ONE mutually-exclusive set rather than N unrelated
+    // radios. An earlier version of renderNodes silently dropped `group`, and
+    // the aria-checked assertion above happily passed anyway — which is exactly
+    // why this test exists separately.
+    const user = userEvent.setup()
+    render(
+      <Harness
+        items={[
+          { kind: 'radio', id: 'p', label: 'public', checked: true, group: 'schema', onSelect: () => {} },
+          { kind: 'radio', id: 's', label: 'sales', checked: false, group: 'schema', onSelect: () => {} },
+        ]}
+      />
+    )
+    await openMenu(user)
+    const group = screen.getByRole('group', { name: 'schema' })
+    expect(within(group).getAllByRole('menuitemradio')).toHaveLength(2)
+  })
+
+  it('keeps two different radio groups in separate containers', async () => {
+    // The database picker and the schema picker are distinct single-select sets;
+    // fusing them would make selecting a schema appear to deselect a database.
+    const user = userEvent.setup()
+    render(
+      <Harness
+        items={[
+          { kind: 'radio', id: 'db1', label: 'main', checked: true, group: 'database', onSelect: () => {} },
+          { kind: 'radio', id: 'sc1', label: 'public', checked: true, group: 'schema', onSelect: () => {} },
+        ]}
+      />
+    )
+    await openMenu(user)
+    expect(within(screen.getByRole('group', { name: 'database' })).getAllByRole('menuitemradio')).toHaveLength(1)
+    expect(within(screen.getByRole('group', { name: 'schema' })).getAllByRole('menuitemradio')).toHaveLength(1)
+  })
+
+  it('does not fuse same-group radios that the author separated', async () => {
+    // A separator between two runs means they were split on purpose; merging
+    // them back into one container would contradict what is rendered.
+    const user = userEvent.setup()
+    render(
+      <Harness
+        items={[
+          { kind: 'radio', id: 'a', label: 'alpha', checked: true, group: 'g', onSelect: () => {} },
+          { kind: 'separator' },
+          { kind: 'radio', id: 'b', label: 'beta', checked: false, group: 'g', onSelect: () => {} },
+        ]}
+      />
+    )
+    await openMenu(user)
+    expect(screen.getAllByRole('group', { name: 'g' })).toHaveLength(2)
+  })
+
   it('renders a section as an accessible group, not as a menu row', async () => {
     // A section label must not be announced as if it were selectable.
     const user = userEvent.setup()

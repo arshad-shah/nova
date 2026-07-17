@@ -10,12 +10,14 @@ export {
   MenuItem,
   MenuCheckItem,
   MenuRadioItem,
+  MenuRadioGroup,
   MenuSeparator,
   MenuSection,
   MenuRow,
   type MenuItemProps,
   type MenuCheckItemProps,
   type MenuRadioItemProps,
+  type MenuRadioGroupProps,
   type MenuSectionProps,
 } from './MenuItem'
 export { MenuSub, type MenuSubProps } from './MenuSub'
@@ -37,7 +39,14 @@ export {
   type FocusableMenuNode,
 } from './types'
 
-import { MenuItem, MenuCheckItem, MenuRadioItem, MenuSeparator, MenuSection } from './MenuItem'
+import {
+  MenuItem,
+  MenuCheckItem,
+  MenuRadioItem,
+  MenuRadioGroup,
+  MenuSeparator,
+  MenuSection,
+} from './MenuItem'
 import { MenuSub } from './MenuSub'
 
 /**
@@ -47,7 +56,9 @@ import { MenuSub } from './MenuSub'
 export const Menu = {
   Item: MenuItem,
   CheckItem: MenuCheckItem,
+  /** Must be wrapped in `Menu.RadioGroup` — ARIA requires the container. */
   RadioItem: MenuRadioItem,
+  RadioGroup: MenuRadioGroup,
   Separator: MenuSeparator,
   Section: MenuSection,
   Sub: MenuSub,
