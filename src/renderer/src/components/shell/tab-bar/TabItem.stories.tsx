@@ -50,10 +50,12 @@ const meta: Meta<typeof TabItem> = {
     onDragStart: noopDrag,
     onDragOver: noopDrag,
     onDragEnd: fn(),
+    tabIndex: 0,
+    onFocus: fn(),
   },
   decorators: [
     (Story) => (
-      <div className="flex items-end h-9 bg-bg-secondary px-2">
+      <div className="flex items-end h-(--tab-bar-h) bg-bg-secondary px-2">
         <Story />
       </div>
     ),
