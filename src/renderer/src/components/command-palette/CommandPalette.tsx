@@ -245,7 +245,7 @@ export function CommandPalette({ open, onClose }: Props) {
               variant="ghost"
               onClick={() => { cmd.action(); onClose() }}
               className={`w-full flex items-center justify-between px-4 py-2 text-left transition-colors rounded-none border-0 h-auto ${
-                i === selectedIndex ? 'bg-accent/10 text-accent' : 'text-text-secondary hover:bg-white/5'
+                i === selectedIndex ? 'bg-accent/10 text-accent' : 'text-text-secondary hover:bg-hover'
               }`}
             >
               <Flex align="center" gap="sm">

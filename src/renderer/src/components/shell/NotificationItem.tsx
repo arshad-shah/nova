@@ -24,7 +24,7 @@ export function NotificationItem({ notification, onClick }: NotificationItemProp
       size="sm"
       onClick={() => onClick(id)}
       className={cn(
-        'w-full justify-start rounded-none px-3.5 py-1.5 h-auto border-b border-white/3',
+        'w-full justify-start rounded-none px-3.5 py-1.5 h-auto border-b border-border-subtle',
         read && 'opacity-60'
       )}
     >

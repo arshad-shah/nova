@@ -29,7 +29,7 @@ export function BottomDockTabs({ tabs, activeId, onSelect, onClose }: Props) {
             'h-7 px-3 text-xs rounded-sm transition-colors',
             activeId === tab.id
               ? 'bg-bg-primary text-text-primary'
-              : 'text-text-muted hover:text-text-primary hover:bg-white/5'
+              : 'text-text-muted hover:text-text-primary hover:bg-hover'
           )}
         >
           {tab.title}
@@ -42,7 +42,7 @@ export function BottomDockTabs({ tabs, activeId, onSelect, onClose }: Props) {
         type="button"
         aria-label={t('shell.bottomDock.hide')}
         onClick={onClose}
-        className="h-7 w-7 inline-flex items-center justify-center text-text-muted hover:text-text-primary hover:bg-white/5 rounded-sm"
+        className="h-7 w-7 inline-flex items-center justify-center text-text-muted hover:text-text-primary hover:bg-hover rounded-sm"
       >
         <X size={14} />
       </Button>

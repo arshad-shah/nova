@@ -59,7 +59,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
         <Box className="max-w-[82%]">
           {/* Tail toward the right edge (rounded-tr-sm) so it reads as the user's. */}
           <Box className="rounded-xl rounded-tr-sm bg-accent-emphasis px-3 py-2">
-            <Text size="sm" className="text-white whitespace-pre-wrap">{message.content}</Text>
+            <Text size="sm" className="text-action-fg whitespace-pre-wrap">{message.content}</Text>
           </Box>
           <Box className="flex justify-end gap-1 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
             <BranchButton messageId={message.id} />

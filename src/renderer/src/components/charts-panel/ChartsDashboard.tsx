@@ -31,7 +31,7 @@ export function ChartsDashboard() {
         {queryTabsWithResults.map(tab => (
           <Box
             key={tab.id}
-            className="px-2 py-2 rounded-md hover:bg-white/5 cursor-pointer transition-colors mb-0.5"
+            className="px-2 py-2 rounded-md hover:bg-hover cursor-pointer transition-colors mb-0.5"
             onClick={() => {
               // Bring the query tab forward AND switch the bottom dock to the
               // Chart tab in one click — the dashboard becomes a real

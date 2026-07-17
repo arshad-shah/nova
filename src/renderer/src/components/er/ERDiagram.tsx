@@ -124,7 +124,7 @@ export function ERDiagram({ connectionId, schema }: Props) {
         <Background color={gridColor} gap={20} size={1} />
         <Controls
           position="bottom-right"
-          className="!bg-bg-secondary !border-border !shadow-lg [&>button]:!bg-bg-secondary [&>button]:!border-border [&>button]:!text-text-secondary [&>button:hover]:!bg-white/5"
+          className="!bg-bg-secondary !border-border !shadow-lg [&>button]:!bg-bg-secondary [&>button]:!border-border [&>button]:!text-text-secondary [&>button:hover]:!bg-hover"
         />
         <MiniMap
           position="bottom-left"

@@ -108,7 +108,7 @@ export function SavedQueriesPanel() {
         {filtered.map(query => (
           <Box
             key={query.id}
-            className="group px-2 py-1.5 rounded-md hover:bg-white/5 cursor-pointer transition-colors"
+            className="group px-2 py-1.5 rounded-md hover:bg-hover cursor-pointer transition-colors"
             onClick={() => handleOpenQuery(query)}
           >
             <Flex align="center" justify="between">

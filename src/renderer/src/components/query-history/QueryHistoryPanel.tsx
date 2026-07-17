@@ -72,7 +72,7 @@ export function QueryHistoryPanel() {
         {filtered.map((entry) => (
           <Box
             key={entry.id}
-            className="group px-2 py-1.5 rounded-md hover:bg-white/5 cursor-pointer transition-colors"
+            className="group px-2 py-1.5 rounded-md hover:bg-hover cursor-pointer transition-colors"
             onClick={() => openHistoryEntry(entry)}
           >
             <Flex align="center" justify="between" gap="xs">
