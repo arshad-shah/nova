@@ -1065,9 +1065,20 @@ Call the Storybook MCP tool `get-storybook-story-instructions` and follow its ou
 `data-density` is one attribute on `<html>`, so each story is a decorator that sets it. Add to `TabBar.stories.tsx`:
 
 ```tsx
+/* Restores the previous density on unmount. Without the cleanup, whichever
+   density story ran last leaks onto <html> and silently resizes every
+   subsequent story in the suite. */
 function withDensity(density: 'compact' | 'comfortable' | 'spacious') {
   return (Story: () => React.ReactElement) => {
-    document.documentElement.setAttribute('data-density', density)
+    const root = document.documentElement
+    const previous = root.getAttribute('data-density')
+    useEffect(() => {
+      root.setAttribute('data-density', density)
+      return () => {
+        if (previous === null) root.removeAttribute('data-density')
+        else root.setAttribute('data-density', previous)
+      }
+    }, [previous])
     return <Story />
   }
 }
