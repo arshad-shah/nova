@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { ChevronLeft, ChevronRight, Plus } from 'lucide-react'
 import { useTabsStore } from '@/stores/tabs'
-import { requestCloseTab } from '@/stores/tab-actions'
+import { requestCloseTab, requestCloseTabs } from '@/stores/tab-actions'
 import { useConnectionsStore, useActiveProfile } from '@/stores/connections'
 import { initialAutoCommit } from '@/lib/initial-autocommit'
 import { Flex, IconButton, Tooltip, cn } from '@/primitives'
@@ -9,6 +9,7 @@ import { TabItem } from './TabItem'
 import { useClipboard } from '@/hooks/useClipboard'
 import { useTabScroll } from './useTabScroll'
 import { useTabDrag } from './useTabDrag'
+import { useTabKeyboardNav } from './useTabKeyboardNav'
 import { useTranslation } from '@/i18n/I18nProvider'
 
 export function TabBar() {
@@ -19,9 +20,6 @@ export function TabBar() {
     activeTabId,
     setActiveTab,
     closeTab,
-    closeOtherTabs,
-    closeTabsToRight,
-    closeAllTabs,
     addQueryTab,
     reorderTabs,
     duplicateTab,
@@ -33,6 +31,13 @@ export function TabBar() {
     useTabScroll()
   const { draggedIndex, dropIndex, onDragStart, onDragOver, onDragEnd } = useTabDrag({
     onReorder: reorderTabs,
+  })
+  const { onKeyDown, tabIndexFor, onTabFocus } = useTabKeyboardNav({
+    tabs,
+    activeTabId,
+    onActivate: setActiveTab,
+    onClose: (id) => requestCloseTab(id, closeTab),
+    scrollIntoView,
   })
 
   // Keep the active tab scrolled into view
@@ -46,9 +51,20 @@ export function TabBar() {
     const tab = tabs.find(item => item.id === tabId)
     return [
       { label: t('shell.tabBar.close'), onSelect: () => requestCloseTab(tabId, closeTab) },
-      { label: t('shell.tabBar.closeOthers'), onSelect: () => closeOtherTabs(tabId), disabled: tabs.length <= 1 },
-      { label: t('shell.tabBar.closeToRight'), onSelect: () => closeTabsToRight(tabId), disabled: index >= tabs.length - 1 },
-      { label: t('shell.tabBar.closeAll'), onSelect: () => closeAllTabs() },
+      {
+        label: t('shell.tabBar.closeOthers'),
+        onSelect: () => requestCloseTabs(tabs.filter(x => x.id !== tabId).map(x => x.id), closeTab),
+        disabled: tabs.length <= 1,
+      },
+      {
+        label: t('shell.tabBar.closeToRight'),
+        onSelect: () => requestCloseTabs(tabs.slice(index + 1).map(x => x.id), closeTab),
+        disabled: index >= tabs.length - 1,
+      },
+      {
+        label: t('shell.tabBar.closeAll'),
+        onSelect: () => requestCloseTabs(tabs.map(x => x.id), closeTab),
+      },
       { label: t('shell.tabBar.duplicate'), onSelect: () => duplicateTab(tabId), disabled: tab?.type !== 'query' },
       {
         label: t('shell.tabBar.copyTitle'),
@@ -61,7 +77,7 @@ export function TabBar() {
     <Flex
       align="end"
       gap="xs"
-      className="h-10 shrink-0 bg-tab-bar-bg px-2 pt-1.5"
+      className="h-(--tab-bar-h) shrink-0 bg-tab-bar-bg px-2 pt-1.5"
     >
       {/* Scroll left arrow */}
       {canScrollLeft && (
@@ -82,6 +98,10 @@ export function TabBar() {
       <Flex
         ref={scrollRef}
         onWheel={onWheel}
+        onKeyDown={onKeyDown}
+        role="tablist"
+        aria-orientation="horizontal"
+        aria-label={t('shell.tabBar.tablistLabel')}
         align="end"
         className="flex-1 h-full overflow-x-hidden gap-0.5"
       >
@@ -89,7 +109,6 @@ export function TabBar() {
           <TabItem
             key={tab.id}
             tab={tab}
-            index={index}
             isActive={activeTabId === tab.id}
             isDragged={draggedIndex === index}
             isDropTarget={dropIndex === index && draggedIndex !== index}
@@ -99,18 +118,20 @@ export function TabBar() {
             onDragStart={(e) => onDragStart(e, index)}
             onDragOver={(e) => onDragOver(e, index)}
             onDragEnd={onDragEnd}
+            tabIndex={tabIndexFor(tab.id)}
+            onFocus={() => onTabFocus(tab.id)}
           />
         ))}
       </Flex>
 
       {/* Scroll right arrow */}
-  { canScrollRight && (
-    <IconButton
-      label={t('shell.tabBar.scrollRight')}
-      size="xs"
-      variant="ghost"
-      onClick={scrollRight}
-      tabIndex={-1}
+      {canScrollRight && (
+        <IconButton
+          label={t('shell.tabBar.scrollRight')}
+          size="xs"
+          variant="ghost"
+          onClick={scrollRight}
+          tabIndex={-1}
         className={cn(
           'shrink-0 text-text-tertiary hover:text-text-primary transition-opacity',
         )}

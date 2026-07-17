@@ -303,6 +303,29 @@ dialog[open] { display: flex; flex-direction: column; }
   --check-sm:18px; --check-md:20px; --check-lg:24px;
 }
 
+/* Tab-strip density tokens — the tab bar sizes off these, mirroring the
+   --field-* block above. Keep the two in step: they sit next to each other in
+   the UI and drifting them apart puts a 38px tab over a 42px field.
+
+   These exist because the strip's sizes used to be an accident: `h-7.5` and
+   `h-10` multiply Tailwind's --spacing, which density already moves, so the
+   tabs scaled — but nobody chose the values and comfortable landed on a
+   fractional 33.75px. Sizes only; no colors (those are --color-tab-* tokens,
+   which plugin themes may override). The :root fallback equals comfortable so
+   the strip sizes correctly before density is wired. */
+:root {
+  --tab-bar-h:48px; --tab-h:38px; --tab-r:10px; --tab-px:13px; --tab-gap:7px; --tab-x:18px;
+}
+[data-density="compact"] {
+  --tab-bar-h:44px; --tab-h:34px; --tab-r:9px;  --tab-px:11px; --tab-gap:6px; --tab-x:16px;
+}
+[data-density="comfortable"] {
+  --tab-bar-h:48px; --tab-h:38px; --tab-r:10px; --tab-px:13px; --tab-gap:7px; --tab-x:18px;
+}
+[data-density="spacious"] {
+  --tab-bar-h:52px; --tab-h:42px; --tab-r:11px; --tab-px:15px; --tab-gap:8px; --tab-x:20px;
+}
+
 /* Honour the appearance.animations toggle. When off, kill all transitions/
    animations app-wide so settings → UI is consistent. The exception list
    covers things that aren't decoration: caret blink, loading spinners. */

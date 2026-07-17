@@ -12,8 +12,14 @@
  * we don't want every tab to re-render when a sibling registers or saves.
  * Subscribers (the close-button, the palette) call `get(tabId)` on demand.
  *
- * The `usePendingClose` hook is the one bit of zustand state: a single
- * pending-close tab id that App.tsx watches to drive the confirm dialog.
+ * The `usePendingClose` hook is the one bit of zustand state: it tracks tabs
+ * the user asked to close but which are awaiting confirmation, in two lanes
+ * — `txnQueue` and `dirtyBatch` — that App.tsx watches to drive the confirm
+ * dialog(s). They're two lanes and not one because they resolve differently:
+ * a transaction needs its own commit/rollback against its own DB session, so
+ * transactional tabs are resolved one at a time, head first (`txnQueue`);
+ * dirty (unsaved-edits) tabs have no per-tab session to reconcile, so they
+ * share one combined discard confirm (`dirtyBatch`).
  */
 import { create } from 'zustand'
 import { useStatementStatus, hashStatement, type StatementStatus } from '@/stores/statement-status'
@@ -90,39 +96,75 @@ export const tabActions = {
   },
 }
 
+/**
+ * `useTabKeyboardNav` derives "is this close awaiting confirmation?" from
+ * membership in `txnQueue`/`dirtyBatch` (see `resolvePendingClose`). If a
+ * third guard bucket is ever added here, that consumer must be updated too
+ * or it will silently stop recognizing pending closes.
+ */
 interface PendingCloseState {
-  pendingId: string | null
-  request: (tabId: string) => void
+  /** Tabs with an open transaction, resolved one at a time, head first.
+   *  Each needs its own commit/rollback against its own session — there is
+   *  no coherent bulk answer, so these queue rather than batch. */
+  txnQueue: string[]
+  /** Dirty tabs sharing one combined discard confirm. */
+  dirtyBatch: string[]
+  requestMany: (ids: { dirty: string[]; txn: string[] }) => void
+  /** Pops the transaction queue after a commit/rollback resolves. */
+  resolveHead: () => void
+  clearBatch: () => void
   clear: () => void
 }
 
 /**
- * Holds the id of a tab the user has asked to close but for which we're
- * still awaiting "discard changes" confirmation. The App watches this and
- * mounts the dialog; the tab-bar and Cmd+W path go through `request()` so
- * every close site shares the same dirty-check.
+ * Holds tabs the user asked to close but which are awaiting confirmation.
+ * App.tsx watches this and mounts the dialog; every close site routes through
+ * `requestCloseTab`/`requestCloseTabs` so they all share the same guards.
  */
 export const usePendingClose = create<PendingCloseState>((set) => ({
-  pendingId: null,
-  request: (tabId) => set({ pendingId: tabId }),
-  clear: () => set({ pendingId: null }),
+  txnQueue: [],
+  dirtyBatch: [],
+  requestMany: ({ dirty, txn }) => set({ dirtyBatch: dirty, txnQueue: txn }),
+  resolveHead: () => set((s) => ({ txnQueue: s.txnQueue.slice(1) })),
+  clearBatch: () => set({ dirtyBatch: [] }),
+  clear: () => set({ txnQueue: [], dirtyBatch: [] }),
 }))
 
 /**
- * Routes through the registry: if the tab is dirty, raises the confirm
- * dialog; otherwise calls the supplied `actuallyClose` synchronously. The
- * caller passes the real close action so this helper stays decoupled from
- * the tabs store (which would otherwise create an import cycle).
+ * Partitions `ids` three ways and closes what it can:
+ *   - neither dirty nor transactional -> closed now, no dialog
+ *   - dirty (and the confirm is on)   -> one combined discard confirm
+ *   - open transaction               -> queued for a per-tab commit/rollback
+ *
+ * The transaction check comes first and wins: a tab that is both dirty and
+ * transactional must not also appear in the discard batch, or the user would
+ * answer for it twice.
+ *
+ * The unsaved-changes confirm is opt-out via Settings -> General. An open
+ * transaction always prompts regardless: discarding it loses committed-looking
+ * work and isn't covered by the "unsaved edits" toggle.
+ */
+export function requestCloseTabs(ids: string[], actuallyClose: (id: string) => void): void {
+  const confirmUnsaved = useSettingsStore.getState().settings.general.confirmOnUnsavedClose
+  const dirty: string[] = []
+  const txn: string[] = []
+
+  for (const id of ids) {
+    if (tabActions.hasOpenTransaction(id)) txn.push(id)
+    else if (confirmUnsaved && tabActions.isDirty(id)) dirty.push(id)
+    else actuallyClose(id)
+  }
+
+  if (dirty.length > 0 || txn.length > 0) {
+    usePendingClose.getState().requestMany({ dirty, txn })
+  }
+}
+
+/**
+ * Single-tab close. The one-element case of `requestCloseTabs` — kept as a
+ * named export because it's the common path and every existing call site uses
+ * it, but deliberately not a second implementation of the same guards.
  */
 export function requestCloseTab(tabId: string, actuallyClose: (id: string) => void): void {
-  // The unsaved-changes confirm is opt-out via Settings → General. An open,
-  // uncommitted transaction always prompts regardless: discarding it loses
-  // committed-looking work and isn't covered by the "unsaved edits" toggle.
-  const confirmUnsaved = useSettingsStore.getState().settings.general.confirmOnUnsavedClose
-  const dirtyBlocks = confirmUnsaved && tabActions.isDirty(tabId)
-  if (dirtyBlocks || tabActions.hasOpenTransaction(tabId)) {
-    usePendingClose.getState().request(tabId)
-  } else {
-    actuallyClose(tabId)
-  }
+  requestCloseTabs([tabId], actuallyClose)
 }
