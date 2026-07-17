@@ -187,7 +187,7 @@ export class PluginBootCoordinator {
         this.plugins.set(fallbackName, {
           manifest: { name: fallbackName, version: '0.0.0', displayName: fallbackName, description: '', main: '', contributes: {} },
           path: pluginPath,
-          status: { state: 'error', error: `Invalid manifest JSON: ${(err as Error).message}`, phase: 'discover' }
+          status: { state: 'error', error: `Invalid manifest JSON: ${errorMessage(err)}`, phase: 'discover' }
         })
         return null
       }
@@ -209,7 +209,7 @@ export class PluginBootCoordinator {
         this.plugins.set(fallbackName, {
           manifest: { name: fallbackName, version: '0.0.0', displayName: fallbackName, description: '', main: '', contributes: {} },
           path: pluginPath,
-          status: { state: 'error', error: `Invalid package.json: ${(err as Error).message}`, phase: 'discover' }
+          status: { state: 'error', error: `Invalid package.json: ${errorMessage(err)}`, phase: 'discover' }
         })
         return null
       }
@@ -273,7 +273,7 @@ export class PluginBootCoordinator {
         }
         plugin.module = mod
       } catch (err) {
-        plugin.status = { state: 'error', error: `Failed to load module: ${(err as Error).message}`, phase: 'validate' }
+        plugin.status = { state: 'error', error: `Failed to load module: ${errorMessage(err)}`, phase: 'validate' }
         continue
       }
 
@@ -791,14 +791,14 @@ export class PluginBootCoordinator {
         try {
           manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8')) as PluginManifest
         } catch (err) {
-          return { success: false, error: `Invalid manifest JSON: ${(err as Error).message}` }
+          return { success: false, error: `Invalid manifest JSON: ${errorMessage(err)}` }
         }
       } else if (fs.existsSync(pkgPath)) {
         let pkg: Record<string, unknown>
         try {
           pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'))
         } catch (err) {
-          return { success: false, error: `Invalid package.json: ${(err as Error).message}` }
+          return { success: false, error: `Invalid package.json: ${errorMessage(err)}` }
         }
         manifest = {
           name: pkg.name as string,
@@ -866,7 +866,7 @@ export class PluginBootCoordinator {
       }
       return { success: true, name }
     } catch (err) {
-      return { success: false, error: (err as Error).message }
+      return { success: false, error: errorMessage(err) }
     }
   }
 
@@ -892,7 +892,7 @@ export class PluginBootCoordinator {
       const installDir = entries.length === 1 ? path.join(tmpDir, entries[0]) : tmpDir
       return this.installFromPath(installDir)
     } catch (err) {
-      return { success: false, error: (err as Error).message }
+      return { success: false, error: errorMessage(err) }
     } finally {
       fs.rmSync(tmpDir, { recursive: true, force: true })
     }

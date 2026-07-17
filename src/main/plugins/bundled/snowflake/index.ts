@@ -5,6 +5,7 @@ import { SnowflakeAdapter } from './snowflake-adapter'
 import { sqlExporter, sqlImporter } from './sql-format'
 import { createRelationalGetTableData } from '../../sdk/relational-helpers'
 import { formatSql, createSampleQuery, createMigrationDdl } from '../../sdk/sql-format'
+import { extractSnowflakeName } from './naming'
 
 const SNOWFLAKE_QUOTE = '"' as const
 
@@ -239,7 +240,7 @@ export function activate(ctx: PluginContext): void {
   // ── Dynamic resolvers ─────────────────────────────────────────────────────
 
   const extractName = (r: Record<string, unknown>) => {
-    const name = String(r['"name"'] ?? r.name ?? '')
+    const name = extractSnowflakeName(r)
     return { value: name, label: name }
   }
   const filterEmpty = (o: { value: string }) => o.value !== ''

@@ -1,6 +1,8 @@
 import Database from 'better-sqlite3'
 import type { DbAdapter } from '../../../db/adapter'
 import { quoteIdentifier } from '../../sdk/identifier'
+import { assertConnected } from '../../../db/assert-connected'
+import { makeQueryResult } from '../../../db/result-shape'
 import type { QueryResult, SchemaTable, SchemaColumn, SchemaIndex, FieldInfo, TestConnectionResult } from '@shared/types'
 
 const SQLITE_QUOTE = '"' as const
@@ -32,17 +34,15 @@ export function runPreparedStatement(
 ): QueryResult {
   if (stmt.reader) {
     const rows = (params ? stmt.all(...params) : stmt.all()) as Record<string, unknown>[]
-    const duration = Math.round(performance.now() - start)
     const fields: FieldInfo[] = stmt.columns().map((c) => ({
       name: c.name,
       dataType: c.type ?? 'unknown',
       nullable: true,
     }))
-    return { rows, fields, rowCount: rows.length, duration, affectedRows: 0 }
+    return makeQueryResult({ rows, fields, start })
   }
   const info = params ? stmt.run(...params) : stmt.run()
-  const duration = Math.round(performance.now() - start)
-  return { rows: [], fields: [], rowCount: 0, duration, affectedRows: info.changes }
+  return makeQueryResult({ rows: [], fields: [], affectedRows: info.changes, start })
 }
 
 export class SqliteAdapter implements DbAdapter {
@@ -61,8 +61,8 @@ export class SqliteAdapter implements DbAdapter {
   }
 
   async testConnection(): Promise<TestConnectionResult> {
-    if (!this.db) throw new Error('Not connected')
-    const row = this.db.prepare('SELECT sqlite_version() as version').get() as { version: string }
+    const db = assertConnected(this.db)
+    const row = db.prepare('SELECT sqlite_version() as version').get() as { version: string }
     return { version: row.version }
   }
 
@@ -78,17 +78,17 @@ export class SqliteAdapter implements DbAdapter {
   }
 
   async query(sql: string, params?: unknown[], opts?: { sessionId?: string; timeoutMs?: number }): Promise<QueryResult> {
-    if (!this.db) throw new Error('Not connected')
+    const db = assertConnected(this.db)
     const session = opts?.sessionId ? this.sessions.get(opts.sessionId) : undefined
     if (opts?.sessionId && !session) throw new Error(`No open session '${opts.sessionId}'`)
     if (session && !session.autoCommit && !session.inTxn) {
       this.assertExclusiveTxn(opts!.sessionId!)
-      this.db.prepare('BEGIN').run()
+      db.prepare('BEGIN').run()
       session.inTxn = true
     }
 
     const start = performance.now()
-    const stmt = this.db.prepare(sql)
+    const stmt = db.prepare(sql)
     return runPreparedStatement(stmt as unknown as PreparedStatementLike, params, start)
   }
 
@@ -147,8 +147,8 @@ export class SqliteAdapter implements DbAdapter {
   }
 
   async getTables(schema?: string): Promise<SchemaTable[]> {
-    if (!this.db) throw new Error('Not connected')
-    const rows = this.db.prepare(
+    const db = assertConnected(this.db)
+    const rows = db.prepare(
       "SELECT name, type FROM sqlite_master WHERE type IN ('table', 'view') AND name NOT LIKE 'sqlite_%' ORDER BY name"
     ).all() as { name: string; type: string }[]
     return rows.map(r => ({
@@ -159,12 +159,12 @@ export class SqliteAdapter implements DbAdapter {
   }
 
   async getColumns(table: string, _schema?: string): Promise<SchemaColumn[]> {
-    if (!this.db) throw new Error('Not connected')
+    const db = assertConnected(this.db)
     const qt = quoteIdentifier(table, SQLITE_QUOTE)
-    const rows = this.db.prepare(`PRAGMA table_info(${qt})`).all() as {
+    const rows = db.prepare(`PRAGMA table_info(${qt})`).all() as {
       cid: number; name: string; type: string; notnull: number; dflt_value: string | null; pk: number
     }[]
-    const fkRows = this.db.prepare(`PRAGMA foreign_key_list(${qt})`).all() as {
+    const fkRows = db.prepare(`PRAGMA foreign_key_list(${qt})`).all() as {
       from: string; table: string; to: string
     }[]
     const fkMap = new Map(fkRows.map(fk => [fk.from, { table: fk.table, column: fk.to }]))
@@ -180,12 +180,12 @@ export class SqliteAdapter implements DbAdapter {
   }
 
   async getIndexes(table: string, _schema?: string): Promise<SchemaIndex[]> {
-    if (!this.db) throw new Error('Not connected')
-    const idxRows = this.db.prepare(`PRAGMA index_list(${quoteIdentifier(table, SQLITE_QUOTE)})`).all() as {
+    const db = assertConnected(this.db)
+    const idxRows = db.prepare(`PRAGMA index_list(${quoteIdentifier(table, SQLITE_QUOTE)})`).all() as {
       name: string; unique: number
     }[]
     return idxRows.map(idx => {
-      const cols = this.db!.prepare(`PRAGMA index_info(${quoteIdentifier(idx.name, SQLITE_QUOTE)})`).all() as { name: string }[]
+      const cols = db.prepare(`PRAGMA index_info(${quoteIdentifier(idx.name, SQLITE_QUOTE)})`).all() as { name: string }[]
       return {
         name: idx.name,
         columns: cols.map(c => c.name),
@@ -195,14 +195,14 @@ export class SqliteAdapter implements DbAdapter {
   }
 
   async getRowCount(table: string, _schema?: string): Promise<number> {
-    if (!this.db) throw new Error('Not connected')
-    const row = this.db.prepare(`SELECT count(*) as cnt FROM ${quoteIdentifier(table, SQLITE_QUOTE)}`).get() as { cnt: number }
+    const db = assertConnected(this.db)
+    const row = db.prepare(`SELECT count(*) as cnt FROM ${quoteIdentifier(table, SQLITE_QUOTE)}`).get() as { cnt: number }
     return row.cnt
   }
 
   async getSchemas(): Promise<string[]> {
-    if (!this.db) throw new Error('Not connected')
-    const rows = this.db.prepare('PRAGMA database_list').all() as { name: string }[]
+    const db = assertConnected(this.db)
+    const rows = db.prepare('PRAGMA database_list').all() as { name: string }[]
     return rows.map(r => r.name)
   }
 
