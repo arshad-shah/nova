@@ -95,6 +95,11 @@ export function TabItem({
           size="tab-action"
           label={isDirty ? t('shell.tabBar.closeTabUnsaved') : t('shell.tabBar.closeTab')}
           variant="tab-action"
+          // Kept out of the Tab sequence: the strip is one tab stop and
+          // Delete/Backspace already closes the roving tab from the keyboard.
+          // Without this, an inactive tab's opacity-0 close button (only
+          // visible on hover) would still be a real, invisible tab stop.
+          tabIndex={-1}
           className={cn(
             'ml-0.5 transition-opacity duration-(--transition-fast)',
             !isActive && !isDirty && 'opacity-0 group-hover:opacity-100',

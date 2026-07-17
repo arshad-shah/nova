@@ -1,4 +1,4 @@
-import { useCallback, useState, type KeyboardEvent } from 'react'
+import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import type { Tab } from '@shared/types'
 
 /**
@@ -22,6 +22,25 @@ export function nextFocusIndex(current: number, key: string, count: number): num
   }
 }
 
+/**
+ * Which tab id the roving tab stop should point at. Pure and exported so the
+ * reconciliation is testable without a DOM.
+ *
+ * `focusedId` is whatever the user last focused, but a tab can disappear out
+ * from under it (Delete, the X button, or the context menu). If we kept
+ * pointing at a closed tab's id, `tabIndexFor` would return -1 for every tab
+ * in the strip — zero tab stops, unreachable by Tab, and it never self-heals
+ * without a mouse click. Falling back to the active tab whenever the focused
+ * id no longer exists in `tabs` guarantees exactly one tab is always tabbable.
+ */
+export function resolveRovingId(
+  focusedId: string | null,
+  activeTabId: string | null,
+  tabs: Tab[],
+): string | null {
+  return focusedId && tabs.some(t => t.id === focusedId) ? focusedId : activeTabId
+}
+
 interface Options {
   tabs: Tab[]
   activeTabId: string | null
@@ -43,9 +62,32 @@ interface Options {
 export function useTabKeyboardNav({ tabs, activeTabId, onActivate, onClose, scrollIntoView }: Options) {
   const [focusedId, setFocusedId] = useState<string | null>(null)
 
-  // The roving tab stop: whatever the user last focused, else the active tab.
-  // Falling back to active is what makes one Tab keypress land somewhere sane.
-  const rovingId = focusedId ?? activeTabId
+  // See resolveRovingId: reconciles focusedId against the live tabs list so a
+  // closed tab can never strand the strip with zero tab stops.
+  const rovingId = resolveRovingId(focusedId, activeTabId, tabs)
+
+  // Tracks a keyboard-initiated close that's in flight. `onClose` routes
+  // through requestCloseTab, which may pop a confirm dialog and not actually
+  // close the tab synchronously (or at all) — so we can't move focus right
+  // after calling it. Instead we record where focus should land *if* the
+  // close goes through, and the effect below watches `tabs` for the closing
+  // tab to actually disappear before moving real DOM focus.
+  const pendingCloseRef = useRef<{ closingId: string; neighborId: string | null } | null>(null)
+
+  useEffect(() => {
+    const pending = pendingCloseRef.current
+    if (!pending) return
+    if (tabs.some(t => t.id === pending.closingId)) return // not closed yet (or the dialog was cancelled)
+
+    pendingCloseRef.current = null
+    const targetId = pending.neighborId && tabs.some(t => t.id === pending.neighborId)
+      ? pending.neighborId
+      : activeTabId
+    if (!targetId) return
+    setFocusedId(targetId)
+    scrollIntoView(targetId)
+    document.querySelector<HTMLElement>(`[data-tab-id="${targetId}"]`)?.focus({ preventScroll: true })
+  }, [tabs, activeTabId, scrollIntoView])
 
   const onKeyDown = useCallback((e: KeyboardEvent) => {
     const current = tabs.findIndex(t => t.id === rovingId)
@@ -58,7 +100,9 @@ export function useTabKeyboardNav({ tabs, activeTabId, onActivate, onClose, scro
       setFocusedId(id)
       scrollIntoView(id)
       // Move real DOM focus so the focus ring and screen readers follow.
-      document.querySelector<HTMLElement>(`[data-tab-id="${id}"]`)?.focus()
+      // preventScroll: scrollIntoView above already animates the trough;
+      // focus()'s own implicit scroll is instant and would fight it.
+      document.querySelector<HTMLElement>(`[data-tab-id="${id}"]`)?.focus({ preventScroll: true })
       return
     }
 
@@ -70,7 +114,12 @@ export function useTabKeyboardNav({ tabs, activeTabId, onActivate, onClose, scro
 
     if (e.key === 'Delete' || e.key === 'Backspace') {
       e.preventDefault()
-      onClose(tabs[current].id)
+      const closingId = tabs[current].id
+      // Prefer the next tab (it slides into this index once the closed tab
+      // is gone); fall back to the previous one when closing the last tab.
+      const neighborId = tabs[current + 1]?.id ?? tabs[current - 1]?.id ?? null
+      pendingCloseRef.current = { closingId, neighborId }
+      onClose(closingId)
     }
   }, [tabs, rovingId, onActivate, onClose, scrollIntoView])
 
