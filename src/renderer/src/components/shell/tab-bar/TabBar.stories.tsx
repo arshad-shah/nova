@@ -85,6 +85,14 @@ function seedStores(tabs: Tab[], activeTabId: string | null) {
 const meta = {
   title: 'Components/Shell/TabBar',
   component: TabBar,
+  // `.storybook/preview.tsx` sets a11y.test = 'todo' globally: violations are
+  // reported but never fail. That is exactly how this component — whose whole
+  // point is an accessible tab strip — shipped a `nested-interactive`
+  // violation on every tab. Gate this component specifically; the global stays
+  // 'todo' so unrelated stories across the repo are unaffected.
+  parameters: {
+    a11y: { test: 'error' },
+  },
   decorators: [
     (Story: React.ComponentType) => (
       <div style={{ width: 900 }}>
@@ -302,6 +310,26 @@ const THEMES = [
  *  varies. Ink & Paper is the tightest pair (#FBF6EA vs #F2EBDE): if the
  *  active tab is going to disappear anywhere, it's there. */
 export const AllThemes: Story = {
+  parameters: {
+    a11y: {
+      // The ONLY rule relaxed anywhere in this file, and only on this story.
+      // Everything structural — nested-interactive, the aria-* family — stays
+      // gated here, on all eleven themes.
+      //
+      // Rendering eleven themes at once surfaces ten color-contrast failures
+      // that have nothing to do with the tab strip's structure: every one is
+      // `--color-text-secondary` at 13px falling short of 4.5:1 in lab (4.16),
+      // midnight (4.33), dracula (3.02/3.47), nord (1.69/1.97), solarized
+      // (2.78/3.21) and catppuccin (2.45/2.8). Five are this story's own theme
+      // -name captions; the other five are the inactive tab title, which
+      // resolves to that same token (--color-tab-inactive-fg is defined as
+      // var(--color-text-secondary)). Raising it is a per-theme design change
+      // to palettes taken verbatim from upstream Dracula/Nord/Solarized/
+      // Catppuccin — app-wide, and not this component's to make. Tracked
+      // separately; deliberately not silenced anywhere but here.
+      config: { rules: [{ id: 'color-contrast', enabled: false }] },
+    },
+  },
   beforeEach: () => {
     seedStores(
       [

@@ -1,7 +1,7 @@
-import { useState, type DragEvent } from 'react'
+import React, { useState, type DragEvent } from 'react'
 import { X } from 'lucide-react'
 import type { Tab } from '@shared/types'
-import { Box, Flex, Text, Tooltip, ContextMenu, cn, IconButton } from '@/primitives'
+import { Box, Flex, Text, Tooltip, ContextMenu, cn, iconButtonVariants } from '@/primitives'
 import { getTabIcon } from './tab-icons'
 import { useTranslation } from '@/i18n/I18nProvider'
 import './tab-bar.css'
@@ -41,8 +41,12 @@ export function TabItem({
   const { icon: Icon, className: iconColor } = getTabIcon(tab.type)
   const isDirty = tab.type === 'query' && tab.isDirty
 
+  // ContextMenu renders a wrapper div to catch `contextmenu`, which lands
+  // between the [role=tablist] and this tab. `presentation` says that wrapper
+  // carries no meaning of its own, keeping the tab a child of the tablist
+  // however an ARIA implementation resolves role-less elements.
   return (
-    <ContextMenu items={contextMenuItems}>
+    <ContextMenu items={contextMenuItems} wrapperRole="presentation">
       <Flex
         align="center"
         id={`tab-${tab.id}`}
@@ -90,26 +94,43 @@ export function TabItem({
           </Text>
         </Tooltip>
 
-        {/* Close / dirty indicator */}
-        <IconButton
-          size="tab-action"
-          label={isDirty ? t('shell.tabBar.closeTabUnsaved') : t('shell.tabBar.closeTab')}
-          variant="tab-action"
-          // Kept out of the Tab sequence: the strip is one tab stop and
-          // Delete/Backspace already closes the roving tab from the keyboard.
-          // Without this, an inactive tab's opacity-0 close button (only
-          // visible on hover) would still be a real, invisible tab stop.
-          tabIndex={-1}
-          // tabIndex={-1} removes it from the Tab sequence but a mouse click
-          // can still focus it directly. This marker lets the trough's
-          // keydown handler (useTabKeyboardNav) recognize and ignore keydowns
-          // that land here instead of misattributing them to the roving tab.
-          data-tab-close-button
+        {/* Close / dirty indicator.
+         *
+         * Deliberately a `role="button"` span and NOT the `IconButton`
+         * primitive (whose native <button> is unconditionally focusable).
+         *
+         * ARIA gives `tab` presentational children: assistive tech never
+         * exposes anything inside a tab, so a focusable control here is
+         * unreachable by AT no matter what we do — which is exactly what axe's
+         * `nested-interactive` rule says. `tabIndex={-1}` does not help; axe
+         * calls a negative tabindex an "unreliable hiding strategy" and fails
+         * it anyway.
+         *
+         * Nor can the close control move out of the tab and sit beside it:
+         * `tablist` may only own `tab`, so a sibling button makes the tablist
+         * fail `aria-required-children` ("Element has children which are not
+         * allowed: button[aria-label]"). Verified — the sibling structure
+         * simply trades one axe violation for another.
+         *
+         * So the only structure that satisfies both rules is this one: the
+         * close control stays inside the tab and stops being focusable. It
+         * keeps its accessible name and its mouse behaviour; the keyboard path
+         * is Delete/Backspace on the roving tab (useTabKeyboardNav) plus the
+         * context menu's Close items — both of which already existed and are
+         * the paths AT users actually have.
+         *
+         * `iconButtonVariants` keeps the look identical to the IconButton this
+         * replaces, from the same source of truth. */}
+        <Box
+          as="span"
+          role="button"
+          aria-label={isDirty ? t('shell.tabBar.closeTabUnsaved') : t('shell.tabBar.closeTab')}
           className={cn(
-            'ml-0.5 transition-opacity duration-(--transition-fast)',
+            iconButtonVariants({ variant: 'tab-action', size: 'tab-action' }),
+            'ml-0.5 shrink-0 transition-opacity duration-(--transition-fast)',
             !isActive && !isDirty && 'opacity-0 group-hover:opacity-100',
           )}
-          onClick={(e) => { e.stopPropagation(); onClose() }}
+          onClick={(e: React.MouseEvent) => { e.stopPropagation(); onClose() }}
           onMouseEnter={() => setCloseHovered(true)}
           onMouseLeave={() => setCloseHovered(false)}
         >
@@ -131,7 +152,7 @@ export function TabItem({
               )}
             />
           )}
-        </IconButton>
+        </Box>
       </Flex>
     </ContextMenu>
   )

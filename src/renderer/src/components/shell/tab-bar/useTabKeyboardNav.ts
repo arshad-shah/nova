@@ -147,14 +147,12 @@ export function useTabKeyboardNav({ tabs, activeTabId, onActivate, onClose, scro
   }, [tabs, dirtyBatch, txnQueue, activeTabId, scrollIntoView])
 
   const onKeyDown = useCallback((e: KeyboardEvent) => {
-    // The close button sits inside the trough with tabIndex={-1} (out of the
-    // Tab sequence) but a mouse click can still focus it directly. Without
-    // this check, Enter on a focused close button both fires the button's
-    // own click (closing that button's tab) AND bubbles up here to activate
-    // whatever tab currently owns the roving tab stop — possibly a different
-    // tab. Bail out and let the button handle its own keydown.
-    if ((e.target as HTMLElement).closest?.('[data-tab-close-button]')) return
-
+    // No close-button escape hatch is needed here. The close affordance inside
+    // each tab is a non-focusable `role="button"` span (see TabItem: a
+    // focusable descendant of a [role=tab] is unreachable by AT and an axe
+    // `nested-interactive` violation), so a keydown can never originate there
+    // and be misattributed to the roving tab. The roving tab is the only
+    // focusable thing in the trough.
     const current = tabs.findIndex(t => t.id === rovingId)
     if (current === -1) return
 

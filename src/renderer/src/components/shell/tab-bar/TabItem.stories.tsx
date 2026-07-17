@@ -36,7 +36,10 @@ const noopDrag = fn()
 const meta: Meta<typeof TabItem> = {
   title: 'Components/Shell/TabBar/TabItem',
   component: TabItem,
-  parameters: { layout: 'centered' },
+  // See TabBar.stories.tsx: the global a11y gate is 'todo' (report, never
+  // fail). This component's whole point is an accessible tab strip, so it
+  // gates itself.
+  parameters: { layout: 'centered', a11y: { test: 'error' } },
   args: {
     index: 0,
     isDragged: false,
@@ -54,8 +57,18 @@ const meta: Meta<typeof TabItem> = {
     onFocus: fn(),
   },
   decorators: [
+    // A tab is only ever rendered inside a tablist — [role=tab] has a required
+    // parent, and a bare TabItem is an `aria-required-parent` violation that
+    // says more about the story than the component. Rendering the real context
+    // also makes these stories the gate on that rule: TabBar.stories cannot
+    // catch a regression in ContextMenu's presentational wrapper, because
+    // there the tablist is a real ancestor either way.
     (Story) => (
-      <div className="flex items-end h-(--tab-bar-h) bg-bg-secondary px-2">
+      <div
+        role="tablist"
+        aria-label="Open tabs"
+        className="flex items-end h-(--tab-bar-h) bg-bg-secondary px-2"
+      >
         <Story />
       </div>
     ),
