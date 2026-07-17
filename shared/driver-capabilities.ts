@@ -54,6 +54,29 @@ export interface DataNouns {
   record?: DataNoun
 }
 
+/**
+ * A driver's visual identity, in semantic terms the driver owns and the
+ * renderer interprets.
+ *
+ * The tone is deliberately semantic ('accent', 'error', …) rather than a colour
+ * or a class name: the driver says what it *is*, and each surface decides how to
+ * paint that — a badge tone in one place, a text colour in another. A driver
+ * shipping `text-emerald-400` would be reaching into the renderer's design
+ * system from the other side of an IPC boundary.
+ */
+export type DriverTone = 'accent' | 'success' | 'warning' | 'error' | 'info' | 'neutral'
+
+export interface DriverPresentation {
+  /**
+   * Short chip label, conventionally two characters ('PG', 'MG'). The renderer
+   * falls back to the first two letters of the driver id, so a
+   * plugin-contributed driver still renders sensibly without declaring one.
+   */
+  abbreviation?: string
+  /** Semantic tone for this driver's chip/badge. Defaults to 'neutral'. */
+  tone?: DriverTone
+}
+
 /** Options when opening a session or beginning a transaction. */
 export interface SessionOpts {
   autoCommit?: boolean
@@ -96,6 +119,14 @@ export interface DriverCapabilities {
    *  shell can label the schema explorer without assuming SQL terminology.
    *  Omitted nouns fall back to generic words in the renderer. */
   nouns?: DataNouns
+  /** How this driver identifies itself visually — its chip label and semantic
+   *  tone. Before this existed, three components each hardcoded their own
+   *  driver-id → label/colour map, and they had already drifted: two omitted
+   *  snowflake, and mongodb was a different colour in each. The renderer must
+   *  not decide what a driver looks like; the driver declares it once here and
+   *  the renderer maps the tone to its own treatment. Omitted values fall back
+   *  in the renderer, so plugin drivers need not declare it. */
+  presentation?: DriverPresentation
   session?: SessionCapability
   explain?: ExplainCapability
   sessionInspection?: InspectionCapability

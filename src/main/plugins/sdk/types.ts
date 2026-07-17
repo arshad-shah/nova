@@ -4,7 +4,7 @@ import type { DbAdapter } from '../../db/adapter'
 import type { UIRegistry } from './ui-registry'
 import type { CompletionRegistry } from './completion-registry'
 import type { AIAccess } from './ai-access'
-import type { SessionCapability, ExplainCapability, InspectionCapability, RuntimeCapabilityOverlay, DataNouns } from '@shared/driver-capabilities'
+import type { SessionCapability, ExplainCapability, InspectionCapability, RuntimeCapabilityOverlay, DataNouns, DriverPresentation } from '@shared/driver-capabilities'
 import type { DbErrorRule } from '@shared/db-errors'
 import type { JsonSchemaObject } from './tool-schema'
 import { TOOL_PERMISSION, type ToolPermission } from '@shared/mcp'
@@ -229,6 +229,15 @@ export interface DriverFactory {
    *  schema explorer can label things in the driver's own terms instead of
    *  assuming SQL "table/column/row". Omit ⇒ the renderer uses generic words. */
   nouns?: DataNouns
+  /** How this driver identifies itself visually: a short chip label and a
+   *  SEMANTIC tone the renderer maps to its own treatment (a badge tone in the
+   *  connection list, a text colour in the switcher). The driver says what it
+   *  is; the renderer decides how to paint it — a driver shipping a colour or a
+   *  class name would be reaching into the renderer's design system.
+   *  Omit ⇒ the renderer falls back to the first two letters of the driver id
+   *  and a neutral tone, so a plugin driver renders sensibly without declaring
+   *  anything. */
+  presentation?: DriverPresentation
   /** Transaction / auto-commit / read-only capabilities. Omit ⇒ no txn UI. */
   session?: SessionCapability
   /** Execution-plan capabilities. Omit ⇒ no Explain action. */

@@ -221,6 +221,7 @@ Do not use SQL syntax. Use standard Redis commands.`
     },
     editorLanguage: 'plaintext',
     statementSyntax: 'redis',
+    presentation: { abbreviation: 'RD', tone: 'error' },
     nouns: {
       object: { one: 'key', many: 'keys' },
       field: { one: 'field', many: 'fields' },

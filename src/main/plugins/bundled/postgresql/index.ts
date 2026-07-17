@@ -125,6 +125,7 @@ export function activate(ctx: PluginContext): void {
     placeholderStyle: 'numbered',
     editorLanguage: 'sql',
     statementSyntax: 'sql',
+    presentation: { abbreviation: 'PG', tone: 'accent' },
     nouns: {
       object: { one: 'table', many: 'tables' },
       field: { one: 'column', many: 'columns' },

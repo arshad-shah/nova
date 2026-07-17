@@ -218,6 +218,7 @@ Examples:
   ctx.drivers.register('mongodb', {
     editorLanguage: 'json',
     statementSyntax: 'mongodb',
+    presentation: { abbreviation: 'MG', tone: 'success' },
     nouns: {
       object: { one: 'collection', many: 'collections' },
       field: { one: 'field', many: 'fields' },
