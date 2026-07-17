@@ -80,11 +80,20 @@ export function TabItem({
 
         <Icon size={14} className={cn(iconColor, 'shrink-0')} />
         <Tooltip content={tab.title} side="bottom" delay={600}>
+          {/* No `color` prop: `Text`'s `color` variant only has the global
+           * semantic values (primary/secondary/...), none of which is the
+           * tab-specific token this label needs. `className` is merged in
+           * last via `cn`/`tailwind-merge`, so a `text-tab-*-fg` utility here
+           * wins over the component's default `text-text-primary` and
+           * actually routes through the container's own
+           * `--color-tab-active-fg` / `--color-tab-inactive-fg`. */}
           <Text
             size="xs"
-            color={isActive ? 'primary' : 'secondary'}
             truncate
-            className={cn('max-w-32', isActive && 'font-medium')}
+            className={cn(
+              'max-w-32',
+              isActive ? 'text-tab-active-fg font-medium' : 'text-tab-inactive-fg',
+            )}
           >
             {tab.title}
           </Text>

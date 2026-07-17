@@ -310,26 +310,6 @@ const THEMES = [
  *  varies. Ink & Paper is the tightest pair (#FBF6EA vs #F2EBDE): if the
  *  active tab is going to disappear anywhere, it's there. */
 export const AllThemes: Story = {
-  parameters: {
-    a11y: {
-      // The ONLY rule relaxed anywhere in this file, and only on this story.
-      // Everything structural — nested-interactive, the aria-* family — stays
-      // gated here, on all eleven themes.
-      //
-      // Rendering eleven themes at once surfaces ten color-contrast failures
-      // that have nothing to do with the tab strip's structure: every one is
-      // `--color-text-secondary` at 13px falling short of 4.5:1 in lab (4.16),
-      // midnight (4.33), dracula (3.02/3.47), nord (1.69/1.97), solarized
-      // (2.78/3.21) and catppuccin (2.45/2.8). Five are this story's own theme
-      // -name captions; the other five are the inactive tab title, which
-      // resolves to that same token (--color-tab-inactive-fg is defined as
-      // var(--color-text-secondary)). Raising it is a per-theme design change
-      // to palettes taken verbatim from upstream Dracula/Nord/Solarized/
-      // Catppuccin — app-wide, and not this component's to make. Tracked
-      // separately; deliberately not silenced anywhere but here.
-      config: { rules: [{ id: 'color-contrast', enabled: false }] },
-    },
-  },
   beforeEach: () => {
     seedStores(
       [
@@ -347,7 +327,15 @@ export const AllThemes: Story = {
         // axe measures the label's contrast against whatever theme
         // Storybook's own chrome happens to be in, not this row's theme.
         <div key={theme} data-theme={theme} className="bg-bg-primary p-2 rounded">
-          <Text size="xs" color="secondary" className="mb-1">{theme}</Text>
+          {/* `color="primary"` (not "secondary") deliberately: this caption
+           * is story scaffolding, not part of TabBar. `--color-text-secondary`
+           * is a global token out of scope for this story to raise, and it
+           * genuinely fails AA against `bg-bg-primary` on several themes
+           * (dracula, nord, solarized, catppuccin) — that's a separate,
+           * app-wide contrast gap tracked elsewhere. Using the always-AA
+           * primary token here keeps this story's own text out of the way of
+           * the thing it's actually gating: the tab strip. */}
+          <Text size="xs" color="primary" className="mb-1">{theme}</Text>
           <TabBar />
         </div>
       ))}
