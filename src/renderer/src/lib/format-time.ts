@@ -14,7 +14,16 @@ export function formatRelativeTime(timestamp: number): string {
   return t('shell.notifications.daysAgo', { count: days })
 }
 
-const pad = (n: number, width = 2): string => String(n).padStart(width, '0')
+/** Zero-pad a number to `width` digits. Shared so callers don't re-declare it. */
+export const pad = (n: number, width = 2): string => String(n).padStart(width, '0')
+
+/** Compact elapsed-time formatting for a millisecond duration: sub-second reads
+ *  `"420ms"`, one second and up reads `"1.4s"`. The one home for the ms→string
+ *  ladder that the query gutter and AI explain panels each hand-rolled. */
+export function formatDuration(ms: number): string {
+  if (ms < 1000) return `${Math.round(ms)}ms`
+  return `${(ms / 1000).toFixed(1)}s`
+}
 
 /** Wall-clock time of a timestamp, `HH:MM:SS`. */
 export function formatClockTime(ts: number): string {

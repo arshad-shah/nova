@@ -7,7 +7,11 @@
 
 import { format as prettyFormatSql, type SqlLanguage } from 'sql-formatter'
 import type { SchemaColumn } from '@shared/types'
+import { errorMessage } from '@shared/errors'
 import { quoteIdentifier } from './identifier'
+import { splitSqlStatements } from './sql-statements'
+import type { RegisteredExporter } from './exporter-registry'
+import type { RegisteredImporter } from './importer-registry'
 
 /**
  * Pretty-print SQL for a given dialect. A shared helper so each SQL driver
@@ -83,4 +87,65 @@ export function generateInsertStatements(
     return `INSERT INTO ${qTable} (${colNames}) VALUES (${values});`
   })
   return lines.join('\n') + '\n'
+}
+
+/**
+ * Build a `sql`-format exporter for a SQL dialect. Every SQL driver's exporter
+ * is the same `generateCreateTable` + `generateInsertStatements` composition;
+ * only the quote char and the descriptor labels differ, so drivers call this
+ * instead of re-implementing the row loop.
+ */
+export function createSqlExporter(config: {
+  quoteChar: string
+  displayName: string
+  appliesToTypes: string[]
+}): RegisteredExporter {
+  return {
+    format: 'sql',
+    extension: 'sql',
+    displayName: config.displayName,
+    appliesToTypes: config.appliesToTypes,
+    supportsSchema: true,
+    execute(rows, columns, options) {
+      const schema = options.includeSchema
+        ? generateCreateTable(options.tableName, columns, config.quoteChar) + '\n'
+        : ''
+      return schema + generateInsertStatements(options.tableName, columns, rows, config.quoteChar)
+    },
+  }
+}
+
+/**
+ * Build a `sql`-format importer that runs each statement through the active
+ * adapter. Identical across every SQL dialect (split → execute → collect
+ * per-statement errors), so drivers supply only the descriptor labels.
+ */
+export function createSqlImporter(config: {
+  displayName: string
+  appliesToTypes: string[]
+}): RegisteredImporter {
+  return {
+    format: 'sql',
+    extensions: ['sql'],
+    displayName: config.displayName,
+    appliesToTypes: config.appliesToTypes,
+    driverExecutes: true,
+    async parse(content, options) {
+      const text = typeof content === 'string' ? content : content.toString('utf-8')
+      const statements = splitSqlStatements(text)
+      const adapter = options.adapter
+      if (!adapter) throw new Error('SQL importer requires an active adapter')
+      let executed = 0
+      const errors: string[] = []
+      for (let i = 0; i < statements.length; i++) {
+        try {
+          await adapter.query(statements[i])
+          executed++
+        } catch (err) {
+          errors.push(`Statement ${i + 1}: ${errorMessage(err)}`)
+        }
+      }
+      return { rows: [], executed, errors }
+    },
+  }
 }
