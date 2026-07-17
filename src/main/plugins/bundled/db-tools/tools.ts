@@ -1,8 +1,9 @@
 import { z } from 'zod'
 import type { Tool, ToolContext, ToolResult } from '../../sdk/types'
 import type { SchemaAccess, ConnectionAccess } from '../../sdk/types'
+import { TOOL_PERMISSION } from '../../sdk/types'
 import { toJsonSchema } from '../../sdk/tool-schema'
-import type { ActivityEntry, ActivityKind, ActivityQuery } from '@shared/activity'
+import { ACTIVITY_KIND, type ActivityEntry, type ActivityKind, type ActivityQuery } from '@shared/activity'
 
 /** Minimal read view of the app activity log (provided by the host as the
  *  `activity-log` service). */
@@ -10,7 +11,13 @@ export interface ActivityReaderLike {
   list(query?: ActivityQuery): ActivityEntry[]
 }
 
-const ACTIVITY_KINDS = ['query', 'tool-call', 'connection', 'notification', 'network'] as const
+const ACTIVITY_KINDS = [
+  ACTIVITY_KIND.QUERY,
+  ACTIVITY_KIND.TOOL_CALL,
+  ACTIVITY_KIND.CONNECTION,
+  ACTIVITY_KIND.NOTIFICATION,
+  ACTIVITY_KIND.NETWORK,
+] as const
 
 /**
  * A read-only tool that lets an agent (AI chat or MCP client) observe what's
@@ -29,7 +36,7 @@ export function createActivityTool(reader: ActivityReaderLike): Tool {
         limit: z.number().optional().describe('Max entries, most recent first (default 50, max 500)'),
       }),
     ),
-    permission: 'read',
+    permission: TOOL_PERMISSION.READ,
     async execute(params: Record<string, unknown>): Promise<ToolResult> {
       const limit = typeof params.limit === 'number' && params.limit > 0 ? Math.min(params.limit, 500) : 50
       const kinds = Array.isArray(params.kinds) ? (params.kinds as ActivityKind[]) : undefined
@@ -88,7 +95,7 @@ export function createDbTools(
       name: 'Run Query',
       description: 'Execute a SQL query against the active database connection. Use this to read data, insert, update, or delete records.',
       inputSchema: toJsonSchema(z.object({ sql: z.string().describe('The SQL query to execute') })),
-      permission: 'write',
+      permission: TOOL_PERMISSION.WRITE,
       async execute(params: Record<string, unknown>, ctx: ToolContext): Promise<ToolResult> {
         if (!ctx.connectionId) return noConn()
         const result = await withCancellation(connections, ctx, () =>
@@ -113,7 +120,7 @@ export function createDbTools(
       name: 'Explain Query',
       description: 'Run EXPLAIN on a SQL query to show its execution plan. Read-only.',
       inputSchema: toJsonSchema(z.object({ sql: z.string().describe('The SQL query to explain') })),
-      permission: 'read',
+      permission: TOOL_PERMISSION.READ,
       async execute(params: Record<string, unknown>, ctx: ToolContext): Promise<ToolResult> {
         if (!ctx.connectionId) return noConn()
         const result = await withCancellation(connections, ctx, () =>
@@ -127,7 +134,7 @@ export function createDbTools(
       name: 'List Tables',
       description: 'List all tables in the current database schema.',
       inputSchema: toJsonSchema(z.object({ schema: z.string().optional().describe('Schema name (optional)') })),
-      permission: 'read',
+      permission: TOOL_PERMISSION.READ,
       async execute(params: Record<string, unknown>, ctx: ToolContext): Promise<ToolResult> {
         if (!ctx.connectionId) return noConn()
         const tables = await schema.getTables(ctx.connectionId, params.schema as string | undefined)
@@ -146,7 +153,7 @@ export function createDbTools(
         table: z.string().describe('Table name to describe'),
         schema: z.string().optional().describe('Schema name (optional)')
       })),
-      permission: 'read',
+      permission: TOOL_PERMISSION.READ,
       async execute(params: Record<string, unknown>, ctx: ToolContext): Promise<ToolResult> {
         if (!ctx.connectionId) return noConn()
         const table = params.table as string
@@ -163,7 +170,7 @@ export function createDbTools(
       name: 'Get Schemas',
       description: 'List all available schemas or databases on the current connection.',
       inputSchema: toJsonSchema(z.object({})),
-      permission: 'read',
+      permission: TOOL_PERMISSION.READ,
       async execute(_params: Record<string, unknown>, ctx: ToolContext): Promise<ToolResult> {
         if (!ctx.connectionId) return noConn()
         const [schemas, databases] = await Promise.all([
@@ -178,7 +185,7 @@ export function createDbTools(
       name: 'Connection Info',
       description: 'Get information about the currently active database connection including type, host, and database name.',
       inputSchema: toJsonSchema(z.object({})),
-      permission: 'read',
+      permission: TOOL_PERMISSION.READ,
       async execute(_params: Record<string, unknown>, ctx: ToolContext): Promise<ToolResult> {
         if (!ctx.connectionId) return noConn()
         const profile = connections.getProfile(ctx.connectionId)

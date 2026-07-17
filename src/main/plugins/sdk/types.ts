@@ -7,7 +7,18 @@ import type { AIAccess } from './ai-access'
 import type { SessionCapability, ExplainCapability, InspectionCapability, RuntimeCapabilityOverlay, DataNouns } from '@shared/driver-capabilities'
 import type { DbErrorRule } from '@shared/db-errors'
 import type { JsonSchemaObject } from './tool-schema'
+import { TOOL_PERMISSION, type ToolPermission } from '@shared/mcp'
 export type { DriverCapabilities } from '@shared/driver-capabilities'
+export { TOOL_PERMISSION, type ToolPermission }
+
+/** Which surfaces may call a tool. Named once so the `bundled/ai` producer and
+ *  the MCP server's `surfaces.includes(...)` gate (`mcp/server.ts`) reference
+ *  the same values instead of re-typing them. */
+export const TOOL_SURFACE = {
+  AI: 'ai',
+  MCP: 'mcp',
+} as const
+export type ToolSurface = (typeof TOOL_SURFACE)[keyof typeof TOOL_SURFACE]
 
 // ─── Core ────────────────────────────────────────────────────────────────────
 
@@ -15,7 +26,18 @@ export interface Disposable {
   dispose(): void
 }
 
-export type PluginPhase = 'discover' | 'validate' | 'resolve' | 'activate' | 'verify' | 'runtime'
+/** Boot-lifecycle phases, named once so `plugin-host.ts` stops re-typing the
+ *  raw string when it tags an error with the phase it failed in. */
+export const PLUGIN_PHASE = {
+  DISCOVER: 'discover',
+  VALIDATE: 'validate',
+  RESOLVE: 'resolve',
+  ACTIVATE: 'activate',
+  VERIFY: 'verify',
+  RUNTIME: 'runtime',
+} as const
+
+export type PluginPhase = (typeof PLUGIN_PHASE)[keyof typeof PLUGIN_PHASE]
 
 export type PluginStatus =
   | { state: 'discovered' }
@@ -261,13 +283,13 @@ export interface Tool {
    *  registered from a process-isolated plugin. Authors typically build it with
    *  the SDK's `toJsonSchema(z.object({ … }))`. */
   inputSchema: JsonSchemaObject
-  permission: 'read' | 'write'
+  permission: ToolPermission
   /**
    * Which surfaces may call this tool. Omitted = all surfaces (back-compat).
    * UI-action tools that need the renderer set this to `['ai']` so they are not
    * exposed to the headless MCP server.
    */
-  surfaces?: Array<'ai' | 'mcp'>
+  surfaces?: ToolSurface[]
   execute(params: Record<string, unknown>, ctx: ToolContext): Promise<ToolResult>
 }
 

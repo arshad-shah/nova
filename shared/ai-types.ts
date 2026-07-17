@@ -1,5 +1,10 @@
 // shared/ai-types.ts
 
+// The main-process AI plugin registers a tool under this id (ai/internal/index.ts);
+// the renderer's ToolCallCard resolves calls to it back to a friendly App-Action
+// title. Centralised here so the two sides of that IPC-tool-call boundary can't drift.
+export const PERFORM_APP_ACTION_TOOL_ID = 'perform_app_action'
+
 export interface AIChatMessage {
   id: string
   role: 'system' | 'user' | 'assistant' | 'tool'

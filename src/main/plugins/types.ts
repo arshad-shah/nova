@@ -3,6 +3,22 @@ import type { PluginStatus, PluginContext } from './sdk/types'
 import type { PluginPermission } from './sdk/permissions'
 import type { ActivityBarContribution, StatusBarContribution, ContextMenuContribution, TabContribution, SelectorContribution } from '@shared/plugin-ui-types'
 
+/** The contribution kinds `verifyContributions` (plugin-host.ts) checks a
+ *  manifest's declarations against, named once so its `declared`/`registered`/
+ *  `missing` ledger entries (`` `${kind}:${id}` ``) stop re-typing each kind by
+ *  hand 2-3x per contribution type. */
+export const CONTRIBUTION_KIND = {
+  DRIVER: 'driver',
+  COMMAND: 'command',
+  PANEL: 'panel',
+  MIDDLEWARE: 'middleware',
+  EXPORTER: 'exporter',
+  IMPORTER: 'importer',
+  FORMATTER: 'formatter',
+  THEME: 'theme',
+} as const
+export type ContributionKind = (typeof CONTRIBUTION_KIND)[keyof typeof CONTRIBUTION_KIND]
+
 export interface PluginManifest {
   name: string
   version: string

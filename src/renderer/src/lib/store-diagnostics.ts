@@ -1,4 +1,5 @@
 import { isDiagnosticsVerbose, recordActivity } from './diagnostics'
+import { ACTIVITY_KIND } from '@shared/activity'
 import { useTabsStore } from '@/stores/tabs'
 import { useConnectionsStore } from '@/stores/connections'
 import { useUiStore } from '@/stores/ui'
@@ -24,7 +25,7 @@ function watch(name: string, store: SubscribableStore): void {
     }
     if (changed.length === 0) return
     recordActivity({
-      kind: 'store',
+      kind: ACTIVITY_KIND.STORE,
       level: 'debug',
       title: `${name}: ${changed.join(', ')}`,
       source: name,
@@ -53,7 +54,7 @@ export function installRendererDiagnostics(): void {
         if (!isDiagnosticsVerbose()) return
         for (const e of list.getEntries()) {
           recordActivity({
-            kind: 'perf',
+            kind: ACTIVITY_KIND.PERF,
             level: 'debug',
             title: `Long task · ${Math.round(e.duration)}ms`,
             durationMs: e.duration,

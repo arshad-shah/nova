@@ -12,6 +12,7 @@ import {
   H2W,
   W2H,
   W2H_EVENT,
+  CAPABILITY_SURFACE,
   type ActivateResult,
   type CapabilityParams,
   type ContributionDescriptor,
@@ -47,13 +48,13 @@ export function canIsolate(manifest: PluginManifest): boolean {
  *  capability surface and bypassing the per-method permission guards. The set
  *  mirrors exactly what `buildWorkerContext` (worker-context.ts) forwards. */
 const CAPABILITY_METHODS: Record<string, Set<string>> = {
-  connections: new Set(['query', 'cancelQuery']),
-  keyring: new Set(['store', 'retrieve', 'delete']),
-  schema: new Set([
+  [CAPABILITY_SURFACE.CONNECTIONS]: new Set(['query', 'cancelQuery']),
+  [CAPABILITY_SURFACE.KEYRING]: new Set(['store', 'retrieve', 'delete']),
+  [CAPABILITY_SURFACE.SCHEMA]: new Set([
     'getTables', 'getColumns', 'getIndexes',
     'getSchemas', 'getDatabases', 'getSchemaSummary',
   ]),
-  settings: new Set(['set']),
+  [CAPABILITY_SURFACE.SETTINGS]: new Set(['set']),
 }
 
 /** True only for the exact (surface, method) pairs the isolation boundary

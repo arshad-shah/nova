@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Database, PenSquare, BarChart3, Puzzle, Settings, Radio } from 'lucide-react'
-import { useUiStore, ACTIVITY_PANEL, type ActivityPanel } from '@/stores/ui'
+import { useUiStore, ACTIVITY_PANEL, PLUGIN_PANEL_PREFIX, type ActivityPanel } from '@/stores/ui'
 import { useTabsStore } from '@/stores/tabs'
 import { SETTINGS_CATEGORY } from '@/lib/settings-categories'
 import { usePluginUIStore, selectContributions } from '@/stores/plugin-ui'
@@ -79,7 +79,7 @@ export function ActivityBar() {
       {activityBarContributions
         .filter((c) => c.meta.zone === 'top' || !c.meta.zone)
         .map((c) => renderButton(
-          `plugin:${c.contributionId}` as ActivityPanel,
+          `${PLUGIN_PANEL_PREFIX}${c.contributionId}` as ActivityPanel,
           Puzzle,
           c.meta.title as string
         ))}

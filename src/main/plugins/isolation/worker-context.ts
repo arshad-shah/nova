@@ -14,7 +14,7 @@
 // `canIsolate` in isolated-plugin.ts), so a real plugin never trips these.
 
 import { RpcEndpoint } from './rpc'
-import { W2H, W2H_EVENT, type ContributionDescriptor } from './protocol'
+import { W2H, W2H_EVENT, CAPABILITY_SURFACE, type ContributionDescriptor } from './protocol'
 
 const NOT_SUPPORTED = (surface: string): never => {
   throw new Error(
@@ -63,17 +63,17 @@ export function buildWorkerContext(endpoint: RpcEndpoint): WorkerContextResult {
   }
 
   const connections = {
-    query: forward('connections', 'query'),
-    cancelQuery: forward('connections', 'cancelQuery'),
+    query: forward(CAPABILITY_SURFACE.CONNECTIONS, 'query'),
+    cancelQuery: forward(CAPABILITY_SURFACE.CONNECTIONS, 'cancelQuery'),
     getActiveConnectionId: () => NOT_SUPPORTED('connections.getActiveConnectionId (sync)'),
     getProfile: () => NOT_SUPPORTED('connections.getProfile (sync)'),
     onActiveConnectionChanged: () => NOT_SUPPORTED('connections.onActiveConnectionChanged'),
   }
 
   const keyring = {
-    store: forward('keyring', 'store'),
-    retrieve: forward('keyring', 'retrieve'),
-    delete: forward('keyring', 'delete'),
+    store: forward(CAPABILITY_SURFACE.KEYRING, 'store'),
+    retrieve: forward(CAPABILITY_SURFACE.KEYRING, 'retrieve'),
+    delete: forward(CAPABILITY_SURFACE.KEYRING, 'delete'),
     retrieveSync: () => NOT_SUPPORTED('keyring.retrieveSync (sync)'),
     storeSync: () => NOT_SUPPORTED('keyring.storeSync (sync)'),
     has: () => NOT_SUPPORTED('keyring.has (sync)'),
@@ -81,19 +81,19 @@ export function buildWorkerContext(endpoint: RpcEndpoint): WorkerContextResult {
   }
 
   const schema = {
-    getTables: forward('schema', 'getTables'),
-    getColumns: forward('schema', 'getColumns'),
-    getIndexes: forward('schema', 'getIndexes'),
-    getSchemas: forward('schema', 'getSchemas'),
-    getDatabases: forward('schema', 'getDatabases'),
-    getSchemaSummary: forward('schema', 'getSchemaSummary'),
+    getTables: forward(CAPABILITY_SURFACE.SCHEMA, 'getTables'),
+    getColumns: forward(CAPABILITY_SURFACE.SCHEMA, 'getColumns'),
+    getIndexes: forward(CAPABILITY_SURFACE.SCHEMA, 'getIndexes'),
+    getSchemas: forward(CAPABILITY_SURFACE.SCHEMA, 'getSchemas'),
+    getDatabases: forward(CAPABILITY_SURFACE.SCHEMA, 'getDatabases'),
+    getSchemaSummary: forward(CAPABILITY_SURFACE.SCHEMA, 'getSchemaSummary'),
   }
 
   const settings = {
     get: () => NOT_SUPPORTED('settings.get (sync); read via your own activate-time logic'),
     set: (key: string, value: unknown) => {
       // set returns void; forward as a request but don't make callers await.
-      void endpoint.request(W2H.CAPABILITY, { surface: 'settings', method: 'set', args: [key, value] })
+      void endpoint.request(W2H.CAPABILITY, { surface: CAPABILITY_SURFACE.SETTINGS, method: 'set', args: [key, value] })
     },
     onChanged: () => NOT_SUPPORTED('settings.onChanged'),
   }

@@ -18,6 +18,7 @@ import { SchemaGroup } from './schema-group/SchemaGroup'
 import { SchemaObjectGroup } from './schema-group/SchemaObjectGroup'
 import { fuzzyMatch } from '@/lib/fuzzy-match'
 import { useTranslation } from '@/i18n/I18nProvider'
+import { SCHEMA_OBJECT_KIND } from '@shared/types'
 import { treeIndent } from '@/lib/math'
 
 interface SchemaNodeProps {
@@ -110,13 +111,13 @@ export function SchemaNode({ schemaName, connectionId, databaseName, depth, onEx
   }
   const filteredTables = allTables.filter((t) => t.type === 'table' && matches(t.name)).sort(byScore)
   const filteredViews = allTables.filter((t) => t.type === 'view' && matches(t.name)).sort(byScore)
-  const matViews = allObjects.filter((o) => o.kind === 'materialized_view' && matches(o.name)).sort(byScore)
-  const functions = allObjects.filter((o) => o.kind === 'function' && matches(o.name)).sort(byScore)
-  const procedures = allObjects.filter((o) => o.kind === 'procedure' && matches(o.name)).sort(byScore)
-  const triggers = allObjects.filter((o) => o.kind === 'trigger' && matches(o.name)).sort(byScore)
-  const sequences = allObjects.filter((o) => o.kind === 'sequence' && matches(o.name)).sort(byScore)
-  const indexes = allObjects.filter((o) => o.kind === 'index' && matches(o.name)).sort(byScore)
-  const extensions = allObjects.filter((o) => o.kind === 'extension' && matches(o.name)).sort(byScore)
+  const matViews = allObjects.filter((o) => o.kind === SCHEMA_OBJECT_KIND.MATERIALIZED_VIEW && matches(o.name)).sort(byScore)
+  const functions = allObjects.filter((o) => o.kind === SCHEMA_OBJECT_KIND.FUNCTION && matches(o.name)).sort(byScore)
+  const procedures = allObjects.filter((o) => o.kind === SCHEMA_OBJECT_KIND.PROCEDURE && matches(o.name)).sort(byScore)
+  const triggers = allObjects.filter((o) => o.kind === SCHEMA_OBJECT_KIND.TRIGGER && matches(o.name)).sort(byScore)
+  const sequences = allObjects.filter((o) => o.kind === SCHEMA_OBJECT_KIND.SEQUENCE && matches(o.name)).sort(byScore)
+  const indexes = allObjects.filter((o) => o.kind === SCHEMA_OBJECT_KIND.INDEX && matches(o.name)).sort(byScore)
+  const extensions = allObjects.filter((o) => o.kind === SCHEMA_OBJECT_KIND.EXTENSION && matches(o.name)).sort(byScore)
 
   const paddingLeft = treeIndent(depth)
   // One indent step in from the schema row, so group headers sit clearly under it.

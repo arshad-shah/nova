@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { Flex, Box, Text } from '@/primitives'
-import { useUiStore, BOTTOM_PANEL, type BottomPanelId } from '@/stores/ui'
+import { useUiStore, BOTTOM_PANEL, PLUGIN_PANEL_PREFIX, type BottomPanelId } from '@/stores/ui'
 import { useTabsStore } from '@/stores/tabs'
 import { useConnectionsStore } from '@/stores/connections'
 import { usePluginUIStore, selectContributions } from '@/stores/plugin-ui'
@@ -58,7 +58,7 @@ export function BottomDock() {
 
   const bottomPluginPanels: BottomTab[] = panelContributions
     .filter(c => c.meta.location === 'bottom')
-    .map(c => ({ id: `plugin:${c.contributionId}`, title: (c.meta.title as string) ?? c.contributionId }))
+    .map(c => ({ id: `${PLUGIN_PANEL_PREFIX}${c.contributionId}`, title: (c.meta.title as string) ?? c.contributionId }))
 
   const tabs: BottomTab[] = [
     ...(showResults ? [{ id: BOTTOM_PANEL.RESULTS, title: t('shell.bottomDock.results') }] : []),
@@ -100,8 +100,8 @@ export function BottomDock() {
     if (bottomActivePanel === BOTTOM_PANEL.CHART && hasChart && resultsForChart) {
       return <ChartPanel results={resultsForChart} />
     }
-    if (bottomActivePanel.startsWith('plugin:')) {
-      const contributionId = bottomActivePanel.slice('plugin:'.length)
+    if (bottomActivePanel.startsWith(PLUGIN_PANEL_PREFIX)) {
+      const contributionId = bottomActivePanel.slice(PLUGIN_PANEL_PREFIX.length)
       const contribution = panelContributions.find(c => c.contributionId === contributionId)
       const hostWidget = contribution?.widgets.find(w => w.type === 'host-component') as { type: 'host-component'; componentId: string } | undefined
       const componentId = hostWidget?.componentId ?? contributionId

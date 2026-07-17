@@ -7,14 +7,7 @@ import { cn } from '@/primitives/utils/cn'
 import { useClickOutside } from '@/hooks/useClickOutside'
 import { useEscapeKey } from '@/hooks/useEscapeKey'
 import { useTranslation } from '@/i18n/I18nProvider'
-
-const DB_ABBREVIATIONS: Record<string, string> = {
-  postgresql: 'PG',
-  mysql: 'MY',
-  sqlite: 'SL',
-  mongodb: 'MG',
-  redis: 'RD',
-}
+import { DB_ABBREVIATIONS } from '@/lib/driver-badges'
 
 const DB_TYPE_COLORS: Record<string, string> = {
   postgresql: 'text-accent',

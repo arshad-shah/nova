@@ -1,4 +1,5 @@
 import type { AppSettings } from '@shared/settings'
+import { CONFIG_KEY } from '@shared/settings'
 import { IPC_CHANNELS, IPC_EVENTS } from '@shared/ipc'
 import type { IpcContext, Handle } from './context'
 import { broadcast } from './broadcast'
@@ -10,8 +11,8 @@ import { buildAppMenu } from '../app-menu'
  *  on its old key (the native accelerator swallows it before the renderer's
  *  handler ever sees it). */
 function rebuildMenuIfKeybindings(ctx: IpcContext, keyPath: string): void {
-  if (keyPath !== 'keybindings' && !keyPath.startsWith('keybindings.')) return
-  buildAppMenu(ctx.configStore.getSettingsCategory('keybindings'))
+  if (keyPath !== CONFIG_KEY.KEYBINDINGS && !keyPath.startsWith(`${CONFIG_KEY.KEYBINDINGS}.`)) return
+  buildAppMenu(ctx.configStore.getSettingsCategory(CONFIG_KEY.KEYBINDINGS))
 }
 
 export function registerSettingsHandlers(ctx: IpcContext, handle: Handle): void {

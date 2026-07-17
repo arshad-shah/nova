@@ -4,6 +4,7 @@ import { useConnectionsStore, useActiveProfile } from '@/stores/connections'
 import { usePluginUIStore, selectContributions } from '@/stores/plugin-ui'
 import { WidgetRenderer } from '@/components/plugin-ui/WidgetRenderer'
 import { PluginSlot } from '@/components/plugins/PluginSlot'
+import { STATUSBAR_NEW_CONNECTION_EVENT } from '@/hooks/useShellMenuEvents'
 import {
   ConnectionSegment,
   SchemaSegment,
@@ -23,7 +24,7 @@ export function StatusBar() {
   // Emit event for App.tsx to handle new connection form (unchanged contract)
   useEffect(() => {
     if (showNewConnection) {
-      window.dispatchEvent(new CustomEvent('statusbar:new-connection'))
+      window.dispatchEvent(new CustomEvent(STATUSBAR_NEW_CONNECTION_EVENT))
       setShowNewConnection(false)
     }
   }, [showNewConnection])

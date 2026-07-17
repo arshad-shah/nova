@@ -11,6 +11,7 @@ import { useQueryHistoryStore } from '@/stores/query-history'
 import { useSettingsStore } from '@/stores/settings'
 import { useTabsStore } from '@/stores/tabs'
 import { useUiStore, ACTIVITY_PANEL } from '@/stores/ui'
+import { SETTINGS_CATEGORY } from '@/lib/settings-categories'
 import { initialAutoCommit } from '@/lib/initial-autocommit'
 import { getLatestReleaseNote } from '@/lib/release-notes'
 import { IPC_CHANNELS } from '@shared/ipc'
@@ -136,7 +137,7 @@ export function WelcomeView() {
       title: t('shell.welcomeTab.stepAiTitle'),
       description: t('shell.welcomeTab.stepAiDesc'),
       actionLabel: t('shell.welcomeTab.stepAiAction'),
-      run: () => useTabsStore.getState().openSettings('ai'),
+      run: () => useTabsStore.getState().openSettings(SETTINGS_CATEGORY.AI),
     },
     {
       id: 'explore', icon: Compass, auto: false,
@@ -150,14 +151,14 @@ export function WelcomeView() {
       title: t('shell.welcomeTab.stepPluginsTitle'),
       description: t('shell.welcomeTab.stepPluginsDesc'),
       actionLabel: t('shell.welcomeTab.stepPluginsAction'),
-      run: () => useTabsStore.getState().openSettings('plugins'),
+      run: () => useTabsStore.getState().openSettings(SETTINGS_CATEGORY.PLUGINS),
     },
     {
       id: 'customize', icon: SlidersHorizontal, auto: false,
       title: t('shell.welcomeTab.stepCustomizeTitle'),
       description: t('shell.welcomeTab.stepCustomizeDesc'),
       actionLabel: t('shell.welcomeTab.stepCustomizeAction'),
-      run: () => useTabsStore.getState().openSettings('appearance'),
+      run: () => useTabsStore.getState().openSettings(SETTINGS_CATEGORY.APPEARANCE),
     },
   ], [t, connectionCount, historyCount, activeModel])
 
@@ -213,7 +214,7 @@ export function WelcomeView() {
               icon={Puzzle}
               label={t('shell.welcomeTab.startBrowsePlugins')}
               hint={t('shell.welcomeTab.startBrowsePluginsHint')}
-              onClick={() => runStep('plugins', () => useTabsStore.getState().openSettings('plugins'))}
+              onClick={() => runStep('plugins', () => useTabsStore.getState().openSettings(SETTINGS_CATEGORY.PLUGINS))}
             />
           </Box>
         </Box>

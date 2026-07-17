@@ -14,6 +14,8 @@ import { ExporterRegistryImpl } from './plugins/sdk/exporter-registry'
 import { ImporterRegistryImpl } from './plugins/sdk/importer-registry'
 import { FormatterRegistryImpl } from './plugins/sdk/formatter-registry'
 import { IPC_CHANNELS, IPC_EVENTS } from '@shared/ipc'
+import { ACTIVITY_KIND } from '@shared/activity'
+import { CONFIG_KEY } from '@shared/settings'
 import { TypeMapperRegistryImpl } from './plugins/sdk/type-mapper-registry'
 import { ThemeRegistryImpl } from './plugins/sdk/theme-registry'
 import { DragDropRegistryImpl } from './plugins/sdk/drag-drop-registry'
@@ -137,7 +139,7 @@ export function registerIpcHandlers(): IpcContext {
   // toolRegistry.execute; the MCP server records its own path below).
   toolRegistry.setActivityRecorder(({ toolId, params, success, durationMs, error }) => {
     activityLog.record({
-      kind: 'tool-call',
+      kind: ACTIVITY_KIND.TOOL_CALL,
       level: success ? 'success' : 'error',
       title: `${toolId} · ${durationMs}ms`,
       detail: error ?? JSON.stringify(params),
@@ -149,7 +151,7 @@ export function registerIpcHandlers(): IpcContext {
   const notificationBus = {
     show(n: { kind?: 'info' | 'success' | 'warning' | 'error'; title: string; message?: string; durationMs?: number }): void {
       activityLog.record({
-        kind: 'notification',
+        kind: ACTIVITY_KIND.NOTIFICATION,
         level: n.kind === 'warning' ? 'warn' : (n.kind ?? 'info'),
         title: n.title,
         detail: n.message,
@@ -272,7 +274,7 @@ export function registerIpcHandlers(): IpcContext {
       // db-tools bundled plugin has registered its tools into the shared
       // registry. Starting earlier (at handler-registration time) would expose
       // an empty tool set.
-      if (ctx.configStore.getSetting('mcp.enabled') as boolean) {
+      if (ctx.configStore.getSetting(CONFIG_KEY.MCP_ENABLED) as boolean) {
         mcpServer.start().catch(err => logger.child('mcp').error('Auto-start failed', err))
       }
       // One-time inline-secrets migration: pre-encryption builds wrote passwords

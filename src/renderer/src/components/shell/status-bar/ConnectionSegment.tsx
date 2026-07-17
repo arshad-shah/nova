@@ -4,14 +4,7 @@ import { ConnectionSwitcher } from '../ConnectionSwitcher'
 import { StatusBarSegment } from './StatusBarSegment'
 import { useTranslation } from '@/i18n/I18nProvider'
 import { Box, StatusDot } from '@/primitives'
-
-const DB_ABBREVIATIONS: Record<string, string> = {
-  postgresql: 'PG',
-  mysql: 'MY',
-  sqlite: 'SL',
-  mongodb: 'MG',
-  redis: 'RD',
-}
+import { DB_ABBREVIATIONS } from '@/lib/driver-badges'
 
 interface Props {
   onNewConnection: () => void

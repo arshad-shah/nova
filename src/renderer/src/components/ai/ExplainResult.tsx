@@ -9,7 +9,7 @@ import { Flex } from '@/primitives/layout/Flex'
 import { MarkdownContent } from '@/components/ai/MarkdownContent'
 import { useTabsStore } from '@/stores/tabs'
 import { useExplainStore } from '@/stores/explain'
-import { useAIStore } from '@/stores/ai'
+import { useAIStore, AI_CHAT_PANEL_ID } from '@/stores/ai'
 import { useUiStore } from '@/stores/ui'
 import { notifyError } from '@/lib/notify-error'
 import { parseAppError } from '@/lib/db-error'
@@ -122,7 +122,7 @@ function ActionBar({ tabId, text }: { tabId: string; text: string }) {
     const sql = tab && tab.type === 'query' ? tab.sql : ''
     const prefill = `> ${sql.split('\n').join('\n> ')}\n\nFollow-up about this explanation:\n\n${text}\n\n`
     useAIStore.getState().seedComposer(prefill)
-    useUiStore.getState().setSecondaryActivePanel('plugin:ai-chat')
+    useUiStore.getState().setSecondaryActivePanel(AI_CHAT_PANEL_ID)
   }, [tabId, text])
 
   const regenerate = useCallback(async () => {

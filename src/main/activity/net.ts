@@ -1,5 +1,6 @@
 import { recordActivity } from './recorder'
 import { errorMessage } from '@shared/errors'
+import { ACTIVITY_KIND } from '@shared/activity'
 
 /**
  * fetch() wrapper that records a `network` activity entry. Records only method,
@@ -16,7 +17,7 @@ export async function tracedFetch(input: string | URL | Request, init?: RequestI
   try {
     const res = await fetch(input, init)
     recordActivity({
-      kind: 'network',
+      kind: ACTIVITY_KIND.NETWORK,
       level: res.ok ? 'info' : 'warn',
       title: `${method} ${path} · ${res.status}`,
       source: host,
@@ -26,7 +27,7 @@ export async function tracedFetch(input: string | URL | Request, init?: RequestI
     return res
   } catch (err) {
     recordActivity({
-      kind: 'network',
+      kind: ACTIVITY_KIND.NETWORK,
       level: 'error',
       title: `${method} ${path} failed`,
       source: host,

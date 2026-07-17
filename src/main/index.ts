@@ -5,6 +5,7 @@ import { registerIpcHandlers } from './ipc-handlers'
 import { buildAppMenu } from './app-menu'
 import { TRAFFIC_LIGHT_X, trafficLightY } from './ipc/window'
 import { IPC_EVENTS } from '@shared/ipc'
+import { CONFIG_KEY } from '@shared/settings'
 
 /** The title bar at the default (comfortable) density — `h-10` on a 4.5px
  *  spacing unit. Only a first-paint value; the renderer reports the real one. */
@@ -148,7 +149,7 @@ app.whenReady().then(() => {
   const ctx = registerIpcHandlers()
   // Accelerators come from the user's saved keybindings; `settings:set`
   // rebuilds the menu when they change.
-  buildAppMenu(ctx.configStore.getSettingsCategory('keybindings'))
+  buildAppMenu(ctx.configStore.getSettingsCategory(CONFIG_KEY.KEYBINDINGS))
   createWindow()
 
   app.on('activate', () => {

@@ -7,7 +7,7 @@ import { usePluginUIStore } from '@/stores/plugin-ui'
 import { useTranslation } from '@/i18n/I18nProvider'
 import { Flex, Text, Button, Badge, Box, ScrollArea, Tabs } from '@/primitives'
 import { IPC_CHANNELS } from '@shared/ipc'
-import { STATE_CONFIG, DETAIL_TAB_IDS } from './plugin-detail/constants'
+import { STATE_CONFIG, DETAIL_TAB, DETAIL_TAB_IDS, type DetailTabId } from './plugin-detail/constants'
 import type { PluginInfo, PermissionState, ErrorRecord, SettingSchema } from './plugin-detail/types'
 import { OverviewTab } from './plugin-detail/OverviewTab'
 import { ContributionsTab } from './plugin-detail/ContributionsTab'
@@ -22,7 +22,7 @@ interface Props {
 export function PluginDetailView({ pluginName }: Props) {
   const { t } = useTranslation()
   const [plugin, setPlugin] = useState<PluginInfo | null>(null)
-  const [activeTab, setActiveTab] = useState('overview')
+  const [activeTab, setActiveTab] = useState<DetailTabId>(DETAIL_TAB.OVERVIEW)
   const [errors, setErrors] = useState<ErrorRecord[]>([])
   const [expandedError, setExpandedError] = useState<number | null>(null)
   const [showUninstallConfirm, setShowUninstallConfirm] = useState(false)
@@ -164,26 +164,26 @@ export function PluginDetailView({ pluginName }: Props) {
       <Tabs
         tabs={DETAIL_TAB_IDS.map((id) => ({ id, label: t(`plugins.detail.tabs.${id}`) }))}
         activeTab={activeTab}
-        onTabChange={setActiveTab}
+        onTabChange={(id) => setActiveTab(id as DetailTabId)}
         className="px-6 shrink-0"
       />
 
       {/* Tab Content */}
       <ScrollArea direction="vertical" className="flex-1">
         <Box className="px-6 py-5">
-          {activeTab === 'overview' && (
+          {activeTab === DETAIL_TAB.OVERVIEW && (
             <OverviewTab plugin={plugin} stateConfig={stateConfig} errors={errors} />
           )}
-          {activeTab === 'permissions' && (
+          {activeTab === DETAIL_TAB.PERMISSIONS && (
             <PermissionsTab permissions={permissions} onToggle={handleTogglePermission} />
           )}
-          {activeTab === 'contributions' && (
+          {activeTab === DETAIL_TAB.CONTRIBUTIONS && (
             <ContributionsTab contributions={plugin.contributions} />
           )}
-          {activeTab === 'errors' && (
+          {activeTab === DETAIL_TAB.ERRORS && (
             <ErrorsTab errors={errors} expandedError={expandedError} onToggleError={setExpandedError} />
           )}
-          {activeTab === 'settings' && (
+          {activeTab === DETAIL_TAB.SETTINGS && (
             <SettingsTab schema={settingsSchema} values={settingsValues} onChange={handleSettingChange} />
           )}
         </Box>
