@@ -11,7 +11,7 @@ import { tabActions } from '@/stores/tab-actions'
 import { pickDefaultSchema } from '@/lib/pick-default-schema'
 import { initialAutoCommit } from '@/lib/initial-autocommit'
 import { getLatestReleaseNote } from '@/lib/release-notes'
-import { Input, ScrollArea, Text, KbdGroup, Box, Flex, Button } from '@/primitives'
+import { Input, ScrollArea, Text, KbdGroup, Flex, Button, Modal } from '@/primitives'
 import { usePluginUIStore, selectContributions } from '@/stores/plugin-ui'
 import type { PluginCommand } from '@/stores/plugin-commands'
 import { useTranslation } from '@/i18n/I18nProvider'
@@ -207,54 +207,53 @@ export function CommandPalette({ open, onClose }: Props) {
         filtered[selectedIndex].action()
         onClose()
       }
-    } else if (e.key === 'Escape') {
-      onClose()
     }
+    // Escape is handled natively by Modal's <dialog> (cancel/close events).
   }
 
-  if (!open) return null
-
   return (
-    <>
-      <Box className="fixed inset-0 bg-black/30 z-50" onClick={onClose} />
-      <Box className="fixed top-[15%] left-1/2 -translate-x-1/2 z-50 w-[520px] bg-bg-secondary border border-border rounded-xl shadow-2xl overflow-hidden">
-        {/* Search input */}
-        <Flex align="center" gap="sm" className="px-4 py-3 border-b border-border">
-          <Search size={16} className="text-text-muted shrink-0" />
-          <Input
-            ref={inputRef}
-            value={query}
-            onChange={e => setQuery(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={t('command.searchPlaceholder')}
-            size="sm"
-            className="flex-1 bg-transparent border-0 focus:ring-0 px-0"
-          />
-        </Flex>
+    <Modal
+      open={open}
+      onClose={onClose}
+      position="top"
+      className="w-[520px] max-w-[520px] rounded-xl overflow-hidden"
+    >
+      {/* Search input */}
+      <Flex align="center" gap="sm" className="px-4 py-3 border-b border-border">
+        <Search size={16} className="text-text-muted shrink-0" />
+        <Input
+          ref={inputRef}
+          value={query}
+          onChange={e => setQuery(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder={t('command.searchPlaceholder')}
+          size="sm"
+          className="flex-1 bg-transparent border-0 focus:ring-0 px-0"
+        />
+      </Flex>
 
-        {/* Results */}
-        <ScrollArea direction="vertical" className="max-h-72 py-1">
-          {filtered.length === 0 && (
-            <Text size="xs" color="muted" as="p" className="px-4 py-3 text-center">{t('command.noMatch')}</Text>
-          )}
-          {filtered.map((cmd, i) => (
-            <Button
-              key={cmd.id}
-              variant="ghost"
-              onClick={() => { cmd.action(); onClose() }}
-              className={`w-full flex items-center justify-between px-4 py-2 text-left transition-colors rounded-none border-0 h-auto ${
-                i === selectedIndex ? 'bg-accent/10 text-accent' : 'text-text-secondary hover:bg-hover'
-              }`}
-            >
-              <Flex align="center" gap="sm">
-                {cmd.category && <Text size="xs" color="muted" className="text-[10px] uppercase">{cmd.category}</Text>}
-                <Text size="xs">{cmd.title}</Text>
-              </Flex>
-              {cmd.keybinding && <KbdGroup accelerator={cmd.keybinding} size="sm" />}
-            </Button>
-          ))}
-        </ScrollArea>
-      </Box>
-    </>
+      {/* Results */}
+      <ScrollArea direction="vertical" className="max-h-72 py-1">
+        {filtered.length === 0 && (
+          <Text size="xs" color="muted" as="p" className="px-4 py-3 text-center">{t('command.noMatch')}</Text>
+        )}
+        {filtered.map((cmd, i) => (
+          <Button
+            key={cmd.id}
+            variant="ghost"
+            onClick={() => { cmd.action(); onClose() }}
+            className={`w-full flex items-center justify-between px-4 py-2 text-left transition-colors rounded-none border-0 h-auto ${
+              i === selectedIndex ? 'bg-accent/10 text-accent' : 'text-text-secondary hover:bg-hover'
+            }`}
+          >
+            <Flex align="center" gap="sm">
+              {cmd.category && <Text size="xs" color="muted" className="text-[10px] uppercase">{cmd.category}</Text>}
+              <Text size="xs">{cmd.title}</Text>
+            </Flex>
+            {cmd.keybinding && <KbdGroup accelerator={cmd.keybinding} size="sm" />}
+          </Button>
+        ))}
+      </ScrollArea>
+    </Modal>
   )
 }
