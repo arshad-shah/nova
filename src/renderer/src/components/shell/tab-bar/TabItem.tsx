@@ -41,7 +41,6 @@ export function TabItem({
     <ContextMenu items={contextMenuItems}>
       <Flex
         align="center"
-        gap="xs"
         data-tab-id={tab.id}
         draggable
         onDragStart={onDragStart}
@@ -50,8 +49,8 @@ export function TabItem({
         onClick={onActivate}
         onAuxClick={(e) => { if (e.button === 1) { e.preventDefault(); onClose() } }}
         className={cn(
-          'group relative h-7.5 px-3 cursor-pointer shrink-0 select-none transition-colors duration-(--transition-fast)',
-          'rounded-t-[10px]',
+          'group relative cursor-pointer shrink-0 select-none transition-colors duration-(--transition-fast)',
+          'h-(--tab-h) px-(--tab-px) gap-(--tab-gap) rounded-t-(--tab-r)',
           isActive
             ? 'bg-tab-active-bg text-tab-active-fg'
             : 'bg-transparent text-tab-inactive-fg hover:bg-tab-hover-bg',
@@ -61,11 +60,9 @@ export function TabItem({
       >
         {/* Active-tab skirt: concave fillets that visually attach the tab to
             the workspace surface (Chrome-style). Rendered only for the active
-            tab so inactive tabs stay flat. The accent strip is one of the few
-            surfaces the brand gradient is reserved for. */}
+            tab so inactive tabs stay flat. */}
         {isActive && (
           <>
-            <span className="tab-accent-strip" aria-hidden="true" />
             <span className="tab-skirt-left" aria-hidden="true" />
             <span className="tab-skirt-right" aria-hidden="true" />
           </>

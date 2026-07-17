@@ -61,7 +61,7 @@ export function TabBar() {
     <Flex
       align="end"
       gap="xs"
-      className="h-10 shrink-0 bg-tab-bar-bg px-2 pt-1.5"
+      className="h-(--tab-bar-h) shrink-0 bg-tab-bar-bg px-2 pt-1.5"
     >
       {/* Scroll left arrow */}
       {canScrollLeft && (
