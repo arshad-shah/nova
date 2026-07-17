@@ -28,20 +28,11 @@ type ContextMenuProps = VariantProps<typeof menuItemVariants> & {
   items: MenuItem[]
   className?: string
   children: React.ReactNode
-  /** Role for the wrapper element this must render to catch `contextmenu`.
-   *  Defaults to none — a plain, role-less div, which is transparent to ARIA
-   *  parent/child resolution and right for the common case of wrapping a whole
-   *  subtree. Pass `'presentation'` only where the wrapper sits between a
-   *  parent that constrains its children (e.g. `[role=tablist]`) and a single
-   *  child that carries the semantics: presentation is a claim that the
-   *  wrapper adds no meaning of its own, and that is not true of every
-   *  consumer. */
-  wrapperRole?: React.AriaRole
 }
 
 type Position = { x: number; y: number }
 
-export function ContextMenu({ items, size, className, children, wrapperRole }: ContextMenuProps) {
+export function ContextMenu({ items, size, className, children }: ContextMenuProps) {
   const [position, setPosition] = useState<Position | null>(null)
 
   function handleContextMenu(e: React.MouseEvent) {
@@ -55,7 +46,7 @@ export function ContextMenu({ items, size, className, children, wrapperRole }: C
   }
 
   return (
-    <div role={wrapperRole} onContextMenu={handleContextMenu}>
+    <div onContextMenu={handleContextMenu}>
       {children}
       {position && (
         <>

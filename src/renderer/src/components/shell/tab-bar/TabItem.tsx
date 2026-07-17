@@ -41,12 +41,8 @@ export function TabItem({
   const { icon: Icon, className: iconColor } = getTabIcon(tab.type)
   const isDirty = tab.type === 'query' && tab.isDirty
 
-  // ContextMenu renders a wrapper div to catch `contextmenu`, which lands
-  // between the [role=tablist] and this tab. `presentation` says that wrapper
-  // carries no meaning of its own, keeping the tab a child of the tablist
-  // however an ARIA implementation resolves role-less elements.
   return (
-    <ContextMenu items={contextMenuItems} wrapperRole="presentation">
+    <ContextMenu items={contextMenuItems}>
       <Flex
         align="center"
         id={`tab-${tab.id}`}
