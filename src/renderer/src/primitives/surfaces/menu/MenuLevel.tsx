@@ -77,6 +77,12 @@ export type MenuLevelProps = {
   ) => React.ReactNode
   /** Nested levels return focus to their parent row rather than trapping. */
   nested?: boolean
+  /**
+   * Extra key handling for the surface, for owners with navigation beyond a
+   * single list — the menubar moves between top-level menus with ←/→.
+   * Runs after the level's own handlers; call `preventDefault` to claim a key.
+   */
+  onLevelKeyDown?: (e: React.KeyboardEvent) => void
   'aria-label'?: string
 }
 
@@ -91,6 +97,7 @@ export function MenuLevel({
   children,
   renderTrigger,
   nested = false,
+  onLevelKeyDown,
   'aria-label': ariaLabel,
 }: MenuLevelProps) {
   const [activeIndex, setActiveIndex] = useState<number | null>(null)
@@ -234,7 +241,11 @@ export function MenuLevel({
               initialFocus={nested ? -1 : 0}
               returnFocus={!nested}
             >
-              <div ref={refs.setFloating} style={{ ...floatingStyles, zIndex: 50 }} {...getFloatingProps()}>
+              <div
+                ref={refs.setFloating}
+                style={{ ...floatingStyles, zIndex: 50 }}
+                {...getFloatingProps({ onKeyDown: onLevelKeyDown })}
+              >
                 <div
                   aria-label={ariaLabel}
                   className={cn(
