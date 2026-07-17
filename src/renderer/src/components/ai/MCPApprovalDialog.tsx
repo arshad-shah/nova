@@ -18,7 +18,7 @@ export function MCPApprovalDialog() {
     <Modal open={!!req} onClose={dismiss} className="bg-bg-primary mx-4">
       <Box className="flex items-center gap-3 px-4 py-3 border-b border-border bg-warning/10">
         <AlertTriangle size={18} className="text-warning shrink-0" />
-        <Box as="span" className="text-sm font-medium text-text-primary">{t('aiui.approval.mcpTitle')}</Box>
+        <Text as="span" size="sm" weight="medium">{t('aiui.approval.mcpTitle')}</Text>
         <Box as="span" className={`ml-auto text-[10px] px-1.5 py-0.5 rounded ${req.permission === 'write' ? 'bg-warning/20 text-warning' : 'bg-bg-secondary text-text-secondary'}`}>
           {req.permission === 'write' ? t('aiui.approval.write') : t('aiui.approval.read')}
         </Box>

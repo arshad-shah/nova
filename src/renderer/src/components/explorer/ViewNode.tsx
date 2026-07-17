@@ -14,6 +14,7 @@ import { ColumnRow } from './ColumnRow'
 import { HighlightedText } from './HighlightedText'
 import { IPC_CHANNELS } from '@shared/ipc'
 import { useTranslation } from '@/i18n/I18nProvider'
+import { treeIndent } from '@/lib/math'
 
 interface ViewNodeProps {
   viewName: string
@@ -85,7 +86,7 @@ export function ViewNode({ viewName, connectionId, schema, depth, highlightQuery
     },
   ]
 
-  const paddingLeft = 8 + depth * 16
+  const paddingLeft = treeIndent(depth)
 
   if (!isExpanded) {
     return (
@@ -105,13 +106,15 @@ export function ViewNode({ viewName, connectionId, schema, depth, highlightQuery
             className="text-info shrink-0"
             strokeWidth={1.8}
           />
-          <Box
+          <Text
             as="span"
-            className="flex-1 truncate min-w-0 text-xs text-text-primary"
+            truncate
+            size="xs"
+            className="flex-1 min-w-0"
             title={viewName}
           >
             <HighlightedText text={viewName} query={highlightQuery ?? ''} />
-          </Box>
+          </Text>
           <Box
             as="span"
             className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center"
@@ -157,13 +160,16 @@ export function ViewNode({ viewName, connectionId, schema, depth, highlightQuery
             className="text-info shrink-0"
             strokeWidth={1.8}
           />
-          <Box
+          <Text
             as="span"
-            className="flex-1 truncate min-w-0 text-xs font-medium text-text-primary"
+            truncate
+            size="xs"
+            weight="medium"
+            className="flex-1 min-w-0"
             title={viewName}
           >
             <HighlightedText text={viewName} query={highlightQuery ?? ''} />
-          </Box>
+          </Text>
         </Box>
 
         {/* Column rows */}

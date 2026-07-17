@@ -105,7 +105,7 @@ export function ToolCallCard({ message, result }: ToolCallCardProps) {
         ) : (
           <XCircle size={12} className="text-[var(--color-error)] shrink-0" />
         )}
-        <Box as="span" className="flex-1 text-xs font-medium text-[var(--color-text)]">{label}</Box>
+        <Text as="span" size="xs" weight="medium" className="flex-1">{label}</Text>
         {isWaitingApproval && (
           <Box as="span" className="text-[10px] text-warning">{t('aiui.tool.awaitingApproval')}</Box>
         )}

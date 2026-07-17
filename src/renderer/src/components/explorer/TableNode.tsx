@@ -12,6 +12,7 @@ import { useTableNodeActions } from './useTableNodeActions'
 import { formatCompactNumber } from '@/lib/format'
 import { useDataNouns } from '@/hooks/useDataNouns'
 import { useTranslation } from '@/i18n/I18nProvider'
+import { treeIndent } from '@/lib/math'
 
 interface TableNodeProps {
   tableName: string
@@ -66,7 +67,7 @@ export function TableNode({
     toggleTreeNode(nodeKey)
   }
 
-  const paddingLeft = 8 + depth * 16
+  const paddingLeft = treeIndent(depth)
 
   // ── Shared header content ──────────────────────────────────────────────────
 
@@ -97,13 +98,15 @@ export function TableNode({
         >
           {chevron}
           <Table2 size={14} className="text-accent shrink-0" strokeWidth={1.8} />
-          <Box
+          <Text
             as="span"
-            className="flex-1 truncate min-w-0 text-xs text-text-primary"
+            truncate
+            size="xs"
+            className="flex-1 min-w-0"
             title={tableName}
           >
             <HighlightedText text={tableName} query={highlightQuery ?? ''} />
-          </Box>
+          </Text>
           {rowCountDisplay}
 
           <TableHoverActions
@@ -147,13 +150,16 @@ export function TableNode({
         >
           {chevron}
           <Table2 size={14} className="text-accent shrink-0" strokeWidth={1.8} />
-          <Box
+          <Text
             as="span"
-            className="flex-1 truncate min-w-0 text-xs font-medium text-text-primary"
+            truncate
+            size="xs"
+            weight="medium"
+            className="flex-1 min-w-0"
             title={tableName}
           >
             <HighlightedText text={tableName} query={highlightQuery ?? ''} />
-          </Box>
+          </Text>
 
           {/* Stat pills */}
           <Box as="span" className="flex items-center gap-1 shrink-0">

@@ -18,6 +18,7 @@ import { SchemaGroup } from './schema-group/SchemaGroup'
 import { SchemaObjectGroup } from './schema-group/SchemaObjectGroup'
 import { fuzzyMatch } from '@/lib/fuzzy-match'
 import { useTranslation } from '@/i18n/I18nProvider'
+import { treeIndent } from '@/lib/math'
 
 interface SchemaNodeProps {
   schemaName: string
@@ -117,7 +118,7 @@ export function SchemaNode({ schemaName, connectionId, databaseName, depth, onEx
   const indexes = allObjects.filter((o) => o.kind === 'index' && matches(o.name)).sort(byScore)
   const extensions = allObjects.filter((o) => o.kind === 'extension' && matches(o.name)).sort(byScore)
 
-  const paddingLeft = 8 + depth * 16
+  const paddingLeft = treeIndent(depth)
   // One indent step in from the schema row, so group headers sit clearly under it.
   const groupLabelPaddingLeft = paddingLeft + 16
   // Items inside a group nest one step further in (matches TableNode/ViewNode depth+2).
@@ -149,13 +150,16 @@ export function SchemaNode({ schemaName, connectionId, databaseName, depth, onEx
             className="text-warning shrink-0"
             strokeWidth={1.8}
           />
-          <Box
+          <Text
             as="span"
-            className="flex-1 truncate min-w-0 text-xs font-medium text-text-primary"
+            truncate
+            size="xs"
+            weight="medium"
+            className="flex-1 min-w-0"
             title={schemaName}
           >
             <HighlightedText text={schemaName} query={filterText} />
-          </Box>
+          </Text>
 
           {/* Hover actions */}
           <Box

@@ -354,6 +354,19 @@
   --color-skeleton-base: color-mix(in oklab, var(--color-text-primary) 14%, transparent);
   --color-skeleton-highlight: color-mix(in oklab, var(--color-text-primary) 28%, transparent);
 
+  /* Chip fill — a plain neutral wash for a small inline badge/pill that
+     isn't a status/severity color (e.g. a driver abbreviation, a hint
+     label). Derived from text-primary the same way the skeleton tokens
+     are, so it self-inverts (a light tint on dark themes, a dark tint on
+     light ones) instead of the fixed `bg-white/NN` it replaces, which read
+     as a near-invisible sliver on light themes. Two weights: `-subtle` for
+     a barely-there hint, the base for a slightly more present chip. */
+  --color-chip-fill: color-mix(in oklab, var(--color-text-primary) 18%, transparent);
+  --color-chip-fill-subtle: color-mix(in oklab, var(--color-text-primary) 8%, transparent);
+  /* Row tint — the faint wash behind an unread list row. Same derivation,
+     lower weight; readable-but-quiet on every theme. */
+  --color-row-tint: color-mix(in oklab, var(--color-text-primary) 2%, transparent);
+
   /* Switch — tuned so the toggle looks *identical in spirit* on every theme,
      light or dark. The knob is always the lightest, raised element (a white
      surface) and the off-track is always darker than it: mixing the theme's
