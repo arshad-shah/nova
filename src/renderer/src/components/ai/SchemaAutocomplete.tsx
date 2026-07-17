@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback, type KeyboardEvent, type RefObject } from 'react'
+import { includesFold } from '@/lib/fuzzy-match'
 import { useSchemaStore } from '@/stores/schema'
 import { useConnectionsStore } from '@/stores/connections'
 import { Box, Button } from '@/primitives'
@@ -83,7 +84,7 @@ export function SchemaAutocomplete({ triggerText, onSelect, onDismiss, anchorRef
     // Filter by trigger text (text after @)
     const filter = triggerText.toLowerCase()
     const filtered = filter
-      ? allItems.filter(i => i.label.toLowerCase().includes(filter))
+      ? allItems.filter(i => includesFold(i.label, filter))
       : allItems
 
     // Sort: tables first, then columns, alphabetical within

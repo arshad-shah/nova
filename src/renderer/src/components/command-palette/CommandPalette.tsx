@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo, type KeyboardEvent } from 'react'
+import { matchesFilter } from '@/lib/fuzzy-match'
 import { Search } from 'lucide-react'
 import { useConnectionsStore, useActiveProfile } from '@/stores/connections'
 import { useTabsStore } from '@/stores/tabs'
@@ -177,10 +178,7 @@ export function CommandPalette({ open, onClose }: Props) {
   const filtered = useMemo(() => {
     if (!query.trim()) return commands
     const q = query.toLowerCase()
-    return commands.filter(c =>
-      c.title.toLowerCase().includes(q) ||
-      c.category?.toLowerCase().includes(q)
-    )
+    return commands.filter(c => matchesFilter(q, c.title, c.category))
   }, [query, commands])
 
   useEffect(() => {

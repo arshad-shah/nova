@@ -1,9 +1,11 @@
 import { useState, useEffect, useRef } from 'react'
+import { matchesFilter } from '@/lib/fuzzy-match'
 import { useConnectionsStore } from '@/stores/connections'
 import { Search, Plus, Check } from 'lucide-react'
 import { Button, Input, Text, Box, Flex, ScrollArea } from '@/primitives'
 import { cn } from '@/primitives/utils/cn'
 import { useClickOutside } from '@/hooks/useClickOutside'
+import { useEscapeKey } from '@/hooks/useEscapeKey'
 import { useTranslation } from '@/i18n/I18nProvider'
 
 const DB_ABBREVIATIONS: Record<string, string> = {
@@ -43,26 +45,12 @@ export function ConnectionSwitcher({ isOpen, onClose, onNewConnection }: Connect
     }
   }, [isOpen])
 
-  useEffect(() => {
-    if (!isOpen) return
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
-    }
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [isOpen, onClose])
-
+  useEscapeKey(onClose, isOpen)
   useClickOutside(panelRef, onClose, { enabled: isOpen, deferAttach: true })
 
   if (!isOpen) return null
 
-  const lowerFilter = filter.toLowerCase()
-  const filtered = connections.filter(
-    (c) =>
-      c.name.toLowerCase().includes(lowerFilter) ||
-      c.database.toLowerCase().includes(lowerFilter) ||
-      (c.host ?? '').toLowerCase().includes(lowerFilter)
-  )
+  const filtered = connections.filter((c) => matchesFilter(filter, c.name, c.database, c.host))
 
   const activeConn = filtered.find((c) => c.id === activeConnectionId)
   const connectedConns = filtered.filter(

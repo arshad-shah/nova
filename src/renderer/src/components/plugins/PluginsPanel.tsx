@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { includesFold } from '@/lib/fuzzy-match'
 import { FolderOpen, RefreshCw, Package } from 'lucide-react'
 import { useTabsStore } from '@/stores/tabs'
 import { useTranslation } from '@/i18n/I18nProvider'
@@ -49,7 +50,7 @@ export function PluginsPanel() {
   }
 
   const filtered = plugins.filter(p =>
-    p.displayName.toLowerCase().includes(search.toLowerCase())
+    includesFold(p.displayName, search)
   )
   const bundledPlugins = filtered.filter(p => p.bundled)
   const installedPlugins = filtered.filter(p => !p.bundled)

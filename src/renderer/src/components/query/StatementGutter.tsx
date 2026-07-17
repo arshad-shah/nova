@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import type { editor } from 'monaco-editor'
 import { Check, AlertCircle } from 'lucide-react'
 import { Spinner } from '@/primitives/feedback/Spinner'
+import { formatDuration } from '@/lib/format-time'
 import { Button } from '@/primitives/forms/Button'
 import { Text } from '@/primitives/typography/Text'
 import {
@@ -189,14 +190,14 @@ function StatusChip({ status }: { status: StatementStatus }) {
       <Text as="span" size="xs" color="error" className="ml-2 inline-flex items-center gap-1">
         <AlertCircle size={10} />
         {t('query.statement.failed')}
-        {status.durationMs != null ? ` · ${formatMs(status.durationMs)}` : null}
+        {status.durationMs != null ? ` · ${formatDuration(status.durationMs)}` : null}
       </Text>
     )
   }
   return (
     <Text as="span" size="xs" color="success" className="ml-2 inline-flex items-center gap-1">
       <Check size={10} />
-      {status.durationMs != null ? formatMs(status.durationMs) : t('query.statement.ok')}
+      {status.durationMs != null ? formatDuration(status.durationMs) : t('query.statement.ok')}
       {status.rowCount != null
         ? ` · ${t('query.statement.rows', { count: status.rowCount })}`
         : null}
@@ -204,7 +205,3 @@ function StatusChip({ status }: { status: StatementStatus }) {
   )
 }
 
-function formatMs(ms: number): string {
-  if (ms < 1000) return `${ms}ms`
-  return `${(ms / 1000).toFixed(1)}s`
-}

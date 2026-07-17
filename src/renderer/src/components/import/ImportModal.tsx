@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { parseAppError } from '@/lib/db-error'
 import { Upload, X } from 'lucide-react'
 import { Modal, Button, Input, Text, Flex, Spinner, Stack, Box, SegmentedControl } from '@/primitives'
 import { IPC_CHANNELS } from '@shared/ipc'
@@ -49,7 +50,7 @@ export function ImportModal({ connectionId, onClose }: Props) {
       setResult({ text: msg, isError: false })
       if (res.errors.length === 0) setTimeout(onClose, 1500)
     } catch (err) {
-      setResult({ text: t('shell.importModal.errorPrefix', { message: (err as Error).message }), isError: true })
+      setResult({ text: t('shell.importModal.errorPrefix', { message: parseAppError(err).message }), isError: true })
     } finally {
       setImporting(false)
     }
@@ -70,7 +71,7 @@ export function ImportModal({ connectionId, onClose }: Props) {
       setResult({ text: msg, isError: false })
       if (res.errors.length === 0) setTimeout(onClose, 1500)
     } catch (err) {
-      setResult({ text: t('shell.importModal.errorPrefix', { message: (err as Error).message }), isError: true })
+      setResult({ text: t('shell.importModal.errorPrefix', { message: parseAppError(err).message }), isError: true })
     } finally {
       setImporting(false)
     }

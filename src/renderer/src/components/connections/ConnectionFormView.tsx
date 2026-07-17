@@ -1,4 +1,5 @@
 import { useState, useEffect, type FormEvent } from 'react'
+import { parseAppError } from '@/lib/db-error'
 import { ConnectionTestButton } from './ConnectionTestButton'
 import { useConnectionsStore } from '@/stores/connections'
 import { useTabsStore } from '@/stores/tabs'
@@ -109,7 +110,7 @@ export function ConnectionFormView({ tabId, editingId }: Props) {
       setAuthStatus('authenticated')
     } catch (err) {
       setAuthStatus('error')
-      setAuthError((err as Error).message)
+      setAuthError(parseAppError(err).message)
     }
   }
 
