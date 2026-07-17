@@ -54,6 +54,8 @@ way to reach the OS.
 | `driver-capabilities.ts` | serializable driver capability flags — incl. `statementSyntax`, `errorRules`, `nouns` (object/field/record terms so the explorer isn't SQL-specific), plan/session/explain support |
 | `db-errors.ts` | `DbErrorCode` taxonomy + serializable `DbErrorRule` (driver-contributed error classification) |
 | `i18n/` | the message catalogue + framework-free `t()` / `MessageKey` (see [i18n.md](/develop/i18n/)) |
+| `activity.ts` | the unified activity-stream types (`ActivityKind`, entries) shared by the recorder, the renderer panel, and AI/MCP tool access (see [activity.md](/develop/activity/)) |
+| `export-import.ts` | renderer-facing export/importer format descriptors, derived from the plugin registries so a connection only offers formats its driver actually supports |
 | `mcp.ts`, `plugin-ui-types.ts`, `appdata.ts` | MCP types, plugin UI contracts, app-data-store record types |
 
 All renderer↔main traffic goes through `ipc.ts`. The constant is mandatory at
@@ -119,13 +121,16 @@ design system for UI.
 | Store | Owns |
 |-------|------|
 | `connections.ts` | connection profiles, connect/disconnect lifecycle, active connection |
-| `tabs.ts` | open tabs (a discriminated union: query / table / ER-diagram / connection-form / plugin-detail / install-plugin / settings) |
+| `tabs.ts` | open tabs (a discriminated union: query / table / ER-diagram / connection-form / plugin-detail / install-plugin / settings / welcome / release-notes) |
 | `schema.ts` | cached schema metadata keyed by connection + schema |
 | `ui.ts` | panel layout, sidebars, bottom dock, settings category (persisted) |
 | `ai.ts` | AI chat: messages, providers/models, **conversations + history** |
 | `editor.ts`, `tab-actions.ts` | non-reactive registries of mounted Monaco editors / per-tab save+txn handlers |
 | `query-history.ts` | recorded query runs (mirror of the SQLite app-data `query_history` table), capped to `general.maxHistoryItems` |
-| `lib/tab-persistence/` | incremental **tab-persistence engine** — per-tab restore-on-startup backed by the SQLite app-data store (`open_tabs`, over IPC); a pure diff/select core + debounced engine persists only the changed tab, restored when `general.restoreTabsOnStartup` is on |
+| `activity.ts` | mirrors the unified activity stream (cap 1000) that backs the Activity panel; applies each IPC batch in one update (see [activity.md](/develop/activity/)) |
+| `explain.ts` | per-tab streaming state for the AI "Explain" feature (loading, streamed text, duration, error) |
+| `statement-status.ts` | per-statement run status (`ok`/`error`/`running`, duration, row count), keyed by tab + statement hash, read by the `StatementGutter` |
+| `src/renderer/src/lib/tab-persistence/` | incremental **tab-persistence engine** — per-tab restore-on-startup backed by the SQLite app-data store (`open_tabs`, over IPC); a pure diff/select core + debounced engine persists only the changed tab, restored when `general.restoreTabsOnStartup` is on |
 | `selection.ts`, `notifications.ts`, `toast.ts` | inspector selection, the notification center, transient toasts |
 | `driver-capabilities.ts`, `themes.ts`, `settings.ts` | capability flags, theme list, settings mirror |
 | `plugin-*.ts` | plugin-contributed commands / panels / lifecycle |
@@ -165,7 +170,7 @@ themes; `ColorInput`'s picker portals so it isn't clipped. The new
 The orchestrator's extension mechanism. A plugin is a directory with a
 declarative `manifest.json` (`contributes` block) and an `activate(ctx)` that
 registers contributions through the SDK. Lifecycle: **discover → validate →
-resolve → activate → runtime**, managed by the `BootCoordinator` in
+resolve → activate → runtime**, managed by the `PluginBootCoordinator` in
 `plugins/plugin-host.ts`; what's declared in the manifest must actually be
 registered or the plugin lands in a `degraded` state.
 

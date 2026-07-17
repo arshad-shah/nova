@@ -1,6 +1,6 @@
 ---
 title: Running queries
-description: The SQL editor, autocomplete, the results grid, transactions, and the command palette.
+description: The editor, autocomplete, the results grid, transactions, and the command palette.
 sidebar:
   order: 3
 ---
@@ -11,26 +11,30 @@ command palette.
 
 [← Back to the User Guide](/guide/)
 
-## The SQL editor
+## The editor
 
 Verql's editor is powered by **Monaco** (the same engine behind VS Code), so it
 feels familiar: syntax highlighting, multiple cursors, find-and-replace, and so
 on. The language adapts to your connection — SQL for relational databases, and
-the appropriate language for non-SQL drivers.
+the appropriate language for non-SQL drivers (JSON for MongoDB, plain text for
+Redis, and so on).
 
 ### Autocomplete
 
 As you type, the editor suggests:
 
-- SQL keywords for your database's dialect
-- Table and column names pulled from the live schema of your connection
+- Keywords and commands for your connection — SQL keywords for relational
+  databases, operation names for MongoDB, commands for Redis
+- Object and field names pulled from the live schema of your connection
+  (tables and columns, or their driver-specific equivalents)
 
 This means completions reflect *your* database, not a generic word list. If
 suggestions look stale, reconnecting refreshes the schema cache.
 
 ## Opening a query tab and running a query
 
-- Open a new query tab with **Cmd/Ctrl+N**.
+- Open a new query tab with **Cmd/Ctrl+T** (the default New Tab shortcut —
+  rebindable in Settings).
 - Write your query, then run it. The results appear in the grid below the editor.
 
 You can keep several query tabs open at once, each against the same or different

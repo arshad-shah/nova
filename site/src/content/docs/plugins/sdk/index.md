@@ -68,16 +68,21 @@ need — see [getting-started.md](/plugins/sdk/getting-started/) and
 
 ## Versioning & releases
 
-`@verql/plugin-sdk` is versioned and published **independently** of the desktop
-app so its API can stabilise on its own cadence:
+`@verql/plugin-sdk` is versioned and published **independently** of the
+desktop app so its API can stabilise on its own cadence, riding the same
+tag-free [Changesets](https://github.com/changesets/changesets) flow as the
+app:
 
-- The app releases on `v*.*.*` tags (`.github/workflows/release.yml`).
-- The SDK publishes on `sdk-v*` tags (`.github/workflows/publish-sdk.yml`),
-  which verifies the tag matches `packages/plugin-sdk/package.json`, typechecks,
-  builds with `tsup`, and runs `pnpm publish --provenance`.
+- A PR that changes the SDK adds a changeset (`pnpm changeset`) bumping
+  `packages/plugin-sdk/package.json`.
+- Merging the automated "Version Packages" PR lands the bump on `main`, which
+  auto-tags `sdk-vX.Y.Z` and publishes it as a reusable workflow — no one
+  pushes a tag by hand.
+- Publishing uses npm **OIDC trusted publishing** (gated by a required
+  reviewer) rather than a long-lived npm token.
 
-To cut an SDK release: bump `packages/plugin-sdk/package.json`, commit, then
-`git tag sdk-vX.Y.Z && git push origin sdk-vX.Y.Z`.
+To cut an SDK release: add a changeset scoped to `packages/plugin-sdk`, get it
+merged to `main`, then merge the "Version Packages" PR when it appears.
 
 ## Local development
 

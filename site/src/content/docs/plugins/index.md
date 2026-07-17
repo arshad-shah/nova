@@ -79,12 +79,20 @@ against the SDK's `PluginModule` type. Missing fields, mistyped
 contributions, or a wrong `activate` signature fail at compile time
 instead of waiting for the boot pipeline to report a runtime error.
 
+**Export `manifest`/`activate`/`deactivate` as named exports, not a default
+export.** The loader does `const mod = require(mainPath)` and then checks
+`typeof mod.activate === 'function'` directly — there is no `.default`
+interop. A plain `export default definePlugin({...})` compiles (with
+esbuild/tsup/tsc CJS output) to `exports.default = {...}`, not
+`exports.activate`, so the plugin fails validation with `'Missing activate()
+export'`. Destructure the return value into named exports instead:
+
 ```ts
 // my-plugin/index.ts
 import { definePlugin } from '@verql/plugin-sdk'
 import { CassandraAdapter } from './cassandra-adapter'
 
-export default definePlugin({
+export const { manifest, activate, deactivate } = definePlugin({
   manifest: {
     name: 'verql-plugin-cassandra',
     version: '1.0.0',
@@ -133,14 +141,15 @@ goes through one of its sub-registries:
 | `drivers` | Register a database driver (see [Driver](#1-driver)) |
 | `drivers.registerConnectionMiddleware` | Pre-/post-connect hooks (e.g. SSH tunnel) |
 | `commands` | Register a command palette entry |
-| `panels` | Register a UI panel slot |
-| `ui` | Register declarative widgets (status-bar items, toolbar selectors, slot resolvers) |
+| `tools` | Register an AI/MCP tool (shared by the AI chat and the MCP server) |
+| `panels` | Legacy panel registration (`title`/`icon`/`location`/`render()`); prefer `ui.registerPanel` |
+| `ui` | Register declarative widgets (panels, status-bar items, toolbar selectors, tabs, slots, resolvers) |
 | `completions` | Contribute autocomplete items to the query editor |
 | `exporters` | Register an export format (CSV, JSON, SQL DDL, …) |
 | `importers` | Register an import format |
 | `formatters` | Pretty-print the query buffer for a dialect |
 | `typeMappers` | Translate column types between dialects |
-| `ai` | Provide AI tools, providers, or context |
+| `ai` | Register an AI provider or a context provider (tool registration lives on `ctx.tools`) |
 | `services` | Provide / consume named cross-plugin services |
 | `settings` | Read & subscribe to plugin-scoped settings |
 | `schema` | Read introspected schema for a connection |
@@ -148,6 +157,8 @@ goes through one of its sub-registries:
 | `keyring` | Read/write secrets in the OS keyring |
 | `ipc` | Own typed IPC channels (only if your plugin needs renderer↔plugin RPC outside the SDK) |
 | `broadcast` | Push events to the renderer |
+| `notifications` | Push an in-app toast notification (see [notifications & the attention seam](#13-desktop-notifications--the-attention-seam)) |
+| `dragDrop` | Claim a file extension for drag-and-drop (e.g. a `.sqlite` file dropped onto the app) |
 
 Disposable returns. Every `ctx.X.register(...)` returns a `Disposable` and
 is automatically tracked under `ctx.subscriptions`. When the plugin is
@@ -568,33 +579,48 @@ live in `src/main/plugins/sdk/theme-registry.ts`.
 
 ### 9. Panel (UI surface)
 
-Add a panel into the primary or secondary sidebar, the bottom dock, or a
-plugin-defined slot.
+Add a panel into the primary or secondary sidebar, or the bottom dock.
 
 **Manifest**
 
 ```json
 "contributes": {
   "panels": [
-    { "id": "snowflake-context", "location": "secondary", "title": "Snowflake" }
+    { "id": "cassandra-console", "title": "Cassandra", "icon": "terminal", "location": "secondary" }
   ]
 }
 ```
 
+`id`, `title`, `icon`, and `location` (`'sidebar' | 'secondary' | 'bottom'`)
+are all required — the manifest validator rejects a panel contribution
+missing any of them.
+
 **Activation**
 
+The idiomatic path is `ctx.ui.registerPanel(id, widgets)`: compose the
+panel's contents out of declarative widgets (`selector`, `action-button`,
+`status-indicator`, `text`, `tree`, `list`, `section`, `separator`), or drop
+in a `host-component` widget when the panel needs a full custom UI the host
+already knows how to mount (this is how the bundled AI plugin registers its
+chat sidebar — `componentId` names a component the renderer's shell maps to a
+real React component; it isn't an arbitrary path a plugin supplies).
+
 ```ts
-ctx.panels.register('snowflake-context', {
-  // a renderer component path (plugin UI is React) or a contribution-id
-  // that pairs with a renderer-side mounted component
-})
+ctx.ui.registerPanel('cassandra-console', [
+  { id: 'cassandra-console-root', type: 'host-component', componentId: 'cassandra-console-panel' }
+])
 ```
 
-Or, for purely declarative UI (no React component bundle), use
-`ctx.ui.registerToolbar` / `registerStatusBar` / `registerSlot` /
-`registerResolver` to compose widgets out of primitives like buttons,
-selectors, and labels. See [snowflake/index.ts](https://github.com/arshad-shah/verql/blob/main/src/main/plugins/bundled/snowflake/index.ts)
-for the role/warehouse selectors driven entirely through declarative UI.
+The SDK also carries a lower-level `ctx.panels.register(id, panel)` — a
+`PanelContribution` shaped `{ title, icon, location, render(): string }` — but
+no bundled plugin uses it; `ctx.ui.registerPanel` is the path every real panel
+takes. `ctx.ui` also has `registerStatusBar` / `registerToolbar` /
+`registerTab` / `registerSlot` / `registerResolver` for widgets that live
+outside a dedicated panel — e.g. a toolbar of selectors, or a widget dropped
+into a host-defined slot. See [snowflake/index.ts](https://github.com/arshad-shah/verql/blob/main/src/main/plugins/bundled/snowflake/index.ts)
+for a toolbar of role/warehouse selectors driven entirely through declarative
+UI, and [ai/index.ts](https://github.com/arshad-shah/verql/blob/main/src/main/plugins/bundled/ai/index.ts)
+for the `ai-chat` panel plus several slot contributions.
 
 ### 10. Command
 
@@ -622,8 +648,10 @@ palette ends up running `verql-plugin-foo:format-sql`.
 ### 11. AI provider / tool
 
 Plugins can register additional AI providers (alongside OpenAI, Anthropic,
-Ollama) or new AI tools (alongside the built-in `schema_list_tables`,
-`query_execute`, …).
+Ollama) or new tools — shared by the AI chat and the MCP server — alongside
+the built-in ones (`query`, `list_tables`, `describe_table`, `get_schemas`,
+`connection_info`, `explain_query`, `get_app_activity`, all registered by the
+bundled `db-tools` plugin, plus `perform_app_action` from the `ai` plugin).
 
 **Activation**
 
@@ -636,18 +664,28 @@ ctx.ai.registerProvider({
   async *chat(request) { … }
 })
 
-ctx.ai.registerTool({
+// Tools are registered on ctx.tools, not ctx.ai — the same registry the
+// MCP server reads from, so a tool registered once shows up in both.
+import { toJsonSchema } from '@verql/plugin-sdk'
+import { z } from 'zod'
+
+ctx.tools.register({
   id: 'count_rows',
   name: 'Count Rows',
   description: 'Count rows in a table',
-  parameters: { type: 'object', properties: { table: { type: 'string' } } },
+  inputSchema: toJsonSchema(z.object({ table: z.string() })),
   permission: 'read',
   async execute(params, ctx) { … }
 })
 ```
 
+Set `surfaces: ['ai']` on a tool that only makes sense from the in-app chat
+(e.g. one that opens a UI panel) to keep it out of the headless MCP server;
+omit `surfaces` to expose it to both.
+
 The MongoDB and Redis bundled plugins both register an AI **context
-provider** so Claude knows how to format queries for those connections.
+provider** (`ctx.ai.registerContextProvider`) so Claude knows how to format
+queries for those connections.
 
 ### 12. Setting
 
@@ -664,11 +702,17 @@ under any category it likes.
       "title": "Query timeout (ms)",
       "type": "number",
       "default": 30000,
-      "category": "performance"
+      "category": "connections"
     }
   ]
 }
 ```
+
+`category` is optional (it defaults to `'plugin'`, showing only in the
+plugin's own detail panel); when set, it must be one of the core category
+ids the host knows about — `'general' | 'appearance' | 'editor' |
+'connections' | 'data-display' | 'keybindings' | 'ai' | 'mcp' | 'plugin'` —
+and the setting then also surfaces in that core Settings category.
 
 Settings are scoped per-plugin (`plugins.<name>.queryTimeoutMs`) and
 accessed via `ctx.settings.get('queryTimeoutMs')`.

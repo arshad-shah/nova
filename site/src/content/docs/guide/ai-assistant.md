@@ -33,10 +33,12 @@ You talk to the assistant in a chat panel. To actually help, it can use **tools*
 — for example, listing tables, describing a table, or running a query against your
 connected database.
 
-**Tool calls require your approval.** The assistant doesn't silently touch your
-database: each tool call is gated by per-call permission, and you approve it
-before it runs. This is especially important for anything that could modify data
-— write operations are not performed without your go-ahead.
+**Tool calls are gated by a permission mode** you pick in the chat panel:
+**Read-only** (writes are refused outright), **Ask before writes** (the
+default — a write tool call pauses for your approval before it runs), or
+**Auto** (writes run without asking). Outside of Auto mode, the assistant
+doesn't silently touch your database: write operations wait for your
+go-ahead before they run.
 
 ## Conversation history
 

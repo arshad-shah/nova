@@ -91,6 +91,26 @@ It's a two-step edit, **all in `shared/ipc.ts`**:
    - `mcp:*` → [`ipc/mcp.ts`](https://github.com/arshad-shah/verql/blob/main/src/main/ipc/mcp.ts)
    - `migration:*` → [`ipc/migration.ts`](https://github.com/arshad-shah/verql/blob/main/src/main/ipc/migration.ts)
    - `app:*` → [`ipc/app.ts`](https://github.com/arshad-shah/verql/blob/main/src/main/ipc/app.ts)
+   - `appdata:*` → [`ipc/appdata.ts`](https://github.com/arshad-shah/verql/blob/main/src/main/ipc/appdata.ts)
+   - `themes:*` → [`ipc/themes.ts`](https://github.com/arshad-shah/verql/blob/main/src/main/ipc/themes.ts)
+   - `updater:*` → [`ipc/updater.ts`](https://github.com/arshad-shah/verql/blob/main/src/main/ipc/updater.ts)
+   - `window:*` → [`ipc/window.ts`](https://github.com/arshad-shah/verql/blob/main/src/main/ipc/window.ts)
+   - `activity:*` → registered inline in
+     [`ipc-handlers.ts`](https://github.com/arshad-shah/verql/blob/main/src/main/ipc-handlers.ts)
+     (no dedicated domain file)
+
+   `ai:*` is the exception to this list: the AI assistant is a bundled
+   *plugin* (`src/main/plugins/bundled/ai/`), so it registers its own
+   channels through `ctx.ipc.handle()` (the `PluginIpc.handle` method) from
+   inside the plugin, not from a file under `src/main/ipc/`. It takes the
+   same `(channel, handler)` pair as the core `handle` wrapper, but the two
+   are not interchangeable: `PluginIpc.handle` returns a `Disposable`
+   (dispose it to unregister — e.g. on plugin deactivation) and throws a
+   permission error unless the plugin was granted the `ipc` capability,
+   whereas the core `handle` returns `void` and also traces every call into
+   the activity stream. If the domain you're adding belongs to a plugin
+   rather than the core app, register it through `ctx.ipc.handle()`, not
+   `handle`.
 
    The handler signature is inferred from `IpcChannelMap`:
 

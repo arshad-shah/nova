@@ -309,7 +309,7 @@ sequenceDiagram
     alt approved
         Srv->>Client: tool result
     else rejected or timeout
-        Srv->>Client: "Query rejected by user"
+        Srv->>Client: "Query rejected by user in Verql"
     end
 ```
 
@@ -421,19 +421,19 @@ stateDiagram-v2
 ```mermaid
 journey
     title Approval while the user is away
-    section AI raises a write query
-      Model proposes DELETE: 3: AI
+    section AI raises a write action
+      Model proposes a write action: 3: AI
       Attention requested: 3: Host
       OS notification shown: 5: User
     section User responds
       Sees desktop banner: 5: User
       Clicks to focus Verql: 4: User
-      Reviews SQL in ApprovalCard: 4: User
+      Reviews the action in ApprovalCard: 4: User
       Approves: 5: User
     section Resolution
       Attention resolved: 3: Host
       Notification dismissed: 5: User
-      Query executes: 4: AI
+      Action executes: 4: AI
 ```
 
 ## Requirements
