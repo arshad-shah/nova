@@ -31,6 +31,16 @@ describe('parseActionHref', () => {
     expect(parseActionHref('verql://something-else/foo')).toBeNull()
     expect(parseActionHref('')).toBeNull()
   })
+
+  it('returns null for a malformed URL instead of throwing', () => {
+    expect(() => parseActionHref('not a valid url at all')).not.toThrow()
+    expect(parseActionHref('not a valid url at all')).toBeNull()
+  })
+
+  it('returns null when the action path is empty', () => {
+    expect(parseActionHref('verql://action/')).toBeNull()
+    expect(parseActionHref('verql://action')).toBeNull()
+  })
 })
 
 describe('AppActionRegistry', () => {
@@ -74,6 +84,27 @@ describe('AppActionRegistry', () => {
     // Compact format: `id "Title"` (description dropped to save tokens).
     expect(text).toContain('open-settings')
     expect(text).toContain('"Open Settings"')
+  })
+
+  it('describes an empty catalog as an empty string', () => {
+    expect(registry.describeForPrompt()).toBe('')
+  })
+
+  it('onChange notifies subscribers when an action is registered or unregistered', () => {
+    const cb = vi.fn()
+    registry.onChange(cb)
+    const dispose = registry.register(navAction)
+    expect(cb).toHaveBeenCalledTimes(1)
+    dispose()
+    expect(cb).toHaveBeenCalledTimes(2)
+  })
+
+  it('onChange — the returned disposer stops further notifications', () => {
+    const cb = vi.fn()
+    const unsub = registry.onChange(cb)
+    unsub()
+    registry.register(navAction)
+    expect(cb).not.toHaveBeenCalled()
   })
 })
 

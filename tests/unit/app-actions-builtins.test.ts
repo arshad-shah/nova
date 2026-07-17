@@ -72,6 +72,24 @@ describe('NEW_QUERY_TAB', () => {
   })
 })
 
+describe('OPEN_CONNECTIONS / NEW_CONNECTION / OPEN_EXPLORER', () => {
+  it('OPEN_CONNECTIONS shows the connections secondary panel', async () => {
+    await run(APP_ACTION.OPEN_CONNECTIONS, {})
+    expect(useUiStore.getState().secondaryActivePanel).toBe(SECONDARY_PANEL.CONNECTIONS)
+  })
+
+  it('NEW_CONNECTION opens a connection-form tab', async () => {
+    await run(APP_ACTION.NEW_CONNECTION, {})
+    expect(useTabsStore.getState().tabs.some((t) => t.type === 'connection-form')).toBe(true)
+  })
+
+  it('OPEN_EXPLORER switches the sidebar to the explorer panel', async () => {
+    useUiStore.setState({ activePanel: 'ai' as never })
+    await run(APP_ACTION.OPEN_EXPLORER, {})
+    expect(useUiStore.getState().activePanel).toBe('explorer')
+  })
+})
+
 describe('OPEN_SAVED_QUERY', () => {
   it('throws when no query name/id is given', async () => {
     await expect(run(APP_ACTION.OPEN_SAVED_QUERY, {})).rejects.toThrow(/provide/i)
@@ -171,6 +189,10 @@ describe('CONNECT_DATABASE / DISCONNECT_DATABASE / SWITCH_CONNECTION', () => {
     useConnectionsStore.setState({ connections: [profile], connectedIds: new Set(), connect })
     await expect(run(APP_ACTION.SWITCH_CONNECTION, { connection: 'c1' })).rejects.toThrow(/couldn't connect/i)
   })
+
+  it('SWITCH_CONNECTION throws when the named connection does not exist', async () => {
+    await expect(run(APP_ACTION.SWITCH_CONNECTION, { connection: 'ghost' })).rejects.toThrow(/no matching/i)
+  })
 })
 
 describe('EXPORT_RESULTS', () => {
@@ -250,6 +272,43 @@ describe('FOCUS_TABLE', () => {
     await run(APP_ACTION.FOCUS_TABLE, { table: 'users', schema: 'public' })
     expect(useSelectionStore.getState().selection).toEqual({ kind: 'table', connectionId: 'c1', schema: 'public', table: 'users' })
   })
+
+  it('falls back to the driver-default schema (via fetchSchemas/pickDefaultSchema) when no schema param is given', async () => {
+    useConnectionsStore.setState({ connections: [profile], activeConnectionId: 'c1', connectedIds: new Set(['c1']) })
+    const fetchSchemas = vi.fn().mockResolvedValue(['app', 'public'])
+    useSchemaStore.setState({ fetchSchemas } as never)
+    useDriverCapabilitiesStore.setState({ fetch: vi.fn().mockResolvedValue({ defaultSchemaCandidates: ['app'] }) } as never)
+    await run(APP_ACTION.FOCUS_TABLE, { table: 'users' })
+    expect(fetchSchemas).toHaveBeenCalledWith('c1', 'app')
+    expect(useSelectionStore.getState().selection).toMatchObject({ table: 'users' })
+  })
+
+  it('switches the sidebar to the explorer panel when a different panel is active', async () => {
+    useUiStore.setState({ activePanel: 'ai' as never, sidebarVisible: true })
+    useConnectionsStore.setState({ connections: [profile], activeConnectionId: 'c1', connectedIds: new Set(['c1']) })
+    useSchemaStore.setState({ fetchSchemas: vi.fn().mockResolvedValue(['public']) } as never)
+    useDriverCapabilitiesStore.setState({ fetch: vi.fn().mockResolvedValue({}) } as never)
+    await run(APP_ACTION.FOCUS_TABLE, { table: 'users', schema: 'public' })
+    expect(useUiStore.getState().activePanel).toBe('explorer')
+  })
+
+  it('also expands the tree node for a table+column when a column param is given', async () => {
+    useConnectionsStore.setState({ connections: [profile], activeConnectionId: 'c1', connectedIds: new Set(['c1']) })
+    useSchemaStore.setState({ fetchSchemas: vi.fn().mockResolvedValue(['public']) } as never)
+    useDriverCapabilitiesStore.setState({ fetch: vi.fn().mockResolvedValue({}) } as never)
+    await run(APP_ACTION.FOCUS_TABLE, { table: 'users', schema: 'public', column: 'email' })
+    expect(useUiStore.getState().expandedTreeNodes.has('table:c1:public:users')).toBe(true)
+  })
+
+  it('expands the database-qualified tree nodes when the connection has a database', async () => {
+    useConnectionsStore.setState({ connections: [profile], activeConnectionId: 'c1', connectedIds: new Set(['c1']) })
+    useSchemaStore.setState({ fetchSchemas: vi.fn().mockResolvedValue(['public']) } as never)
+    useDriverCapabilitiesStore.setState({ fetch: vi.fn().mockResolvedValue({}) } as never)
+    await run(APP_ACTION.FOCUS_TABLE, { table: 'users', schema: 'public' })
+    const nodes = useUiStore.getState().expandedTreeNodes
+    expect(nodes.has('db:c1:app')).toBe(true)
+    expect(nodes.has('schema:c1:app:public')).toBe(true)
+  })
 })
 
 describe('OPEN_ER_DIAGRAM', () => {
@@ -291,6 +350,43 @@ describe('FORMAT_EDITOR', () => {
     await run(APP_ACTION.FORMAT_EDITOR, {})
     expect(executeEdits).not.toHaveBeenCalled()
     expect(invoke).not.toHaveBeenCalled()
+  })
+
+  it('makes no edit when the formatter reports no change', async () => {
+    invoke.mockResolvedValueOnce({ formatted: 'select 1', changed: false })
+    const executeEdits = vi.fn()
+    editorRegistry.register({
+      tabId: 'tab-1',
+      monaco: {} as never,
+      editor: {
+        getModel: () => ({ getValue: () => 'select 1', getLanguageId: () => 'sql', getFullModelRange: () => ({}) }),
+        executeEdits, focus: vi.fn(),
+      } as never,
+    })
+    await run(APP_ACTION.FORMAT_EDITOR, {})
+    expect(executeEdits).not.toHaveBeenCalled()
+    expect(invoke).toHaveBeenCalled()
+  })
+
+  it('resolves the connection type from the editor\'s own query tab, not the app-wide active connection', async () => {
+    invoke.mockResolvedValueOnce({ formatted: 'SELECT\n  1', changed: true })
+    useConnectionsStore.setState({
+      connections: [{ id: 'c-tab', name: 'Tab Conn', type: 'sqlite', database: 'db' } as ConnectionProfile],
+      activeConnectionId: 'c-other',
+    })
+    useTabsStore.setState({
+      tabs: [{ id: 'tab-1', type: 'query', title: 'Q', connectionId: 'c-tab', database: null, schema: null, sql: 'select 1', results: null, isExecuting: false, error: null, isDirty: false, aiExplanation: null } as QueryTab],
+    })
+    editorRegistry.register({
+      tabId: 'tab-1',
+      monaco: {} as never,
+      editor: {
+        getModel: () => ({ getValue: () => 'select 1', getLanguageId: () => 'sql', getFullModelRange: () => ({}) }),
+        executeEdits: vi.fn(), focus: vi.fn(),
+      } as never,
+    })
+    await run(APP_ACTION.FORMAT_EDITOR, {})
+    expect(invoke).toHaveBeenCalledWith(IPC_CHANNELS.DB_FORMAT_QUERY, 'sql', 'sqlite', 'select 1')
   })
 
   it('applies the formatted text as a full-range edit when the formatter reports a change', async () => {
@@ -355,6 +451,18 @@ describe('INSERT_INTO_EDITOR', () => {
     expect(executeEdits).toHaveBeenCalledWith('ai-insert', [
       { range: { startLineNumber: 3, startColumn: 7, endLineNumber: 3, endColumn: 7 }, text: 'y', forceMoveMarkers: true },
     ])
+  })
+})
+
+describe('OPEN_INSTALL_PLUGIN / OPEN_WELCOME', () => {
+  it('OPEN_INSTALL_PLUGIN opens the install-plugin tab', async () => {
+    await run(APP_ACTION.OPEN_INSTALL_PLUGIN, {})
+    expect(useTabsStore.getState().tabs.some((t) => t.type === 'install-plugin')).toBe(true)
+  })
+
+  it('OPEN_WELCOME opens the welcome tab', async () => {
+    await run(APP_ACTION.OPEN_WELCOME, {})
+    expect(useTabsStore.getState().tabs.some((t) => t.type === 'welcome')).toBe(true)
   })
 })
 

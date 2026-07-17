@@ -48,4 +48,14 @@ describe('readAndClearLegacyTabs', () => {
     localStorage.setItem(LEGACY_KEY, JSON.stringify({ tabs: [], activeIndex: null }))
     expect(readAndClearLegacyTabs()).toBeNull()
   })
+
+  it('returns null instead of throwing when localStorage.getItem itself throws', () => {
+    const original = localStorage.getItem.bind(localStorage)
+    localStorage.getItem = () => { throw new Error('access denied') }
+    try {
+      expect(readAndClearLegacyTabs()).toBeNull()
+    } finally {
+      localStorage.getItem = original
+    }
+  })
 })

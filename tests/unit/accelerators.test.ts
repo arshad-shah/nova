@@ -3,7 +3,7 @@
 // produces ("Ctrl+X"/"Cmd+X"); this covers the parser's own surface —
 // cmdOrCtrl, exact-modifier matching, and malformed input — which a plugin
 // manifest's freeform keybinding string can also hit.
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { matchesAccelerator } from '../../src/renderer/src/lib/accelerators'
 
 function ev(over: Partial<KeyboardEvent>): KeyboardEvent {
@@ -64,5 +64,21 @@ describe('matchesAccelerator', () => {
 
   it('returns false when the pressed key does not match', () => {
     expect(matchesAccelerator(ev({ key: 'x', ctrlKey: true }), 'Ctrl+S')).toBe(false)
+  })
+})
+
+describe('matchesAccelerator — CmdOrCtrl on Mac', () => {
+  it('resolves CmdOrCtrl to Cmd when navigator.platform reports Mac (MAC is computed once at module load)', async () => {
+    const originalPlatform = navigator.platform
+    Object.defineProperty(navigator, 'platform', { value: 'MacIntel', configurable: true })
+    try {
+      vi.resetModules()
+      const { matchesAccelerator: matchesOnMac } = await import('../../src/renderer/src/lib/accelerators')
+      expect(matchesOnMac(ev({ key: 's', metaKey: true }), 'CmdOrCtrl+S')).toBe(true)
+      expect(matchesOnMac(ev({ key: 's', ctrlKey: true }), 'CmdOrCtrl+S')).toBe(false)
+    } finally {
+      Object.defineProperty(navigator, 'platform', { value: originalPlatform, configurable: true })
+      vi.resetModules()
+    }
   })
 })
