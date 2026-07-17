@@ -31,6 +31,7 @@ Three things ride along because they are defects in the surface being rebuilt, n
 | Brand gradient strip | **Removed** | See "Cost of removing the strip" below. |
 | Size increase | **+4px** at every density | Reviewed against today's rendering at all three densities. |
 | Bulk close + dirty tabs | **One combined guard** | Prompting per tab for N dirty tabs is hostile. |
+| Bulk close + open transactions | **Sequential queue** | Commit/rollback is per-session; there is no bulk answer. |
 | Density plumbing | New `--tab-*` tokens | Mirrors the established `--field-*` pattern. |
 
 ## Visual design
@@ -120,16 +121,50 @@ Lands as `useTabKeyboardNav.ts`, a hook alongside `useTabDrag` / `useTabScroll`,
 
 ## The close-guard bug
 
-`closeOtherTabs` and `closeTabsToRight` are wired straight to the store from `TabBar.tsx:49-51`, bypassing `requestCloseTab`. The X button and Cmd+W honor `settings.general.confirmOnUnsavedClose` via `usePendingClose` → `TabCloseGuard`; these two paths do not. **Today they silently destroy unsaved queries.** `closeAllTabs` has the same hole.
+`closeOtherTabs` and `closeTabsToRight` are wired straight to the store from `TabBar.tsx:49-51`, bypassing `requestCloseTab`. The X button and Cmd+W honor the guard via `usePendingClose` → `TabCloseGuard`; these two paths do not. **Today they silently destroy unsaved queries and abandon open transactions.** `closeAllTabs` has the same hole.
 
-Chaining single-tab guards would prompt N times. Instead:
+### Two different blockers, not one
 
-- Extend `tab-actions.ts` with `requestCloseTabs(ids, commit)`, which collects the dirty subset of `ids` and raises **one** pending-close carrying that list.
-- `TabCloseGuard` grows a plural branch: with >1 dirty tab it names them and offers Discard all / Cancel. The existing single-tab copy is untouched.
-- Clean tabs close without prompting. Zero dirty tabs → commit immediately, no dialog.
-- Respects `confirmOnUnsavedClose` exactly as the single-tab path does.
+`requestCloseTab` blocks on **two** independent conditions, and they are not interchangeable:
 
-New i18n keys under `shell.tabBar.*` / the close-guard namespace for the plural copy.
+| Blocker | Condition | Dialog | Opt-out |
+|---|---|---|---|
+| Unsaved edits | `tabActions.isDirty(id)` | Discard / Keep editing | Yes — `settings.general.confirmOnUnsavedClose` |
+| Open transaction | `tabActions.hasOpenTransaction(id)` | **Commit or Rollback** | **No — always prompts** |
+
+Dirty tabs can share one "discard all" confirm. **Transactions cannot** — each needs its own commit or rollback against its own DB session, so there is no coherent bulk answer. Any design that collapses them into a single dialog is wrong.
+
+### Design: close clean, batch dirty, queue transactions
+
+Extend `tab-actions.ts` with `requestCloseTabs(ids, actuallyClose)`, which partitions `ids` three ways:
+
+1. **Neither dirty nor transactional** → closed immediately, no dialog.
+2. **Dirty (and `confirmOnUnsavedClose` on), no transaction** → collected into **one** combined confirm naming the affected tabs, offering Discard all / Cancel.
+3. **Open transaction** (regardless of dirty state, regardless of the setting) → **queued**, each resolved in turn by the existing per-tab Commit/Rollback dialog.
+
+`usePendingClose` therefore grows from a single `pendingId: string | null` to a queue plus a batch:
+
+```ts
+interface PendingCloseState {
+  /** Tabs with open transactions, resolved one at a time, head first. */
+  txnQueue: string[]
+  /** Dirty tabs sharing one combined discard confirm. */
+  dirtyBatch: string[]
+  request: (tabId: string) => void            // unchanged single-tab entry point
+  requestMany: (ids: { dirty: string[]; txn: string[] }) => void
+  resolveHead: () => void                     // pops txnQueue after commit/rollback
+  clearBatch: () => void
+  clear: () => void
+}
+```
+
+`requestCloseTab(id, close)` keeps its exact current signature and behavior — it routes to `requestMany` with a one-element list, so single-tab close is the degenerate case of the same code path rather than a parallel implementation.
+
+`TabCloseGuard` renders, in priority order: the transaction dialog for `txnQueue[0]` if non-empty (existing component, unchanged copy, now popping the queue on resolve instead of clearing a single id), else the combined discard dialog if `dirtyBatch` is non-empty, else nothing. With one dirty tab the combined dialog must render **today's exact singular copy**, so the common path is visually unchanged.
+
+New i18n keys under `shell.confirmClose.*` for the plural copy, using the existing ICU plural syntax (see `activityBar.mcpServerStatus` for the in-repo pattern).
+
+**Cancel semantics:** cancelling the combined discard dialog cancels the *whole* bulk operation — tabs already closed in step 1 stay closed, nothing further closes. Cancelling a transaction dialog cancels only that tab and continues to the next queued one, since each transaction is an independent decision.
 
 ## Tokenizing tab icons
 
@@ -166,7 +201,12 @@ Cleanups in files already being touched (and nothing beyond them):
 - **Density stories** — the strip at compact / comfortable / spacious. `data-density` is one attribute on a decorator, so this is three thin stories over one render.
 - **Theme story** — the strip across all 11 bundled themes, verifying the active tab reads without the gradient strip. This is the check that de-risks the strip removal; **Ink & Paper is the case to inspect.**
 - **Keyboard `play` functions** — Tab into the strip lands on the active tab; `→` moves focus without activating; `Enter` activates; `Home`/`End`; `Delete` routes through the guard. These encode the manual-activation contract, which is the part most likely to regress.
-- **Unit test** for `requestCloseTabs`: mixed clean/dirty selection raises exactly one pending close carrying only the dirty ids; all-clean commits with no dialog; `confirmOnUnsavedClose=false` bypasses. This is the only new non-presentational logic, and it guards data loss.
+- **Unit tests** for `requestCloseTabs` — the only new non-presentational logic, and it guards against data loss:
+  - Mixed clean/dirty/transactional: clean ids close immediately, dirty ids land in one `dirtyBatch`, transactional ids land in `txnQueue`.
+  - All-clean: everything closes, no dialog raised.
+  - `confirmOnUnsavedClose=false`: dirty tabs close without prompting, **but transactional tabs still queue** (the setting does not govern transactions).
+  - A tab that is both dirty and transactional queues as transactional and does **not** also appear in the dirty batch.
+  - `requestCloseTab(id)` still blocks a single dirty tab and a single transactional tab exactly as before (regression guard on the refactor).
 - Existing story a11y checks run through the Storybook browser project and must pass — the new roles are exactly what they assert on.
 
 ## Verification
