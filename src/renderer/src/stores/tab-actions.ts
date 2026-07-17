@@ -97,7 +97,6 @@ interface PendingCloseState {
   txnQueue: string[]
   /** Dirty tabs sharing one combined discard confirm. */
   dirtyBatch: string[]
-  request: (tabId: string) => void
   requestMany: (ids: { dirty: string[]; txn: string[] }) => void
   /** Pops the transaction queue after a commit/rollback resolves. */
   resolveHead: () => void
@@ -113,7 +112,6 @@ interface PendingCloseState {
 export const usePendingClose = create<PendingCloseState>((set) => ({
   txnQueue: [],
   dirtyBatch: [],
-  request: (tabId) => set({ dirtyBatch: [tabId] }),
   requestMany: ({ dirty, txn }) => set({ dirtyBatch: dirty, txnQueue: txn }),
   resolveHead: () => set((s) => ({ txnQueue: s.txnQueue.slice(1) })),
   clearBatch: () => set({ dirtyBatch: [] }),
