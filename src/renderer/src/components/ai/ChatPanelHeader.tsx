@@ -4,6 +4,7 @@ import {
   Minimize2, MoreHorizontal, ChevronDown,
 } from 'lucide-react'
 import { Spinner } from '@/primitives/feedback/Spinner'
+import { Progress } from '@/primitives/feedback/Progress'
 import { useAIStore } from '@/stores/ai'
 import { Flex, Text, Input, IconButton, ScrollArea, Box, Button } from '@/primitives'
 import { Tooltip } from '@/primitives/surfaces/Tooltip'
@@ -47,7 +48,7 @@ export function ChatPanelHeader() {
   const pct = contextWindow && contextWindow > 0
     ? Math.min(100, Math.round((totalTokens / contextWindow) * 100))
     : 0
-  const tone = pct >= 90 ? 'bg-error' : pct >= 70 ? 'bg-warning' : 'bg-accent'
+  const contextTone = pct >= 90 ? 'error' : pct >= 70 ? 'warning' : 'accent'
   const remainingTone = pct >= 90 ? 'text-error' : pct >= 70 ? 'text-warning' : 'text-text-secondary'
 
   const canCompact = messages.length >= 6 && !isCompacting
@@ -125,9 +126,12 @@ export function ChatPanelHeader() {
 
         {contextWindow != null ? (
           <>
-            <Box className="h-1.5 rounded-full bg-bg-tertiary overflow-hidden">
-              <Box className={`h-full transition-[width] ${tone}`} style={{ width: `${pct}%` }} />
-            </Box>
+            <Progress
+              value={pct}
+              tone={contextTone}
+              className="bg-bg-tertiary shadow-none"
+              aria-label={t('aiui.header.used', { used: formatCompactNumber(totalTokens), total: formatCompactNumber(contextWindow) })}
+            />
             <Flex align="center" justify="between" className="text-[10px]">
               <Text size="xs" color="muted">
                 {t('aiui.header.used', { used: formatCompactNumber(totalTokens), total: formatCompactNumber(contextWindow) })}
