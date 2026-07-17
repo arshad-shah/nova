@@ -156,6 +156,42 @@ describe('initTabPersistence (engine integration)', () => {
     expect(localStorage.getItem('verql:open-tabs')).toBeNull()
   })
 
+  it('falls back to an empty snapshot when the store\'s initial list() call rejects', async () => {
+    const store: TabPersistenceStore = {
+      list: async () => { throw new Error('IPC down') },
+      apply: async () => {},
+    }
+    const stop = await initTabPersistence({ restoreOnStartup: true, store, debounceMs: 0 })
+    expect(useTabsStore.getState().tabs).toHaveLength(0)
+    await stop()
+  })
+
+  it('reports a failed write through onError instead of throwing (best-effort durability)', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const store: TabPersistenceStore = {
+      list: async () => ({ tabs: [], activeId: null }),
+      apply: async () => { throw new Error('write failed') },
+    }
+    const stop = await initTabPersistence({ restoreOnStartup: true, store, debounceMs: 0 })
+    useTabsStore.getState().addQueryTab('c1')
+    await stop()
+    expect(warn).toHaveBeenCalledWith('[tab-persistence] write failed', expect.any(Error))
+    warn.mockRestore()
+  })
+
+  it('flushes any pending write on pagehide (best-effort durability on quit)', async () => {
+    const store = memoryStore()
+    const stop = await initTabPersistence({ restoreOnStartup: true, store, debounceMs: 50_000 })
+    const id = useTabsStore.getState().addQueryTab('c1')
+    // Debounce hasn't fired yet — nothing durable written so far.
+    expect((await store.list()).tabs).toHaveLength(0)
+    window.dispatchEvent(new Event('pagehide'))
+    await new Promise((r) => setTimeout(r, 0)) // let the fire-and-forget flush() land
+    const persisted = await store.list()
+    expect(persisted.tabs.map((t) => t.id)).toEqual([id])
+    await stop()
+  })
+
   it('writes a single op batch for a one-tab edit among many', async () => {
     const seedTabs = ['a', 'b', 'c', 'd'].map((id) => ({
       id, title: id, sql: '', connectionId: null, database: null, schema: null, autoCommit: true,
