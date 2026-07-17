@@ -1,4 +1,5 @@
 import { JSX, useEffect, useMemo, useState } from 'react'
+import { matchesFilter } from '@/lib/fuzzy-match'
 import { Search, X } from 'lucide-react'
 import { Flex, Box, ScrollArea, Text, Divider, Input, IconButton, SearchInput } from '@/primitives'
 import { useUiStore } from '@/stores/ui'
@@ -64,7 +65,7 @@ export function SettingsLayout() {
   const filteredCategories = useMemo(() => {
     const q = query.trim().toLowerCase()
     if (!q) return SETTINGS_CATEGORIES
-    return SETTINGS_CATEGORIES.filter(c => c.label.toLowerCase().includes(q) || c.id.toLowerCase().includes(q))
+    return SETTINGS_CATEGORIES.filter(c => matchesFilter(q, c.label, c.id))
   }, [query])
 
   // Register with the tab-actions registry so the global Cmd+S handler in

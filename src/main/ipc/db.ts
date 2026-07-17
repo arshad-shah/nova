@@ -144,7 +144,7 @@ export function registerDbHandlers(
       const result = await adapter.testConnection()
       return { success: true, ...result }
     } catch (err) {
-      return { success: false, error: (err as Error).message }
+      return { success: false, error: errorMessage(err) }
     } finally {
       await adapter?.disconnect()
     }

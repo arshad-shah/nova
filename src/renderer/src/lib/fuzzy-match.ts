@@ -54,6 +54,28 @@ export function fuzzyMatch(query: string, target: string): FuzzyMatch | null {
   return { score, positions }
 }
 
+/**
+ * Case-insensitive substring test — the one home for the
+ * `field.toLowerCase().includes(query.toLowerCase())` idiom that a dozen list
+ * filters hand-rolled (each re-lowercasing the query per item). An empty query
+ * matches everything.
+ */
+export function includesFold(target: string, query: string): boolean {
+  if (!query) return true
+  return target.toLowerCase().includes(query.toLowerCase())
+}
+
+/**
+ * True when `query` (case-insensitively) is a substring of any of the given
+ * fields. The query is lowered once, not per field. Nullish fields are skipped.
+ * Use for multi-field list filtering (`matchesFilter(q, item.name, item.desc)`).
+ */
+export function matchesFilter(query: string, ...fields: (string | null | undefined)[]): boolean {
+  if (!query) return true
+  const q = query.toLowerCase()
+  return fields.some((f) => f != null && f.toLowerCase().includes(q))
+}
+
 function isBoundary(s: string, i: number): boolean {
   if (i === 0) return true
   const prev = s[i - 1]

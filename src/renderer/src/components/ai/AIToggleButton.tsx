@@ -27,7 +27,7 @@ export function AIToggleButton() {
           'rounded-lg transition-colors',
           open
             ? 'bg-accent/10 text-accent hover:bg-accent/10'
-            : 'text-text-muted hover:text-text-primary hover:bg-white/5'
+            : 'text-text-muted hover:text-text-primary hover:bg-hover'
         )}
       >
         <Sparkles size={20} />

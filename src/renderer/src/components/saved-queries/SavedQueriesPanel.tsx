@@ -1,4 +1,5 @@
 import { useState, useSyncExternalStore } from 'react'
+import { matchesFilter } from '@/lib/fuzzy-match'
 import { Search, Play, Trash2, Clock } from 'lucide-react'
 import type { SavedQuery } from '@shared/appdata'
 import { IPC_CHANNELS } from '@shared/ipc'
@@ -82,7 +83,7 @@ export function SavedQueriesPanel() {
   const [search, setSearch] = useState('')
   const queries = useSavedQueries()
   const filtered = search.trim()
-    ? queries.filter(q => q.name.toLowerCase().includes(search.toLowerCase()) || q.sql.toLowerCase().includes(search.toLowerCase()))
+    ? queries.filter(q => matchesFilter(search, q.name, q.sql))
     : queries
 
   const handleOpenQuery = (query: SavedQuery) => { openSavedQuery(query) }
@@ -108,7 +109,7 @@ export function SavedQueriesPanel() {
         {filtered.map(query => (
           <Box
             key={query.id}
-            className="group px-2 py-1.5 rounded-md hover:bg-white/5 cursor-pointer transition-colors"
+            className="group px-2 py-1.5 rounded-md hover:bg-hover cursor-pointer transition-colors"
             onClick={() => handleOpenQuery(query)}
           >
             <Flex align="center" justify="between">

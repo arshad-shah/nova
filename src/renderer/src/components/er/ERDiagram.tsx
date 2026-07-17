@@ -16,7 +16,6 @@ import { useSelectionStore } from '@/stores/selection'
 import { useSchemaStore } from '@/stores/schema'
 import { useConnectionsStore } from '@/stores/connections'
 import { useDataNouns, nounVars } from '@/hooks/useDataNouns'
-import { Loader2 } from 'lucide-react'
 import { Flex, Text, Box, Button, Spinner } from '@/primitives'
 import { useTheme } from '@/primitives/theme/ThemeProvider'
 import { useTranslation } from '@/i18n/I18nProvider'
@@ -124,7 +123,7 @@ export function ERDiagram({ connectionId, schema }: Props) {
         <Background color={gridColor} gap={20} size={1} />
         <Controls
           position="bottom-right"
-          className="!bg-bg-secondary !border-border !shadow-lg [&>button]:!bg-bg-secondary [&>button]:!border-border [&>button]:!text-text-secondary [&>button:hover]:!bg-white/5"
+          className="!bg-bg-secondary !border-border !shadow-lg [&>button]:!bg-bg-secondary [&>button]:!border-border [&>button]:!text-text-secondary [&>button:hover]:!bg-hover"
         />
         <MiniMap
           position="bottom-left"

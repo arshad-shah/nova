@@ -79,7 +79,7 @@ function ThemeGrid({
                 <Box
                   as="span"
                   className={`absolute top-1.5 right-1.5 inline-flex items-center justify-center rounded-full p-0.5 ${
-                    hasError ? 'bg-error text-white' : 'bg-warning text-black/80'
+                    hasError ? 'bg-error text-error-fg' : 'bg-warning text-black/80'
                   }`}
                   aria-label={tooltip}
                 >

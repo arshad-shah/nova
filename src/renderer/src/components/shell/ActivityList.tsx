@@ -80,7 +80,7 @@ function ActivityRow({ entry }: { entry: ActivityEntry }) {
     <Box
       className={cn(
         'px-3 py-1.5 border-b border-border/50 text-xs',
-        expandable && 'cursor-pointer hover:bg-white/[0.03]',
+        expandable && 'cursor-pointer hover:bg-hover',
       )}
       onClick={expandable ? () => setOpen((o) => !o) : undefined}
     >
@@ -218,7 +218,7 @@ export function ActivityList({ entries, onClear }: ActivityListProps) {
               size="none"
               type="button"
               onClick={() => setLevels((p) => toggle(p, 'error'))}
-              className={cn('flex items-center gap-0.5 rounded px-1 py-0.5 text-[10px]', levels.has('error') ? 'bg-error/15 text-error' : 'text-error hover:bg-white/5')}
+              className={cn('flex items-center gap-0.5 rounded px-1 py-0.5 text-[10px]', levels.has('error') ? 'bg-error/15 text-error' : 'text-error hover:bg-hover')}
             >
               <AlertCircle size={11} />{errorCount}
             </Button>
@@ -229,7 +229,7 @@ export function ActivityList({ entries, onClear }: ActivityListProps) {
               size="none"
               type="button"
               onClick={() => setLevels((p) => toggle(p, 'warn'))}
-              className={cn('flex items-center gap-0.5 rounded px-1 py-0.5 text-[10px]', levels.has('warn') ? 'bg-warning/15 text-warning' : 'text-warning hover:bg-white/5')}
+              className={cn('flex items-center gap-0.5 rounded px-1 py-0.5 text-[10px]', levels.has('warn') ? 'bg-warning/15 text-warning' : 'text-warning hover:bg-hover')}
             >
               <TriangleAlert size={11} />{warnCount}
             </Button>
@@ -241,7 +241,7 @@ export function ActivityList({ entries, onClear }: ActivityListProps) {
             onClick={toggleVerbose}
             title={t('shell.activity.verbose')}
             className={cn(
-              'flex items-center rounded p-1 hover:bg-white/5',
+              'flex items-center rounded p-1 hover:bg-hover',
               verbose ? 'text-accent' : 'text-text-muted hover:text-text-primary',
             )}
           >
@@ -254,7 +254,7 @@ export function ActivityList({ entries, onClear }: ActivityListProps) {
             onClick={togglePause}
             title={t(paused ? 'shell.activity.resume' : 'shell.activity.pause')}
             className={cn(
-              'flex items-center rounded p-1 hover:bg-white/5',
+              'flex items-center rounded p-1 hover:bg-hover',
               paused ? 'text-warning' : 'text-text-muted hover:text-text-primary',
             )}
           >
@@ -267,7 +267,7 @@ export function ActivityList({ entries, onClear }: ActivityListProps) {
             onClick={() => downloadEntries(matched)}
             disabled={matched.length === 0}
             title={t('shell.activity.export')}
-            className="flex items-center rounded p-1 text-text-muted hover:text-text-primary hover:bg-white/5 disabled:opacity-40 disabled:hover:bg-transparent"
+            className="flex items-center rounded p-1 text-text-muted hover:text-text-primary hover:bg-hover disabled:opacity-40 disabled:hover:bg-transparent"
           >
             <Download size={13} />
           </Button>
@@ -277,7 +277,7 @@ export function ActivityList({ entries, onClear }: ActivityListProps) {
             type="button"
             onClick={onClear}
             title={t('shell.activity.clear')}
-            className="flex items-center rounded p-1 text-text-muted hover:text-error hover:bg-white/5"
+            className="flex items-center rounded p-1 text-text-muted hover:text-error hover:bg-hover"
           >
             <Trash2 size={13} />
           </Button>

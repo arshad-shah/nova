@@ -115,8 +115,8 @@ function TopMenu({
         aria-expanded={isOpen}
         className={cn(
           'flex items-center px-2.5 text-xs text-text-secondary transition-colors',
-          'hover:bg-white/10 hover:text-text-primary focus-visible:outline-none focus-visible:bg-white/10',
-          isOpen && 'bg-white/10 text-text-primary'
+          'hover:bg-active hover:text-text-primary focus-visible:outline-none focus-visible:bg-active',
+          isOpen && 'bg-active text-text-primary'
         )}
         {...getReferenceProps({
           onClick: onToggle,

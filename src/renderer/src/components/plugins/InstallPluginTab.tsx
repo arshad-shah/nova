@@ -1,4 +1,5 @@
 import { useState, useCallback, type DragEvent } from 'react'
+import { parseAppError } from '@/lib/db-error'
 import { Package, Upload } from 'lucide-react'
 import { useToastStore } from '@/stores/toast'
 import { useTranslation } from '@/i18n/I18nProvider'
@@ -28,7 +29,7 @@ export function InstallPluginTab() {
         return
       }
     } catch (err) {
-      setErrorMessage((err as Error).message)
+      setErrorMessage(parseAppError(err).message)
       setState('error')
       return
     }

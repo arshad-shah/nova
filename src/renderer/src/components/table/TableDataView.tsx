@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { parseAppError } from '@/lib/db-error'
 import { RefreshCw } from 'lucide-react'
 import { Flex, Box, Text, IconButton, Spinner, EmptyState } from '@/primitives'
 import { ResultsGrid } from '@/components/results/ResultsGrid'
@@ -41,7 +42,7 @@ export function TableDataView({ tab }: { tab: TableTab }) {
       }
       setState({ loading: false, result, error: null })
     } catch (err) {
-      setState({ loading: false, result: null, error: (err as Error).message })
+      setState({ loading: false, result: null, error: parseAppError(err).message })
     }
   }, [tab.connectionId, tab.tableName, tab.schema])
 

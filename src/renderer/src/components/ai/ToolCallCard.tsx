@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { ChevronDown, ChevronRight, CheckCircle2, XCircle, ShieldQuestion, Loader2 } from 'lucide-react'
+import { ChevronDown, ChevronRight, CheckCircle2, XCircle, ShieldQuestion } from 'lucide-react'
+import { Spinner } from '@/primitives/feedback/Spinner'
 import type { AIChatMessage } from '@shared/ai-types'
 import { useAIStore } from '@/stores/ai'
 import { Text } from '@/primitives/typography/Text'
@@ -98,7 +99,7 @@ export function ToolCallCard({ message, result }: ToolCallCardProps) {
         {isWaitingApproval ? (
           <ShieldQuestion size={12} className="text-warning shrink-0" />
         ) : isExecuting ? (
-          <Loader2 size={12} className="text-[var(--color-accent)] shrink-0 animate-spin" />
+          <Spinner size="xs" className="shrink-0" />
         ) : parsed?.success ? (
           <CheckCircle2 size={12} className="text-[var(--color-success)] shrink-0" />
         ) : (

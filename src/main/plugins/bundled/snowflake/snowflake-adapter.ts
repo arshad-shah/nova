@@ -2,6 +2,7 @@ import snowflake from 'snowflake-sdk'
 import fs from 'fs/promises'
 import type { DbAdapter } from '../../../db/adapter'
 import { quoteIdentifier } from '../../sdk/identifier'
+import { extractSnowflakeName } from './naming'
 import type { QueryResult, SchemaTable, SchemaColumn, SchemaIndex, FieldInfo, TestConnectionResult } from '@shared/types'
 
 const SNOWFLAKE_QUOTE = '"' as const
@@ -74,8 +75,7 @@ export class SnowflakeAdapter implements DbAdapter {
   }
 
   async getConnectionOptions(field: string): Promise<string[]> {
-    // SHOW commands return quoted-lowercase column names (e.g. '"name"')
-    const extractName = (r: Record<string, unknown>) => String(r['"name"'] ?? r.name ?? '')
+    const extractName = extractSnowflakeName
 
     switch (field) {
       case 'warehouse': {
@@ -254,7 +254,7 @@ export class SnowflakeAdapter implements DbAdapter {
     if (!this.connection) throw new Error('Not connected')
     const result = await this.query(`SHOW DATABASES`)
     return result.rows
-      .map((r) => String(r['"name"'] ?? r.name ?? ''))
+      .map(extractSnowflakeName)
       .filter(Boolean)
   }
 

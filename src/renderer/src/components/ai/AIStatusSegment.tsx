@@ -1,5 +1,6 @@
 import { useEffect, useState, type ComponentType, type ReactNode } from 'react'
-import { Sparkles, Loader2, Settings, Maximize2, Minimize2, Eye, Shield, Zap } from 'lucide-react'
+import { Sparkles, Settings, Maximize2, Minimize2, Eye, Shield, Zap } from 'lucide-react'
+import { Spinner } from '@/primitives/feedback/Spinner'
 import { Popover } from '@/primitives/surfaces/Popover'
 import { Switch } from '@/primitives/forms/Switch'
 import { Text, Box, Button } from '@/primitives'
@@ -67,7 +68,7 @@ export function AIStatusSegment() {
       aria-label={busy ? t('aiui.status.aiWorking') : t('aiui.status.aiStatus')}
     >
       {busy
-        ? <Loader2 size={12} className="animate-spin text-accent" />
+        ? <Spinner size="xs" />
         : <Sparkles size={12} className={activeModelId ? 'text-accent' : 'text-text-muted'} />}
     </StatusBarSegment>
   )

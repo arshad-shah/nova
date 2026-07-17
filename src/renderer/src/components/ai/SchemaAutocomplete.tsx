@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback, type KeyboardEvent, type RefObject } from 'react'
+import { includesFold } from '@/lib/fuzzy-match'
 import { useSchemaStore } from '@/stores/schema'
 import { useConnectionsStore } from '@/stores/connections'
 import { Box, Button } from '@/primitives'
@@ -83,7 +84,7 @@ export function SchemaAutocomplete({ triggerText, onSelect, onDismiss, anchorRef
     // Filter by trigger text (text after @)
     const filter = triggerText.toLowerCase()
     const filtered = filter
-      ? allItems.filter(i => i.label.toLowerCase().includes(filter))
+      ? allItems.filter(i => includesFold(i.label, filter))
       : allItems
 
     // Sort: tables first, then columns, alphabetical within
@@ -153,7 +154,7 @@ export function SchemaAutocomplete({ triggerText, onSelect, onDismiss, anchorRef
           onMouseEnter={() => setSelectedIndex(i)}
         >
           <Box as="span" className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-            item.type === 'table' ? 'bg-blue-400' : 'bg-green-400'
+            item.type === 'table' ? 'bg-data-accent' : 'bg-info'
           }`} />
           <Box as="span" className="text-text-primary font-medium truncate">{item.label}</Box>
           <Box as="span" className="text-text-muted ml-auto shrink-0">{item.detail}</Box>

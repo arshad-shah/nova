@@ -6,12 +6,14 @@ import { useConnectionsStore, useActiveProfile } from '@/stores/connections'
 import { initialAutoCommit } from '@/lib/initial-autocommit'
 import { Flex, IconButton, Tooltip, cn } from '@/primitives'
 import { TabItem } from './TabItem'
+import { useClipboard } from '@/hooks/useClipboard'
 import { useTabScroll } from './useTabScroll'
 import { useTabDrag } from './useTabDrag'
 import { useTranslation } from '@/i18n/I18nProvider'
 
 export function TabBar() {
   const { t } = useTranslation()
+  const { copy } = useClipboard()
   const {
     tabs,
     activeTabId,
@@ -50,7 +52,7 @@ export function TabBar() {
       { label: t('shell.tabBar.duplicate'), onSelect: () => duplicateTab(tabId), disabled: tab?.type !== 'query' },
       {
         label: t('shell.tabBar.copyTitle'),
-        onSelect: () => navigator.clipboard.writeText(tab?.title ?? ''),
+        onSelect: () => copy(tab?.title ?? ''),
       },
     ]
   }

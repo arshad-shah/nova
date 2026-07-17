@@ -2,6 +2,7 @@ import { Sparkles } from 'lucide-react'
 import { useAIStore } from '@/stores/ai'
 import { Text } from '@/primitives/typography/Text'
 import { Box } from '@/primitives/layout/Box'
+import { Skeleton } from '@/primitives/data-display/Skeleton'
 import { Avatar } from '@/primitives/data-display/Avatar'
 import { MarkdownContent } from './MarkdownContent'
 import { useTranslation } from '@/i18n/I18nProvider'
@@ -49,9 +50,9 @@ function SkeletonLines() {
   const { t } = useTranslation()
   return (
     <Box className="space-y-1.5 py-1">
-      <Box className="h-2.5 rounded bg-bg-tertiary animate-pulse w-[90%]" />
-      <Box className="h-2.5 rounded bg-bg-tertiary animate-pulse w-[75%]" />
-      <Box className="h-2.5 rounded bg-bg-tertiary animate-pulse w-[60%]" />
+      <Skeleton animation="pulse" className="h-2.5 w-[90%]" />
+      <Skeleton animation="pulse" className="h-2.5 w-[75%]" />
+      <Skeleton animation="pulse" className="h-2.5 w-[60%]" />
       <Text size="xs" color="muted" className="pt-1 block">{t('aiui.chat.working')}</Text>
     </Box>
   )

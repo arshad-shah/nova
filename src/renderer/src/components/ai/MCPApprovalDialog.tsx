@@ -31,7 +31,7 @@ export function MCPApprovalDialog() {
         </Box>
         <Box className="flex justify-end gap-2 px-4 py-3 border-t border-border">
           <Button variant="bare" size="none" onClick={() => respond(req.requestId, false)} className="px-4 py-1.5 text-sm rounded-md border border-border text-text-secondary hover:bg-hover transition-colors">{t('aiui.approval.reject')}</Button>
-          <Button variant="bare" size="none" onClick={() => respond(req.requestId, true)} className="px-4 py-1.5 text-sm rounded-md bg-accent text-white hover:opacity-90 transition-colors">{t('aiui.approval.approve')}</Button>
+          <Button variant="bare" size="none" onClick={() => respond(req.requestId, true)} className="px-4 py-1.5 text-sm rounded-md bg-accent text-action-fg hover:opacity-90 transition-colors">{t('aiui.approval.approve')}</Button>
         </Box>
       </Box>
     </Box>

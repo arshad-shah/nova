@@ -2,6 +2,9 @@ import { useCallback, useEffect } from 'react'
 import { Sparkles, Copy, RefreshCcw, MessageSquarePlus, Square, AlertCircle } from 'lucide-react'
 import { Button } from '@/primitives/forms/Button'
 import { Text, Box } from '@/primitives'
+import { Skeleton } from '@/primitives/data-display/Skeleton'
+import { useClipboard } from '@/hooks/useClipboard'
+import { formatDuration } from '@/lib/format-time'
 import { Flex } from '@/primitives/layout/Flex'
 import { MarkdownContent } from '@/components/ai/MarkdownContent'
 import { useTabsStore } from '@/stores/tabs'
@@ -88,7 +91,7 @@ function StopButton({ tabId, streamId }: { tabId: string; streamId: string | nul
 
 function ModelDurationLabel({ model, durationMs }: { model: string | null | undefined; durationMs: number | null | undefined }) {
   if (!model && durationMs == null) return null
-  const ms = durationMs != null ? (durationMs < 1000 ? `${durationMs}ms` : `${(durationMs / 1000).toFixed(1)}s`) : null
+  const ms = durationMs != null ? formatDuration(durationMs) : null
   return <Text size="xs" color="muted">{[model, ms].filter(Boolean).join(' · ')}</Text>
 }
 
@@ -104,14 +107,15 @@ function ErrorRow({ message }: { message: string }) {
 function SkeletonBody() {
   return (
     <Box className="space-y-1.5 py-1">
-      <Box className="h-3 rounded bg-bg-tertiary animate-pulse w-[90%]" />
-      <Box className="h-3 rounded bg-bg-tertiary animate-pulse w-[75%]" />
-      <Box className="h-3 rounded bg-bg-tertiary animate-pulse w-[60%]" />
+      <Skeleton animation="pulse" className="h-3 w-[90%]" />
+      <Skeleton animation="pulse" className="h-3 w-[75%]" />
+      <Skeleton animation="pulse" className="h-3 w-[60%]" />
     </Box>
   )
 }
 
 function ActionBar({ tabId, text }: { tabId: string; text: string }) {
+  const { copy } = useClipboard()
   const { t } = useTranslation()
   const askInChat = useCallback(() => {
     const tab = useTabsStore.getState().tabs.find((item) => item.id === tabId)
@@ -145,7 +149,7 @@ function ActionBar({ tabId, text }: { tabId: string; text: string }) {
 
   return (
     <Flex gap="xs" className="px-3 py-1 border-t border-border-default/40">
-      <Button variant="ghost" size="xs" className="!h-6 !px-1.5 gap-1" onClick={() => navigator.clipboard.writeText(text)}>
+      <Button variant="ghost" size="xs" className="!h-6 !px-1.5 gap-1" onClick={() => copy(text)}>
         <Copy size={10} /> {t('aiui.explain.copy')}
       </Button>
       <Button variant="ghost" size="xs" className="!h-6 !px-1.5 gap-1" onClick={regenerate}>

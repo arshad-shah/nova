@@ -1,8 +1,9 @@
 import { useCallback, useRef, useState } from 'react'
 import {
   History, Plus, Trash2, Pencil, Check, X, Sparkles,
-  Minimize2, MoreHorizontal, ChevronDown, Loader2,
+  Minimize2, MoreHorizontal, ChevronDown,
 } from 'lucide-react'
+import { Spinner } from '@/primitives/feedback/Spinner'
 import { useAIStore } from '@/stores/ai'
 import { Flex, Text, Input, IconButton, ScrollArea, Box, Button } from '@/primitives'
 import { Tooltip } from '@/primitives/surfaces/Tooltip'
@@ -97,7 +98,7 @@ export function ChatPanelHeader() {
             disabled={!canCompact}
             onClick={() => { void compactConversation() }}
           >
-            {isCompacting ? <Loader2 size={13} className="animate-spin" /> : <Minimize2 size={13} />}
+            {isCompacting ? <Spinner size="xs" className="text-current" /> : <Minimize2 size={13} />}
           </IconButton>
         </Tooltip>
         <IconButton

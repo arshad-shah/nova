@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { parseAppError } from '@/lib/db-error'
 import { Download, X } from 'lucide-react'
 import { Modal, Button, Checkbox, Text, Flex, Spinner, Stack, Box, SegmentedControl } from '@/primitives'
 import { IPC_CHANNELS } from '@shared/ipc'
@@ -46,7 +47,7 @@ export function ExportModal({ tableName, connectionId, onClose }: Props) {
         setTimeout(onClose, 1500)
       }
     } catch (err) {
-      setResult({ text: t('shell.exportModal.errorPrefix', { message: (err as Error).message }), isError: true })
+      setResult({ text: t('shell.exportModal.errorPrefix', { message: parseAppError(err).message }), isError: true })
     } finally {
       setExporting(false)
     }
