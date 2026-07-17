@@ -119,7 +119,13 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 
 Button.displayName = 'Button'
 
-const iconButtonVariants = cva(
+/** Exported for the rare caller that needs an IconButton's *look* on an
+ *  element that must not be a native `<button>` — see the tab strip's close
+ *  affordance, which lives inside a `[role=tab]` (a role whose children are
+ *  presentational, so a focusable descendant there is an axe
+ *  `nested-interactive` violation). Reach for `IconButton` everywhere else;
+ *  this exists so those callers reuse these classes instead of restating them. */
+export const iconButtonVariants = cva(
   'inline-flex items-center justify-center font-medium transition-all duration-[var(--transition-fast)] focus-visible:outline-none focus-visible:shadow-[var(--shadow-focus-glow)] disabled:pointer-events-none disabled:opacity-50',
   {
     variants: {

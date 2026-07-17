@@ -5,27 +5,21 @@
  * Each pseudo-element paints a workspace-coloured square in the tab strip's
  * background and then masks out a quarter-circle so the visible result is a
  * concave fillet. Pure CSS; no extra DOM and no SVG.
+ *
+ * The fillet radius is --tab-r, the same token the tab's own corner uses, so
+ * the concave curve always matches the convex one it continues — at every
+ * density, without a second hardcoded number to keep in step.
+ *
+ * There is deliberately no accent strip here. The active tab used to carry a
+ * 2px brand-gradient cap doing two jobs at once: brand surface and active-tab
+ * indicator. The tab's own geometry (workspace-coloured fill + these fillets +
+ * brighter medium-weight label) already carries the second, and every bundled
+ * theme sets tab-bar-bg != tab-active-bg, so the signal survives without it.
  */
-/*
- * Active-tab accent strip. The brand gradient is reserved — an active-tab
- * accent is one of the surfaces it's allowed on (see the design laws in
- * primitives/theme/tokens.css). Radius matches the tab's rounded-t-[10px]
- * so the strip follows the corners rather than overhanging them.
- */
-.tab-accent-strip {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: var(--vq-gradient);
-  border-radius: 10px 10px 0 0;
-  pointer-events: none;
-}
 
 .tab-skirt-left,
 .tab-skirt-right {
-  --skirt-size: 8px;
+  --skirt-size: var(--tab-r);
   position: absolute;
   bottom: 0;
   width: var(--skirt-size);

@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen, fireEvent, act } from '@testing-library/react'
 import { ConnectionSegment } from '@/components/shell/status-bar/ConnectionSegment'
 import { useConnectionsStore } from '@/stores/connections'
+import { useDriverCapabilitiesStore } from '@/stores/driver-capabilities'
 import type { ConnectionProfile } from '@shared/types'
 
 const PROFILE: ConnectionProfile = {
@@ -11,6 +12,12 @@ const PROFILE: ConnectionProfile = {
 describe('ConnectionSegment', () => {
   beforeEach(() => {
     useConnectionsStore.setState({ connections: [], activeConnectionId: null, connectedIds: new Set() })
+    // Seed the driver-capabilities cache the abbreviation chip reads from.
+    // Without it the hook would fetch over IPC (unavailable in jsdom) and every
+    // chip would show the two-letter fallback instead of the declared 'PG'.
+    useDriverCapabilitiesStore.setState({
+      byType: { postgresql: { presentation: { abbreviation: 'PG', tone: 'accent' } } } as never,
+    })
   })
 
   it('shows "No connection" when nothing is active', () => {

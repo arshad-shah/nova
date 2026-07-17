@@ -1,9 +1,10 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { fn, expect, userEvent } from 'storybook/test'
+import { expect, userEvent } from 'storybook/test'
 import type { Tab, QueryTab, TableTab, ErDiagramTab, ConnectionFormTab, PluginDetailTab } from '@shared/types'
 import { useTabsStore } from '@/stores/tabs'
 import { useConnectionsStore } from '@/stores/connections'
+import { Stack, Text } from '@/primitives'
 import { TabBar } from './TabBar'
 
 // ---------------------------------------------------------------------------
@@ -84,6 +85,14 @@ function seedStores(tabs: Tab[], activeTabId: string | null) {
 const meta = {
   title: 'Components/Shell/TabBar',
   component: TabBar,
+  // `.storybook/preview.tsx` sets a11y.test = 'todo' globally: violations are
+  // reported but never fail. That is exactly how this component — whose whole
+  // point is an accessible tab strip — shipped a `nested-interactive`
+  // violation on every tab. Gate this component specifically; the global stays
+  // 'todo' so unrelated stories across the repo are unaffected.
+  parameters: {
+    a11y: { test: 'error' },
+  },
   decorators: [
     (Story: React.ComponentType) => (
       <div style={{ width: 900 }}>
@@ -230,5 +239,172 @@ export const AllTabTypes: Story = {
       ],
       'q1',
     )
+  },
+}
+
+// ---------------------------------------------------------------------------
+// Density stories
+// ---------------------------------------------------------------------------
+
+/* Restores the previous density on unmount. Without the cleanup, whichever
+   density story ran last leaks onto <html> and silently resizes every
+   subsequent story in the suite. */
+function withDensity(density: 'compact' | 'comfortable' | 'spacious') {
+  return (Story: () => React.ReactElement) => {
+    const root = document.documentElement
+    const previous = root.getAttribute('data-density')
+    useEffect(() => {
+      root.setAttribute('data-density', density)
+      return () => {
+        if (previous === null) root.removeAttribute('data-density')
+        else root.setAttribute('data-density', previous)
+      }
+    }, [previous])
+    return <Story />
+  }
+}
+
+const DENSITY_TABS: [Tab[], string] = [
+  [
+    makeQueryTab({ id: 'q1', title: 'SELECT * FROM users' }),
+    makeTableTab({ id: 't1', title: 'orders' }),
+    makeErDiagramTab({ id: 'er1', title: 'ER Diagram — public' }),
+  ],
+  'q1',
+]
+
+/** Bar/tab heights come from `--tab-*` density tokens on `[data-density]`. */
+export const DensityCompact: Story = {
+  decorators: [withDensity('compact')],
+  beforeEach: () => {
+    seedStores(...DENSITY_TABS)
+  },
+}
+
+export const DensityComfortable: Story = {
+  decorators: [withDensity('comfortable')],
+  beforeEach: () => {
+    seedStores(...DENSITY_TABS)
+  },
+}
+
+export const DensitySpacious: Story = {
+  decorators: [withDensity('spacious')],
+  beforeEach: () => {
+    seedStores(...DENSITY_TABS)
+  },
+}
+
+// ---------------------------------------------------------------------------
+// All-themes story
+// ---------------------------------------------------------------------------
+
+const THEMES = [
+  'ion', 'nightshift', 'lab', 'inkpaper', 'dark', 'light',
+  'midnight', 'dracula', 'nord', 'solarized', 'catppuccin',
+] as const
+
+/** The active tab has no gradient strip; its only cues are the workspace-
+ *  coloured fill, the fillets and brighter text. Every bundled theme sets
+ *  tab-bar-bg != tab-active-bg, so the signal survives — but the margin
+ *  varies. Ink & Paper is the tightest pair (#FBF6EA vs #F2EBDE): if the
+ *  active tab is going to disappear anywhere, it's there. */
+export const AllThemes: Story = {
+  beforeEach: () => {
+    seedStores(
+      [
+        makeQueryTab({ id: 'q1', title: 'SELECT * FROM users' }),
+        makeTableTab({ id: 't1', title: 'orders' }),
+      ],
+      'q1',
+    )
+  },
+  render: () => (
+    <Stack gap="md">
+      {THEMES.map(theme => (
+        // bg-bg-primary gives the label a themed backdrop instead of
+        // inheriting the ambient (unrelated) page background — without it
+        // axe measures the label's contrast against whatever theme
+        // Storybook's own chrome happens to be in, not this row's theme.
+        <div key={theme} data-theme={theme} className="bg-bg-primary p-2 rounded">
+          {/* `color="primary"` (not "secondary") deliberately: this caption
+           * is story scaffolding, not part of TabBar. `--color-text-secondary`
+           * is a global token out of scope for this story to raise, and it
+           * genuinely fails AA against `bg-bg-primary` on several themes
+           * (dracula, nord, solarized, catppuccin) — that's a separate,
+           * app-wide contrast gap tracked elsewhere. Using the always-AA
+           * primary token here keeps this story's own text out of the way of
+           * the thing it's actually gating: the tab strip. */}
+          <Text size="xs" color="primary" className="mb-1">{theme}</Text>
+          <TabBar />
+        </div>
+      ))}
+    </Stack>
+  ),
+  play: async ({ canvas }) => {
+    // Programmatic sanity check, not a substitute for visual review: the
+    // active tab's computed background must differ from the bar's, on every
+    // theme. This proves the two fills are distinguishable colors — it does
+    // NOT prove the contrast is comfortable to the human eye (that needs a
+    // human looking at the Ink & Paper row, the tightest pair).
+    const tabs = canvas.getAllByRole('tab', { selected: true })
+    await expect(tabs.length).toBe(THEMES.length)
+    for (const tab of tabs) {
+      // The tablist itself is unstyled; `bg-tab-bar-bg` lives on its parent,
+      // the bar container rendered by TabBar.
+      const bar = tab.closest('[role="tablist"]')?.parentElement
+      if (!bar) continue
+      const tabBg = getComputedStyle(tab).backgroundColor
+      const barBg = getComputedStyle(bar).backgroundColor
+      await expect(tabBg).not.toBe(barBg)
+    }
+  },
+}
+
+// ---------------------------------------------------------------------------
+// Keyboard navigation story
+// ---------------------------------------------------------------------------
+
+/** The only end-to-end coverage of the roving-tabindex keyboard contract:
+ *  manual activation — arrows move focus, Enter/Space activates. Every other
+ *  keyboard assertion in this codebase is a pure-reducer unit test against
+ *  `nextFocusIndex`/`resolveRovingId`; this play function is the gate on the
+ *  wired-up DOM behaviour. */
+export const KeyboardNavigation: Story = {
+  beforeEach: () => {
+    seedStores(
+      [
+        makeQueryTab({ id: 'q1', title: 'Tab One' }),
+        makeTableTab({ id: 't1', title: 'Tab Two' }),
+        makeErDiagramTab({ id: 'er1', title: 'Tab Three' }),
+      ],
+      'q1',
+    )
+  },
+  play: async ({ canvas, step }) => {
+    const tabs = canvas.getAllByRole('tab')
+
+    await step('the strip is a single tab stop, landing on the active tab', async () => {
+      await userEvent.tab()
+      const active = tabs.find(t => t.getAttribute('aria-selected') === 'true')
+      await expect(active).toHaveFocus()
+      await expect(active?.id).toBe('tab-q1')
+    })
+
+    await step('ArrowRight moves focus without changing selection', async () => {
+      await userEvent.keyboard('{ArrowRight}')
+      await expect(tabs[1]).toHaveFocus()
+      // The contract: focus moved to Tab Two, but Tab One is still selected.
+      await expect(tabs[0]).toHaveAttribute('aria-selected', 'true')
+      await expect(tabs[1]).toHaveAttribute('aria-selected', 'false')
+      await expect(useTabsStore.getState().activeTabId).toBe('q1')
+    })
+
+    await step('Enter activates the focused tab', async () => {
+      await userEvent.keyboard('{Enter}')
+      await expect(tabs[1]).toHaveAttribute('aria-selected', 'true')
+      await expect(tabs[0]).toHaveAttribute('aria-selected', 'false')
+      await expect(useTabsStore.getState().activeTabId).toBe('t1')
+    })
   },
 }

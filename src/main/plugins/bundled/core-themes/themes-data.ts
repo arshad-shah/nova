@@ -120,7 +120,13 @@ const LAB_CSS = `
   --color-tab-bar-bg: var(--raw-paper-300);
   --color-tab-active-bg: var(--raw-paper-100);
   --color-tab-active-fg: var(--raw-paper-900);
-  --color-tab-inactive-fg: var(--raw-paper-500);
+  /* raw-paper-500 (the text-secondary step) is only 4.16:1 on tab-bar-bg —
+     under WCAG AA. There's no intermediate step in the paper scale between
+     -500 and -900 (text-primary), so this mixes 17% of -900 into -500: a
+     darker grey that stays in the same neutral family instead of jumping to
+     full text-primary weight. 5.12:1 on tab-bar-bg (#E5E3DC), 4.66:1 on the
+     hover fill (tab-hover-bg composited over tab-bar-bg). */
+  --color-tab-inactive-fg: color-mix(in srgb, var(--raw-paper-500), var(--raw-paper-900) 17%);
   --color-tab-hover-bg: rgba(26, 26, 28, 0.05);
 
   /* Syntax — matches this theme's editor rules */
@@ -360,7 +366,10 @@ const MIDNIGHT_CSS = `
   --color-tab-bar-bg: #141422;
   --color-tab-active-bg: #0a0a12;
   --color-tab-active-fg: #e0e0f0;
-  --color-tab-inactive-fg: #7878a0;
+  /* #7878a0 (this theme's text-secondary) is only 4.33:1 on tab-bar-bg —
+     under WCAG AA. Lightened toward text-primary (#e0e0f0), 14% mix: 5.25:1
+     on tab-bar-bg, 4.64:1 on the hover fill. */
+  --color-tab-inactive-fg: #8787ab;
   --color-tab-hover-bg: rgba(255, 255, 255, 0.05);
 
   /* Syntax — matches this theme's editor rules */
@@ -414,7 +423,11 @@ const DRACULA_CSS = `
   --color-tab-bar-bg: #1e1f29;
   --color-tab-active-bg: #282a36;
   --color-tab-active-fg: #f8f8f2;
-  --color-tab-inactive-fg: #6272a4;
+  /* #6272a4 (this theme's text-secondary — Dracula's canonical "comment"
+     grey-purple) is only 3.48:1 on tab-bar-bg — under WCAG AA. Lightened
+     toward text-primary (#f8f8f2), 24% mix: 5.31:1 on tab-bar-bg, 4.62:1 on
+     the hover fill. */
+  --color-tab-inactive-fg: #8692b7;
   --color-tab-hover-bg: rgba(255, 255, 255, 0.05);
 
   /* Syntax — matches this theme's editor rules */
@@ -468,7 +481,11 @@ const NORD_CSS = `
   --color-tab-bar-bg: #242933;
   --color-tab-active-bg: #2e3440;
   --color-tab-active-fg: #eceff4;
-  --color-tab-inactive-fg: #4c566a;
+  /* #4c566a (this theme's text-secondary — Nord's nord3) is only 1.98:1 on
+     tab-bar-bg — the worst offender, well under WCAG AA. Lightened toward
+     text-primary/snow0 (#eceff4), 45% mix: 5.21:1 on tab-bar-bg, 4.60:1 on
+     the hover fill. */
+  --color-tab-inactive-fg: #949ba8;
   --color-tab-hover-bg: rgba(255, 255, 255, 0.04);
 
   /* Syntax — matches this theme's editor rules */
@@ -529,7 +546,11 @@ const SOLARIZED_CSS = `
   --color-tab-bar-bg: #001e26;
   --color-tab-active-bg: #002b36;
   --color-tab-active-fg: #fdf6e3;
-  --color-tab-inactive-fg: #586e75;
+  /* #586e75 (this theme's text-secondary — Solarized's base01) is only
+     3.22:1 on tab-bar-bg — under WCAG AA. Lightened toward text-primary/
+     base3 (#fdf6e3), 25% mix: 5.22:1 on tab-bar-bg, 4.60:1 on the hover
+     fill. */
+  --color-tab-inactive-fg: #819090;
   --color-tab-hover-bg: rgba(253, 246, 227, 0.05);
 
   /* Syntax — matches this theme's editor rules */
@@ -583,7 +604,10 @@ const CATPPUCCIN_CSS = `
   --color-tab-bar-bg: #11111b;
   --color-tab-active-bg: #1e1e2e;
   --color-tab-active-fg: #cdd6f4;
-  --color-tab-inactive-fg: #585b70;
+  /* #585b70 (this theme's text-secondary — Catppuccin's surface2) is only
+     2.81:1 on tab-bar-bg — under WCAG AA. Lightened toward text-primary
+     (#cdd6f4), 34% mix: 5.13:1 on tab-bar-bg, 4.68:1 on the hover fill. */
+  --color-tab-inactive-fg: #80859d;
   --color-tab-hover-bg: rgba(255, 255, 255, 0.04);
 
   /* Syntax — matches this theme's editor rules */

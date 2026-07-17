@@ -1,8 +1,18 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { ConnectionListItem } from '../../../../src/renderer/src/components/connections/ConnectionListItem'
+import { useDriverCapabilitiesStore } from '../../../../src/renderer/src/stores/driver-capabilities'
 import type { ConnectionProfile } from '../../../../shared/types'
+
+beforeEach(() => {
+  // Seed the driver-capabilities cache the abbreviation chip reads from, so the
+  // known engine renders its declared 'PG' chip rather than the IPC-fetched
+  // path (unavailable in jsdom). Unrecognized engines still hit the fallback.
+  useDriverCapabilitiesStore.setState({
+    byType: { postgresql: { presentation: { abbreviation: 'PG', tone: 'accent' } } } as never,
+  })
+})
 
 const base: ConnectionProfile = {
   id: 'c-1',

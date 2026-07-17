@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { TabCloseGuard } from '@/components/shell/TabCloseGuard'
 import { tabActions } from '@/stores/tab-actions'
@@ -6,110 +6,199 @@ import { notifyError } from '@/lib/notify-error'
 
 vi.mock('@/lib/notify-error', () => ({ notifyError: vi.fn() }))
 
-describe('TabCloseGuard', () => {
-  beforeEach(() => {
-    vi.restoreAllMocks()
-  })
+beforeEach(() => {
+  vi.clearAllMocks()
+  HTMLDialogElement.prototype.showModal = vi.fn()
+  HTMLDialogElement.prototype.close = vi.fn()
+  ;['a', 'b'].forEach(id => tabActions.unregister(id))
+})
 
-  it('leaves the modal un-opened when there is no pending close', () => {
-    const { container } = render(
-      <TabCloseGuard pendingCloseId={null} clearPendingClose={() => {}} closeTab={() => {}} />
-    )
-    // ConfirmDialog(open=false) still mounts a <dialog>, but the dialog itself
-    // must not carry the `open` attribute that makes it visible/modal.
-    expect(container.querySelector('dialog')).toHaveProperty('open', false)
-  })
+describe('TabCloseGuard (dirty batch copy)', () => {
+  it('renders the singular unsaved-changes copy for exactly one dirty tab', () => {
+    tabActions.register('a', { label: 'Query 1', isDirty: () => true })
 
-  it('shows the plain unsaved-changes confirm when the tab has no open transaction', () => {
-    vi.spyOn(tabActions, 'hasOpenTransaction').mockReturnValue(false)
-    vi.spyOn(tabActions, 'get').mockReturnValue({ label: 'My Query' })
     render(
-      <TabCloseGuard pendingCloseId="t1" clearPendingClose={() => {}} closeTab={() => {}} />
+      <TabCloseGuard
+        txnQueue={[]}
+        dirtyBatch={['a']}
+        resolveHead={() => {}}
+        clearBatch={() => {}}
+        closeTab={() => {}}
+      />
     )
-    expect(screen.getByText('My Query has unsaved changes. Close anyway?')).toBeInTheDocument()
+
+    expect(screen.getByText('Unsaved changes')).toBeInTheDocument()
+    expect(screen.getByText('Query 1 has unsaved changes. Close anyway?')).toBeInTheDocument()
     expect(screen.getByText('Discard changes')).toBeInTheDocument()
+    // Plural copy must not appear on the singular path.
+    expect(screen.queryByText(/Discard all/)).not.toBeInTheDocument()
   })
 
-  it('discarding via the plain confirm closes the tab and clears the pending state', () => {
-    vi.spyOn(tabActions, 'hasOpenTransaction').mockReturnValue(false)
-    vi.spyOn(tabActions, 'get').mockReturnValue({ label: 'My Query' })
-    const clearPendingClose = vi.fn()
-    const closeTab = vi.fn()
-    render(
-      <TabCloseGuard pendingCloseId="t1" clearPendingClose={clearPendingClose} closeTab={closeTab} />
-    )
-    fireEvent.click(screen.getByText('Discard changes'))
-    expect(clearPendingClose).toHaveBeenCalledOnce()
-    expect(closeTab).toHaveBeenCalledWith('t1')
-  })
+  it('renders the plural unsaved-changes copy and names both tabs for two dirty tabs', () => {
+    tabActions.register('a', { label: 'Query 1', isDirty: () => true })
+    tabActions.register('b', { label: 'Query 2', isDirty: () => true })
 
-  it('cancelling the plain confirm clears pending state without closing the tab', () => {
-    vi.spyOn(tabActions, 'hasOpenTransaction').mockReturnValue(false)
-    vi.spyOn(tabActions, 'get').mockReturnValue({ label: 'My Query' })
-    const clearPendingClose = vi.fn()
-    const closeTab = vi.fn()
     render(
-      <TabCloseGuard pendingCloseId="t1" clearPendingClose={clearPendingClose} closeTab={closeTab} />
+      <TabCloseGuard
+        txnQueue={[]}
+        dirtyBatch={['a', 'b']}
+        resolveHead={() => {}}
+        clearBatch={() => {}}
+        closeTab={() => {}}
+      />
     )
-    fireEvent.click(screen.getByText('Keep editing'))
-    expect(clearPendingClose).toHaveBeenCalledOnce()
-    expect(closeTab).not.toHaveBeenCalled()
-  })
 
-  it('shows the transaction guard instead of the plain confirm when a transaction is open', () => {
-    vi.spyOn(tabActions, 'hasOpenTransaction').mockReturnValue(true)
-    vi.spyOn(tabActions, 'get').mockReturnValue({ label: 'My Query' })
-    render(
-      <TabCloseGuard pendingCloseId="t1" clearPendingClose={() => {}} closeTab={() => {}} />
-    )
-    expect(screen.getByText('Commit & close')).toBeInTheDocument()
-    expect(screen.getByText('Rollback & close')).toBeInTheDocument()
+    expect(screen.getByText('Unsaved changes in 2 tabs')).toBeInTheDocument()
+    expect(
+      screen.getByText('Query 1, Query 2 have unsaved changes. Close anyway?')
+    ).toBeInTheDocument()
+    expect(screen.getByText('Discard all')).toBeInTheDocument()
+    // Singular copy must not appear on the plural path.
     expect(screen.queryByText('Discard changes')).not.toBeInTheDocument()
   })
 
-  it('rollback success rolls back, clears pending state, and closes the tab', async () => {
-    vi.spyOn(tabActions, 'hasOpenTransaction').mockReturnValue(true)
-    vi.spyOn(tabActions, 'get').mockReturnValue({ label: 'My Query' })
-    const rollback = vi.spyOn(tabActions, 'rollbackTransaction').mockResolvedValue(undefined)
-    const clearPendingClose = vi.fn()
+  it('discarding closes every tab in the batch and clears it', () => {
+    tabActions.register('a', { label: 'Query 1', isDirty: () => true })
+    tabActions.register('b', { label: 'Query 2', isDirty: () => true })
+    const clearBatch = vi.fn()
     const closeTab = vi.fn()
+
     render(
-      <TabCloseGuard pendingCloseId="t1" clearPendingClose={clearPendingClose} closeTab={closeTab} />
+      <TabCloseGuard
+        txnQueue={[]}
+        dirtyBatch={['a', 'b']}
+        resolveHead={() => {}}
+        clearBatch={clearBatch}
+        closeTab={closeTab}
+      />
     )
-    fireEvent.click(screen.getByText('Rollback & close'))
-    await waitFor(() => expect(closeTab).toHaveBeenCalledWith('t1'))
-    expect(rollback).toHaveBeenCalledWith('t1')
-    expect(clearPendingClose).toHaveBeenCalledOnce()
+
+    fireEvent.click(screen.getByText('Discard all'))
+    expect(clearBatch).toHaveBeenCalledOnce()
+    // `forEach(closeTab)` also hands the callback the index and the array, so
+    // assert on the tab id alone rather than the whole argument list.
+    expect(closeTab.mock.calls.map(call => call[0])).toEqual(['a', 'b'])
+  })
+
+  it('renders nothing when no close is awaiting confirmation', () => {
+    const { container } = render(
+      <TabCloseGuard
+        txnQueue={[]}
+        dirtyBatch={[]}
+        resolveHead={() => {}}
+        clearBatch={() => {}}
+        closeTab={() => {}}
+      />
+    )
+    expect(container).toBeEmptyDOMElement()
+  })
+})
+
+describe('TabCloseGuard (transaction queue)', () => {
+  it('resolves the transaction queue head first, ahead of any dirty batch', () => {
+    tabActions.register('a', { label: 'Query 1', txnStatus: () => 'active' })
+    tabActions.register('b', { label: 'Query 2', isDirty: () => true })
+
+    render(
+      <TabCloseGuard
+        txnQueue={['a']}
+        dirtyBatch={['b']}
+        resolveHead={() => {}}
+        clearBatch={() => {}}
+        closeTab={() => {}}
+      />
+    )
+
+    expect(screen.getByText('Commit & close')).toBeInTheDocument()
+    // The dirty confirm must wait its turn.
+    expect(screen.queryByText(/unsaved changes/)).not.toBeInTheDocument()
+  })
+
+  it('a successful commit pops the head and closes that tab', async () => {
+    const commitTransaction = vi.fn().mockResolvedValue(undefined)
+    tabActions.register('a', { label: 'Query 1', txnStatus: () => 'active', commitTransaction })
+    const resolveHead = vi.fn()
+    const closeTab = vi.fn()
+
+    render(
+      <TabCloseGuard
+        txnQueue={['a']}
+        dirtyBatch={[]}
+        resolveHead={resolveHead}
+        clearBatch={() => {}}
+        closeTab={closeTab}
+      />
+    )
+
+    fireEvent.click(screen.getByText('Commit & close'))
+    await waitFor(() => expect(closeTab).toHaveBeenCalledWith('a'))
+    expect(resolveHead).toHaveBeenCalledOnce()
     expect(notifyError).not.toHaveBeenCalled()
   })
 
-  it('a failed rollback notifies the error and leaves the dialog open (does not close the tab)', async () => {
-    vi.spyOn(tabActions, 'hasOpenTransaction').mockReturnValue(true)
-    vi.spyOn(tabActions, 'get').mockReturnValue({ label: 'My Query' })
-    vi.spyOn(tabActions, 'rollbackTransaction').mockRejectedValue(new Error('server unreachable'))
-    const clearPendingClose = vi.fn()
+  // A failed commit must not close the tab: doing so would strand an open
+  // transaction on the server with no UI left to resolve it.
+  it('a failed commit notifies the error and leaves the tab open', async () => {
+    const commitTransaction = vi.fn().mockRejectedValue(new Error('conflict'))
+    tabActions.register('a', { label: 'Query 1', txnStatus: () => 'active', commitTransaction })
+    const resolveHead = vi.fn()
     const closeTab = vi.fn()
-    render(
-      <TabCloseGuard pendingCloseId="t1" clearPendingClose={clearPendingClose} closeTab={closeTab} />
-    )
-    fireEvent.click(screen.getByText('Rollback & close'))
-    await waitFor(() => expect(notifyError).toHaveBeenCalledOnce())
-    expect(closeTab).not.toHaveBeenCalled()
-    expect(clearPendingClose).not.toHaveBeenCalled()
-  })
 
-  it('a failed commit notifies the error and leaves the dialog open (does not close the tab)', async () => {
-    vi.spyOn(tabActions, 'hasOpenTransaction').mockReturnValue(true)
-    vi.spyOn(tabActions, 'get').mockReturnValue({ label: 'My Query' })
-    vi.spyOn(tabActions, 'commitTransaction').mockRejectedValue(new Error('conflict'))
-    const clearPendingClose = vi.fn()
-    const closeTab = vi.fn()
     render(
-      <TabCloseGuard pendingCloseId="t1" clearPendingClose={clearPendingClose} closeTab={closeTab} />
+      <TabCloseGuard
+        txnQueue={['a']}
+        dirtyBatch={[]}
+        resolveHead={resolveHead}
+        clearBatch={() => {}}
+        closeTab={closeTab}
+      />
     )
+
     fireEvent.click(screen.getByText('Commit & close'))
     await waitFor(() => expect(notifyError).toHaveBeenCalledOnce())
     expect(closeTab).not.toHaveBeenCalled()
-    expect(clearPendingClose).not.toHaveBeenCalled()
+    expect(resolveHead).not.toHaveBeenCalled()
+  })
+
+  it('a failed rollback notifies the error and leaves the tab open', async () => {
+    const rollbackTransaction = vi.fn().mockRejectedValue(new Error('connection lost'))
+    tabActions.register('a', { label: 'Query 1', txnStatus: () => 'active', rollbackTransaction })
+    const resolveHead = vi.fn()
+    const closeTab = vi.fn()
+
+    render(
+      <TabCloseGuard
+        txnQueue={['a']}
+        dirtyBatch={[]}
+        resolveHead={resolveHead}
+        clearBatch={() => {}}
+        closeTab={closeTab}
+      />
+    )
+
+    fireEvent.click(screen.getByText('Rollback & close'))
+    await waitFor(() => expect(notifyError).toHaveBeenCalledOnce())
+    expect(closeTab).not.toHaveBeenCalled()
+    expect(resolveHead).not.toHaveBeenCalled()
+  })
+
+  it('cancelling a transaction confirm pops the head without closing the tab', () => {
+    tabActions.register('a', { label: 'Query 1', txnStatus: () => 'active' })
+    const resolveHead = vi.fn()
+    const closeTab = vi.fn()
+
+    render(
+      <TabCloseGuard
+        txnQueue={['a']}
+        dirtyBatch={[]}
+        resolveHead={resolveHead}
+        clearBatch={() => {}}
+        closeTab={closeTab}
+      />
+    )
+
+    fireEvent.click(screen.getByText('Cancel'))
+    expect(resolveHead).toHaveBeenCalledOnce()
+    expect(closeTab).not.toHaveBeenCalled()
   })
 })
