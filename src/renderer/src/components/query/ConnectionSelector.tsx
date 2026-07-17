@@ -5,7 +5,8 @@ import { useSchemaStore } from '@/stores/schema'
 import { useTabsStore } from '@/stores/tabs'
 import { useDriverCapabilitiesStore } from '@/stores/driver-capabilities'
 import { pickDefaultSchema } from '@/lib/pick-default-schema'
-import { Button, Text, Divider, ScrollArea, Flex, Box, ConnectionDot } from '@/primitives'
+import { Button, Text, Flex, DropdownMenu, ConnectionDot } from '@/primitives'
+import { Menu } from '@/primitives/surfaces/menu'
 import { IPC_CHANNELS } from '@shared/ipc'
 import { useTranslation } from '@/i18n/I18nProvider'
 
@@ -22,13 +23,11 @@ export function ConnectionSelector({ tabId, connectionId, database, schema }: Pr
   const { fetchSchemas, fetchDatabases, switchDatabase } = useSchemaStore()
   const { setTabConnection, setTabDatabase, setTabSchema, setTabTxnStatus } = useTabsStore()
   const fetchCaps = useDriverCapabilitiesStore((s) => s.fetch)
-  const [showConnDropdown, setShowConnDropdown] = useState(false)
-  const [showDbDropdown, setShowDbDropdown] = useState(false)
-  const [showSchemaDropdown, setShowSchemaDropdown] = useState(false)
   const [schemaList, setSchemaList] = useState<string[]>([])
   const [databaseList, setDatabaseList] = useState<string[]>([])
 
   const connectedList = connections.filter(c => connectedIds.has(c.id))
+  const disconnectedList = connections.filter(c => !connectedIds.has(c.id))
   const activeConn = connections.find(c => c.id === connectionId)
   const hasMultipleDatabases = databaseList.length > 1
 
@@ -85,7 +84,11 @@ export function ConnectionSelector({ tabId, connectionId, database, schema }: Pr
       setTabTxnStatus(tabId, 'none')
     }
     setTabConnection(tabId, id)
-    setShowConnDropdown(false)
+  }
+
+  const handleConnectAndSelect = async (id: string) => {
+    const result = await connect(id)
+    if (result.success) handleSelectConnection(id)
   }
 
   const handleSelectDatabase = async (db: string) => {
@@ -99,57 +102,100 @@ export function ConnectionSelector({ tabId, connectionId, database, schema }: Pr
     setTabDatabase(tabId, db)
     // Reset schema when database changes — will be re-fetched by the useEffect
     setTabSchema(tabId, '')
-    setShowDbDropdown(false)
   }
 
   const handleSelectSchema = (s: string) => {
     setTabSchema(tabId, s)
-    setShowSchemaDropdown(false)
-  }
-
-  const closeAllDropdowns = () => {
-    setShowConnDropdown(false)
-    setShowDbDropdown(false)
-    setShowSchemaDropdown(false)
   }
 
   return (
     <Flex align="center" gap="xs" className="relative">
       {/* Connection selector */}
-      <Button
-        variant="outline"
-        size="xs"
-        onClick={() => { setShowConnDropdown(!showConnDropdown); setShowDbDropdown(false); setShowSchemaDropdown(false) }}
-        className="flex items-center gap-1.5"
+      <DropdownMenu
+        aria-label={t('query.connection.noConnection')}
+        trigger={
+          <Button variant="outline" size="xs" className="flex items-center gap-1.5">
+            {activeConn ? (
+              <>
+                <ConnectionDot size="sm" state="neutral" color={activeConn.color} />
+                <Text size="xs" color="primary" truncate className="max-w-28">{activeConn.name}</Text>
+              </>
+            ) : (
+              <>
+                <Database size={12} strokeWidth={1.8} className="text-text-muted" />
+                <Text size="xs" color="muted">{t('query.connection.noConnection')}</Text>
+              </>
+            )}
+            <ChevronDown size={10} strokeWidth={1.8} className="text-text-muted" />
+          </Button>
+        }
       >
-        {activeConn ? (
+        {connectedList.length === 0 && (
+          <Text size="xs" color="muted" as="p" className="px-3 py-2">{t('query.connection.noActiveConnections')}</Text>
+        )}
+        {connectedList.map(conn => (
+          <Menu.Item key={conn.id} label={conn.name} onSelect={() => handleSelectConnection(conn.id)}>
+            <Flex align="center" gap="xs" className="flex-1 min-w-0">
+              <ConnectionDot size="sm" state="neutral" color={conn.color} />
+              <Text size="xs" truncate color={connectionId === conn.id ? 'accent' : 'secondary'}>{conn.name}</Text>
+              <Text size="xs" color="muted" className="ml-auto">{conn.database}</Text>
+            </Flex>
+          </Menu.Item>
+        ))}
+
+        {disconnectedList.length > 0 && (
           <>
-            <ConnectionDot size="sm" state="neutral" color={activeConn.color} />
-            <Text size="xs" color="primary" truncate className="max-w-28">{activeConn.name}</Text>
-          </>
-        ) : (
-          <>
-            <Database size={12} strokeWidth={1.8} className="text-text-muted" />
-            <Text size="xs" color="muted">{t('query.connection.noConnection')}</Text>
+            <Menu.Separator />
+            <Menu.Section label={t('query.connection.disconnected')}>
+              {disconnectedList.map(conn => (
+                <Menu.Item key={conn.id} label={conn.name} onSelect={() => handleConnectAndSelect(conn.id)}>
+                  <Flex align="center" gap="xs" className="flex-1 min-w-0">
+                    <ConnectionDot size="sm" state="neutral" color="var(--color-text-muted)" />
+                    <Text size="xs" color="muted" truncate>{conn.name}</Text>
+                    <Text size="xs" color="muted" className="ml-auto text-[10px]">{t('query.connection.clickToConnect')}</Text>
+                  </Flex>
+                </Menu.Item>
+              ))}
+            </Menu.Section>
           </>
         )}
-        <ChevronDown size={10} strokeWidth={1.8} className="text-text-muted" />
-      </Button>
+      </DropdownMenu>
 
       {/* Database selector — only for multi-database connections */}
       {activeConn && hasMultipleDatabases && (
         <>
           <Text size="xs" color="muted">/</Text>
-          <Button
-            variant="outline"
-            size="xs"
-            onClick={() => { setShowDbDropdown(!showDbDropdown); setShowConnDropdown(false); setShowSchemaDropdown(false) }}
-            className="flex items-center gap-1"
+          <DropdownMenu
+            aria-label={t('query.connection.database')}
+            trigger={
+              <Button variant="outline" size="xs" className="flex items-center gap-1">
+                <HardDrive size={11} strokeWidth={1.8} className="text-text-muted" />
+                <Text size="xs" color="secondary" truncate className="max-w-24">{database ?? t('query.connection.database')}</Text>
+                <ChevronDown size={10} strokeWidth={1.8} className="text-text-muted" />
+              </Button>
+            }
           >
-            <HardDrive size={11} strokeWidth={1.8} className="text-text-muted" />
-            <Text size="xs" color="secondary" truncate className="max-w-24">{database ?? t('query.connection.database')}</Text>
-            <ChevronDown size={10} strokeWidth={1.8} className="text-text-muted" />
-          </Button>
+            {databaseList.length === 0 && (
+              <Text size="xs" color="muted" as="p" className="px-3 py-2">{t('query.connection.noDatabasesFound')}</Text>
+            )}
+            {databaseList.length > 0 && (
+              <Menu.RadioGroup label={t('query.connection.database')}>
+                {databaseList.map(db => (
+                  <Menu.RadioItem
+                    key={db}
+                    label={db}
+                    checked={database === db}
+                    onSelect={() => handleSelectDatabase(db)}
+                  >
+                    <Flex align="center" gap="xs" className="flex-1 min-w-0">
+                      <HardDrive size={11} strokeWidth={1.8} className="shrink-0" />
+                      <Text size="xs" truncate>{db}</Text>
+                    </Flex>
+                  </Menu.RadioItem>
+                ))}
+              </Menu.RadioGroup>
+            )}
+          </DropdownMenu>
         </>
       )}
 
@@ -157,118 +203,38 @@ export function ConnectionSelector({ tabId, connectionId, database, schema }: Pr
       {activeConn && schemaList.length > 0 && (
         <>
           <Text size="xs" color="muted">/</Text>
-          <Button
-            variant="outline"
-            size="xs"
-            onClick={() => { setShowSchemaDropdown(!showSchemaDropdown); setShowConnDropdown(false); setShowDbDropdown(false) }}
-            className="flex items-center gap-1"
+          <DropdownMenu
+            aria-label={t('query.connection.schema')}
+            trigger={
+              <Button variant="outline" size="xs" className="flex items-center gap-1">
+                <Layers size={11} strokeWidth={1.8} className="text-text-muted" />
+                <Text size="xs" color="secondary" truncate className="max-w-24">{schema ?? t('query.connection.schema')}</Text>
+                <ChevronDown size={10} strokeWidth={1.8} className="text-text-muted" />
+              </Button>
+            }
           >
-            <Layers size={11} strokeWidth={1.8} className="text-text-muted" />
-            <Text size="xs" color="secondary" truncate className="max-w-24">{schema ?? t('query.connection.schema')}</Text>
-            <ChevronDown size={10} strokeWidth={1.8} className="text-text-muted" />
-          </Button>
+            {schemaList.length === 0 && (
+              <Text size="xs" color="muted" as="p" className="px-3 py-2">{t('query.connection.noSchemasFound')}</Text>
+            )}
+            {schemaList.length > 0 && (
+              <Menu.RadioGroup label={t('query.connection.schema')}>
+                {schemaList.map(s => (
+                  <Menu.RadioItem
+                    key={s}
+                    label={s}
+                    checked={schema === s}
+                    onSelect={() => handleSelectSchema(s)}
+                  >
+                    <Flex align="center" gap="xs" className="flex-1 min-w-0">
+                      <Layers size={11} strokeWidth={1.8} className="shrink-0" />
+                      <Text size="xs" truncate>{s}</Text>
+                    </Flex>
+                  </Menu.RadioItem>
+                ))}
+              </Menu.RadioGroup>
+            )}
+          </DropdownMenu>
         </>
-      )}
-
-      {/* Backdrop for any dropdown */}
-      {(showConnDropdown || showDbDropdown || showSchemaDropdown) && (
-        <Box className="fixed inset-0 z-40" onClick={closeAllDropdowns} />
-      )}
-
-      {/* Connection dropdown */}
-      {showConnDropdown && (
-        <ScrollArea direction="vertical" className="absolute top-full left-0 mt-1 z-50 bg-bg-secondary border border-border rounded-lg shadow-xl min-w-[260px] py-1 max-h-80">
-          {/* Active connections */}
-          {connectedList.length === 0 && (
-            <Text size="xs" color="muted" as="p" className="px-3 py-2">{t('query.connection.noActiveConnections')}</Text>
-          )}
-          {connectedList.map(conn => (
-            <Button
-              key={conn.id}
-              variant="ghost"
-              size="xs"
-              onClick={() => handleSelectConnection(conn.id)}
-              className={`w-full flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-hover transition-colors rounded-none border-0 h-auto ${
-                connectionId === conn.id ? 'text-accent' : 'text-text-secondary'
-              }`}
-            >
-              <ConnectionDot size="sm" state="neutral" color={conn.color} />
-              <Text size="xs" truncate>{conn.name}</Text>
-              <Text size="xs" color="muted" className="ml-auto">{conn.database}</Text>
-            </Button>
-          ))}
-
-          {/* Disconnected connections */}
-          {connections.filter(c => !connectedIds.has(c.id)).length > 0 && (
-            <>
-              <Divider />
-              <Text size="xs" color="muted" as="p" className="px-3 py-0.5 text-[10px] uppercase tracking-wider">{t('query.connection.disconnected')}</Text>
-              {connections.filter(c => !connectedIds.has(c.id)).map(conn => (
-                <Button
-                  key={conn.id}
-                  variant="ghost"
-                  size="xs"
-                  onClick={async () => {
-                    const result = await connect(conn.id)
-                    if (result.success) handleSelectConnection(conn.id)
-                    setShowConnDropdown(false)
-                  }}
-                  className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-text-muted hover:bg-hover transition-colors rounded-none border-0 h-auto"
-                >
-                  <ConnectionDot size="sm" state="neutral" color="var(--color-text-muted)" />
-                  <Text size="xs" truncate>{conn.name}</Text>
-                  <Text size="xs" color="muted" className="ml-auto text-[10px]">{t('query.connection.clickToConnect')}</Text>
-                </Button>
-              ))}
-            </>
-          )}
-        </ScrollArea>
-      )}
-
-      {/* Database dropdown */}
-      {showDbDropdown && (
-        <ScrollArea direction="vertical" className="absolute top-full left-0 mt-1 z-50 bg-bg-secondary border border-border rounded-lg shadow-xl min-w-[200px] py-1 max-h-60">
-          {databaseList.length === 0 && (
-            <Text size="xs" color="muted" as="p" className="px-3 py-2">{t('query.connection.noDatabasesFound')}</Text>
-          )}
-          {databaseList.map(db => (
-            <Button
-              key={db}
-              variant="ghost"
-              size="xs"
-              onClick={() => handleSelectDatabase(db)}
-              className={`w-full flex items-center gap-2 text-left px-3 py-1.5 text-xs hover:bg-hover transition-colors rounded-none border-0 h-auto ${
-                database === db ? 'text-accent' : 'text-text-secondary'
-              }`}
-            >
-              <HardDrive size={11} strokeWidth={1.8} className="shrink-0" />
-              <Text size="xs" truncate>{db}</Text>
-            </Button>
-          ))}
-        </ScrollArea>
-      )}
-
-      {/* Schema dropdown */}
-      {showSchemaDropdown && (
-        <ScrollArea direction="vertical" className="absolute top-full right-0 mt-1 z-50 bg-bg-secondary border border-border rounded-lg shadow-xl min-w-[180px] py-1 max-h-60">
-          {schemaList.length === 0 && (
-            <Text size="xs" color="muted" as="p" className="px-3 py-2">{t('query.connection.noSchemasFound')}</Text>
-          )}
-          {schemaList.map(s => (
-            <Button
-              key={s}
-              variant="ghost"
-              size="xs"
-              onClick={() => handleSelectSchema(s)}
-              className={`w-full flex items-center gap-2 text-left px-3 py-1.5 text-xs hover:bg-hover transition-colors rounded-none border-0 h-auto ${
-                schema === s ? 'text-accent' : 'text-text-secondary'
-              }`}
-            >
-              <Layers size={11} strokeWidth={1.8} className="shrink-0" />
-              <Text size="xs" truncate>{s}</Text>
-            </Button>
-          ))}
-        </ScrollArea>
       )}
     </Flex>
   )
