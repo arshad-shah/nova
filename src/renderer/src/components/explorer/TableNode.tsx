@@ -4,7 +4,7 @@ import { useUiStore } from '@/stores/ui'
 import { useSchemaStore } from '@/stores/schema'
 import { ContextMenu } from '@/primitives/surfaces/ContextMenu'
 import type { MenuNode } from '@/primitives/surfaces/menu/types'
-import { Box, Card, Text, Button } from '@/primitives'
+import { Badge, Box, Card, Text, Button } from '@/primitives'
 import { ColumnRow } from './ColumnRow'
 import { HighlightedText } from './HighlightedText'
 import { TableHoverActions } from './TableHoverActions'
@@ -158,14 +158,14 @@ export function TableNode({
           {/* Stat pills */}
           <Box as="span" className="flex items-center gap-1 shrink-0">
             {rowCount !== undefined && (
-              <Box as="span" className="px-2 py-0.5 rounded-full text-[10px] bg-bg-elevated text-text-secondary">
+              <Badge size="pill" className="font-normal shadow-none">
                 {t('explorer.table.rows', { value: formatCompactNumber(rowCount), records: rowCount === 1 ? nouns.record.one : nouns.record.many })}
-              </Box>
+              </Badge>
             )}
             {tableIndexes.length > 0 && (
-              <Box as="span" className="px-2 py-0.5 rounded-full text-[10px] bg-bg-elevated text-text-secondary">
+              <Badge size="pill" className="font-normal shadow-none">
                 {t('explorer.table.indexes', { value: tableIndexes.length, n: tableIndexes.length })}
-              </Box>
+              </Badge>
             )}
           </Box>
 
