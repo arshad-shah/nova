@@ -1,9 +1,22 @@
 import { describe, it, expect } from 'vitest'
-import { nextFocusIndex, resolveRovingId } from '@/components/shell/tab-bar/useTabKeyboardNav'
-import type { Tab } from '@shared/types'
+import { nextFocusIndex, resolveRovingId, resolvePendingClose } from '@/components/shell/tab-bar/useTabKeyboardNav'
+import type { QueryTab } from '@shared/types'
 
-function makeTab(id: string): Tab {
-  return { id, type: 'query', title: id } as unknown as Tab
+function makeTab(id: string): QueryTab {
+  return {
+    id,
+    type: 'query',
+    title: id,
+    connectionId: null,
+    database: null,
+    schema: null,
+    sql: '',
+    results: null,
+    isExecuting: false,
+    error: null,
+    isDirty: false,
+    aiExplanation: null,
+  }
 }
 
 describe('nextFocusIndex', () => {
@@ -51,7 +64,47 @@ describe('resolveRovingId', () => {
     expect(resolveRovingId('closed-id', 'a', tabs)).toBe('a')
   })
 
-  it('returns null when there is no active tab and the focused id is gone', () => {
-    expect(resolveRovingId('closed-id', null, tabs)).toBeNull()
+  it('falls back to the first tab when there is no active tab and the focused id is gone', () => {
+    // The one-tab-stop invariant must hold on its own, not contingent on
+    // "tabs exist implies one is active" being true elsewhere. With tabs
+    // non-empty, this must never return null.
+    expect(resolveRovingId('closed-id', null, tabs)).toBe('a')
+  })
+
+  it('falls back to the first tab when the active tab id itself is stale', () => {
+    expect(resolveRovingId(null, 'closed-id', tabs)).toBe('a')
+  })
+
+  it('returns null when there are no tabs at all', () => {
+    expect(resolveRovingId(null, null, [])).toBeNull()
+  })
+})
+
+describe('resolvePendingClose', () => {
+  const tabs = [makeTab('a'), makeTab('b'), makeTab('c')]
+
+  it('returns null when nothing is pending', () => {
+    expect(resolvePendingClose(null, tabs, [], [])).toBeNull()
+  })
+
+  it('resolves to "closed" once the closing tab is gone from tabs', () => {
+    const remaining = [makeTab('a'), makeTab('c')]
+    expect(resolvePendingClose({ closingId: 'b', neighborId: 'c' }, remaining, [], [])).toBe('closed')
+  })
+
+  it('resolves to "pending" while the tab is still open and awaiting a dirty-confirm answer', () => {
+    expect(resolvePendingClose({ closingId: 'b', neighborId: 'c' }, tabs, ['b'], [])).toBe('pending')
+  })
+
+  it('resolves to "pending" while the tab is still open and awaiting a transaction-confirm answer', () => {
+    expect(resolvePendingClose({ closingId: 'b', neighborId: 'c' }, tabs, [], ['b'])).toBe('pending')
+  })
+
+  it('resolves to "cancelled" when the tab is still open but no longer awaiting confirmation', () => {
+    // Regression: this is the case a lifetime-unbound ref gets wrong — the
+    // user cancelled the confirm dialog, the tab never closed, and the
+    // pending close must not fire later for an unrelated close of the same
+    // tab (mouse X, context menu, Cmd+W).
+    expect(resolvePendingClose({ closingId: 'b', neighborId: 'c' }, tabs, [], [])).toBe('cancelled')
   })
 })

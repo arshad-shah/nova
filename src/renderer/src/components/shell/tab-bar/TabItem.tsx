@@ -100,6 +100,11 @@ export function TabItem({
           // Without this, an inactive tab's opacity-0 close button (only
           // visible on hover) would still be a real, invisible tab stop.
           tabIndex={-1}
+          // tabIndex={-1} removes it from the Tab sequence but a mouse click
+          // can still focus it directly. This marker lets the trough's
+          // keydown handler (useTabKeyboardNav) recognize and ignore keydowns
+          // that land here instead of misattributing them to the roving tab.
+          data-tab-close-button
           className={cn(
             'ml-0.5 transition-opacity duration-(--transition-fast)',
             !isActive && !isDirty && 'opacity-0 group-hover:opacity-100',
