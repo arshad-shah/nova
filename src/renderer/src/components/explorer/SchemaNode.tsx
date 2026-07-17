@@ -7,6 +7,7 @@ import { useToastStore } from '@/stores/toast'
 import { useClipboard } from '@/hooks/useClipboard'
 import { useDataNouns, titleCase } from '@/hooks/useDataNouns'
 import { ContextMenu } from '@/primitives/surfaces/ContextMenu'
+import type { MenuNode } from '@/primitives/surfaces/menu/types'
 import { IconButton } from '@/primitives/forms/Button'
 import { Tooltip } from '@/primitives/surfaces/Tooltip'
 import { Box, Text, Button } from '@/primitives'
@@ -93,10 +94,10 @@ export function SchemaNode({ schemaName, connectionId, databaseName, depth, onEx
     copy(schemaName, { toast: 'explorer.toast.copiedSchemaName' })
   }
 
-  const menuItems = [
-    { label: t('explorer.menu.openErDiagram'), onSelect: () => openErDiagram(connectionId, schemaName) },
-    { label: t('explorer.menu.refresh'), onSelect: handleRefresh },
-    { label: t('explorer.menu.copySchemaName'), onSelect: handleCopySchemaName },
+  const menuItems: MenuNode[] = [
+    { kind: 'item', id: 'open-er-diagram', label: t('explorer.menu.openErDiagram'), onSelect: () => openErDiagram(connectionId, schemaName) },
+    { kind: 'item', id: 'refresh', label: t('explorer.menu.refresh'), onSelect: handleRefresh },
+    { kind: 'item', id: 'copy-schema-name', label: t('explorer.menu.copySchemaName'), onSelect: handleCopySchemaName },
   ]
 
   const matches = (name: string) => !filterText || fuzzyMatch(filterText, name) !== null

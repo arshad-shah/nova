@@ -7,6 +7,7 @@ import { useClipboard } from '@/hooks/useClipboard'
 import { useDataNouns } from '@/hooks/useDataNouns'
 import { initialAutoCommit } from '@/lib/initial-autocommit'
 import { ContextMenu } from '@/primitives/surfaces/ContextMenu'
+import type { MenuNode } from '@/primitives/surfaces/menu/types'
 import { IconButton } from '@/primitives/forms/Button'
 import { Box, Text } from '@/primitives'
 import { ColumnRow } from './ColumnRow'
@@ -60,16 +61,22 @@ export function ViewNode({ viewName, connectionId, schema, depth, highlightQuery
     updateTabSql(tabId, query)
   }
 
-  const menuItems = [
+  const menuItems: MenuNode[] = [
     {
+      kind: 'item',
+      id: 'open-in-query-tab',
       label: t('explorer.menu.openInQueryTab'),
       onSelect: handleOpenInTab,
     },
     {
+      kind: 'item',
+      id: 'copy-view-name',
       label: t('explorer.menu.copyViewName'),
       onSelect: () => copy(viewName, { toast: 'explorer.toast.copiedViewName' }),
     },
     {
+      kind: 'item',
+      id: 'copy-sample-query',
       label: t('explorer.menu.copySampleQuery'),
       onSelect: async () => {
         const query = await getSampleQuery()

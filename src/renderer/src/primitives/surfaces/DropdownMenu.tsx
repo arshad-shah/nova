@@ -1,143 +1,74 @@
-import React, { useCallback, useState } from 'react'
-import {
-  useFloating,
-  useClick,
-  useDismiss,
-  useRole,
-  useInteractions,
-  useTransitionStyles,
-  offset,
-  flip,
-  shift,
-  autoUpdate,
-  FloatingPortal,
-} from '@floating-ui/react'
-import { cva, type VariantProps } from 'class-variance-authority'
-import { cn } from '../utils/cn'
+import React, { useState } from 'react'
+import { FloatingTree, useFloatingParentNodeId } from '@floating-ui/react'
+import { MenuLevel } from './menu/MenuLevel'
+import { renderNodes } from './menu/render-nodes'
+import type { MenuNode } from './menu/types'
+import type { MenuSize } from './menu/menu-context'
 
-type MenuItem = {
-  label: string
-  onSelect: () => void
-  disabled?: boolean
-}
-
-const menuItemVariants = cva(
-  'w-full text-left whitespace-nowrap hover:bg-hover focus:bg-hover disabled:opacity-50 disabled:pointer-events-none transition-colors duration-(--transition-fast)',
-  {
-    variants: {
-      size: {
-        sm: 'text-xs py-1 px-2',
-        md: 'text-sm py-1.5 px-3',
-        lg: 'text-base py-2 px-4',
-      },
-    },
-    defaultVariants: {
-      size: 'md',
-    },
-  }
-)
-
-type DropdownMenuProps = VariantProps<typeof menuItemVariants> & {
+/**
+ * A menu opened by clicking a trigger.
+ *
+ * Two ways to fill it, one implementation underneath:
+ *
+ *   // declarative — for data-shaped menus
+ *   <DropdownMenu trigger={<Button/>} items={[{kind:'item', id:'a', label:'A', onSelect}]} />
+ *
+ *   // compound — for rows with custom content
+ *   <DropdownMenu trigger={<Button/>}>
+ *     <Menu.Item label="Save" shortcut="Ctrl+S" onSelect={save} />
+ *     <Menu.Separator />
+ *     <Menu.Sub label="Export"><Menu.Item label="CSV" onSelect={csv} /></Menu.Sub>
+ *   </DropdownMenu>
+ */
+export type DropdownMenuProps = {
   trigger: React.ReactElement
-  items: MenuItem[]
+  /** Declarative tree. Mutually exclusive with `children`. */
+  items?: MenuNode[]
+  children?: React.ReactNode
+  size?: MenuSize
   className?: string
+  /** Accessible name for the menu surface. */
+  'aria-label'?: string
 }
 
-export function DropdownMenu({ trigger, items, size, className }: DropdownMenuProps) {
-  const [isOpen, setIsOpen] = useState(false)
-
-  const { refs, floatingStyles, context } = useFloating({
-    placement: 'bottom-start',
-    open: isOpen,
-    onOpenChange: setIsOpen,
-    whileElementsMounted: autoUpdate,
-    middleware: [
-      offset(4),
-      flip({ padding: 8 }),
-      shift({ padding: 8 }),
-    ],
-  })
-
-  const click = useClick(context)
-  const dismiss = useDismiss(context)
-  const role = useRole(context, { role: 'menu' })
-
-  const { getReferenceProps, getFloatingProps } = useInteractions([click, dismiss, role])
-
-  const { isMounted, styles: transitionStyles } = useTransitionStyles(context, {
-    duration: { open: 150, close: 100 },
-    initial: { opacity: 0, transform: 'scaleY(0.95)' },
-    common: { transformOrigin: 'top', transitionTimingFunction: 'cubic-bezier(0.34, 1.56, 0.64, 1)' },
-    open: { opacity: 1, transform: 'scaleY(1)' },
-    close: { opacity: 0, transform: 'scaleY(0.95)' },
-  })
-
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLDivElement>) => {
-      const menuEl = refs.floating.current
-      if (!menuEl) return
-      const itemEls = Array.from(
-        menuEl.querySelectorAll<HTMLButtonElement>('[role="menuitem"]:not([disabled])')
-      )
-      const current = document.activeElement
-      const idx = itemEls.indexOf(current as HTMLButtonElement)
-
-      if (e.key === 'ArrowDown') {
-        e.preventDefault()
-        const next = idx < itemEls.length - 1 ? itemEls[idx + 1] : itemEls[0]
-        next?.focus()
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault()
-        const prev = idx > 0 ? itemEls[idx - 1] : itemEls[itemEls.length - 1]
-        prev?.focus()
-      } else if (e.key === 'Escape') {
-        setIsOpen(false)
-      }
-    },
-    [refs.floating]
-  )
+function DropdownMenuImpl({
+  trigger,
+  items,
+  children,
+  size = 'md',
+  className,
+  'aria-label': ariaLabel,
+}: DropdownMenuProps) {
+  const [open, setOpen] = useState(false)
 
   return (
-    <div>
-      {React.cloneElement(trigger as React.ReactElement<Record<string, unknown>>, {
-        ref: refs.setReference,
-        ...getReferenceProps(),
-      })}
+    <MenuLevel
+      triggerMode="click"
+      open={open}
+      onOpenChange={setOpen}
+      size={size}
+      className={className}
+      aria-label={ariaLabel}
+      renderTrigger={(ref, props) =>
+        React.cloneElement(trigger as React.ReactElement<Record<string, unknown>>, {
+          ref,
+          ...props,
+        })
+      }
+    >
+      {items ? renderNodes(items) : children}
+    </MenuLevel>
+  )
+}
 
-      {isMounted && (
-        <FloatingPortal>
-        <div
-          ref={refs.setFloating}
-          style={{ ...floatingStyles, zIndex: 50 }}
-          {...getFloatingProps()}
-        >
-          <div
-            role="menu"
-            onKeyDown={handleKeyDown}
-            className={cn(
-              'bg-bg-elevated border border-border-default rounded-lg py-1 min-w-[7rem] shadow-dropdown',
-              className
-            )}
-            style={transitionStyles}
-          >
-            {items.map((item) => (
-              <button
-                key={item.label}
-                role="menuitem"
-                disabled={item.disabled}
-                className={menuItemVariants({ size })}
-                onClick={() => {
-                  item.onSelect()
-                  setIsOpen(false)
-                }}
-              >
-                {item.label}
-              </button>
-            ))}
-          </div>
-        </div>
-        </FloatingPortal>
-      )}
-    </div>
+export function DropdownMenu(props: DropdownMenuProps) {
+  // Submenus talk to their ancestors through the tree. A root must provide one;
+  // a DropdownMenu nested inside another menu must not start a second.
+  const parentId = useFloatingParentNodeId()
+  if (parentId != null) return <DropdownMenuImpl {...props} />
+  return (
+    <FloatingTree>
+      <DropdownMenuImpl {...props} />
+    </FloatingTree>
   )
 }

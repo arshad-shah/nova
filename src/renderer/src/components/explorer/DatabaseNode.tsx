@@ -5,6 +5,7 @@ import { useSchemaStore } from '@/stores/schema'
 import { useToastStore } from '@/stores/toast'
 import { useClipboard } from '@/hooks/useClipboard'
 import { ContextMenu } from '@/primitives/surfaces/ContextMenu'
+import type { MenuNode } from '@/primitives/surfaces/menu/types'
 import { IconButton } from '@/primitives/forms/Button'
 import { Tooltip } from '@/primitives/surfaces/Tooltip'
 import { Box, Text } from '@/primitives'
@@ -88,9 +89,9 @@ export function DatabaseNode({
     copy(databaseName, { toast: 'explorer.toast.copiedDatabaseName' })
   }
 
-  const menuItems = [
-    { label: t('explorer.menu.refresh'), onSelect: handleRefresh },
-    { label: t('explorer.menu.copyDatabaseName'), onSelect: handleCopyName },
+  const menuItems: MenuNode[] = [
+    { kind: 'item', id: 'refresh', label: t('explorer.menu.refresh'), onSelect: handleRefresh },
+    { kind: 'item', id: 'copy-database-name', label: t('explorer.menu.copyDatabaseName'), onSelect: handleCopyName },
   ]
 
   const paddingLeft = 8 + depth * 16

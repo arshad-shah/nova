@@ -2,6 +2,7 @@ import { useState, type DragEvent } from 'react'
 import { X } from 'lucide-react'
 import type { Tab } from '@shared/types'
 import { Box, Flex, Text, Tooltip, ContextMenu, cn, IconButton } from '@/primitives'
+import type { MenuNode } from '@/primitives/surfaces/menu/types'
 import { getTabIcon } from './tab-icons'
 import { useTranslation } from '@/i18n/I18nProvider'
 import './tab-bar.css'
@@ -12,7 +13,7 @@ interface TabItemProps {
   isActive: boolean
   isDragged: boolean
   isDropTarget: boolean
-  contextMenuItems: { label: string; onSelect: () => void; disabled?: boolean }[]
+  contextMenuItems: MenuNode[]
   onActivate: () => void
   onClose: () => void
   onDragStart: (e: DragEvent) => void

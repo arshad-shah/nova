@@ -9,11 +9,7 @@ import { useClipboard } from '@/hooks/useClipboard'
 import { resolveDataNouns } from '@/lib/data-nouns'
 import { IPC_CHANNELS } from '@shared/ipc'
 import { useTranslation } from '@/i18n/I18nProvider'
-
-interface MenuItem {
-  label: string
-  onSelect: () => void
-}
+import type { MenuNode } from '@/primitives/surfaces/menu/types'
 
 export interface TableNodeActions {
   /** Whether the driver exposes a data reader (browse grid available). */
@@ -23,7 +19,7 @@ export interface TableNodeActions {
   copyTableName: () => void
   copySampleQuery: () => Promise<void>
   /** Context-menu items (view/open/copy/export + plugin contributions). */
-  menuItems: MenuItem[]
+  menuItems: MenuNode[]
 }
 
 /** Owns a table tree-node's data actions: open the browse grid, open a sample
@@ -75,25 +71,33 @@ export function useTableNodeActions(
     copy(query, { toast: 'explorer.toast.copiedSampleQuery' })
   }
 
-  const menuItems: MenuItem[] = [
+  const menuItems: MenuNode[] = [
     ...(canViewData
-      ? [{ label: t('explorer.menu.viewData'), onSelect: openData }]
+      ? [{ kind: 'item' as const, id: 'view-data', label: t('explorer.menu.viewData'), onSelect: openData }]
       : []),
     {
+      kind: 'item',
+      id: 'open-in-query-tab',
       label: t('explorer.menu.openInQueryTab'),
       onSelect: openInQueryTab,
     },
     {
+      kind: 'item',
+      id: 'copy-table-name',
       label: t('explorer.menu.copyTableName', { object: nouns.object.one }),
       onSelect: copyTableName,
     },
     {
+      kind: 'item',
+      id: 'copy-sample-query',
       label: t('explorer.menu.copySampleQuery'),
       onSelect: copySampleQuery,
     },
     ...(onExportTable
       ? [
           {
+            kind: 'item' as const,
+            id: 'export-table',
             label: t('explorer.menu.exportTable', { object: nouns.object.one }),
             onSelect: () => onExportTable(tableName),
           },

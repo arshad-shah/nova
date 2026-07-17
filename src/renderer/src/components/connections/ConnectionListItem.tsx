@@ -1,6 +1,7 @@
 import { MoreHorizontal } from 'lucide-react'
 import { Badge, Flex, IconButton, Text } from '@/primitives'
 import { DropdownMenu } from '@/primitives/surfaces/DropdownMenu'
+import type { MenuNode } from '@/primitives/surfaces/menu/types'
 import type { ConnectionProfile } from '@shared/types'
 import { useTranslation } from '@/i18n/I18nProvider'
 
@@ -81,13 +82,13 @@ export function ConnectionListItem({
 
   // All row actions live in an overflow menu so the row stays uncluttered and
   // destructive actions (delete) aren't a stray click away.
-  const menuItems = [
+  const menuItems: MenuNode[] = [
     connected
-      ? { label: t('connections.active.menuDisconnect'), onSelect: onDisconnect }
-      : { label: t('connections.active.menuConnect'), onSelect: onConnect },
-    ...(connected ? [{ label: t('connections.active.menuOpenQueryTab'), onSelect: onOpenQueryTab }] : []),
-    { label: t('connections.active.menuEdit'), onSelect: onEdit },
-    { label: t('connections.active.menuDelete'), onSelect: onDelete },
+      ? { kind: 'item', id: 'disconnect', label: t('connections.active.menuDisconnect'), onSelect: onDisconnect }
+      : { kind: 'item', id: 'connect', label: t('connections.active.menuConnect'), onSelect: onConnect },
+    ...(connected ? [{ kind: 'item' as const, id: 'open-query-tab', label: t('connections.active.menuOpenQueryTab'), onSelect: onOpenQueryTab }] : []),
+    { kind: 'item', id: 'edit', label: t('connections.active.menuEdit'), onSelect: onEdit },
+    { kind: 'item', id: 'delete', label: t('connections.active.menuDelete'), onSelect: onDelete, tone: 'danger' },
   ]
 
   return (

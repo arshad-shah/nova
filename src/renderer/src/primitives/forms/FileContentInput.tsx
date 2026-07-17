@@ -3,6 +3,7 @@ import { type VariantProps } from 'class-variance-authority'
 import { File, Shield, X, ChevronDown, ClipboardPaste, Upload } from 'lucide-react'
 import { cn } from '../utils/cn'
 import { DropdownMenu } from '../surfaces/DropdownMenu'
+import type { MenuNode } from '../surfaces/menu/types'
 import { Textarea } from './Textarea'
 import { fieldRowVariants } from './field-variants'
 import { IPC_CHANNELS } from '@shared/ipc'
@@ -144,15 +145,15 @@ export const FileContentInput = forwardRef<HTMLDivElement, FileContentInputProps
       [disabled, acceptExtensions]
     )
 
-    const menuItems =
+    const menuItems: MenuNode[] =
       mode === 'browse'
         ? [
-            { label: 'Browse file', onSelect: handleBrowse },
-            { label: 'Paste content', onSelect: () => dispatch({ type: 'setMode', mode: 'paste' }) },
+            { kind: 'item', id: 'browse-file', label: 'Browse file', onSelect: handleBrowse },
+            { kind: 'item', id: 'paste-content', label: 'Paste content', onSelect: () => dispatch({ type: 'setMode', mode: 'paste' }) },
           ]
         : [
-            { label: 'Browse file', onSelect: () => { dispatch({ type: 'setMode', mode: 'browse' }); handleBrowse() } },
-            { label: 'Paste content', onSelect: () => {}, disabled: true },
+            { kind: 'item', id: 'browse-file', label: 'Browse file', onSelect: () => { dispatch({ type: 'setMode', mode: 'browse' }); handleBrowse() } },
+            { kind: 'item', id: 'paste-content', label: 'Paste content', onSelect: () => {}, disabled: true },
           ]
 
     const displayName = fileName ?? (hasContent ? 'Pasted content' : null)
