@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useCallback, useState } from 'react'
 import { FloatingTree, useFloatingParentNodeId } from '@floating-ui/react'
 import { MenuLevel } from './menu/MenuLevel'
 import { renderNodes } from './menu/render-nodes'
@@ -27,6 +27,16 @@ export type DropdownMenuProps = {
   children?: React.ReactNode
   size?: MenuSize
   className?: string
+  /**
+   * Controlled open state. Omit to let the menu own it.
+   *
+   * Needed when something outside the trigger has to open the menu — e.g. an
+   * action in one menu that opens another. Pair with
+   * {@link DropdownMenuProps.onOpenChange}, or the menu cannot close itself.
+   */
+  open?: boolean
+  /** Called whenever the menu wants to open or close. Required if `open` is passed. */
+  onOpenChange?: (open: boolean) => void
   /** Accessible name for the menu surface. */
   'aria-label'?: string
 }
@@ -37,9 +47,21 @@ function DropdownMenuImpl({
   children,
   size = 'md',
   className,
+  open: controlledOpen,
+  onOpenChange,
   'aria-label': ariaLabel,
 }: DropdownMenuProps) {
-  const [open, setOpen] = useState(false)
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false)
+  const isControlled = controlledOpen !== undefined
+  const open = isControlled ? controlledOpen : uncontrolledOpen
+
+  const setOpen = useCallback(
+    (next: boolean) => {
+      if (!isControlled) setUncontrolledOpen(next)
+      onOpenChange?.(next)
+    },
+    [isControlled, onOpenChange]
+  )
 
   return (
     <MenuLevel

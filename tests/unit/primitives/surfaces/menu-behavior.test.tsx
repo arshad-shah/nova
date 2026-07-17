@@ -475,6 +475,64 @@ describe('ContextMenu', () => {
   })
 })
 
+describe('menu — controlled open', () => {
+  // Without this, anything that must open a menu from outside its trigger has to
+  // resort to tricks (remounting via a key, or redesigning the interaction).
+  // The AI panel needed all three.
+
+  it('stays shut when the owner says it is shut, even after a trigger click', async () => {
+    const user = userEvent.setup()
+    const onOpenChange = vi.fn()
+    render(
+      <DropdownMenu
+        trigger={<button>Open</button>}
+        open={false}
+        onOpenChange={onOpenChange}
+        items={[{ kind: 'item', id: 'a', label: 'Alpha', onSelect: () => {} }]}
+      />
+    )
+    await user.click(screen.getByRole('button', { name: 'Open' }))
+
+    // The menu asked to open; the owner did not grant it.
+    expect(onOpenChange).toHaveBeenCalledWith(true)
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument()
+  })
+
+  it('opens with no trigger interaction when the owner opens it', async () => {
+    render(
+      <DropdownMenu
+        trigger={<button>Open</button>}
+        open
+        onOpenChange={() => {}}
+        items={[{ kind: 'item', id: 'a', label: 'Alpha', onSelect: () => {} }]}
+      />
+    )
+    expect(await screen.findByRole('menu')).toBeInTheDocument()
+  })
+
+  it('reports a close request when a row is activated', async () => {
+    const user = userEvent.setup()
+    const onOpenChange = vi.fn()
+    render(
+      <DropdownMenu
+        trigger={<button>Open</button>}
+        open
+        onOpenChange={onOpenChange}
+        items={[{ kind: 'item', id: 'a', label: 'Alpha', onSelect: () => {} }]}
+      />
+    )
+    await user.click(await screen.findByRole('menuitem', { name: 'Alpha' }))
+    expect(onOpenChange).toHaveBeenCalledWith(false)
+  })
+
+  it('still owns its own state when uncontrolled', async () => {
+    const user = userEvent.setup()
+    render(<Harness items={[{ kind: 'item', id: 'a', label: 'Alpha', onSelect: () => {} }]} />)
+    await user.click(screen.getByRole('button', { name: 'Open' }))
+    expect(await screen.findByRole('menu')).toBeInTheDocument()
+  })
+})
+
 describe('menu — compound API', () => {
   it('renders and activates rows built from compound components', async () => {
     const user = userEvent.setup()

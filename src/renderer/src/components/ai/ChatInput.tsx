@@ -1,11 +1,11 @@
 import { useState, useCallback, useEffect, useRef, type KeyboardEvent } from 'react'
-import { ArrowUp, Square, ChevronDown } from 'lucide-react'
+import { ArrowUp, Square } from 'lucide-react'
 import { useAIStore } from '@/stores/ai'
 import { useConnectionsStore, useActiveProfile } from '@/stores/connections'
-import { IconButton, Button } from '@/primitives/forms/Button'
+import { IconButton } from '@/primitives/forms/Button'
 import { Card } from '@/primitives/surfaces/Card'
 import { Textarea } from '@/primitives/forms/Textarea'
-import { Text, Box } from '@/primitives'
+import { Box } from '@/primitives'
 import { SchemaAutocomplete } from './SchemaAutocomplete'
 import { ModelPicker } from './ModelPicker'
 import { useTranslation } from '@/i18n/I18nProvider'
@@ -34,7 +34,6 @@ export function ChatInput() {
 
   const [showAutocomplete, setShowAutocomplete] = useState(false)
   const [autocompleteFilter, setAutocompleteFilter] = useState('')
-  const [showModelPicker, setShowModelPicker] = useState(false)
 
   const activeModelName = models.find(m => m.id === activeModel)?.name ?? activeModel ?? t('aiui.input.selectModel')
 
@@ -118,22 +117,6 @@ export function ChatInput() {
           anchorRef={textareaRef}
         />
       )}
-      {showModelPicker && (
-        <ModelPicker
-          providers={providers}
-          models={models}
-          activeModel={activeModel}
-          onSelect={(modelId) => {
-            useAIStore.getState().setActiveModel(modelId)
-            setShowModelPicker(false)
-          }}
-          onSelectProvider={(provider) => {
-            useAIStore.getState().setActiveProvider(provider)
-            setShowModelPicker(false)
-          }}
-          onDismiss={() => setShowModelPicker(false)}
-        />
-      )}
       <Card padding="none" className="overflow-hidden">
         {/* The Card owns the frame and focus affordance here, so the field
             itself is chrome-less. */}
@@ -150,15 +133,14 @@ export function ChatInput() {
           disabled={isStreaming}
         />
         <Box className="flex items-center justify-between px-2 pb-2">
-          <Button
-            variant="bare"
-            size="none"
-            onClick={() => setShowModelPicker(!showModelPicker)}
-            className="flex items-center gap-1 rounded px-1.5 py-0.5 hover:bg-hover transition-colors"
-          >
-            <Text size="xs" color="accent">{activeModelName}</Text>
-            <ChevronDown className="h-3 w-3 text-text-muted" />
-          </Button>
+          <ModelPicker
+            providers={providers}
+            models={models}
+            activeModel={activeModel}
+            activeModelName={activeModelName}
+            onSelect={(modelId) => useAIStore.getState().setActiveModel(modelId)}
+            onSelectProvider={(provider) => useAIStore.getState().setActiveProvider(provider)}
+          />
           {isStreaming ? (
             <IconButton
               label={t('aiui.input.stop')}
