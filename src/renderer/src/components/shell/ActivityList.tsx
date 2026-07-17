@@ -3,7 +3,7 @@ import {
   Database, Wrench, Plug, Bell, Globe, ScrollText, Trash2, Search, Download, Pause, Play,
   Cable, Puzzle, Layers, Gauge, ChevronRight, ChevronDown, AlertCircle, TriangleAlert,
 } from 'lucide-react'
-import { Flex, Box, Text, cn, Button, ToggleGroup } from '@/primitives'
+import { Flex, Box, Text, cn, Button, ToggleGroup, StatusDot, type StatusDotTone } from '@/primitives'
 import type { ActivityEntry, ActivityKind, ActivityLevel } from '@shared/activity'
 import { useTranslation } from '@/i18n/I18nProvider'
 import type { MessageKey } from '@shared/i18n'
@@ -29,6 +29,14 @@ const LEVEL_CLASS: Record<ActivityLevel, string> = {
   success: 'text-success',
   info: 'text-text-muted',
   debug: 'text-text-muted/60',
+}
+
+const LEVEL_DOT_TONE: Record<ActivityLevel, StatusDotTone> = {
+  error: 'error',
+  warn: 'warning',
+  success: 'success',
+  info: 'muted',
+  debug: 'muted',
 }
 
 const LEVEL_META: { level: ActivityLevel; label: MessageKey }[] = [
@@ -308,9 +316,10 @@ export function ActivityList({ entries, onClear }: ActivityListProps) {
               // uniform — the level is already encoded in the dot, so tinting
               // the chip too would say it twice.
               icon: (
-                <Box
-                  as="span"
-                  className={cn('h-1.5 w-1.5 rounded-full bg-current', LEVEL_CLASS[level])}
+                <StatusDot
+                  size="xs"
+                  tone={LEVEL_DOT_TONE[level]}
+                  className={level === 'debug' ? 'opacity-60' : undefined}
                 />
               ),
             }))}

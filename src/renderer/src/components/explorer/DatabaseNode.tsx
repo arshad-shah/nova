@@ -11,6 +11,7 @@ import { Tooltip } from '@/primitives/surfaces/Tooltip'
 import { Box, Text } from '@/primitives'
 import { SchemaNode } from './SchemaNode'
 import { useTranslation } from '@/i18n/I18nProvider'
+import { treeIndent } from '@/lib/math'
 
 interface DatabaseNodeProps {
   databaseName: string
@@ -94,7 +95,7 @@ export function DatabaseNode({
     { kind: 'item', id: 'copy-database-name', label: t('explorer.menu.copyDatabaseName'), onSelect: handleCopyName },
   ]
 
-  const paddingLeft = 8 + depth * 16
+  const paddingLeft = treeIndent(depth)
 
   const chevron = isExpanded ? (
     <ChevronDown size={12} className="text-text-muted shrink-0" strokeWidth={1.8} />
@@ -116,12 +117,15 @@ export function DatabaseNode({
             className="text-info shrink-0"
             strokeWidth={1.8}
           />
-          <Box
+          <Text
             as="span"
-            className="flex-1 truncate min-w-0 text-xs font-semibold text-text-primary"
+            truncate
+            size="xs"
+            weight="semibold"
+            className="flex-1 min-w-0"
           >
             {databaseName}
-          </Box>
+          </Text>
 
           <Box
             as="span"

@@ -3,6 +3,7 @@ export { ThemeProvider, useTheme } from './theme/ThemeProvider'
 
 // Utils
 export { cn } from './utils/cn'
+export { FOCUS_GLOW } from './utils/focus'
 
 // Layout
 export * from './layout'

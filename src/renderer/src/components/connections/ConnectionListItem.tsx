@@ -1,5 +1,5 @@
 import { MoreHorizontal } from 'lucide-react'
-import { Badge, Flex, IconButton, Text } from '@/primitives'
+import { Badge, ConnectionDot, Flex, IconButton, Text } from '@/primitives'
 import { DropdownMenu } from '@/primitives/surfaces/DropdownMenu'
 import type { MenuNode } from '@/primitives/surfaces/menu/types'
 import type { ConnectionProfile } from '@shared/types'
@@ -78,7 +78,6 @@ export function ConnectionListItem({
   const { t } = useTranslation()
   const chip = typeChip(connection.type)
   const summary = describe(connection)
-  const dotColor = connection.color ?? (connected ? 'var(--color-success)' : 'var(--color-text-disabled)')
 
   // All row actions live in an overflow menu so the row stays uncluttered and
   // destructive actions (delete) aren't a stray click away.
@@ -105,16 +104,11 @@ export function ConnectionListItem({
       onClick={onActivate}
     >
       {/* Status dot — full colour + halo when connected, faded ring when not. */}
-      <span
-        className="shrink-0 inline-block w-2.5 h-2.5 rounded-full"
-        style={{
-          backgroundColor: dotColor,
-          opacity: connected ? 1 : 0.45,
-          boxShadow: connected
-            ? `0 0 0 1.5px color-mix(in srgb, ${dotColor} 35%, transparent), 0 0 6px color-mix(in srgb, ${dotColor} 50%, transparent)`
-            : 'inset 0 0 0 1px var(--color-border-strong)',
-        }}
-        aria-label={connected ? t('connections.active.statusConnected') : t('connections.active.statusDisconnected')}
+      <ConnectionDot
+        size="md"
+        state={connected ? 'connected' : 'disconnected'}
+        color={connection.color}
+        label={connected ? t('connections.active.statusConnected') : t('connections.active.statusDisconnected')}
       />
 
       <Flex direction="column" className="flex-1 min-w-0">

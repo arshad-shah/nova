@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { fn, expect, userEvent } from 'storybook/test'
-import { Settings, X, Star, RefreshCw, Trash2 } from 'lucide-react'
+import { Settings, X, Star, RefreshCw, Trash2, Database } from 'lucide-react'
 import { IconButton } from './Button'
 
 const VARIANTS = ['solid', 'subtle', 'outline', 'ghost', 'error'] as const
@@ -12,7 +12,7 @@ const meta: Meta<typeof IconButton> = {
   argTypes: {
     variant: {
       control: 'select',
-      options: [...VARIANTS, 'tab-action', 'bare'],
+      options: [...VARIANTS, 'nav', 'tab-action', 'bare'],
     },
     size: {
       control: 'select',
@@ -117,6 +117,33 @@ export const TabAction: Story = {
       </IconButton>
     </div>
   ),
+}
+
+/** `nav` is the shell-rail control (ActivityBar, SecondaryActivityBar, the AI
+ *  toggle, NotificationBell, …): muted → primary on hover, and an `active`
+ *  prop (exposed as `data-active`) for the current/selected panel — the
+ *  accent wash the rail indicator is reserved for. Idle, hover, and active
+ *  side by side; hover the middle button to see the hover state live. */
+export const Nav: Story = {
+  render: () => (
+    <div className="flex items-center gap-3 rounded-md bg-bg-primary p-3">
+      <IconButton variant="nav" size="lg" className="rounded-lg" label="Idle">
+        <Database size={20} />
+      </IconButton>
+      <IconButton variant="nav" size="lg" className="rounded-lg" label="Hover me">
+        <Database size={20} />
+      </IconButton>
+      <IconButton variant="nav" size="lg" active className="rounded-lg" label="Active">
+        <Database size={20} />
+      </IconButton>
+    </div>
+  ),
+  play: async ({ canvas }) => {
+    const active = canvas.getByRole('button', { name: 'Active' })
+    await expect(active).toHaveAttribute('data-active', 'true')
+    const idle = canvas.getByRole('button', { name: 'Idle' })
+    await expect(idle).not.toHaveAttribute('data-active')
+  },
 }
 
 export const States: Story = {

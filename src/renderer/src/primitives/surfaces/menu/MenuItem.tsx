@@ -166,6 +166,11 @@ export function MenuCheckItem({ checked, label, children, ...rest }: MenuCheckIt
 
 export type MenuRadioItemProps = MenuCheckItemProps
 
+/**
+ * A row in a single-select set. MUST be rendered inside a {@link MenuRadioGroup}:
+ * ARIA requires `menuitemradio` rows to sit in a `group`, which is what makes
+ * them one mutually-exclusive set rather than N unrelated toggles.
+ */
 export function MenuRadioItem({ checked, label, children, ...rest }: MenuRadioItemProps) {
   return (
     <MenuRow
@@ -178,6 +183,31 @@ export function MenuRadioItem({ checked, label, children, ...rest }: MenuRadioIt
     >
       {children ?? label}
     </MenuRow>
+  )
+}
+
+export type MenuRadioGroupProps = {
+  /** Optional accessible name for the set, e.g. "Schema". */
+  label?: string
+  children: React.ReactNode
+}
+
+/**
+ * The `role="group"` container that turns a run of {@link MenuRadioItem} rows
+ * into one mutually-exclusive set.
+ *
+ * Without this the rows are announced as unrelated radios and the "one of these
+ * is selected" relationship is lost — the whole reason to use radio rows for the
+ * database/schema pickers instead of plain items.
+ *
+ * Unlike {@link MenuSection} this renders no visible header; pass `label` only
+ * to name the set for assistive tech.
+ */
+export function MenuRadioGroup({ label, children }: MenuRadioGroupProps) {
+  return (
+    <div role="group" aria-label={label}>
+      {children}
+    </div>
   )
 }
 

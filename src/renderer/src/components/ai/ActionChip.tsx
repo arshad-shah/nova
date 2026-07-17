@@ -7,7 +7,7 @@ import { appActions } from '@/lib/app-actions/registry'
 import { APP_ACTION } from '@/lib/app-actions/ids'
 import { useToastStore } from '@/stores/toast'
 import { useTranslation } from '@/i18n/I18nProvider'
-import { Button } from '@/primitives'
+import { Button, Tag } from '@/primitives'
 
 // Per-action icons (lucide only — no emoji). Unknown ids fall back to a generic
 // "jump to" arrow so any plugin-registered action still renders sensibly.
@@ -36,13 +36,13 @@ export function ActionChip({ actionId, params, children }: Props) {
   // user isn't left with a dead link that silently does nothing.
   if (!action) {
     return (
-      <span
-        className="inline-flex items-center gap-1 rounded-md border border-border-default px-2 py-0.5 text-xs text-text-muted align-baseline"
+      <Tag
+        className="rounded-md bg-transparent text-text-muted align-baseline"
         title={t('aiui.actionChip.unavailable')}
       >
         <AlertTriangle className="h-3 w-3" />
         {children ?? actionId}
-      </span>
+      </Tag>
     )
   }
 

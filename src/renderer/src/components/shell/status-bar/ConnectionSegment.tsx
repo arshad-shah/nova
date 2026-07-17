@@ -2,9 +2,8 @@ import { useEffect, useState } from 'react'
 import { useConnectionsStore, useActiveProfile } from '@/stores/connections'
 import { ConnectionSwitcher } from '../ConnectionSwitcher'
 import { StatusBarSegment } from './StatusBarSegment'
-import { cn } from '@/primitives/utils/cn'
 import { useTranslation } from '@/i18n/I18nProvider'
-import { Box } from '@/primitives'
+import { Box, StatusDot } from '@/primitives'
 
 const DB_ABBREVIATIONS: Record<string, string> = {
   postgresql: 'PG',
@@ -44,20 +43,16 @@ export function ConnectionSegment({ onNewConnection }: Props) {
         aria-expanded={open}
         aria-label={t('shell.statusBar.toggleConnectionSwitcher')}
       >
-        <Box
-          as="span"
-          className={cn(
-            'h-1.5 w-1.5 rounded-full',
-            isConnected
-              ? 'bg-success shadow-[0_0_0_2px_rgba(40,200,64,0.25)]'
-              : 'bg-text-tertiary'
-          )}
+        <StatusDot
+          size="xs"
+          tone={isConnected ? 'success' : 'muted'}
+          className={isConnected ? 'shadow-[0_0_0_2px_rgba(40,200,64,0.25)]' : undefined}
         />
         {isConnected && active ? (
           <>
             <Box as="span">{active.name}</Box>
             {driver && (
-              <Box as="span" className="rounded-sm bg-white/18 px-1 py-px text-[9.5px] font-medium">
+              <Box as="span" className="rounded-sm bg-chip-fill px-1 py-px text-[9.5px] font-medium">
                 {driver}
               </Box>
             )}
@@ -65,7 +60,7 @@ export function ConnectionSegment({ onNewConnection }: Props) {
         ) : (
           <>
             <Box as="span">{t('shell.statusBar.noConnection')}</Box>
-            <Box as="span" className="rounded-sm bg-white/8 px-1 py-px text-[9.5px] font-medium opacity-80">
+            <Box as="span" className="rounded-sm bg-chip-fill-subtle px-1 py-px text-[9.5px] font-medium opacity-80">
               {t('shell.statusBar.clickToConnect')}
             </Box>
           </>

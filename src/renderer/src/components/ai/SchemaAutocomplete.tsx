@@ -137,7 +137,7 @@ export function SchemaAutocomplete({ triggerText, onSelect, onDismiss, anchorRef
   return (
     <Box
       ref={listRef}
-      className="absolute bottom-full left-0 mb-1 w-64 max-h-48 overflow-y-auto rounded-lg border border-border bg-bg-primary shadow-lg z-50"
+      className="absolute bottom-full left-0 mb-1 w-64 max-h-48 overflow-y-auto rounded-lg border border-border-default bg-bg-elevated shadow-dropdown z-50"
     >
       {items.map((item, i) => (
         <Button

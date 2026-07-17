@@ -64,6 +64,13 @@ describe('Badge', () => {
     expect(container.firstChild).toHaveClass('text-sm')
   })
 
+  it('applies pill size', () => {
+    const { container } = render(<Badge size="pill">Pill</Badge>)
+    expect(container.firstChild).toHaveClass('px-2')
+    expect(container.firstChild).toHaveClass('py-0.5')
+    expect(container.firstChild).toHaveClass('text-[10px]')
+  })
+
   it('has base classes', () => {
     const { container } = render(<Badge>Base</Badge>)
     expect(container.firstChild).toHaveClass('inline-flex')

@@ -20,13 +20,12 @@ const meta: Meta<typeof ModelPicker> = {
   args: {
     onSelect: fn(),
     onSelectProvider: fn(),
-    onDismiss: fn(),
   },
   decorators: [
     (Story) => (
-      // ModelPicker is absolutely positioned above its anchor; give it a
-      // relative host with headroom so it renders in-frame.
-      <div style={{ position: 'relative', width: 320, height: 320 }}>
+      // ModelPicker owns its own trigger + Popover positioning; give it a
+      // host with headroom so the upward-opening panel renders in-frame.
+      <div style={{ position: 'relative', width: 320, height: 320, display: 'flex', alignItems: 'flex-end' }}>
         <Story />
       </div>
     ),
@@ -40,6 +39,7 @@ export const Default: Story = {
     providers,
     models,
     activeModel: 'claude-opus',
+    activeModelName: 'Claude Opus',
   },
 }
 
@@ -48,6 +48,7 @@ export const SingleProvider: Story = {
     providers: [providers[0]],
     models: models.slice(0, 2),
     activeModel: 'claude-sonnet',
+    activeModelName: 'Claude Sonnet',
   },
 }
 
@@ -56,5 +57,6 @@ export const Empty: Story = {
     providers: [],
     models: [],
     activeModel: null,
+    activeModelName: 'No model selected',
   },
 }

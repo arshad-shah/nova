@@ -3,7 +3,7 @@ import { includesFold } from '@/lib/fuzzy-match'
 import { FolderOpen, RefreshCw, Package } from 'lucide-react'
 import { useTabsStore } from '@/stores/tabs'
 import { useTranslation } from '@/i18n/I18nProvider'
-import { Stack, ScrollArea, Flex, Text, EmptyState, IconButton, Box, Spinner, SearchInput, cn } from '@/primitives'
+import { Stack, ScrollArea, Flex, Text, EmptyState, IconButton, Box, Spinner, SearchInput, cn, StatusDot, type StatusDotTone } from '@/primitives'
 import { IPC_CHANNELS } from '@shared/ipc'
 import { PluginIcon } from './PluginIcon'
 
@@ -18,10 +18,10 @@ export interface PluginInfo {
   contributions: string[]
 }
 
-const STATUS_COLORS: Record<string, string> = {
-  active: 'bg-success',
-  degraded: 'bg-warning',
-  error: 'bg-error',
+const STATUS_TONES: Record<string, StatusDotTone> = {
+  active: 'success',
+  degraded: 'warning',
+  error: 'error',
 }
 
 export function PluginsPanel() {
@@ -139,7 +139,7 @@ export function PluginsPanel() {
 }
 
 function PluginRow({ plugin, isSelected, onClick }: { plugin: PluginInfo; isSelected: boolean; onClick: () => void }) {
-  const statusColor = STATUS_COLORS[plugin.status.state] ?? 'bg-text-tertiary'
+  const statusTone = STATUS_TONES[plugin.status.state] ?? 'muted'
 
   return (
     <Flex
@@ -158,7 +158,7 @@ function PluginRow({ plugin, isSelected, onClick }: { plugin: PluginInfo; isSele
       <Text size="xs" weight="medium" color="primary" truncate className="flex-1 min-w-0">
         {plugin.displayName}
       </Text>
-      <Box className={`w-1.5 h-1.5 rounded-full shrink-0 ${statusColor}`} />
+      <StatusDot size="xs" tone={statusTone} />
     </Flex>
   )
 }

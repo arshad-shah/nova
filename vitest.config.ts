@@ -36,13 +36,14 @@ export default defineConfig({
       ],
       reporter: ['text-summary', 'json-summary', 'html'],
       reportsDirectory: 'coverage',
-      // Floor measured 2026-07-17: 1687 passing tests across 183 files.
-      // statements 34.31 · branches 30.00 · functions 29.35 · lines 36.14
+      // Floor measured 2026-07-17: 2039 passing tests across 214 files.
+      // statements 40.68 · branches 35.57 · functions 35.41 · lines 42.45
+      // (33.52 / 28.95 / 28.40 / 35.34 when this ratchet was first pinned.)
       thresholds: {
-        statements: 34.3,
-        branches: 30,
-        functions: 29.3,
-        lines: 36.1,
+        statements: 40.6,
+        branches: 35.5,
+        functions: 35.4,
+        lines: 42.4,
         autoUpdate: false,
       },
     },

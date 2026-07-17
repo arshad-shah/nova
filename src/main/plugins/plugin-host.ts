@@ -5,6 +5,7 @@ import os from 'os'
 import { execFileSync } from 'child_process'
 import { app } from 'electron'
 import { recordActivity } from '../activity/recorder'
+import { resolveWithinPlugin } from './plugin-paths'
 import type { PluginManifest, LoadedPlugin } from './types'
 import type { PluginStatus, BootReport, PluginContext } from './sdk/types'
 import { createPluginContext, disposePluginContext } from './sdk/index'
@@ -232,15 +233,12 @@ export class PluginBootCoordinator {
 
       // Path-traversal guard: a hostile manifest can specify `main` as
       // `../../../etc/anything.js` or as an absolute path. `require()` would
-      // happily load whichever file the joined path resolves to. We pin
-      // mainPath to the plugin's own directory by comparing the resolved
-      // absolute paths.
-      const pluginRoot = path.resolve(plugin.path)
-      const mainPath = path.resolve(pluginRoot, plugin.manifest.main)
-      const withinPlugin =
-        mainPath === pluginRoot ||
-        mainPath.startsWith(pluginRoot + path.sep)
-      if (!withinPlugin) {
+      // happily load whichever file the joined path resolves to, so pin it to
+      // the plugin's own directory. Shared with the icon read in
+      // `ipc/plugins.ts` — this check used to live only here, which is exactly
+      // why `manifest.icon` shipped without it.
+      const mainPath = resolveWithinPlugin(plugin.path, plugin.manifest.main)
+      if (!mainPath) {
         plugin.status = {
           state: 'error',
           error: `Invalid main: '${plugin.manifest.main}' resolves outside the plugin directory`,
