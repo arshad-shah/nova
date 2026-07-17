@@ -10,11 +10,16 @@ The unit project now reports coverage through `pnpm test:coverage`, and CI runs
 that instead of a bare `vitest run --project unit`.
 
 `vitest.config.ts` gains a `coverage` block whose `thresholds` are pinned to the
-measured floor rather than to an aspiration: statements 33.5, branches 28.9,
-functions 28.4, lines 35.3 (measured 2026-07-17 across 1646 passing tests in 180
-files). CI fails below the floor, so coverage can only go up; raising it means
-raising the floor in the same PR. Verified by temporarily demanding 40% and
-confirming a non-zero exit and an explicit threshold error.
+measured floor rather than to an aspiration. CI fails below the floor, so
+coverage can only go up; raising it means raising the floor in the same PR.
+Verified by temporarily demanding more than the codebase had and confirming a
+non-zero exit and an explicit threshold error.
+
+When the ratchet was first pinned the floor was statements 33.52, branches 28.95,
+functions 28.40, lines 35.34, across 1646 passing tests in 180 files. The
+behavioural test passes in this same release raised it well past that, and the
+floor was raised with them each time — which is the mechanism working as
+intended rather than a number to admire.
 
 Two things the numbers do not say, both noted in the config so the next reader
 doesn't misread them. The floor covers the `unit` project only — the `storybook`

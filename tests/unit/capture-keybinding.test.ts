@@ -31,6 +31,15 @@ describe('chordFromEvent', () => {
     ])
   })
 
+  it('captures punctuation keys shared by both matchers', () => {
+    expect(chordFromEvent(ev({ key: ',', ctrlKey: true }))).toEqual(['Ctrl+,', 'Cmd+,'])
+    expect(chordFromEvent(ev({ key: '/', metaKey: true }))).toEqual(['Ctrl+/', 'Cmd+/'])
+  })
+
+  it('rejects a single-character key that is not a letter, digit, or supported punctuation', () => {
+    expect(chordFromEvent(ev({ key: '~', metaKey: true }))).toBeNull()
+  })
+
   it('keeps digits and supported named keys', () => {
     expect(chordFromEvent(ev({ key: '1', metaKey: true }))).toEqual(['Ctrl+1', 'Cmd+1'])
     expect(chordFromEvent(ev({ key: 'Enter', metaKey: true }))).toEqual(['Ctrl+Enter', 'Cmd+Enter'])

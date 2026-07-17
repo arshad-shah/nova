@@ -47,6 +47,10 @@ describe('parseKeybinding', () => {
     expect(parseKeybinding('Ctrl+nope', monaco)).toBe(0)
   })
 
+  it('resolves the winCtrl modifier', () => {
+    expect(parseKeybinding('WinCtrl+S', monaco)).toBe(KeyMod.WinCtrl | KeyCode.KeyS)
+  })
+
   it('returns 0 when no key is present (modifiers only)', () => {
     expect(parseKeybinding('Ctrl', monaco)).toBe(0)
     expect(parseKeybinding('Cmd+Shift', monaco)).toBe(0)
