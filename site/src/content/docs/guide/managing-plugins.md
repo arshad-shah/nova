@@ -28,16 +28,31 @@ what it brings.
 
 ## Viewing, enabling, and disabling plugins
 
-Open the plugins settings page to see everything that's installed. From there you
+Verql shows installed plugins in two places that stay in sync: the **Plugins**
+panel in the sidebar, and the **Plugins** category in Settings. From either you
 can:
 
 - See each plugin's description and what it contributes
 - **Enable** or **disable** a plugin — a disabled plugin's contributions are
   removed from the app, and your choice persists across restarts
-- **Install** a new plugin or **uninstall** one you no longer want
 
 > The always-on bundled plugins that provide core functionality stay in place;
 > optional plugins are the ones you'll typically toggle.
+
+Installing and uninstalling starts from the sidebar **Plugins** panel: its
+install button opens an install view where you drag a plugin folder or `.zip`
+file, or use **Browse Files** to pick one; open a plugin's detail view and
+choose **Uninstall** to remove one you no longer want. Built-in plugins can't
+be uninstalled — only disabled.
+
+## Reviewing a plugin's permissions
+
+A plugin's detail view has a **Permissions** tab. Built-in plugins are trusted
+and skip this entirely. A third-party plugin instead lists the capabilities it
+declared — for example, access to the keyring or your saved connections — with
+a toggle for each; the tab marks which ones Verql actually enforces and which
+are advisory only. If you change a permission while the plugin is active, you
+need to disable and re-enable it for the change to take effect.
 
 ## A word on safety
 

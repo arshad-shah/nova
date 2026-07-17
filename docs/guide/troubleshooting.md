@@ -5,18 +5,6 @@ Running into something odd? Start here. If your problem isn't listed, see
 
 [← Back to the User Guide](./README.md)
 
-## Windows SmartScreen warning {#windows-smartscreen}
-
-**Symptom:** A blue "Windows protected your PC" dialog appears when you run the
-installer.
-
-**Why:** The Windows build is **unsigned**, so Microsoft Defender SmartScreen
-warns about it. This is expected and does not mean the file is unsafe.
-
-**Fix:** Click **More info**, then **Run anyway**. For extra confidence, first
-[verify the download's checksum](./installation.md#verifying-your-download) to
-confirm you have a genuine release file.
-
 ## macOS Gatekeeper {#macos-gatekeeper}
 
 **Symptom:** macOS blocks the app or warns that it can't be verified.

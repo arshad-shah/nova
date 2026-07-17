@@ -32,7 +32,7 @@ flowchart LR
 |-------|------|------|
 | Shape + defaults | `shared/settings.ts` | `AppSettings`, `defaultSettings`, `mergeWithDefaults`, and the `KEYBINDING_ACTION` id registry |
 | Renderer mirror | `src/renderer/src/stores/settings.ts` | `useSettingsStore` (`set`, `hydrate`, `resetCategory`) + the change listener |
-| IPC handlers | `src/main/ipc/settings.ts` | `settings:get-all/get/set/reset`; routes `ai.openaiKey`/`ai.anthropicKey` into the keyring instead of disk |
+| IPC handlers | `src/main/ipc/settings.ts` | `settings:get-all/get/set/reset`; a legacy `settings:set` special-case still redirects `ai.openaiKey`/`ai.anthropicKey` into the keyring, but the current AI Settings UI writes keys through the AI plugin's own `ai:keys:set`/`ai:keys:has` channels (`src/main/plugins/bundled/ai/internal/index.ts`), same keyring namespace |
 | Persistence | `src/main/config/store.ts` | `ConfigStore` — one atomic JSON file; strips keyring-backed secrets before writing |
 | UI | `src/renderer/src/components/settings/` | `SettingsLayout` → category components; categories centralized in `lib/settings-categories.ts` (`SETTINGS_CATEGORY`) |
 
@@ -45,7 +45,7 @@ correct category.
 
 | Category | Key examples | Consumed by |
 |----------|-------------|-------------|
-| **General** | `queryTimeout`, `defaultPageSize`, `maxHistoryItems`, `confirmDestructiveQueries`, `confirmOnUnsavedClose`, `restoreTabsOnStartup`, `language` | QueryPanel (timeout/confirm), ResultsGrid (page size), query history, tab-actions (close confirm), tab restore, i18n locale |
+| **General** | `queryTimeout`, `defaultPageSize`, `maxHistoryItems`, `confirmDestructiveQueries`, `confirmOnUnsavedClose`, `restoreTabsOnStartup`, `language`* | QueryPanel (timeout/confirm), ResultsGrid (page size), query history, tab-actions (close confirm), tab restore, i18n locale |
 | **Appearance** | `appearanceMode`, `theme`/`lightTheme`/`darkTheme`, `uiDensity`, `accentColor`, `animations`, sidebar/dock visibility + sizes | `ThemeProvider`, `App` shell layout, `usePanelResize` |
 | **Editor** | font, tab size, word wrap, minimap, line numbers, cursor, ligatures, … | `QueryEditor` Monaco options |
 | **Data Display** | `nullDisplay`, `dateFormat` (+`customDateFormat`), `numberFormat`, `booleanDisplay`, `truncateTextAt`, `maxColumnWidth` | `ResultsGrid` via `lib/format-cell.ts` |
@@ -68,10 +68,22 @@ correct category.
 - **Keybinding rebind** — the persisted `keybindings[]` drives both App-level
   shortcuts (via `matchesAccelerator`) and the editor; the page captures a chord
   and writes compatible key strings. Action ids: `KEYBINDING_ACTION`.
-- **Secrets** — AI API keys and the MCP token never touch disk; `settings:set`
-  redirects them to the OS keyring and reads are redacted.
-- **Language** (`general.language`) — selects the i18n locale (see
-  [i18n.md](./i18n.md)).
+- **Secrets** — AI API keys and the MCP token never touch disk. AI keys are
+  written via the AI plugin's `ai:keys:set` channel straight to the keyring
+  (a legacy `settings:set` path for `ai.openaiKey`/`ai.anthropicKey` still
+  works too) and are redacted (blanked) on every read. The MCP token is
+  minted/rotated through its own `mcp:regenerate-token` channel and stored in
+  the keyring by `src/main/ipc/mcp.ts` (with a one-time migration that moves
+  any legacy plaintext `mcp.token` out of `config.json`) — it is *not* set via
+  `settings:set`, and unlike the AI keys it is deliberately returned to the
+  renderer in plaintext (via `mcp:status`) so the user can copy it into an
+  MCP client config.
+- **Language*** (`general.language`) — `<I18nProvider>` syncs the i18n core's
+  locale from this field on every change (see [i18n.md](./i18n.md)), but
+  there is currently no Settings UI control that writes it (no
+  `setSetting('general.language', ...)` call anywhere in the renderer) — only
+  the bundled `en` locale ships today, so the field exists and is consumed,
+  it just has no way to be changed from the UI yet.
 - **Onboarding** (`onboarding.*`) — `lastSeenVersion`, `completedSteps`,
   `hideOnStartup`. App-managed state (no Settings UI category): written by the
   boot logic and the Welcome tab to drive the first-run Welcome / post-update

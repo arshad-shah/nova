@@ -69,18 +69,25 @@ available to every driver.
 
 ## How your credentials are stored
 
-Verql does **not** write database passwords or other secrets to disk in plain
-text. Secrets are stored encrypted in your operating system's keychain via
-Electron's [`safeStorage`](https://www.electronjs.org/docs/latest/api/safe-storage):
+Verql stores database passwords and other secrets encrypted, using Electron's
+[`safeStorage`](https://www.electronjs.org/docs/latest/api/safe-storage), which
+defers to your operating system's keychain:
 
 - **macOS:** the system Keychain
 - **Windows:** the Credential Manager / DPAPI
 - **Linux:** the available secret service (e.g. the GNOME Keyring / KWallet)
 
 Non-secret profile details (host, port, database name, options) are saved in
-Verql's configuration file; only the secrets live in the keychain. The encrypted
-credentials file is also written with owner-only permissions so it isn't readable
+Verql's configuration file; only the secrets live in the encrypted credentials
+file, which is written with owner-only (`0600`) permissions so it isn't readable
 by other users on a shared machine.
+
+> On a Linux system with no secret service available (for example, a headless
+> box or WSL2 with no keyring running), `safeStorage` encryption isn't possible.
+> Verql detects this and falls back to writing secrets in an obfuscated
+> (base64), **not encrypted**, form in that same owner-only file, and logs a
+> warning — install and enable a keyring (e.g. gnome-keyring/libsecret) to get
+> real at-rest encryption on those systems.
 
 > AI provider API keys are stored the same way — see
 > [The AI assistant](/guide/ai-assistant/).
