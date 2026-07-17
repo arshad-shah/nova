@@ -12,8 +12,14 @@
  * we don't want every tab to re-render when a sibling registers or saves.
  * Subscribers (the close-button, the palette) call `get(tabId)` on demand.
  *
- * The `usePendingClose` hook is the one bit of zustand state: a single
- * pending-close tab id that App.tsx watches to drive the confirm dialog.
+ * The `usePendingClose` hook is the one bit of zustand state: it tracks tabs
+ * the user asked to close but which are awaiting confirmation, in two lanes
+ * — `txnQueue` and `dirtyBatch` — that App.tsx watches to drive the confirm
+ * dialog(s). They're two lanes and not one because they resolve differently:
+ * a transaction needs its own commit/rollback against its own DB session, so
+ * transactional tabs are resolved one at a time, head first (`txnQueue`);
+ * dirty (unsaved-edits) tabs have no per-tab session to reconcile, so they
+ * share one combined discard confirm (`dirtyBatch`).
  */
 import { create } from 'zustand'
 import { useStatementStatus, hashStatement, type StatementStatus } from '@/stores/statement-status'
@@ -90,6 +96,12 @@ export const tabActions = {
   },
 }
 
+/**
+ * `useTabKeyboardNav` derives "is this close awaiting confirmation?" from
+ * membership in `txnQueue`/`dirtyBatch` (see `resolvePendingClose`). If a
+ * third guard bucket is ever added here, that consumer must be updated too
+ * or it will silently stop recognizing pending closes.
+ */
 interface PendingCloseState {
   /** Tabs with an open transaction, resolved one at a time, head first.
    *  Each needs its own commit/rollback against its own session — there is

@@ -1,4 +1,4 @@
-import React, { useState, type DragEvent } from 'react'
+import { useState, type DragEvent, type MouseEvent } from 'react'
 import { X } from 'lucide-react'
 import type { Tab } from '@shared/types'
 import { Box, Flex, Text, Tooltip, ContextMenu, cn, iconButtonVariants } from '@/primitives'
@@ -8,7 +8,6 @@ import './tab-bar.css'
 
 interface TabItemProps {
   tab: Tab
-  index: number
   isActive: boolean
   isDragged: boolean
   isDropTarget: boolean
@@ -118,8 +117,13 @@ export function TabItem({
          * simply trades one axe violation for another.
          *
          * So the only structure that satisfies both rules is this one: the
-         * close control stays inside the tab and stops being focusable. It
-         * keeps its accessible name and its mouse behaviour; the keyboard path
+         * close control stays inside the tab and stops being focusable. Its
+         * `aria-label` is retained for tooling, not for assistive tech — `tab`
+         * gives its children presentational semantics, so AT never exposes a
+         * button named "Close tab" here regardless of this attribute. What the
+         * label actually does is feed the tab's accessible-name-from-content
+         * computation and let tests query `getByRole('button', { name: ... })`.
+         * Mouse behaviour is unaffected; the keyboard path
          * is Delete/Backspace on the roving tab (useTabKeyboardNav) plus the
          * context menu's Close items — both of which already existed and are
          * the paths AT users actually have.
@@ -135,7 +139,7 @@ export function TabItem({
             'ml-0.5 shrink-0 transition-opacity duration-(--transition-fast)',
             !isActive && !isDirty && 'opacity-0 group-hover:opacity-100',
           )}
-          onClick={(e: React.MouseEvent) => { e.stopPropagation(); onClose() }}
+          onClick={(e: MouseEvent) => { e.stopPropagation(); onClose() }}
           onMouseEnter={() => setCloseHovered(true)}
           onMouseLeave={() => setCloseHovered(false)}
         >

@@ -79,6 +79,15 @@ export function resolvePendingClose(
   txnQueue: string[],
 ): PendingCloseResolution | null {
   if (!pending) return null
+  // Load-bearing order: `tabs` membership must be checked BEFORE
+  // `awaitingConfirm`. `TabCloseGuard`'s `onConfirm` calls `clearBatch()`
+  // before `closeTab()` — two separate store updates that only land in the
+  // same render because React batches them. If they ever landed in separate
+  // renders (or this check's order were flipped), the tab-still-in-`tabs`
+  // render would see `dirtyBatch` already empty and this would resolve
+  // 'cancelled' for a close that is actually going through. Checking `tabs`
+  // first means a confirmed close is read as 'pending' until the tab is
+  // actually gone, regardless of which store update lands first.
   if (!tabs.some(t => t.id === pending.closingId)) return 'closed'
   const awaitingConfirm = dirtyBatch.includes(pending.closingId) || txnQueue.includes(pending.closingId)
   return awaitingConfirm ? 'pending' : 'cancelled'
@@ -155,14 +164,6 @@ export function useTabKeyboardNav({ tabs, activeTabId, onActivate, onClose, scro
     // focusable thing in the trough.
     const current = tabs.findIndex(t => t.id === rovingId)
     if (current === -1) return
-
-    // Any navigation-relevant key other than the close key ends the previous
-    // keyboard-close interaction, if one was still pending: the user has
-    // moved on within the strip. This is a cheap extra bound on top of
-    // `resolvePendingClose` — belt and braces, not load-bearing on its own.
-    if (e.key !== 'Delete' && e.key !== 'Backspace') {
-      pendingCloseRef.current = null
-    }
 
     const next = nextFocusIndex(current, e.key, tabs.length)
     if (next !== null) {

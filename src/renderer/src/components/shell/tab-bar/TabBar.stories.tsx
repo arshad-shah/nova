@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react'
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { fn, expect, userEvent } from 'storybook/test'
+import { expect, userEvent } from 'storybook/test'
 import type { Tab, QueryTab, TableTab, ErDiagramTab, ConnectionFormTab, PluginDetailTab } from '@shared/types'
 import { useTabsStore } from '@/stores/tabs'
 import { useConnectionsStore } from '@/stores/connections'

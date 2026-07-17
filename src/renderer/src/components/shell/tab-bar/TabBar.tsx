@@ -109,7 +109,6 @@ export function TabBar() {
           <TabItem
             key={tab.id}
             tab={tab}
-            index={index}
             isActive={activeTabId === tab.id}
             isDragged={draggedIndex === index}
             isDropTarget={dropIndex === index && draggedIndex !== index}
@@ -126,13 +125,13 @@ export function TabBar() {
       </Flex>
 
       {/* Scroll right arrow */}
-  { canScrollRight && (
-    <IconButton
-      label={t('shell.tabBar.scrollRight')}
-      size="xs"
-      variant="ghost"
-      onClick={scrollRight}
-      tabIndex={-1}
+      {canScrollRight && (
+        <IconButton
+          label={t('shell.tabBar.scrollRight')}
+          size="xs"
+          variant="ghost"
+          onClick={scrollRight}
+          tabIndex={-1}
         className={cn(
           'shrink-0 text-text-tertiary hover:text-text-primary transition-opacity',
         )}

@@ -41,7 +41,6 @@ const meta: Meta<typeof TabItem> = {
   // gates itself.
   parameters: { layout: 'centered', a11y: { test: 'error' } },
   args: {
-    index: 0,
     isDragged: false,
     isDropTarget: false,
     contextMenuItems: [
@@ -59,10 +58,13 @@ const meta: Meta<typeof TabItem> = {
   decorators: [
     // A tab is only ever rendered inside a tablist — [role=tab] has a required
     // parent, and a bare TabItem is an `aria-required-parent` violation that
-    // says more about the story than the component. Rendering the real context
-    // also makes these stories the gate on that rule: TabBar.stories cannot
-    // catch a regression in ContextMenu's presentational wrapper, because
-    // there the tablist is a real ancestor either way.
+    // says more about the story than the component. This decorator supplies
+    // that real ancestor so the a11y gate above (`error`, not the repo-default
+    // `todo`) checks the same structure the app actually renders — including
+    // ContextMenu's presentational wrapper between `tab` and its children,
+    // which TabBar.stories also renders inside a real tablist and so equally
+    // covers; this file's TabItem-focused stories aren't uniquely gating that
+    // rule, they're just where TabItem itself is exercised in isolation.
     (Story) => (
       <div
         role="tablist"
