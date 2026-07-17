@@ -22,7 +22,10 @@ type AppTab = ReturnType<typeof useTabsStore.getState>['tabs'][number]
 export function ActiveTabView({ activeTab, activeTabId }: { activeTab: AppTab | undefined; activeTabId: string | null }) {
   const { t } = useTranslation()
   return (
-    <Box className="flex-1 overflow-hidden">
+    <Box
+      className="flex-1 overflow-hidden"
+      {...(activeTab ? { role: 'tabpanel', 'aria-labelledby': `tab-${activeTab.id}` } : {})}
+    >
       <SectionErrorBoundary label={activeTab?.title ?? t('shell.sectionLabels.tab')} resetKey={activeTabId}>
         {activeTab?.type === 'query' && (
           <QueryPanel tab={activeTab as QueryTab} />

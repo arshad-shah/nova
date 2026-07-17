@@ -18,6 +18,8 @@ interface TabItemProps {
   onDragStart: (e: DragEvent) => void
   onDragOver: (e: DragEvent) => void
   onDragEnd: () => void
+  tabIndex: 0 | -1
+  onFocus: () => void
 }
 
 export function TabItem({
@@ -31,6 +33,8 @@ export function TabItem({
   onDragStart,
   onDragOver,
   onDragEnd,
+  tabIndex,
+  onFocus,
 }: TabItemProps) {
   const { t } = useTranslation()
   const [closeHovered, setCloseHovered] = useState(false)
@@ -41,6 +45,11 @@ export function TabItem({
     <ContextMenu items={contextMenuItems}>
       <Flex
         align="center"
+        id={`tab-${tab.id}`}
+        role="tab"
+        aria-selected={isActive}
+        tabIndex={tabIndex}
+        onFocus={onFocus}
         data-tab-id={tab.id}
         draggable
         onDragStart={onDragStart}
@@ -51,6 +60,7 @@ export function TabItem({
         className={cn(
           'group relative cursor-pointer shrink-0 select-none transition-colors duration-(--transition-fast)',
           'h-(--tab-h) px-(--tab-px) gap-(--tab-gap) rounded-t-(--tab-r)',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-inset',
           isActive
             ? 'bg-tab-active-bg text-tab-active-fg'
             : 'bg-transparent text-tab-inactive-fg hover:bg-tab-hover-bg',

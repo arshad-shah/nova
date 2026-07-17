@@ -16,6 +16,7 @@ export const shell = {
     scrollLeft: 'Scroll tabs left',
     scrollRight: 'Scroll tabs right',
     newTab: 'New Query Tab',
+    tablistLabel: 'Open tabs',
     closeTab: 'Close tab',
     closeTabUnsaved: 'Close tab (unsaved changes)',
     unsavedChanges: 'Unsaved changes',

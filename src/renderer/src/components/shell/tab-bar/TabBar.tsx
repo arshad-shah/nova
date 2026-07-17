@@ -9,6 +9,7 @@ import { TabItem } from './TabItem'
 import { useClipboard } from '@/hooks/useClipboard'
 import { useTabScroll } from './useTabScroll'
 import { useTabDrag } from './useTabDrag'
+import { useTabKeyboardNav } from './useTabKeyboardNav'
 import { useTranslation } from '@/i18n/I18nProvider'
 
 export function TabBar() {
@@ -30,6 +31,13 @@ export function TabBar() {
     useTabScroll()
   const { draggedIndex, dropIndex, onDragStart, onDragOver, onDragEnd } = useTabDrag({
     onReorder: reorderTabs,
+  })
+  const { onKeyDown, tabIndexFor, onTabFocus } = useTabKeyboardNav({
+    tabs,
+    activeTabId,
+    onActivate: setActiveTab,
+    onClose: (id) => requestCloseTab(id, closeTab),
+    scrollIntoView,
   })
 
   // Keep the active tab scrolled into view
@@ -90,6 +98,10 @@ export function TabBar() {
       <Flex
         ref={scrollRef}
         onWheel={onWheel}
+        onKeyDown={onKeyDown}
+        role="tablist"
+        aria-orientation="horizontal"
+        aria-label={t('shell.tabBar.tablistLabel')}
         align="end"
         className="flex-1 h-full overflow-x-hidden gap-0.5"
       >
@@ -107,6 +119,8 @@ export function TabBar() {
             onDragStart={(e) => onDragStart(e, index)}
             onDragOver={(e) => onDragOver(e, index)}
             onDragEnd={onDragEnd}
+            tabIndex={tabIndexFor(tab.id)}
+            onFocus={() => onTabFocus(tab.id)}
           />
         ))}
       </Flex>
