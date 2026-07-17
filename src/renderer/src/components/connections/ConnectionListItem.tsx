@@ -4,23 +4,8 @@ import { DropdownMenu } from '@/primitives/surfaces/DropdownMenu'
 import type { MenuNode } from '@/primitives/surfaces/menu/types'
 import type { ConnectionProfile } from '@shared/types'
 import { useTranslation } from '@/i18n/I18nProvider'
-
-/**
- * Two-letter chips for the most common engines. Anything not listed falls
- * back to the first two letters of the type id (uppercased), so a future
- * plugin-contributed driver still renders sensibly without a code change.
- */
-const TYPE_BADGE: Record<string, { label: string; tone: 'accent' | 'warning' | 'info' | 'error' | 'default' | 'success' }> = {
-  postgresql: { label: 'PG', tone: 'accent'  },
-  mysql:      { label: 'MY', tone: 'warning' },
-  sqlite:     { label: 'SL', tone: 'info'    },
-  mongodb:    { label: 'MG', tone: 'success' },
-  redis:      { label: 'RD', tone: 'error'   },
-  snowflake:  { label: 'SF', tone: 'info'    },
-}
-function typeChip(type: string) {
-  return TYPE_BADGE[type] ?? { label: type.slice(0, 2).toUpperCase(), tone: 'default' as const }
-}
+import { useDriverPresentation } from '@/hooks/useDriverPresentation'
+import { DRIVER_TONE_BADGE } from '@/lib/driver-presentation'
 
 /**
  * Builds the muted one-line summary under the connection name. Skips empty
@@ -76,7 +61,9 @@ export function ConnectionListItem({
   onDelete,
 }: ConnectionListItemProps) {
   const { t } = useTranslation()
-  const chip = typeChip(connection.type)
+  // The driver declares its own chip; the renderer only maps the tone.
+  const presentationOf = useDriverPresentation([connection.type])
+  const { abbreviation, tone } = presentationOf(connection.type)
   const summary = describe(connection)
 
   // All row actions live in an overflow menu so the row stays uncluttered and
@@ -113,8 +100,8 @@ export function ConnectionListItem({
 
       <Flex direction="column" className="flex-1 min-w-0">
         <Flex align="center" gap="xs">
-          <Badge tone={chip.tone} size="sm" className="font-mono text-[9px] leading-none px-1.5 py-0.5 shrink-0">
-            {chip.label}
+          <Badge tone={DRIVER_TONE_BADGE[tone]} size="sm" className="font-mono text-[9px] leading-none px-1.5 py-0.5 shrink-0">
+            {abbreviation}
           </Badge>
           <Text size="xs" weight={active ? 'medium' : 'normal'} truncate className="flex-1">
             {connection.name}

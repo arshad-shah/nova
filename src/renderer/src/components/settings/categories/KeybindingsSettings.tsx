@@ -5,7 +5,7 @@ import { Stack, Text, Divider, Flex, Box } from '@/primitives'
 import { SearchInput, Table, KbdGroup, Button, IconButton, Tooltip } from '@/primitives'
 import { useSettingsStore } from '@/stores/settings'
 import { usePluginCommands } from '@/stores/plugin-commands'
-import { defaultSettings, type KeyBinding } from '@shared/settings'
+import { defaultSettings, CONFIG_KEY, type KeyBinding } from '@shared/settings'
 import { chordFromEvent } from '@/lib/capture-keybinding'
 import { useTranslation } from '@/i18n/I18nProvider'
 
@@ -41,7 +41,7 @@ export function KeybindingsSettings() {
       const next = builtinKeybindings.map((kb) =>
         kb.id === recordingId ? { ...kb, keys } : kb,
       )
-      void setSetting('keybindings', next)
+      void setSetting(CONFIG_KEY.KEYBINDINGS, next)
       setRecordingId(null)
     }
     window.addEventListener('keydown', onKey, true)
@@ -52,7 +52,7 @@ export function KeybindingsSettings() {
     const def = defaultSettings.keybindings.find((k) => k.id === id)
     if (!def) return
     const next = builtinKeybindings.map((kb) => (kb.id === id ? { ...kb, keys: def.keys } : kb))
-    void setSetting('keybindings', next)
+    void setSetting(CONFIG_KEY.KEYBINDINGS, next)
   }
 
   const isCustom = (kb: KeyBinding): boolean => {
@@ -213,7 +213,7 @@ export function KeybindingsSettings() {
         <Button
           variant="outline"
           size="sm"
-          onClick={() => void setSetting('keybindings', defaultSettings.keybindings)}
+          onClick={() => void setSetting(CONFIG_KEY.KEYBINDINGS, defaultSettings.keybindings)}
         >
           {t('settings.keybindings.resetAll')}
         </Button>

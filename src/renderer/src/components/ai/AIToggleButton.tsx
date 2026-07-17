@@ -1,6 +1,6 @@
 import { Sparkles } from 'lucide-react'
 import { Tooltip, IconButton } from '@/primitives'
-import { useAIStore } from '@/stores/ai'
+import { useAIStore, AI_CHAT_PANEL_ID } from '@/stores/ai'
 import { useUiStore } from '@/stores/ui'
 import { useTranslation } from '@/i18n/I18nProvider'
 
@@ -13,7 +13,7 @@ export function AIToggleButton() {
   const { t } = useTranslation()
   const toggle = useAIStore((s) => s.togglePanel)
   const open = useUiStore(
-    (s) => s.secondarySidebarVisible && s.secondaryActivePanel === 'plugin:ai-chat'
+    (s) => s.secondarySidebarVisible && s.secondaryActivePanel === AI_CHAT_PANEL_ID
   )
 
   return (

@@ -196,6 +196,7 @@ export function activate(ctx: PluginContext): void {
     placeholderStyle: 'positional',
     editorLanguage: 'sql',
     statementSyntax: 'sql',
+    presentation: { abbreviation: 'SF', tone: 'info' },
     nouns: {
       object: { one: 'table', many: 'tables' },
       field: { one: 'column', many: 'columns' },

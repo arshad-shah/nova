@@ -1,6 +1,7 @@
 import { createLogger as createKitLogger } from '@arshad-shah/log-kit'
 import type { Logger as KitLogger, LogRecord, Transport } from '@arshad-shah/log-kit'
 import type { RecordInput } from '../activity/log'
+import { ACTIVITY_KIND } from '@shared/activity'
 
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error'
 
@@ -116,7 +117,7 @@ function activityTransport(sink: LogSink): Transport {
     write: (record) => {
       const { detail, durationMs } = readContext(record.context)
       sink.record({
-        kind: 'log',
+        kind: ACTIVITY_KIND.LOG,
         level: toAppLevel(record.level),
         title: record.message,
         detail,

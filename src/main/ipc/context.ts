@@ -1,7 +1,8 @@
 import { ipcMain } from 'electron'
 import { errorMessage } from '@shared/errors'
-import type { IpcChannelMap } from '@shared/ipc'
+import { IPC_CHANNELS, type IpcChannelMap } from '@shared/ipc'
 import { recordActivity } from '../activity/recorder'
+import { ACTIVITY_KIND } from '@shared/activity'
 import type { DbAdapter } from '../db/adapter'
 import type { ConfigStore } from '../config/store'
 import type { KeyringService } from '../keyring'
@@ -23,7 +24,7 @@ export type Handle = <K extends keyof IpcChannelMap>(
 
 // Activity-stream channels are excluded from IPC tracing to avoid a feedback
 // loop (recording an entry would itself record an entry).
-const TRACE_EXCLUDED = new Set<string>(['activity:list', 'activity:clear', 'activity:record'])
+const TRACE_EXCLUDED = new Set<string>([IPC_CHANNELS.ACTIVITY_LIST, IPC_CHANNELS.ACTIVITY_CLEAR, IPC_CHANNELS.ACTIVITY_RECORD])
 
 /** Trace every typed IPC call into the activity stream (kind `ipc`, debug level)
  *  so devs can see exactly what crosses the bridge and how long it took. We
@@ -38,7 +39,7 @@ export const handle: Handle = (channel, handler) => {
     try {
       const result = await handler(...(args as Parameters<typeof handler>))
       recordActivity({
-        kind: 'ipc',
+        kind: ACTIVITY_KIND.IPC,
         level: 'debug',
         title: `${channel} · ${Date.now() - start}ms`,
         source: String(channel),
@@ -48,7 +49,7 @@ export const handle: Handle = (channel, handler) => {
       return result
     } catch (err) {
       recordActivity({
-        kind: 'ipc',
+        kind: ACTIVITY_KIND.IPC,
         level: 'error',
         title: `${channel} failed`,
         source: String(channel),

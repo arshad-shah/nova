@@ -5,7 +5,7 @@ import { StatusDot, type StatusDotTone } from '@/primitives/feedback/StatusDot'
 import { Popover } from '@/primitives/surfaces/Popover'
 import { Switch } from '@/primitives/forms/Switch'
 import { Text, Box, Badge, Button } from '@/primitives'
-import { useAIStore } from '@/stores/ai'
+import { useAIStore, AI_CHAT_PANEL_ID } from '@/stores/ai'
 import { useUiStore } from '@/stores/ui'
 import { useTabsStore } from '@/stores/tabs'
 import { SETTINGS_CATEGORY } from '@/lib/settings-categories'
@@ -134,7 +134,7 @@ export function AIStatusSegment() {
 
       <Box className="flex gap-1 pt-1 border-t border-border-default">
         <ActionBtn icon={Minimize2} label={t('aiui.status.compact')}   onClick={() => { void compact() }} />
-        <ActionBtn icon={Maximize2} label={t('aiui.status.openChat')} onClick={() => setSecondaryActivePanel('plugin:ai-chat')} />
+        <ActionBtn icon={Maximize2} label={t('aiui.status.openChat')} onClick={() => setSecondaryActivePanel(AI_CHAT_PANEL_ID)} />
         <ActionBtn icon={Settings}  label={t('aiui.status.settings')}  onClick={() => openSettings(SETTINGS_CATEGORY.AI)} />
       </Box>
     </Box>

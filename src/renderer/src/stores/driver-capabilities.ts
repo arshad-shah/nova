@@ -3,7 +3,7 @@ import { IPC_CHANNELS, type IpcChannelMap } from '@shared/ipc'
 import { mergeCapabilities } from '@shared/driver-capabilities'
 import type { RuntimeCapabilityOverlay } from '@shared/driver-capabilities'
 
-export type DriverCapabilities = NonNullable<IpcChannelMap['db:driver-capabilities']['return']>
+export type DriverCapabilities = NonNullable<IpcChannelMap[typeof IPC_CHANNELS.DB_DRIVER_CAPABILITIES]['return']>
 
 interface DriverCapsState {
   /** Cache keyed by driver type ('postgresql', 'mongodb', …). `null` means

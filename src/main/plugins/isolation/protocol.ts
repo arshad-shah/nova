@@ -72,6 +72,18 @@ export const H2W = {
   DEACTIVATE: 'host:deactivate',
 } as const
 
+/** The `ctx[surface]` names the isolation bridge forwards over `W2H.CAPABILITY`.
+ *  Named once so `worker-context.ts` (producer) and `isolated-plugin.ts`'s
+ *  `CAPABILITY_METHODS` allowlist (consumer) can't drift from each other across
+ *  the process boundary. */
+export const CAPABILITY_SURFACE = {
+  CONNECTIONS: 'connections',
+  KEYRING: 'keyring',
+  SCHEMA: 'schema',
+  SETTINGS: 'settings',
+} as const
+export type CapabilitySurface = (typeof CAPABILITY_SURFACE)[keyof typeof CAPABILITY_SURFACE]
+
 // ─── Worker → Host methods ───────────────────────────────────────────────────
 export const W2H = {
   /** A gated capability call: ctx[surface][method](...args). The host applies

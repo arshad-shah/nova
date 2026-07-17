@@ -5,6 +5,7 @@ import type { ToolRegistry } from '../plugins/sdk/types'
 import type { AttentionHub } from '../attention/attention-hub'
 import type { MCPToolInfo } from '@shared/mcp'
 import type { IpcContext, Handle } from './context'
+import { CONFIG_KEY } from '@shared/settings'
 
 export interface SettingsStoreFacade {
   get(key: string): unknown
@@ -26,12 +27,12 @@ export function registerMcpHandlers(
   // One-time migration: earlier builds stored the token in plaintext in
   // config.json. Move any such token into the keyring and scrub the on-disk
   // copy so the credential no longer sits readable on disk.
-  const legacyToken = ctx.configStore.getSetting('mcp.token') as string | undefined
+  const legacyToken = ctx.configStore.getSetting(CONFIG_KEY.MCP_TOKEN) as string | undefined
   if (legacyToken) {
     if (!ctx.keyring.has(MCP_TOKEN_NS, MCP_TOKEN_KEY)) {
       ctx.keyring.storeSync(MCP_TOKEN_NS, MCP_TOKEN_KEY, legacyToken)
     }
-    ctx.configStore.setSetting('mcp.token', '')
+    ctx.configStore.setSetting(CONFIG_KEY.MCP_TOKEN, '')
   }
 
   const tokenStore = {
@@ -49,19 +50,19 @@ export function registerMcpHandlers(
 
   handle(IPC_CHANNELS.MCP_START, async () => {
     const result = await mcpServer.start()
-    ctx.configStore.setSetting('mcp.enabled', true)
+    ctx.configStore.setSetting(CONFIG_KEY.MCP_ENABLED, true)
     return result
   })
 
   handle(IPC_CHANNELS.MCP_STOP, async () => {
     await mcpServer.stop()
-    ctx.configStore.setSetting('mcp.enabled', false)
+    ctx.configStore.setSetting(CONFIG_KEY.MCP_ENABLED, false)
   })
 
   handle(IPC_CHANNELS.MCP_STATUS, async () => mcpServer.getStatus())
 
   handle(IPC_CHANNELS.MCP_TOOLS, async (): Promise<MCPToolInfo[]> => {
-    const disabled = (ctx.configStore.getSetting('mcp.disabledTools') as string[]) ?? []
+    const disabled = (ctx.configStore.getSetting(CONFIG_KEY.MCP_DISABLED_TOOLS) as string[]) ?? []
     return toolRegistry.list().map(t => ({
       id: t.id, name: t.name, description: t.description, permission: t.permission,
       enabled: !disabled.includes(t.id),
@@ -69,10 +70,10 @@ export function registerMcpHandlers(
   })
 
   handle(IPC_CHANNELS.MCP_SET_TOOL_ENABLED, async (toolId, enabled) => {
-    const disabled = new Set((ctx.configStore.getSetting('mcp.disabledTools') as string[]) ?? [])
+    const disabled = new Set((ctx.configStore.getSetting(CONFIG_KEY.MCP_DISABLED_TOOLS) as string[]) ?? [])
     if (enabled) disabled.delete(toolId)
     else disabled.add(toolId)
-    ctx.configStore.setSetting('mcp.disabledTools', [...disabled])
+    ctx.configStore.setSetting(CONFIG_KEY.MCP_DISABLED_TOOLS, [...disabled])
     // Rebuild the exposed tool set so the change takes effect on a live server.
     await mcpServer.reload()
   })

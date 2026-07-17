@@ -4,7 +4,7 @@ import { IPC_CHANNELS, IPC_EVENTS, type IpcEventMap } from '@shared/ipc'
 import { useTranslation } from '@/i18n/I18nProvider'
 import { SettingRow } from './SettingRow'
 
-type ProgressEvent = IpcEventMap['updater:progress'][0]
+type ProgressEvent = IpcEventMap[typeof IPC_EVENTS.UPDATER_PROGRESS][0]
 
 type Status =
   | { kind: 'loading' }

@@ -3,7 +3,7 @@ import { matchesFilter } from '@/lib/fuzzy-match'
 import { Search } from 'lucide-react'
 import { useConnectionsStore, useActiveProfile } from '@/stores/connections'
 import { useTabsStore } from '@/stores/tabs'
-import { useUiStore, ACTIVITY_PANEL, SECONDARY_PANEL } from '@/stores/ui'
+import { useUiStore, ACTIVITY_PANEL, SECONDARY_PANEL, PLUGIN_PANEL_PREFIX } from '@/stores/ui'
 import { useSchemaStore } from '@/stores/schema'
 import { useDriverCapabilitiesStore } from '@/stores/driver-capabilities'
 import { editorRegistry } from '@/stores/editor'
@@ -16,6 +16,7 @@ import { usePluginUIStore, selectContributions } from '@/stores/plugin-ui'
 import type { PluginCommand } from '@/stores/plugin-commands'
 import { useTranslation } from '@/i18n/I18nProvider'
 import { IPC_CHANNELS, IPC_EVENTS } from '@shared/ipc'
+import { KEYBINDING_ACTION } from '@shared/settings'
 
 interface Command {
   id: string
@@ -94,14 +95,14 @@ export function CommandPalette({ open, onClose }: Props) {
         id: 'editor.runAll',
         title: t('command.runEntireBuffer'),
         category: t('command.category.editor'),
-        action: () => editorRegistry.runAction('execute-query')
+        action: () => editorRegistry.runAction(KEYBINDING_ACTION.EXECUTE_QUERY)
       })
       // Pull Monaco's full action list verbatim. Anything Monaco itself or a
       // future plugin registers (format, fold, find, multi-cursor, …) appears
       // here for free — no per-action wiring.
       for (const a of editorActions) {
         // Skip the few we already surface above to avoid duplicates.
-        if (a.id === 'execute-query' || a.id === 'save-query') continue
+        if (a.id === KEYBINDING_ACTION.EXECUTE_QUERY || a.id === KEYBINDING_ACTION.SAVE_QUERY) continue
         cmds.push({
           id: `editor:${a.id}`,
           title: a.label,
@@ -132,7 +133,7 @@ export function CommandPalette({ open, onClose }: Props) {
           id: `show-secondary-${c.contributionId}`,
           title: t('command.viewShow', { title: String(c.meta.title ?? c.contributionId) }),
           category: t('command.category.view'),
-          action: () => setSecondaryActive(`plugin:${c.contributionId}`),
+          action: () => setSecondaryActive(`${PLUGIN_PANEL_PREFIX}${c.contributionId}`),
         })
       }
     }

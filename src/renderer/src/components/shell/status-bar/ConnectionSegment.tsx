@@ -4,14 +4,7 @@ import { ConnectionSwitcher } from '../ConnectionSwitcher'
 import { StatusBarSegment } from './StatusBarSegment'
 import { useTranslation } from '@/i18n/I18nProvider'
 import { Box, StatusDot } from '@/primitives'
-
-const DB_ABBREVIATIONS: Record<string, string> = {
-  postgresql: 'PG',
-  mysql: 'MY',
-  sqlite: 'SL',
-  mongodb: 'MG',
-  redis: 'RD',
-}
+import { useDriverPresentation } from '@/hooks/useDriverPresentation'
 
 interface Props {
   onNewConnection: () => void
@@ -28,9 +21,8 @@ export function ConnectionSegment({ onNewConnection }: Props) {
   const { activeConnectionId, connectedIds } = useConnectionsStore()
   const active = useActiveProfile()
   const isConnected = activeConnectionId ? connectedIds.has(activeConnectionId) : false
-  const driver = active?.type
-    ? (DB_ABBREVIATIONS[active.type] ?? active.type.slice(0, 2).toUpperCase())
-    : null
+  const presentationOf = useDriverPresentation(active?.type ? [active.type] : [])
+  const driver = active?.type ? presentationOf(active.type).abbreviation : null
 
   return (
     <Box className="relative h-full">

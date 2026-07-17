@@ -1,4 +1,5 @@
 import { toJSONSchema, z } from 'zod'
+import { TOOL_PERMISSION, type ToolPermission } from '@shared/mcp'
 
 const WRITE_KEYWORDS_RE =
   /\b(INSERT|UPDATE|DELETE|DROP|ALTER|CREATE|TRUNCATE|REPLACE|MERGE|GRANT|REVOKE)\b/i
@@ -33,10 +34,10 @@ export function isWriteQuery(sql: string): boolean {
  * per-tool override), so the shared rule stays agnostic to where overrides live.
  */
 export function isWriteToolCall(
-  effectivePermission: 'read' | 'write',
+  effectivePermission: ToolPermission,
   params: Record<string, unknown> | undefined,
 ): boolean {
-  if (effectivePermission === 'write') return true
+  if (effectivePermission === TOOL_PERMISSION.WRITE) return true
   const sql = params && typeof params.sql === 'string' ? params.sql : ''
   return sql ? isWriteQuery(sql) : false
 }

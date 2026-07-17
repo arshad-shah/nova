@@ -3,6 +3,13 @@ import { IPC_EVENTS } from '@shared/ipc'
 import { MENU_ACTION, type MenuActionId } from '@shared/menus'
 import { runMenuAction } from '@/components/shell/menu-model'
 
+/** The status bar's new-connection shortcut is a plain DOM `CustomEvent`
+ *  rather than an IPC one (it never leaves the renderer), but it still
+ *  crosses a component boundary — `StatusBar.tsx` dispatches it, this hook
+ *  listens — so the name is centralised here rather than re-typed at both
+ *  ends where a typo would silently stop the shortcut from doing anything. */
+export const STATUSBAR_NEW_CONNECTION_EVENT = 'statusbar:new-connection'
+
 /**
  * Runs commands invoked from the **native** application menu — the visible menu
  * bar on macOS, and the accelerator table on every platform.
@@ -26,10 +33,10 @@ export function useShellMenuEvents(): void {
     })
 
     const handleStatusBarNewConn = (): void => runMenuAction(MENU_ACTION.NEW_CONNECTION)
-    window.addEventListener('statusbar:new-connection', handleStatusBarNewConn)
+    window.addEventListener(STATUSBAR_NEW_CONNECTION_EVENT, handleStatusBarNewConn)
 
     return () => {
-      window.removeEventListener('statusbar:new-connection', handleStatusBarNewConn)
+      window.removeEventListener(STATUSBAR_NEW_CONNECTION_EVENT, handleStatusBarNewConn)
       offMenuAction()
     }
   }, [])

@@ -2,7 +2,7 @@ import pg from 'pg'
 import type { DbAdapter } from '../../../db/adapter'
 import { quoteIdentifier } from '../../sdk/identifier'
 import { parsePostgresPlan } from './plan-parse'
-import type { QueryResult, SchemaTable, SchemaColumn, SchemaIndex, SchemaObject, FieldInfo, TestConnectionResult, PlanNode } from '@shared/types'
+import { SCHEMA_OBJECT_KIND, type QueryResult, type SchemaTable, type SchemaColumn, type SchemaIndex, type SchemaObject, type FieldInfo, type TestConnectionResult, type PlanNode } from '@shared/types'
 
 const PG_QUOTE = '"' as const
 
@@ -259,7 +259,7 @@ export class PostgresAdapter implements DbAdapter {
       `SELECT matviewname AS name FROM pg_matviews WHERE schemaname = $1 ORDER BY matviewname`, [s]
     )
     for (const r of mvs.rows as { name: string }[]) {
-      objects.push({ name: r.name, schema: s, kind: 'materialized_view' })
+      objects.push({ name: r.name, schema: s, kind: SCHEMA_OBJECT_KIND.MATERIALIZED_VIEW })
     }
 
     // Functions and procedures
@@ -279,7 +279,7 @@ export class PostgresAdapter implements DbAdapter {
       objects.push({
         name: r.name,
         schema: s,
-        kind: r.kind === 'p' ? 'procedure' : 'function',
+        kind: r.kind === 'p' ? SCHEMA_OBJECT_KIND.PROCEDURE : SCHEMA_OBJECT_KIND.FUNCTION,
         signature: r.signature ? `(${r.signature})` : '()',
         returnType: r.kind === 'f' ? r.return_type : undefined
       })
@@ -296,7 +296,7 @@ export class PostgresAdapter implements DbAdapter {
       [s]
     )
     for (const r of triggers.rows as { name: string; parent: string }[]) {
-      objects.push({ name: r.name, schema: s, kind: 'trigger', parent: r.parent })
+      objects.push({ name: r.name, schema: s, kind: SCHEMA_OBJECT_KIND.TRIGGER, parent: r.parent })
     }
 
     // Sequences
@@ -305,7 +305,7 @@ export class PostgresAdapter implements DbAdapter {
       [s]
     )
     for (const r of seqs.rows as { name: string }[]) {
-      objects.push({ name: r.name, schema: s, kind: 'sequence' })
+      objects.push({ name: r.name, schema: s, kind: SCHEMA_OBJECT_KIND.SEQUENCE })
     }
 
     // Indexes across all tables in the schema, excluding the implicit ones
@@ -326,7 +326,7 @@ export class PostgresAdapter implements DbAdapter {
       objects.push({
         name: r.name,
         schema: s,
-        kind: 'index',
+        kind: SCHEMA_OBJECT_KIND.INDEX,
         parent: r.parent,
         returnType: r.kind || undefined
       })
@@ -339,7 +339,7 @@ export class PostgresAdapter implements DbAdapter {
         `SELECT extname AS name FROM pg_extension ORDER BY extname`
       )
       for (const r of exts.rows as { name: string }[]) {
-        objects.push({ name: r.name, schema: s, kind: 'extension' })
+        objects.push({ name: r.name, schema: s, kind: SCHEMA_OBJECT_KIND.EXTENSION })
       }
     }
 

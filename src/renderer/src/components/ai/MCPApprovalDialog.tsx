@@ -2,6 +2,7 @@ import { useAIStore } from '@/stores/ai'
 import { AlertTriangle } from 'lucide-react'
 import { CodeView, Box, Text, Button, Modal } from '@/primitives'
 import { useTranslation } from '@/i18n/I18nProvider'
+import { TOOL_PERMISSION } from '@shared/mcp'
 
 export function MCPApprovalDialog() {
   const { t } = useTranslation()
@@ -19,8 +20,8 @@ export function MCPApprovalDialog() {
       <Box className="flex items-center gap-3 px-4 py-3 border-b border-border bg-warning/10">
         <AlertTriangle size={18} className="text-warning shrink-0" />
         <Text as="span" size="sm" weight="medium">{t('aiui.approval.mcpTitle')}</Text>
-        <Box as="span" className={`ml-auto text-[10px] px-1.5 py-0.5 rounded ${req.permission === 'write' ? 'bg-warning/20 text-warning' : 'bg-bg-secondary text-text-secondary'}`}>
-          {req.permission === 'write' ? t('aiui.approval.write') : t('aiui.approval.read')}
+        <Box as="span" className={`ml-auto text-[10px] px-1.5 py-0.5 rounded ${req.permission === TOOL_PERMISSION.WRITE ? 'bg-warning/20 text-warning' : 'bg-bg-secondary text-text-secondary'}`}>
+          {req.permission === TOOL_PERMISSION.WRITE ? t('aiui.approval.write') : t('aiui.approval.read')}
         </Box>
       </Box>
       <Box className="p-4">
