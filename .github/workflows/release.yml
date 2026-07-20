@@ -294,5 +294,12 @@ jobs:
             echo "::error::No .appx found in the Windows build artifact."
             exit 1
           fi
-          echo "Publishing $appx to product $PRODUCT_ID"
-          msstore publish "$appx" -id "$PRODUCT_ID"
+          # `msstore publish` picks a publisher by file extension, and its
+          # packaged-app publisher (MSIXProjectPublisher) only matches
+          # .msix/.msixbundle/.msixupload — a `.appx` matches nothing and fails
+          # with "could not find a project publisher". The two formats are
+          # byte-identical, so rename before publishing.
+          msix="${appx%.appx}.msix"
+          mv "$appx" "$msix"
+          echo "Publishing $msix to product $PRODUCT_ID"
+          msstore publish "$msix" -id "$PRODUCT_ID"

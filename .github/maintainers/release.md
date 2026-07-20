@@ -221,6 +221,10 @@ The Windows build emits a single artifact (`package.json` → `build.win.target:
   drives its own updates, so no code-signing certificate is needed on our side.
   The `publish-msstore` job in `release.yml` submits it via the `msstore` CLI,
   gated behind the same `release` environment reviewer as the GitHub release.
+  The job renames the `.appx` to `.msix` before submitting: `msstore publish`
+  selects its packaged-app publisher purely by file extension
+  (`.msix`/`.msixbundle`/`.msixupload`), so a `.appx` fails with "could not
+  find a project publisher" even though the two formats are byte-identical.
 
 > The `.appx` is **not** attached to the GitHub release (the publish job filters
 > it out) — it only goes to the Store. There is no non-Store Windows install
