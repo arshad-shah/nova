@@ -1,9 +1,11 @@
 import { useEffect, useState, type ComponentType, type ReactNode } from 'react'
-import { Sparkles, Loader2, Settings, Maximize2, Minimize2, Eye, Shield, Zap } from 'lucide-react'
+import { Sparkles, Settings, Maximize2, Minimize2, Eye, Shield, Zap } from 'lucide-react'
+import { Spinner } from '@/primitives/feedback/Spinner'
+import { StatusDot, type StatusDotTone } from '@/primitives/feedback/StatusDot'
 import { Popover } from '@/primitives/surfaces/Popover'
 import { Switch } from '@/primitives/forms/Switch'
-import { Text, Box, Button } from '@/primitives'
-import { useAIStore } from '@/stores/ai'
+import { Text, Box, Badge, Button } from '@/primitives'
+import { useAIStore, AI_CHAT_PANEL_ID } from '@/stores/ai'
 import { useUiStore } from '@/stores/ui'
 import { useTabsStore } from '@/stores/tabs'
 import { SETTINGS_CATEGORY } from '@/lib/settings-categories'
@@ -55,8 +57,9 @@ export function AIStatusSegment() {
   const ModeIcon = profile === 'read-only' ? Eye : profile === 'auto' ? Zap : Shield
 
   const statusLabel = isStreaming ? t('aiui.status.streaming') : inlineState === 'thinking' ? t('aiui.status.thinking') : t('aiui.status.idle')
+  const statusDotTone: StatusDotTone = isStreaming || inlineState === 'thinking' ? 'accent' : 'success'
   const statusTone =
-    isStreaming || inlineState === 'thinking'
+    statusDotTone === 'accent'
       ? 'bg-accent/15 text-accent'
       : 'bg-success/15 text-success'
 
@@ -67,7 +70,7 @@ export function AIStatusSegment() {
       aria-label={busy ? t('aiui.status.aiWorking') : t('aiui.status.aiStatus')}
     >
       {busy
-        ? <Loader2 size={12} className="animate-spin text-accent" />
+        ? <Spinner size="xs" />
         : <Sparkles size={12} className={activeModelId ? 'text-accent' : 'text-text-muted'} />}
     </StatusBarSegment>
   )
@@ -77,10 +80,10 @@ export function AIStatusSegment() {
       <Box className="flex items-center gap-2 px-1">
         <Sparkles size={12} className="text-accent" />
         <Text size="xs" weight="medium">{t('aiui.status.title')}</Text>
-        <Box as="span" className={`ml-auto inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] ${statusTone}`}>
-          <Box as="span" className="h-1.5 w-1.5 rounded-full bg-current" />
+        <Badge size="pill" className={`ml-auto gap-1 font-normal shadow-none ${statusTone}`}>
+          <StatusDot size="xs" tone={statusDotTone} />
           {statusLabel}
-        </Box>
+        </Badge>
       </Box>
 
       <Row label={t('aiui.status.provider')} value={activeProvider?.name ?? t('aiui.status.none')} />
@@ -131,7 +134,7 @@ export function AIStatusSegment() {
 
       <Box className="flex gap-1 pt-1 border-t border-border-default">
         <ActionBtn icon={Minimize2} label={t('aiui.status.compact')}   onClick={() => { void compact() }} />
-        <ActionBtn icon={Maximize2} label={t('aiui.status.openChat')} onClick={() => setSecondaryActivePanel('plugin:ai-chat')} />
+        <ActionBtn icon={Maximize2} label={t('aiui.status.openChat')} onClick={() => setSecondaryActivePanel(AI_CHAT_PANEL_ID)} />
         <ActionBtn icon={Settings}  label={t('aiui.status.settings')}  onClick={() => openSettings(SETTINGS_CATEGORY.AI)} />
       </Box>
     </Box>

@@ -8,7 +8,7 @@ import { IPC_CHANNELS, IPC_EVENTS } from '@shared/ipc'
 import { randomUUID } from 'crypto'
 import { z } from 'zod'
 import { toJsonSchema } from '../../../sdk/tool-schema'
-import type { AIStreamEvent } from '@shared/ai-types'
+import { PERFORM_APP_ACTION_TOOL_ID, type AIStreamEvent } from '@shared/ai-types'
 import { AIProviderRegistry } from './provider-registry'
 import { PermissionManager } from './permission-manager'
 import { ConversationManager } from './conversation-manager'
@@ -16,6 +16,7 @@ import { OpenAIProvider } from './providers/openai'
 import { AnthropicProvider } from './providers/anthropic'
 import { OllamaProvider, assertSafeOllamaEndpoint } from './providers/ollama'
 import type { SchemaAccess, ConnectionAccess, PluginIpc, BroadcastFn, Disposable, KeyringAccess, ToolRegistry } from '../../../sdk/types'
+import { TOOL_PERMISSION, TOOL_SURFACE } from '../../../sdk/types'
 import type { AttentionHub } from '../../../../attention/attention-hub'
 import { createAIEnhancements } from './enhancements'
 import { pickCheapestModel } from './pick-cheapest-model'
@@ -166,15 +167,15 @@ export function startAIModule(deps: AIDeps): AIModule {
   // that only safe navigation actions run agentically. AI surface only, so the
   // headless MCP server (which has no renderer) never sees it.
   const appActionTool = toolRegistry.register({
-    id: 'perform_app_action',
+    id: PERFORM_APP_ACTION_TOOL_ID,
     name: 'Perform App Action',
     description: 'Navigate or open something in the Verql UI by action id (see the action catalog). Use for safe navigation/open actions. For anything that changes data, do NOT use this — instead offer a markdown link with a verql://action/<id> href so the user confirms.',
     inputSchema: toJsonSchema(z.object({
       actionId: z.string(),
       params: z.record(z.string(), z.unknown()).optional()
     })),
-    permission: 'read',
-    surfaces: ['ai'],
+    permission: TOOL_PERMISSION.READ,
+    surfaces: [TOOL_SURFACE.AI],
     execute: async (params) => {
       const actionId = typeof params.actionId === 'string' ? params.actionId : ''
       if (!actionId) return { success: false, data: null, display: 'No actionId provided' }

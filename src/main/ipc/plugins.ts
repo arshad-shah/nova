@@ -3,6 +3,7 @@ import path from 'path'
 import { dialog } from 'electron'
 import { broadcast } from './broadcast'
 import { PluginBootCoordinator } from '../plugins/plugin-host'
+import { resolveWithinPlugin } from '../plugins/plugin-paths'
 import { IPC_CHANNELS, IPC_EVENTS } from '@shared/ipc'
 import { PERMISSION_INFO, type PluginPermission } from '../plugins/sdk/permissions'
 import { UIRegistryImpl } from '../plugins/sdk/ui-registry'
@@ -17,12 +18,34 @@ export interface PluginsHandlerDeps {
   pluginCoordinator: PluginBootCoordinator
 }
 
+/** Image types a plugin icon may be. Anything else is not read at all. */
+const ICON_MIME: Record<string, string> = {
+  '.svg': 'image/svg+xml',
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.webp': 'image/webp',
+  '.gif': 'image/gif',
+}
+
 function resolvePluginIcon(plugin: { manifest: { icon?: string }; path: string }): string | undefined {
   if (!plugin.manifest.icon || plugin.path === '<bundled>') return undefined
-  const iconPath = path.resolve(plugin.path, plugin.manifest.icon)
+
+  // `manifest.icon` is attacker-controlled for any third-party plugin. Without
+  // pinning it to the plugin's own directory, `icon: "../../../etc/passwd"`
+  // would be read and handed to the renderer base64-encoded — an arbitrary file
+  // read for anything the main process can open. `manifest.main` has always been
+  // guarded this way; icon was not.
+  const iconPath = resolveWithinPlugin(plugin.path, plugin.manifest.icon)
+  if (!iconPath) return undefined
+
+  // The extension previously only chose a MIME type, so a traversal to a
+  // non-image was still read and returned. Now an unknown extension means the
+  // file is never opened.
+  const mime = ICON_MIME[path.extname(iconPath).toLowerCase()]
+  if (!mime) return undefined
+
   if (!fs.existsSync(iconPath)) return undefined
-  const ext = path.extname(iconPath).toLowerCase()
-  const mime = ext === '.svg' ? 'image/svg+xml' : ext === '.png' ? 'image/png' : 'image/jpeg'
   const data = fs.readFileSync(iconPath)
   return `data:${mime};base64,${data.toString('base64')}`
 }

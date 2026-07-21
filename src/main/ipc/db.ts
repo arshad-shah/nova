@@ -1,6 +1,7 @@
 import type { ConnectionProfile } from '@shared/types'
 import { IPC_CHANNELS } from '@shared/ipc'
 import { errorMessage } from '@shared/errors'
+import { ACTIVITY_KIND } from '@shared/activity'
 import type { DbAdapter } from '../db/adapter'
 import type { ActivityLog } from '../activity/log'
 import { createAdapter } from '../db/factory'
@@ -53,7 +54,7 @@ export function registerDbHandlers(
         await adapter.connect()
         ctx.activeAdapters.set(profileId, adapter)
         connectionAccess.setActiveConnectionId(profileId)
-        activity?.record({ kind: 'connection', level: 'success', title: `Connected to ${profile.name}`, source: profileId })
+        activity?.record({ kind: ACTIVITY_KIND.CONNECTION, level: 'success', title: `Connected to ${profile.name}`, source: profileId })
         return { success: true as const }
       } catch (err) {
         // connect() can partially initialise a pool/socket (e.g. pg.Pool with
@@ -63,7 +64,7 @@ export function registerDbHandlers(
           await adapter.disconnect().catch(() => { /* best-effort cleanup */ })
         }
         const message = errorMessage(err)
-        activity?.record({ kind: 'connection', level: 'error', title: `Connection to ${connName(profileId)} failed`, detail: message, source: profileId })
+        activity?.record({ kind: ACTIVITY_KIND.CONNECTION, level: 'error', title: `Connection to ${connName(profileId)} failed`, detail: message, source: profileId })
         return { success: false as const, error: message }
       } finally {
         inFlightConnects.delete(profileId)
@@ -92,7 +93,7 @@ export function registerDbHandlers(
     if (adapter) {
       await adapter.disconnect()
       ctx.activeAdapters.delete(profileId)
-      activity?.record({ kind: 'connection', title: `Disconnected from ${connName(profileId)}`, source: profileId })
+      activity?.record({ kind: ACTIVITY_KIND.CONNECTION, title: `Disconnected from ${connName(profileId)}`, source: profileId })
     }
     if (connectionAccess.getActiveConnectionId() === profileId) {
       connectionAccess.setActiveConnectionId(null)
@@ -115,14 +116,14 @@ export function registerDbHandlers(
     try {
       const result = await requireAdapter(profileId).query(sql, params, opts)
       activity.record({
-        kind: 'query', level: 'success',
+        kind: ACTIVITY_KIND.QUERY, level: 'success',
         title: `${result.rowCount} row(s) · ${result.duration}ms`,
         detail: sql, source: connName(profileId), durationMs: result.duration,
       })
       return result
     } catch (err) {
       activity.record({
-        kind: 'query', level: 'error', title: 'Query failed',
+        kind: ACTIVITY_KIND.QUERY, level: 'error', title: 'Query failed',
         detail: `${sql}\n\n${errorMessage(err)}`,
         source: connName(profileId),
       })
@@ -144,7 +145,7 @@ export function registerDbHandlers(
       const result = await adapter.testConnection()
       return { success: true, ...result }
     } catch (err) {
-      return { success: false, error: (err as Error).message }
+      return { success: false, error: errorMessage(err) }
     } finally {
       await adapter?.disconnect()
     }

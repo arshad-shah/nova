@@ -1,4 +1,4 @@
-import { Modal, Input, Button, Box } from '@/primitives'
+import { Modal, Input, Button, Box, Text } from '@/primitives'
 import { useTranslation } from '@/i18n/I18nProvider'
 
 interface Props {
@@ -20,7 +20,7 @@ export function SaveQueryDialog({ open, name, onNameChange, onClose, onConfirm }
         className="p-4 flex flex-col gap-3"
       >
         <Box className="flex flex-col gap-1">
-          <Box className="text-sm font-medium">{t('query.save.title')}</Box>
+          <Text size="sm" weight="medium">{t('query.save.title')}</Text>
           <Box className="text-xs text-text-tertiary">
             {t('query.save.description')}
           </Box>

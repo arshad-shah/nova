@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef, useMemo, type KeyboardEvent } from 'react'
+import { matchesFilter } from '@/lib/fuzzy-match'
 import { Search } from 'lucide-react'
 import { useConnectionsStore, useActiveProfile } from '@/stores/connections'
 import { useTabsStore } from '@/stores/tabs'
-import { useUiStore, ACTIVITY_PANEL, SECONDARY_PANEL } from '@/stores/ui'
+import { useUiStore, ACTIVITY_PANEL, SECONDARY_PANEL, PLUGIN_PANEL_PREFIX } from '@/stores/ui'
 import { useSchemaStore } from '@/stores/schema'
 import { useDriverCapabilitiesStore } from '@/stores/driver-capabilities'
 import { editorRegistry } from '@/stores/editor'
@@ -10,11 +11,12 @@ import { tabActions } from '@/stores/tab-actions'
 import { pickDefaultSchema } from '@/lib/pick-default-schema'
 import { initialAutoCommit } from '@/lib/initial-autocommit'
 import { getLatestReleaseNote } from '@/lib/release-notes'
-import { Input, ScrollArea, Text, KbdGroup, Box, Flex, Button } from '@/primitives'
+import { Input, ScrollArea, Text, KbdGroup, Flex, Button, Modal } from '@/primitives'
 import { usePluginUIStore, selectContributions } from '@/stores/plugin-ui'
 import type { PluginCommand } from '@/stores/plugin-commands'
 import { useTranslation } from '@/i18n/I18nProvider'
 import { IPC_CHANNELS, IPC_EVENTS } from '@shared/ipc'
+import { KEYBINDING_ACTION } from '@shared/settings'
 
 interface Command {
   id: string
@@ -93,14 +95,14 @@ export function CommandPalette({ open, onClose }: Props) {
         id: 'editor.runAll',
         title: t('command.runEntireBuffer'),
         category: t('command.category.editor'),
-        action: () => editorRegistry.runAction('execute-query')
+        action: () => editorRegistry.runAction(KEYBINDING_ACTION.EXECUTE_QUERY)
       })
       // Pull Monaco's full action list verbatim. Anything Monaco itself or a
       // future plugin registers (format, fold, find, multi-cursor, …) appears
       // here for free — no per-action wiring.
       for (const a of editorActions) {
         // Skip the few we already surface above to avoid duplicates.
-        if (a.id === 'execute-query' || a.id === 'save-query') continue
+        if (a.id === KEYBINDING_ACTION.EXECUTE_QUERY || a.id === KEYBINDING_ACTION.SAVE_QUERY) continue
         cmds.push({
           id: `editor:${a.id}`,
           title: a.label,
@@ -131,7 +133,7 @@ export function CommandPalette({ open, onClose }: Props) {
           id: `show-secondary-${c.contributionId}`,
           title: t('command.viewShow', { title: String(c.meta.title ?? c.contributionId) }),
           category: t('command.category.view'),
-          action: () => setSecondaryActive(`plugin:${c.contributionId}`),
+          action: () => setSecondaryActive(`${PLUGIN_PANEL_PREFIX}${c.contributionId}`),
         })
       }
     }
@@ -177,10 +179,7 @@ export function CommandPalette({ open, onClose }: Props) {
   const filtered = useMemo(() => {
     if (!query.trim()) return commands
     const q = query.toLowerCase()
-    return commands.filter(c =>
-      c.title.toLowerCase().includes(q) ||
-      c.category?.toLowerCase().includes(q)
-    )
+    return commands.filter(c => matchesFilter(q, c.title, c.category))
   }, [query, commands])
 
   useEffect(() => {
@@ -209,54 +208,53 @@ export function CommandPalette({ open, onClose }: Props) {
         filtered[selectedIndex].action()
         onClose()
       }
-    } else if (e.key === 'Escape') {
-      onClose()
     }
+    // Escape is handled natively by Modal's <dialog> (cancel/close events).
   }
 
-  if (!open) return null
-
   return (
-    <>
-      <Box className="fixed inset-0 bg-black/30 z-50" onClick={onClose} />
-      <Box className="fixed top-[15%] left-1/2 -translate-x-1/2 z-50 w-[520px] bg-bg-secondary border border-border rounded-xl shadow-2xl overflow-hidden">
-        {/* Search input */}
-        <Flex align="center" gap="sm" className="px-4 py-3 border-b border-border">
-          <Search size={16} className="text-text-muted shrink-0" />
-          <Input
-            ref={inputRef}
-            value={query}
-            onChange={e => setQuery(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={t('command.searchPlaceholder')}
-            size="sm"
-            className="flex-1 bg-transparent border-0 focus:ring-0 px-0"
-          />
-        </Flex>
+    <Modal
+      open={open}
+      onClose={onClose}
+      position="top"
+      className="w-[520px] max-w-[520px] rounded-xl overflow-hidden"
+    >
+      {/* Search input */}
+      <Flex align="center" gap="sm" className="px-4 py-3 border-b border-border">
+        <Search size={16} className="text-text-muted shrink-0" />
+        <Input
+          ref={inputRef}
+          value={query}
+          onChange={e => setQuery(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder={t('command.searchPlaceholder')}
+          size="sm"
+          className="flex-1 bg-transparent border-0 focus:ring-0 px-0"
+        />
+      </Flex>
 
-        {/* Results */}
-        <ScrollArea direction="vertical" className="max-h-72 py-1">
-          {filtered.length === 0 && (
-            <Text size="xs" color="muted" as="p" className="px-4 py-3 text-center">{t('command.noMatch')}</Text>
-          )}
-          {filtered.map((cmd, i) => (
-            <Button
-              key={cmd.id}
-              variant="ghost"
-              onClick={() => { cmd.action(); onClose() }}
-              className={`w-full flex items-center justify-between px-4 py-2 text-left transition-colors rounded-none border-0 h-auto ${
-                i === selectedIndex ? 'bg-accent/10 text-accent' : 'text-text-secondary hover:bg-white/5'
-              }`}
-            >
-              <Flex align="center" gap="sm">
-                {cmd.category && <Text size="xs" color="muted" className="text-[10px] uppercase">{cmd.category}</Text>}
-                <Text size="xs">{cmd.title}</Text>
-              </Flex>
-              {cmd.keybinding && <KbdGroup accelerator={cmd.keybinding} size="sm" />}
-            </Button>
-          ))}
-        </ScrollArea>
-      </Box>
-    </>
+      {/* Results */}
+      <ScrollArea direction="vertical" className="max-h-72 py-1">
+        {filtered.length === 0 && (
+          <Text size="xs" color="muted" as="p" className="px-4 py-3 text-center">{t('command.noMatch')}</Text>
+        )}
+        {filtered.map((cmd, i) => (
+          <Button
+            key={cmd.id}
+            variant="ghost"
+            onClick={() => { cmd.action(); onClose() }}
+            className={`w-full flex items-center justify-between px-4 py-2 text-left transition-colors rounded-none border-0 h-auto ${
+              i === selectedIndex ? 'bg-accent/10 text-accent' : 'text-text-secondary hover:bg-hover'
+            }`}
+          >
+            <Flex align="center" gap="sm">
+              {cmd.category && <Text size="xs" color="muted" className="text-[10px] uppercase">{cmd.category}</Text>}
+              <Text size="xs">{cmd.title}</Text>
+            </Flex>
+            {cmd.keybinding && <KbdGroup accelerator={cmd.keybinding} size="sm" />}
+          </Button>
+        ))}
+      </ScrollArea>
+    </Modal>
   )
 }

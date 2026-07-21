@@ -5,7 +5,7 @@ import { useConnectionsStore, useActiveProfile } from '@/stores/connections'
 import { ScrollArea } from '@/primitives/layout/ScrollArea'
 import { Box } from '@/primitives/layout/Box'
 import { Button } from '@/primitives/forms/Button'
-import { Text } from '@/primitives/typography/Text'
+import { EmptyState } from '@/primitives/data-display/EmptyState'
 import { MessageBubble } from './MessageBubble'
 import { ToolCallCard } from './ToolCallCard'
 import { StreamingResponse } from './StreamingResponse'
@@ -20,7 +20,7 @@ const SUGGESTIONS: MessageKey[] = [
   'aiui.chat.suggestionRelationships',
 ]
 
-function EmptyState() {
+function ChatEmptyState() {
   const { t } = useTranslation()
   const sendMessage = useAIStore(s => s.sendMessage)
   const activeConnectionId = useConnectionsStore(s => s.activeConnectionId)
@@ -32,31 +32,35 @@ function EmptyState() {
   }
 
   return (
-    <Box className="flex flex-col items-center justify-center h-full gap-4 px-4 text-center">
-      <Box className="flex flex-col items-center gap-2">
+    <EmptyState
+      size="sm"
+      className="h-full px-4"
+      icon={
         <Box as="span" className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-accent/10 text-accent ring-1 ring-border-default">
           <Sparkles className="h-4 w-4" />
         </Box>
-        <Text size="sm" color="secondary">{t('aiui.chat.emptyPrompt')}</Text>
-      </Box>
-      <Box className="flex flex-wrap justify-center gap-1.5 max-w-[300px]">
-        {SUGGESTIONS.map(key => {
-          const text = t(key)
-          return (
-            <Button
-              variant="bare"
-              size="none"
-              key={key}
-              type="button"
-              onClick={() => ask(text)}
-              className="rounded-md border border-border-default px-2 py-1 text-xs text-text-secondary hover:bg-hover hover:text-text-primary transition-colors"
-            >
-              {text}
-            </Button>
-          )
-        })}
-      </Box>
-    </Box>
+      }
+      title={t('aiui.chat.emptyPrompt')}
+      action={
+        <Box className="flex flex-wrap justify-center gap-1.5 max-w-[300px]">
+          {SUGGESTIONS.map(key => {
+            const text = t(key)
+            return (
+              <Button
+                variant="bare"
+                size="none"
+                key={key}
+                type="button"
+                onClick={() => ask(text)}
+                className="rounded-md border border-border-default px-2 py-1 text-xs text-text-secondary hover:bg-hover hover:text-text-primary transition-colors"
+              >
+                {text}
+              </Button>
+            )
+          })}
+        </Box>
+      }
+    />
   )
 }
 
@@ -85,7 +89,7 @@ export function MessageThread() {
 
   return (
     <ScrollArea direction="vertical" className="flex-1 p-3">
-      {messages.length === 0 && !isAwaiting && !streamingContent && <EmptyState />}
+      {messages.length === 0 && !isAwaiting && !streamingContent && <ChatEmptyState />}
       {messages.map(msg => {
         // Skip standalone tool-result messages — they're shown inside ToolCallCard
         if (resultIds.has(msg.id)) return null

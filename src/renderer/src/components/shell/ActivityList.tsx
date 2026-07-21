@@ -3,7 +3,7 @@ import {
   Database, Wrench, Plug, Bell, Globe, ScrollText, Trash2, Search, Download, Pause, Play,
   Cable, Puzzle, Layers, Gauge, ChevronRight, ChevronDown, AlertCircle, TriangleAlert,
 } from 'lucide-react'
-import { Flex, Box, Text, cn, Button, ToggleGroup } from '@/primitives'
+import { Flex, Box, Text, cn, Button, ToggleGroup, StatusDot, type StatusDotTone } from '@/primitives'
 import type { ActivityEntry, ActivityKind, ActivityLevel } from '@shared/activity'
 import { useTranslation } from '@/i18n/I18nProvider'
 import type { MessageKey } from '@shared/i18n'
@@ -29,6 +29,14 @@ const LEVEL_CLASS: Record<ActivityLevel, string> = {
   success: 'text-success',
   info: 'text-text-muted',
   debug: 'text-text-muted/60',
+}
+
+const LEVEL_DOT_TONE: Record<ActivityLevel, StatusDotTone> = {
+  error: 'error',
+  warn: 'warning',
+  success: 'success',
+  info: 'muted',
+  debug: 'muted',
 }
 
 const LEVEL_META: { level: ActivityLevel; label: MessageKey }[] = [
@@ -80,7 +88,7 @@ function ActivityRow({ entry }: { entry: ActivityEntry }) {
     <Box
       className={cn(
         'px-3 py-1.5 border-b border-border/50 text-xs',
-        expandable && 'cursor-pointer hover:bg-white/[0.03]',
+        expandable && 'cursor-pointer hover:bg-hover',
       )}
       onClick={expandable ? () => setOpen((o) => !o) : undefined}
     >
@@ -218,7 +226,7 @@ export function ActivityList({ entries, onClear }: ActivityListProps) {
               size="none"
               type="button"
               onClick={() => setLevels((p) => toggle(p, 'error'))}
-              className={cn('flex items-center gap-0.5 rounded px-1 py-0.5 text-[10px]', levels.has('error') ? 'bg-error/15 text-error' : 'text-error hover:bg-white/5')}
+              className={cn('flex items-center gap-0.5 rounded px-1 py-0.5 text-[10px]', levels.has('error') ? 'bg-error/15 text-error' : 'text-error hover:bg-hover')}
             >
               <AlertCircle size={11} />{errorCount}
             </Button>
@@ -229,7 +237,7 @@ export function ActivityList({ entries, onClear }: ActivityListProps) {
               size="none"
               type="button"
               onClick={() => setLevels((p) => toggle(p, 'warn'))}
-              className={cn('flex items-center gap-0.5 rounded px-1 py-0.5 text-[10px]', levels.has('warn') ? 'bg-warning/15 text-warning' : 'text-warning hover:bg-white/5')}
+              className={cn('flex items-center gap-0.5 rounded px-1 py-0.5 text-[10px]', levels.has('warn') ? 'bg-warning/15 text-warning' : 'text-warning hover:bg-hover')}
             >
               <TriangleAlert size={11} />{warnCount}
             </Button>
@@ -241,7 +249,7 @@ export function ActivityList({ entries, onClear }: ActivityListProps) {
             onClick={toggleVerbose}
             title={t('shell.activity.verbose')}
             className={cn(
-              'flex items-center rounded p-1 hover:bg-white/5',
+              'flex items-center rounded p-1 hover:bg-hover',
               verbose ? 'text-accent' : 'text-text-muted hover:text-text-primary',
             )}
           >
@@ -254,7 +262,7 @@ export function ActivityList({ entries, onClear }: ActivityListProps) {
             onClick={togglePause}
             title={t(paused ? 'shell.activity.resume' : 'shell.activity.pause')}
             className={cn(
-              'flex items-center rounded p-1 hover:bg-white/5',
+              'flex items-center rounded p-1 hover:bg-hover',
               paused ? 'text-warning' : 'text-text-muted hover:text-text-primary',
             )}
           >
@@ -267,7 +275,7 @@ export function ActivityList({ entries, onClear }: ActivityListProps) {
             onClick={() => downloadEntries(matched)}
             disabled={matched.length === 0}
             title={t('shell.activity.export')}
-            className="flex items-center rounded p-1 text-text-muted hover:text-text-primary hover:bg-white/5 disabled:opacity-40 disabled:hover:bg-transparent"
+            className="flex items-center rounded p-1 text-text-muted hover:text-text-primary hover:bg-hover disabled:opacity-40 disabled:hover:bg-transparent"
           >
             <Download size={13} />
           </Button>
@@ -277,7 +285,7 @@ export function ActivityList({ entries, onClear }: ActivityListProps) {
             type="button"
             onClick={onClear}
             title={t('shell.activity.clear')}
-            className="flex items-center rounded p-1 text-text-muted hover:text-error hover:bg-white/5"
+            className="flex items-center rounded p-1 text-text-muted hover:text-error hover:bg-hover"
           >
             <Trash2 size={13} />
           </Button>
@@ -308,9 +316,10 @@ export function ActivityList({ entries, onClear }: ActivityListProps) {
               // uniform — the level is already encoded in the dot, so tinting
               // the chip too would say it twice.
               icon: (
-                <Box
-                  as="span"
-                  className={cn('h-1.5 w-1.5 rounded-full bg-current', LEVEL_CLASS[level])}
+                <StatusDot
+                  size="xs"
+                  tone={LEVEL_DOT_TONE[level]}
+                  className={level === 'debug' ? 'opacity-60' : undefined}
                 />
               ),
             }))}

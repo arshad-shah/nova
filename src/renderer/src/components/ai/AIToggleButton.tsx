@@ -1,6 +1,6 @@
 import { Sparkles } from 'lucide-react'
-import { Tooltip, IconButton, cn } from '@/primitives'
-import { useAIStore } from '@/stores/ai'
+import { Tooltip, IconButton } from '@/primitives'
+import { useAIStore, AI_CHAT_PANEL_ID } from '@/stores/ai'
 import { useUiStore } from '@/stores/ui'
 import { useTranslation } from '@/i18n/I18nProvider'
 
@@ -13,7 +13,7 @@ export function AIToggleButton() {
   const { t } = useTranslation()
   const toggle = useAIStore((s) => s.togglePanel)
   const open = useUiStore(
-    (s) => s.secondarySidebarVisible && s.secondaryActivePanel === 'plugin:ai-chat'
+    (s) => s.secondarySidebarVisible && s.secondaryActivePanel === AI_CHAT_PANEL_ID
   )
 
   return (
@@ -21,14 +21,10 @@ export function AIToggleButton() {
       <IconButton
         label={t('aiui.toggle.label')}
         size="lg"
-        variant="ghost"
+        variant="nav"
+        active={open}
         onClick={toggle}
-        className={cn(
-          'rounded-lg transition-colors',
-          open
-            ? 'bg-accent/10 text-accent hover:bg-accent/10'
-            : 'text-text-muted hover:text-text-primary hover:bg-white/5'
-        )}
+        className="rounded-lg"
       >
         <Sparkles size={20} />
       </IconButton>

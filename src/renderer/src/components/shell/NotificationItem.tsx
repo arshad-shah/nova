@@ -1,13 +1,13 @@
-import { Flex, Box, Text, Button } from '@/primitives'
+import { Flex, Box, Text, Button, StatusDot, type StatusDotTone } from '@/primitives'
 import { cn } from '@/primitives/utils/cn'
 import { formatRelativeTime } from '@/lib/format-time'
 import type { Notification } from '@/stores/notifications'
 
-const dotColorMap: Record<Notification['type'], string> = {
-  error: 'bg-error',
-  warning: 'bg-warning',
-  info: 'bg-info',
-  success: 'bg-success',
+const dotToneMap: Record<Notification['type'], StatusDotTone> = {
+  error: 'error',
+  warning: 'warning',
+  info: 'info',
+  success: 'success',
 }
 
 interface NotificationItemProps {
@@ -24,17 +24,15 @@ export function NotificationItem({ notification, onClick }: NotificationItemProp
       size="sm"
       onClick={() => onClick(id)}
       className={cn(
-        'w-full justify-start rounded-none px-3.5 py-1.5 h-auto border-b border-white/3',
+        'w-full justify-start rounded-none px-3.5 py-1.5 h-auto border-b border-border-subtle',
         read && 'opacity-60'
       )}
     >
       <Flex direction="row" align="start" gap="sm" className="w-full">
-        <Box
-          className={cn(
-            'mt-1.25 h-1.5 w-1.5 shrink-0 rounded-full',
-            dotColorMap[type],
-            read && 'opacity-40'
-          )}
+        <StatusDot
+          size="xs"
+          tone={dotToneMap[type]}
+          className={cn('mt-1.25', read && 'opacity-40')}
         />
         <Box className="min-w-0 flex-1 text-left">
           <Text size="xs" color="primary" truncate>{message}</Text>

@@ -1,6 +1,7 @@
 import { Key, Link, Hash } from 'lucide-react'
 import { Badge } from '@/primitives/data-display/Badge'
 import { ContextMenu } from '@/primitives/surfaces/ContextMenu'
+import type { MenuNode } from '@/primitives/surfaces/menu/types'
 import { Box } from '@/primitives'
 import { useClipboard } from '@/hooks/useClipboard'
 import { useDataNouns } from '@/hooks/useDataNouns'
@@ -64,12 +65,16 @@ export function ColumnRow({ column, tableName, connectionId }: ColumnRowProps) {
 
   const qualifiedName = `${tableName}.${column.name}`
 
-  const menuItems = [
+  const menuItems: MenuNode[] = [
     {
+      kind: 'item',
+      id: 'copy-column-name',
       label: t('explorer.menu.copyColumnName', { field: nouns.field.one }),
       onSelect: () => copy(column.name, { toast: { key: 'explorer.toast.copiedColumnName', vars: { field: nouns.field.one } } }),
     },
     {
+      kind: 'item',
+      id: 'copy-qualified-name',
       label: t('explorer.menu.copyQualifiedName'),
       onSelect: () => copy(qualifiedName, { toast: 'explorer.toast.copiedQualifiedName' }),
     },

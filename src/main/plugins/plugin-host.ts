@@ -1,12 +1,16 @@
 import fs from 'fs'
 import { errorMessage } from '@shared/errors'
+import { ACTIVITY_KIND } from '@shared/activity'
 import path from 'path'
 import os from 'os'
 import { execFileSync } from 'child_process'
 import { app } from 'electron'
 import { recordActivity } from '../activity/recorder'
+import { resolveWithinPlugin } from './plugin-paths'
 import type { PluginManifest, LoadedPlugin } from './types'
+import { CONTRIBUTION_KIND } from './types'
 import type { PluginStatus, BootReport, PluginContext } from './sdk/types'
+import { PLUGIN_PHASE } from './sdk/types'
 import { createPluginContext, disposePluginContext } from './sdk/index'
 import { safeCall, ErrorBudget } from './sdk/safe-call'
 import type { DriverRegistryImpl } from './sdk/driver-registry'
@@ -187,7 +191,7 @@ export class PluginBootCoordinator {
         this.plugins.set(fallbackName, {
           manifest: { name: fallbackName, version: '0.0.0', displayName: fallbackName, description: '', main: '', contributes: {} },
           path: pluginPath,
-          status: { state: 'error', error: `Invalid manifest JSON: ${(err as Error).message}`, phase: 'discover' }
+          status: { state: 'error', error: `Invalid manifest JSON: ${errorMessage(err)}`, phase: PLUGIN_PHASE.DISCOVER }
         })
         return null
       }
@@ -209,7 +213,7 @@ export class PluginBootCoordinator {
         this.plugins.set(fallbackName, {
           manifest: { name: fallbackName, version: '0.0.0', displayName: fallbackName, description: '', main: '', contributes: {} },
           path: pluginPath,
-          status: { state: 'error', error: `Invalid package.json: ${(err as Error).message}`, phase: 'discover' }
+          status: { state: 'error', error: `Invalid package.json: ${errorMessage(err)}`, phase: PLUGIN_PHASE.DISCOVER }
         })
         return null
       }
@@ -226,30 +230,27 @@ export class PluginBootCoordinator {
 
       const result = validateManifest(plugin.manifest)
       if (!result.valid) {
-        plugin.status = { state: 'error', error: result.error!, phase: 'validate' }
+        plugin.status = { state: 'error', error: result.error!, phase: PLUGIN_PHASE.VALIDATE }
         continue
       }
 
       // Path-traversal guard: a hostile manifest can specify `main` as
       // `../../../etc/anything.js` or as an absolute path. `require()` would
-      // happily load whichever file the joined path resolves to. We pin
-      // mainPath to the plugin's own directory by comparing the resolved
-      // absolute paths.
-      const pluginRoot = path.resolve(plugin.path)
-      const mainPath = path.resolve(pluginRoot, plugin.manifest.main)
-      const withinPlugin =
-        mainPath === pluginRoot ||
-        mainPath.startsWith(pluginRoot + path.sep)
-      if (!withinPlugin) {
+      // happily load whichever file the joined path resolves to, so pin it to
+      // the plugin's own directory. Shared with the icon read in
+      // `ipc/plugins.ts` — this check used to live only here, which is exactly
+      // why `manifest.icon` shipped without it.
+      const mainPath = resolveWithinPlugin(plugin.path, plugin.manifest.main)
+      if (!mainPath) {
         plugin.status = {
           state: 'error',
           error: `Invalid main: '${plugin.manifest.main}' resolves outside the plugin directory`,
-          phase: 'validate',
+          phase: PLUGIN_PHASE.VALIDATE,
         }
         continue
       }
       if (!fs.existsSync(mainPath)) {
-        plugin.status = { state: 'error', error: `main file not found: ${plugin.manifest.main}`, phase: 'validate' }
+        plugin.status = { state: 'error', error: `main file not found: ${plugin.manifest.main}`, phase: PLUGIN_PHASE.VALIDATE }
         continue
       }
 
@@ -268,12 +269,12 @@ export class PluginBootCoordinator {
       try {
         const mod = require(mainPath)
         if (typeof mod.activate !== 'function') {
-          plugin.status = { state: 'error', error: 'Missing activate() export', phase: 'validate' }
+          plugin.status = { state: 'error', error: 'Missing activate() export', phase: PLUGIN_PHASE.VALIDATE }
           continue
         }
         plugin.module = mod
       } catch (err) {
-        plugin.status = { state: 'error', error: `Failed to load module: ${(err as Error).message}`, phase: 'validate' }
+        plugin.status = { state: 'error', error: `Failed to load module: ${errorMessage(err)}`, phase: PLUGIN_PHASE.VALIDATE }
         continue
       }
 
@@ -343,7 +344,7 @@ export class PluginBootCoordinator {
 
   async activatePlugin(plugin: LoadedPlugin): Promise<LoadedPlugin> {
     if (!plugin.runIsolated && !plugin.module) {
-      plugin.status = { state: 'error', error: 'No module loaded', phase: 'activate' }
+      plugin.status = { state: 'error', error: 'No module loaded', phase: PLUGIN_PHASE.ACTIVATE }
       return plugin
     }
 
@@ -372,7 +373,7 @@ export class PluginBootCoordinator {
       plugin.status = {
         state: 'error',
         error: errorMessage(err),
-        phase: 'activate'
+        phase: PLUGIN_PHASE.ACTIVATE
       }
       return plugin
     }
@@ -403,7 +404,7 @@ export class PluginBootCoordinator {
       commandRegistry: this.deps.commandRegistry,
       themeRegistry: this.deps.themeRegistry,
       onCrash: (error) => {
-        plugin.status = { state: 'error', error: error.message, phase: 'runtime' }
+        plugin.status = { state: 'error', error: error.message, phase: PLUGIN_PHASE.RUNTIME }
         plugin.isolatedHandle = undefined
         this.activationOrder = this.activationOrder.filter(n => n !== plugin.manifest.name)
         this.deps.notificationBus.show({
@@ -424,7 +425,7 @@ export class PluginBootCoordinator {
       plugin.status = {
         state: 'error',
         error: errorMessage(err),
-        phase: 'activate',
+        phase: PLUGIN_PHASE.ACTIVATE,
       }
       return plugin
     }
@@ -458,11 +459,11 @@ export class PluginBootCoordinator {
 
     if (c.drivers) {
       for (const d of c.drivers) {
-        declared.push(`driver:${d.id}`)
+        declared.push(`${CONTRIBUTION_KIND.DRIVER}:${d.id}`)
         if (this.deps.driverRegistry.has(d.id)) {
-          registered.push(`driver:${d.id}`)
+          registered.push(`${CONTRIBUTION_KIND.DRIVER}:${d.id}`)
         } else {
-          missing.push(`driver:${d.id}`)
+          missing.push(`${CONTRIBUTION_KIND.DRIVER}:${d.id}`)
         }
       }
     }
@@ -470,11 +471,11 @@ export class PluginBootCoordinator {
     if (c.commands) {
       for (const cmd of c.commands) {
         const namespacedId = `${plugin.manifest.name}:${cmd.id}`
-        declared.push(`command:${cmd.id}`)
+        declared.push(`${CONTRIBUTION_KIND.COMMAND}:${cmd.id}`)
         if (this.deps.commandRegistry.has(namespacedId)) {
-          registered.push(`command:${cmd.id}`)
+          registered.push(`${CONTRIBUTION_KIND.COMMAND}:${cmd.id}`)
         } else {
-          missing.push(`command:${cmd.id}`)
+          missing.push(`${CONTRIBUTION_KIND.COMMAND}:${cmd.id}`)
         }
       }
     }
@@ -482,24 +483,24 @@ export class PluginBootCoordinator {
     if (c.panels) {
       const uiPanelIds = new Set(this.deps.uiRegistry.getAllPanels().map((p) => p.id))
       for (const p of c.panels) {
-        declared.push(`panel:${p.id}`)
+        declared.push(`${CONTRIBUTION_KIND.PANEL}:${p.id}`)
         // Panels can register via either the new UIRegistry (ctx.ui.registerPanel)
         // or the legacy PanelRegistry (ctx.panels.register); accept both.
         if (uiPanelIds.has(p.id) || this.deps.panelRegistry.has(p.id)) {
-          registered.push(`panel:${p.id}`)
+          registered.push(`${CONTRIBUTION_KIND.PANEL}:${p.id}`)
         } else {
-          missing.push(`panel:${p.id}`)
+          missing.push(`${CONTRIBUTION_KIND.PANEL}:${p.id}`)
         }
       }
     }
 
     if (c.connectionMiddleware) {
       for (const mw of c.connectionMiddleware) {
-        declared.push(`middleware:${mw.id}`)
+        declared.push(`${CONTRIBUTION_KIND.MIDDLEWARE}:${mw.id}`)
         if (this.deps.driverRegistry.hasMiddleware(mw.id)) {
-          registered.push(`middleware:${mw.id}`)
+          registered.push(`${CONTRIBUTION_KIND.MIDDLEWARE}:${mw.id}`)
         } else {
-          missing.push(`middleware:${mw.id}`)
+          missing.push(`${CONTRIBUTION_KIND.MIDDLEWARE}:${mw.id}`)
         }
       }
     }
@@ -510,11 +511,11 @@ export class PluginBootCoordinator {
         // multiple plugins can each contribute an exporter with the same
         // short id (e.g. several drivers register their own "sql" exporter).
         const namespacedId = `${plugin.manifest.name}:${ex.id}`
-        declared.push(`exporter:${ex.id}`)
+        declared.push(`${CONTRIBUTION_KIND.EXPORTER}:${ex.id}`)
         if (this.deps.exporterRegistry.get(namespacedId)) {
-          registered.push(`exporter:${ex.id}`)
+          registered.push(`${CONTRIBUTION_KIND.EXPORTER}:${ex.id}`)
         } else {
-          missing.push(`exporter:${ex.id}`)
+          missing.push(`${CONTRIBUTION_KIND.EXPORTER}:${ex.id}`)
         }
       }
     }
@@ -522,11 +523,11 @@ export class PluginBootCoordinator {
     if (c.importers) {
       for (const im of c.importers) {
         const namespacedId = `${plugin.manifest.name}:${im.id}`
-        declared.push(`importer:${im.id}`)
+        declared.push(`${CONTRIBUTION_KIND.IMPORTER}:${im.id}`)
         if (this.deps.importerRegistry.get(namespacedId)) {
-          registered.push(`importer:${im.id}`)
+          registered.push(`${CONTRIBUTION_KIND.IMPORTER}:${im.id}`)
         } else {
-          missing.push(`importer:${im.id}`)
+          missing.push(`${CONTRIBUTION_KIND.IMPORTER}:${im.id}`)
         }
       }
     }
@@ -534,21 +535,21 @@ export class PluginBootCoordinator {
     if (c.formatters) {
       for (const fmt of c.formatters) {
         const namespacedId = `${plugin.manifest.name}:${fmt.id}`
-        declared.push(`formatter:${fmt.id}`)
+        declared.push(`${CONTRIBUTION_KIND.FORMATTER}:${fmt.id}`)
         if (this.deps.formatterRegistry.get(namespacedId)) {
-          registered.push(`formatter:${fmt.id}`)
+          registered.push(`${CONTRIBUTION_KIND.FORMATTER}:${fmt.id}`)
         } else {
-          missing.push(`formatter:${fmt.id}`)
+          missing.push(`${CONTRIBUTION_KIND.FORMATTER}:${fmt.id}`)
         }
       }
     }
 
     if (c.themes) {
       for (const t of c.themes) {
-        declared.push(`theme:${t.id}`)
+        declared.push(`${CONTRIBUTION_KIND.THEME}:${t.id}`)
         const entry = this.deps.themeRegistry.get(t.id)
         if (!entry) {
-          missing.push(`theme:${t.id}`)
+          missing.push(`${CONTRIBUTION_KIND.THEME}:${t.id}`)
           continue
         }
         // The registry has already run validateTheme() at register time
@@ -564,7 +565,7 @@ export class PluginBootCoordinator {
             message: `${plugin.manifest.name}: ${report.missingRequired.join(', ')}`,
             durationMs: 8000,
           })
-          missing.push(`theme:${t.id}`)
+          missing.push(`${CONTRIBUTION_KIND.THEME}:${t.id}`)
           continue
         }
 
@@ -577,7 +578,7 @@ export class PluginBootCoordinator {
           })
         }
 
-        registered.push(`theme:${t.id}`)
+        registered.push(`${CONTRIBUTION_KIND.THEME}:${t.id}`)
       }
     }
 
@@ -590,7 +591,7 @@ export class PluginBootCoordinator {
     }
 
     if (registered.length === 0) {
-      return { state: 'error', error: `Plugin activated but registered no contributions. Expected: ${declared.join(', ')}`, phase: 'verify' }
+      return { state: 'error', error: `Plugin activated but registered no contributions. Expected: ${declared.join(', ')}`, phase: PLUGIN_PHASE.VERIFY }
     }
 
     return { state: 'degraded', error: `Missing contributions: ${missing.join(', ')}`, contributions: registered }
@@ -747,7 +748,7 @@ export class PluginBootCoordinator {
         const plugin = this.plugins.get(pluginName)
         if (plugin && plugin.status.state !== 'error' && plugin.status.state !== 'inactive') {
           await this.deactivatePlugin(plugin)
-          plugin.status = { state: 'error', error: `Disabled due to repeated errors (${this.errorBudget.getErrors(pluginName).length} in window)`, phase: 'runtime' }
+          plugin.status = { state: 'error', error: `Disabled due to repeated errors (${this.errorBudget.getErrors(pluginName).length} in window)`, phase: PLUGIN_PHASE.RUNTIME }
           console.warn(`[plugins] ${pluginName} auto-deactivated due to repeated errors`)
         }
       }
@@ -791,14 +792,14 @@ export class PluginBootCoordinator {
         try {
           manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8')) as PluginManifest
         } catch (err) {
-          return { success: false, error: `Invalid manifest JSON: ${(err as Error).message}` }
+          return { success: false, error: `Invalid manifest JSON: ${errorMessage(err)}` }
         }
       } else if (fs.existsSync(pkgPath)) {
         let pkg: Record<string, unknown>
         try {
           pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'))
         } catch (err) {
-          return { success: false, error: `Invalid package.json: ${(err as Error).message}` }
+          return { success: false, error: `Invalid package.json: ${errorMessage(err)}` }
         }
         manifest = {
           name: pkg.name as string,
@@ -866,7 +867,7 @@ export class PluginBootCoordinator {
       }
       return { success: true, name }
     } catch (err) {
-      return { success: false, error: (err as Error).message }
+      return { success: false, error: errorMessage(err) }
     }
   }
 
@@ -892,7 +893,7 @@ export class PluginBootCoordinator {
       const installDir = entries.length === 1 ? path.join(tmpDir, entries[0]) : tmpDir
       return this.installFromPath(installDir)
     } catch (err) {
-      return { success: false, error: (err as Error).message }
+      return { success: false, error: errorMessage(err) }
     } finally {
       fs.rmSync(tmpDir, { recursive: true, force: true })
     }
@@ -935,7 +936,7 @@ export class PluginBootCoordinator {
       const st = p.status
       const level = st.state === 'error' ? 'error' : st.state === 'degraded' ? 'warn' : 'success'
       recordActivity({
-        kind: 'plugin',
+        kind: ACTIVITY_KIND.PLUGIN,
         level,
         title: `${p.name}: ${st.state}`,
         source: p.name,
@@ -950,7 +951,7 @@ export class PluginBootCoordinator {
     }
     console.log(`[plugins] Boot complete: ${report.active} active, ${report.degraded} degraded, ${report.failed} failed`)
     recordActivity({
-      kind: 'plugin',
+      kind: ACTIVITY_KIND.PLUGIN,
       level: report.failed > 0 ? 'error' : report.degraded > 0 ? 'warn' : 'info',
       title: `Boot complete: ${report.active} active, ${report.degraded} degraded, ${report.failed} failed`,
       source: 'plugin-host',

@@ -1,5 +1,283 @@
 # Changelog
 
+## 1.6.0
+
+### Minor Changes
+
+- [#146](https://github.com/arshad-shah/verql/pull/146) [`ea6409c`](https://github.com/arshad-shah/verql/commit/ea6409ce5f6c555832a8a8a36e8b93cec25ff2c2) Thanks [@arshad-shah](https://github.com/arshad-shah)! - Drivers now declare their own visual identity.
+
+  Three components each hardcoded their own driver-id → label/colour map:
+  `ConnectionSegment`, `ConnectionSwitcher` and `ConnectionListItem`. They had
+  already drifted — two omitted Snowflake entirely, so it fell back to a generic
+  grey "SN" chip in the status bar while the connection list showed a proper "SF",
+  and MongoDB was a different colour depending on which surface you looked at.
+
+  That is the ownership rule in CLAUDE.md being broken: the renderer was deciding
+  what each driver looks like. It meant every new driver required editing the
+  renderer, and a plugin-contributed driver could never look like anything at all.
+
+  Drivers now declare a `presentation` capability — a short chip label and a
+  semantic tone — alongside the `nouns` capability they already declare. The tone
+  is deliberately semantic ('accent', 'error', …) rather than a colour: the driver
+  says what it is, and each surface maps that to its own treatment. A driver
+  shipping a CSS class would be reaching into the renderer's design system from
+  the far side of an IPC boundary.
+
+  Omitting it still works: the renderer falls back to the first two letters of the
+  driver id and a neutral tone, so a plugin driver renders sensibly without
+  declaring anything — which the three maps could never do.
+
+  One deliberate visual change: MongoDB's colour in the connection switcher.
+  The two maps disagreed, so one identity had to win; it is now the same green the
+  connection list already used. Snowflake gains its proper "SF" chip in the status
+  bar and switcher, which previously only the connection list knew about.
+
+- [#146](https://github.com/arshad-shah/verql/pull/146) [`ea6409c`](https://github.com/arshad-shah/verql/commit/ea6409ce5f6c555832a8a8a36e8b93cec25ff2c2) Thanks [@arshad-shah](https://github.com/arshad-shah)! - Menus: one implementation for every menu in the app.
+
+  The renderer carried three copies of the same floating-menu machinery.
+  `DropdownMenu` accepted only `{ label, onSelect, disabled }`. `ContextMenu` was
+  a near-copy of it with no keyboard navigation and no collision handling, so
+  right-clicking an explorer node near a screen edge opened a menu that ran off
+  the viewport. `MenuBar` never used the primitive at all — despite a comment
+  claiming its look — and hand-rolled the same stack a third time, which is how it
+  ended up the most capable menu in the app while not being the shared one.
+
+  All three now render `primitives/surfaces/menu`. Nothing new was added to the
+  dependency tree: `@floating-ui/react` was already installed, and this uses the
+  parts of it the app had never touched — `useListNavigation` (replacing a
+  `querySelectorAll`-per-keypress loop), `useTypeahead`, `FloatingFocusManager`,
+  `FloatingTree` with `safePolygon` for submenus, and the `size` middleware so a
+  long connection list scrolls instead of overflowing.
+
+  Menus can now express what the app already needed: icons, accelerators, section
+  headers, separators, submenus, check and radio rows with the right ARIA roles
+  (`menuitemcheckbox` / `menuitemradio` / `group`), and a destructive tone. Two
+  entry points, one implementation — a declarative `items` tree for data-shaped
+  menus like the application menu, and compound `<Menu.Item>` for rows with custom
+  content.
+
+  Visible fixes that fall out of this: right-click near a screen edge now flips
+  into view; Escape returns focus to the trigger instead of stranding it on
+  `<body>`; typing jumps to a row; and the leading icon column is reserved per
+  menu rather than per row, so labels no longer jag left and right depending on
+  whether their neighbour has an icon — all three previous menus got that wrong.
+
+  The menubar keeps only what is genuinely menubar-specific (cross-menu hover
+  switching and ←/→) in a local `useMenubar` hook.
+
+  An audit test now fails CI if a fourth copy appears: `role="menu"` may only be
+  declared inside the menu module.
+
+- [#149](https://github.com/arshad-shah/verql/pull/149) [`f6e5263`](https://github.com/arshad-shah/verql/commit/f6e5263f987f5bbd210dc7fca15d68e70bb13d38) Thanks [@arshad-shah](https://github.com/arshad-shah)! - Redesigned the tab bar. Tabs are larger and roomier at every UI density
+  (Settings → Appearance → UI Density), sized off a proper density scale instead
+  of a fractional accident — the previous "comfortable" tab was 33.75px tall.
+  The active tab no longer relies on a thin accent strip across the top; it now
+  reads as a raised surface welded into the workspace, with a brighter label and
+  matching corner rounding.
+
+  Tabs are now fully keyboard-operable and exposed to assistive tech: the tab
+  strip is a single tab stop, arrow keys move focus along it, Enter/Space
+  activates the focused tab, Home/End jump to the first/last tab, and
+  Delete/Backspace closes it (respecting the same unsaved-changes and
+  open-transaction prompts as clicking the close button). Switching focus with
+  the arrow keys does not itself switch tabs — activating one opens a real
+  editor and, for a database tab, a real connection, so that only happens on an
+  explicit activate.
+
+  Fixed: Close Others, Close to the Right, and Close All could silently discard
+  unsaved changes and abandon open transactions, bypassing the confirmation
+  prompts that a single tab's close button always honored. They now behave
+  consistently with closing one tab at a time: clean tabs close immediately, any
+  unsaved tabs in the batch share one confirmation before their changes are
+  discarded, and any tab with an open transaction is prompted to commit or roll
+  back before it closes.
+
+  Fixed: tab icons no longer ignore the active theme.
+
+  Fixed: inactive tab labels had insufficient contrast against the tab
+  background on several bundled themes; labels are now readable at a minimum
+  contrast ratio across all bundled themes, checked automatically going forward.
+
+- [#146](https://github.com/arshad-shah/verql/pull/146) [`ea6409c`](https://github.com/arshad-shah/verql/commit/ea6409ce5f6c555832a8a8a36e8b93cec25ff2c2) Thanks [@arshad-shah](https://github.com/arshad-shah)! - UI: complete the deferred modularity follow-ups from [#145](https://github.com/arshad-shah/verql/issues/145).
+
+  All ten items in `docs/ui-modularity-followups.md` are done. The headline is
+  `ConnectionSelector` — the audit called it the single biggest UI cleanup, and it
+  was blocked until the menu primitive could express what it needed. Three
+  `useState` booleans with hand-written mutual exclusion, a `fixed inset-0`
+  backdrop, three floating panels and a class string repeated four times are
+  replaced by one primitive. Its database and schema pickers are single-select, so
+  the active one is now announced through `aria-checked` in a `role="group"`
+  rather than being conveyed by colour alone.
+
+  New primitives for patterns that were hand-rolled across the app: `StatusDot`
+  (eight sites, previously four different sizes) and `ConnectionDot`, which
+  preserves both of its call-sites' deliberately different colour fallbacks
+  through a `state` prop rather than unifying away a distinction that was by
+  design.
+
+  Where a primitive could not express a call-site, it was extended rather than
+  overridden with `!` classes — `Modal` gained a `position` variant for the
+  top-anchored command palette, `Badge` a `pill` size, `Progress` a semantic
+  `tone`, `IconButton` a `nav` variant, and both `DropdownMenu` and `Popover`
+  gained controlled `open`/`onOpenChange`. That last one matters: without it the
+  AI panel had to force-close a picker by remounting it, and one menu could not
+  open another, which had pushed a refactor into quietly redesigning the chat
+  rename flow.
+
+  Two real bugs fixed on the way. The `bg-white/18` overlays in the status bar and
+  notifications sidebar did not invert on light themes the way every other overlay
+  token does; they are now derived tokens that follow the theme. And
+  `ToolCallCard` referenced an undefined `--color-text`, so one label rendered with
+  no colour at all.
+
+  Six items deviate from the audit as written, deliberately, and the reasons are
+  recorded in the doc: `ActivityList` keeps its inline cluster rather than grow its
+  hit target, `ActionChip`'s interactive chip stays a `Button` rather than lose its
+  keyboard semantics to a `span`, and `SchemaAutocomplete` stays hand-rolled
+  because a combobox anchored to someone else's textarea is not a popover.
+
+### Patch Changes
+
+- [#146](https://github.com/arshad-shah/verql/pull/146) [`ea6409c`](https://github.com/arshad-shah/verql/commit/ea6409ce5f6c555832a8a8a36e8b93cec25ff2c2) Thanks [@arshad-shah](https://github.com/arshad-shah)! - Testing: two adversarial coverage passes over the least-covered high-risk code.
+
+  Coverage had never been measured in this repo — `@vitest/coverage-v8` was a
+  dependency that nothing configured — so these passes started by finding out where
+  the holes actually were, then went by risk rather than by size.
+
+  The first pass took the trust boundaries and the pure-logic gaps: `src/main/ipc`
+  (every renderer→main call, where a bug is a security bug), `src/main/mcp` (the
+  external tool surface), the renderer hooks, and the seven Zustand stores with no
+  test file at all. The second took what it did not reach: the AI plugin's
+  conversation loop and token budget, the plugin host lifecycle, settings and
+  connections, the explorer and query surfaces, the shell, the interactive
+  primitives, and the mongodb/redis/postgres/snowflake drivers.
+
+  Every area was then adversarially mutation-tested — break the source, confirm the
+  tests fail, restore — and any test that survived a mutation was strengthened.
+  That step is what separates a real test from a coverage filler, and it is how the
+  plugin icon vulnerability fixed in this release was found.
+
+  The tests deliberately do not chase the percentage. This repo already had suites
+  that render a component, assert its labels appear, and validate nothing — one
+  `ContextMenu` suite never right-clicked, so the single interaction that component
+  exists for was untested. Those pass against a completely broken implementation
+  while producing real coverage, and a percentage target is best satisfied by
+  writing more of them.
+
+  Several genuine bugs surfaced and are documented by tests asserting today's
+  behaviour rather than silently changed — each is a behaviour change and belongs
+  in its own release. The notable ones: Mongo `distinct` results are shredded
+  because the formatter branches only on `Array.isArray`; the explorer tree cannot
+  distinguish "loaded but empty" from "still loading", so a schema-less driver
+  shows a permanent loading state; and an AI approval arriving in a narrow window
+  is swallowed and treated as a rejection.
+
+- [#149](https://github.com/arshad-shah/verql/pull/149) [`f6e5263`](https://github.com/arshad-shah/verql/commit/f6e5263f987f5bbd210dc7fca15d68e70bb13d38) Thanks [@arshad-shah](https://github.com/arshad-shah)! - Testing: turn coverage into a ratchet that CI enforces.
+
+  `@vitest/coverage-v8` was already a dependency but had never been configured, so
+  coverage had never been measured and nothing stopped a change from lowering it.
+  The unit project now reports coverage through `pnpm test:coverage`, and CI runs
+  that instead of a bare `vitest run --project unit`.
+
+  `vitest.config.ts` gains a `coverage` block whose `thresholds` are pinned to the
+  measured floor rather than to an aspiration. CI fails below the floor, so
+  coverage can only go up; raising it means raising the floor in the same PR.
+  Verified by temporarily demanding more than the codebase had and confirming a
+  non-zero exit and an explicit threshold error.
+
+  When the ratchet was first pinned the floor was statements 33.52, branches 28.95,
+  functions 28.40, lines 35.34, across 1646 passing tests in 180 files. The
+  behavioural test passes in this same release raised it well past that, and the
+  floor was raised with them each time — which is the mechanism working as
+  intended rather than a number to admire.
+
+  Two things the numbers do not say, both noted in the config so the next reader
+  doesn't misread them. The floor covers the `unit` project only — the `storybook`
+  project renders components in a real browser and isn't counted, so component
+  percentages understate reality. And a threshold is a ratchet, not a goal:
+  percentage is trivially satisfied by tests that render code without asserting
+  behaviour, so the floor exists to prevent regression, not to be chased.
+
+  `src/preload/**` and the renderer bootstrap are excluded — entry points with no
+  logic worth asserting.
+
+- [#146](https://github.com/arshad-shah/verql/pull/146) [`ea6409c`](https://github.com/arshad-shah/verql/commit/ea6409ce5f6c555832a8a8a36e8b93cec25ff2c2) Thanks [@arshad-shah](https://github.com/arshad-shah)! - Docs: audit every page against the source and fix what had drifted.
+
+  Every document in `docs/` and its `site/` counterpart was checked one at a time,
+  claim by claim, against the actual code — roughly 650 factual claims verified,
+  64 corrections. Each page was then re-checked by a second pass whose job was to
+  assume the first had been lazy, and to read the diff for errors the audit itself
+  introduced.
+
+  The user guide had drifted furthest, and in the way that matters most: it still
+  told Windows users to download and run an unsigned `.exe`, and to verify it.
+  That installer does not exist — Verql ships on Windows through the Microsoft
+  Store, which updates and signs itself. The Linux Homebrew formula was missing
+  from the update instructions entirely.
+
+  `docs/plugin-audit.md` is pure status ("fully wired" / "partly wired" / "not
+  wired") and so rots fastest; every marker was re-derived from source, and 12 were
+  wrong.
+
+  The menu and design-system sections were deliberately left alone — they are being
+  rewritten in [#146](https://github.com/arshad-shah/verql/issues/146) and are documented there.
+
+- [#146](https://github.com/arshad-shah/verql/pull/146) [`ea6409c`](https://github.com/arshad-shah/verql/commit/ea6409ce5f6c555832a8a8a36e8b93cec25ff2c2) Thanks [@arshad-shah](https://github.com/arshad-shah)! - Security: a plugin's manifest icon could read arbitrary files.
+
+  `plugins:list` resolved a plugin's `manifest.icon` against the plugin's own
+  directory with `path.resolve` and no containment check, then base64-encoded
+  whatever it found and returned it to the renderer. Because a manifest is
+  attacker-controlled for any third-party plugin, an entry like
+  `"icon": "../../../../etc/passwd"` — or any absolute path — escaped the plugin's
+  directory and the file's contents were handed back as the plugin's "icon".
+
+  Any installed plugin could therefore read any file the app process can read,
+  with no prompt, no permission grant, and no capability gate. The file extension
+  only ever selected a MIME type, so it restricted nothing: a traversal to
+  `../secret.png` was read and returned too.
+
+  **Who is affected:** anyone who has installed a third-party plugin. Bundled
+  plugins were never able to reach this path. There is no indication of
+  exploitation, and nothing in the app itself triggers it — a plugin had to ask.
+
+  **The fix:** icon paths are now pinned to the plugin's own directory through a
+  shared `resolveWithinPlugin()` guard, and an unknown extension means the file is
+  never opened rather than read and mislabelled. The same guard has always
+  protected `manifest.main`, but it was written inline in the plugin host and
+  never shared — which is precisely why `icon` shipped without it. Both call-sites
+  now use the one guard, so a third manifest-driven path cannot forget it.
+
+  Found by an adversarial test-hardening pass, and now pinned by regression tests
+  covering traversal, absolute paths, a traversal wearing an image extension, a
+  non-image inside the plugin directory, and a legitimate nested icon still
+  resolving.
+
+- [#146](https://github.com/arshad-shah/verql/pull/146) [`ea6409c`](https://github.com/arshad-shah/verql/commit/ea6409ce5f6c555832a8a8a36e8b93cec25ff2c2) Thanks [@arshad-shah](https://github.com/arshad-shah)! - Internal: route hardcoded identifiers through their constants, and guard it.
+
+  `IPC_CHANNELS` has always been single-sourced and guarded by an audit test, but
+  that pattern stopped there. ~131 raw literals across the codebase re-typed an id
+  that already lived in a constant, or should have. A re-typed identifier is
+  type-checked at some call sites and silently wrong at others, and it is how the
+  two sides of a boundary drift apart.
+
+  Seven constant sets now exist where the code previously only had a union type
+  with no runtime companion, so every call site hand-typed the string:
+  `CONTRIBUTION_KIND`, `CAPABILITY_SURFACE`, `PLUGIN_PERMISSION`, `PLUGIN_PHASE`,
+  `ACTIVITY_KIND`, `CONFIG_KEY`, `DEFAULT_THEME_ID`, plus `AI_CHAT_PANEL_ID` for a
+  plugin-namespaced panel id that was duplicated across five files.
+
+  A new audit test generalises the IPC guard to 18 constant sets. It derives each
+  set's values by importing the defining module rather than copying the strings —
+  a guardrail that duplicates what it guards is its own worst example — and scopes
+  each check to the specific call-site shapes the codebase actually uses, because
+  half these values ('error', 'active', 'query', 'dark') are ordinary words
+  elsewhere and a guard that flags every 'error' gets deleted within a week.
+
+  Driver ids were deliberately NOT swept into a constant. Some of those literals
+  are the renderer branching on a driver's identity, which CLAUDE.md's ownership
+  rule exists to prevent; a constant would only have made the wrong thing tidier.
+  They are reported instead — see the PR.
+
 ## 1.5.0
 
 ### Minor Changes

@@ -7,12 +7,14 @@ import { useClipboard } from '@/hooks/useClipboard'
 import { useDataNouns } from '@/hooks/useDataNouns'
 import { initialAutoCommit } from '@/lib/initial-autocommit'
 import { ContextMenu } from '@/primitives/surfaces/ContextMenu'
+import type { MenuNode } from '@/primitives/surfaces/menu/types'
 import { IconButton } from '@/primitives/forms/Button'
 import { Box, Text } from '@/primitives'
 import { ColumnRow } from './ColumnRow'
 import { HighlightedText } from './HighlightedText'
 import { IPC_CHANNELS } from '@shared/ipc'
 import { useTranslation } from '@/i18n/I18nProvider'
+import { treeIndent } from '@/lib/math'
 
 interface ViewNodeProps {
   viewName: string
@@ -60,16 +62,22 @@ export function ViewNode({ viewName, connectionId, schema, depth, highlightQuery
     updateTabSql(tabId, query)
   }
 
-  const menuItems = [
+  const menuItems: MenuNode[] = [
     {
+      kind: 'item',
+      id: 'open-in-query-tab',
       label: t('explorer.menu.openInQueryTab'),
       onSelect: handleOpenInTab,
     },
     {
+      kind: 'item',
+      id: 'copy-view-name',
       label: t('explorer.menu.copyViewName'),
       onSelect: () => copy(viewName, { toast: 'explorer.toast.copiedViewName' }),
     },
     {
+      kind: 'item',
+      id: 'copy-sample-query',
       label: t('explorer.menu.copySampleQuery'),
       onSelect: async () => {
         const query = await getSampleQuery()
@@ -78,7 +86,7 @@ export function ViewNode({ viewName, connectionId, schema, depth, highlightQuery
     },
   ]
 
-  const paddingLeft = 8 + depth * 16
+  const paddingLeft = treeIndent(depth)
 
   if (!isExpanded) {
     return (
@@ -98,13 +106,15 @@ export function ViewNode({ viewName, connectionId, schema, depth, highlightQuery
             className="text-info shrink-0"
             strokeWidth={1.8}
           />
-          <Box
+          <Text
             as="span"
-            className="flex-1 truncate min-w-0 text-xs text-text-primary"
+            truncate
+            size="xs"
+            className="flex-1 min-w-0"
             title={viewName}
           >
             <HighlightedText text={viewName} query={highlightQuery ?? ''} />
-          </Box>
+          </Text>
           <Box
             as="span"
             className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center"
@@ -150,13 +160,16 @@ export function ViewNode({ viewName, connectionId, schema, depth, highlightQuery
             className="text-info shrink-0"
             strokeWidth={1.8}
           />
-          <Box
+          <Text
             as="span"
-            className="flex-1 truncate min-w-0 text-xs font-medium text-text-primary"
+            truncate
+            size="xs"
+            weight="medium"
+            className="flex-1 min-w-0"
             title={viewName}
           >
             <HighlightedText text={viewName} query={highlightQuery ?? ''} />
-          </Box>
+          </Text>
         </Box>
 
         {/* Column rows */}

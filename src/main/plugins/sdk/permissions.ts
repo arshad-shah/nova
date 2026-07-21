@@ -24,10 +24,29 @@
 import type { KeyringAccess, ConnectionAccess, Disposable } from './types'
 import type { ConnectionProfile, QueryResult } from '@shared/types'
 
+/** Every plugin permission id, named once so call sites stop re-typing the
+ *  raw string (mirrors IPC_CHANNELS / ACTIVITY_PANEL's shape). */
+export const PLUGIN_PERMISSION = {
+  KEYRING: 'keyring',
+  CONNECTIONS: 'connections',
+  IPC: 'ipc',
+  NETWORK: 'network',
+  FILESYSTEM: 'filesystem',
+  PROCESS: 'process',
+} as const
+
 /** Capabilities the host actually gates. Using them without a grant throws. */
-export const ENFORCED_PERMISSIONS = ['keyring', 'connections', 'ipc'] as const
+export const ENFORCED_PERMISSIONS = [
+  PLUGIN_PERMISSION.KEYRING,
+  PLUGIN_PERMISSION.CONNECTIONS,
+  PLUGIN_PERMISSION.IPC,
+] as const
 /** Capabilities declared for transparency but not enforceable in-process. */
-export const ADVISORY_PERMISSIONS = ['network', 'filesystem', 'process'] as const
+export const ADVISORY_PERMISSIONS = [
+  PLUGIN_PERMISSION.NETWORK,
+  PLUGIN_PERMISSION.FILESYSTEM,
+  PLUGIN_PERMISSION.PROCESS,
+] as const
 export const ALL_PERMISSIONS = [...ENFORCED_PERMISSIONS, ...ADVISORY_PERMISSIONS] as const
 
 export type EnforcedPermission = (typeof ENFORCED_PERMISSIONS)[number]
@@ -147,7 +166,9 @@ export function guardKeyring(
 ): KeyringAccess {
   if (grant.trusted) return keyring
   const need = (): void => {
-    if (!hasPermission(grant, 'keyring')) throw new PermissionDeniedError(pluginName, 'keyring')
+    if (!hasPermission(grant, PLUGIN_PERMISSION.KEYRING)) {
+      throw new PermissionDeniedError(pluginName, PLUGIN_PERMISSION.KEYRING)
+    }
   }
   // Async methods are `async` so a denied call rejects (rather than throwing
   // synchronously before the caller can `.catch`). Sync methods throw directly.
@@ -169,8 +190,8 @@ export function guardConnections(
 ): ConnectionAccess {
   if (grant.trusted) return connections
   const need = (): void => {
-    if (!hasPermission(grant, 'connections')) {
-      throw new PermissionDeniedError(pluginName, 'connections')
+    if (!hasPermission(grant, PLUGIN_PERMISSION.CONNECTIONS)) {
+      throw new PermissionDeniedError(pluginName, PLUGIN_PERMISSION.CONNECTIONS)
     }
   }
   return {

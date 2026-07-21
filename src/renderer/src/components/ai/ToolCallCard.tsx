@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { ChevronDown, ChevronRight, CheckCircle2, XCircle, ShieldQuestion, Loader2 } from 'lucide-react'
-import type { AIChatMessage } from '@shared/ai-types'
+import { ChevronDown, ChevronRight, CheckCircle2, XCircle, ShieldQuestion } from 'lucide-react'
+import { Spinner } from '@/primitives/feedback/Spinner'
+import { PERFORM_APP_ACTION_TOOL_ID, type AIChatMessage } from '@shared/ai-types'
 import { useAIStore } from '@/stores/ai'
 import { Text } from '@/primitives/typography/Text'
 import { Box } from '@/primitives/layout/Box'
@@ -57,7 +58,7 @@ function parseToolResult(content: string): { success: boolean; summary: string; 
 function getToolLabel(name: string, args: string): string {
   // Resolve agentic UI actions to their friendly title (e.g. "Open ER Diagram")
   // rather than showing the raw tool/action id.
-  if (name === 'perform_app_action') {
+  if (name === PERFORM_APP_ACTION_TOOL_ID) {
     try {
       const actionId = (JSON.parse(args) as { actionId?: string }).actionId
       const title = actionId ? appActions.get(actionId)?.title : undefined
@@ -98,13 +99,13 @@ export function ToolCallCard({ message, result }: ToolCallCardProps) {
         {isWaitingApproval ? (
           <ShieldQuestion size={12} className="text-warning shrink-0" />
         ) : isExecuting ? (
-          <Loader2 size={12} className="text-[var(--color-accent)] shrink-0 animate-spin" />
+          <Spinner size="xs" className="shrink-0" />
         ) : parsed?.success ? (
           <CheckCircle2 size={12} className="text-[var(--color-success)] shrink-0" />
         ) : (
           <XCircle size={12} className="text-[var(--color-error)] shrink-0" />
         )}
-        <Box as="span" className="flex-1 text-xs font-medium text-[var(--color-text)]">{label}</Box>
+        <Text as="span" size="xs" weight="medium" className="flex-1">{label}</Text>
         {isWaitingApproval && (
           <Box as="span" className="text-[10px] text-warning">{t('aiui.tool.awaitingApproval')}</Box>
         )}
@@ -134,7 +135,7 @@ export function ToolCallCard({ message, result }: ToolCallCardProps) {
       {parsed && (
         <Box className="px-3 py-2">
           <Text size="xs" color={parsed.success ? 'secondary' : 'error'}>
-            {toolCall.name === 'perform_app_action' && parsed.success ? label : parsed.summary}
+            {toolCall.name === PERFORM_APP_ACTION_TOOL_ID && parsed.success ? label : parsed.summary}
           </Text>
         </Box>
       )}

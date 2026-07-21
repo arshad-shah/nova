@@ -79,9 +79,15 @@ export function App() {
   const paletteOpen = useUiStore(s => s.commandPaletteOpen)
   const aboutModalOpen = useUiStore(s => s.aboutModalOpen)
   // Shared across every close site (tab-bar X, Cmd+W, context menu). The
-  // store gives us a single pending tab id; setting it raises the dialog.
-  const pendingCloseId = usePendingClose(s => s.pendingId)
-  const clearPendingClose = usePendingClose(s => s.clear)
+  // store partitions closes into two lanes: a transaction queue, resolved
+  // one tab at a time (each needs its own Commit/Rollback against its own
+  // session, so there's no coherent bulk answer), and a dirty batch that
+  // shares one combined discard confirm. Either being non-empty raises the
+  // guard dialog.
+  const pendingTxnQueue = usePendingClose(s => s.txnQueue)
+  const pendingDirtyBatch = usePendingClose(s => s.dirtyBatch)
+  const resolvePendingHead = usePendingClose(s => s.resolveHead)
+  const clearPendingBatch = usePendingClose(s => s.clearBatch)
 
   // Global shell behaviour — keyboard shortcuts, dropped-file forwarding and
   // native-menu commands — lives in focused hooks (see ./hooks).
@@ -220,8 +226,10 @@ export function App() {
         <PluginRestartBanner />
       </SectionErrorBoundary>
       <TabCloseGuard
-        pendingCloseId={pendingCloseId}
-        clearPendingClose={clearPendingClose}
+        txnQueue={pendingTxnQueue}
+        dirtyBatch={pendingDirtyBatch}
+        resolveHead={resolvePendingHead}
+        clearBatch={clearPendingBatch}
         closeTab={closeTab}
       />
     </Flex>

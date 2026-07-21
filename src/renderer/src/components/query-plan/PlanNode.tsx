@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { ChevronRight, ChevronDown } from 'lucide-react'
 import type { PlanNode as PlanNodeType } from '@shared/types'
 import { Box, Flex, Text } from '@/primitives'
+import { Progress } from '@/primitives/feedback/Progress'
 
 interface Props {
   node: PlanNodeType
@@ -13,6 +14,13 @@ function costColor(ratio: number): string {
   if (ratio < 0.3) return 'var(--color-success)'
   if (ratio < 0.6) return 'var(--color-warning)'
   return 'var(--color-error)'
+}
+
+// Same thresholds as costColor, expressed as a Progress `tone` for the bar.
+function costTone(ratio: number): 'success' | 'warning' | 'error' {
+  if (ratio < 0.3) return 'success'
+  if (ratio < 0.6) return 'warning'
+  return 'error'
 }
 
 export function PlanNodeView({ node, maxCost, depth = 0 }: Props) {
@@ -45,9 +53,13 @@ export function PlanNodeView({ node, maxCost, depth = 0 }: Props) {
 
         {node.table && <Text size="xs" color="accent">{node.table}</Text>}
 
-        <Box className="flex-1 mx-2 h-2 bg-bg-tertiary rounded-full overflow-hidden">
-          <Box className="h-full rounded-full transition-all" style={{ width: `${Math.max(costRatio * 100, 2)}%`, backgroundColor: color }} />
-        </Box>
+        <Progress
+          value={Math.max(costRatio * 100, 2)}
+          tone={costTone(costRatio)}
+          size="lg"
+          className="flex-1 mx-2 bg-bg-tertiary shadow-none"
+          aria-label={`cost ${node.cost.toFixed(1)}`}
+        />
 
         <Text size="xs" color="muted" className="shrink-0">cost: {node.cost.toFixed(1)}</Text>
         <Text size="xs" color="muted" className="shrink-0">rows: {node.rows}</Text>

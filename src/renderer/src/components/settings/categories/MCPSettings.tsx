@@ -7,7 +7,8 @@ import { SettingRow } from '../SettingRow'
 import { PluginContributedSettings } from '../PluginContributedSettings'
 import { Copy, Check, RefreshCw } from 'lucide-react'
 import { IPC_CHANNELS, IPC_EVENTS } from '@shared/ipc'
-import { buildMcpClientConfig, type MCPServerStatus, type MCPToolInfo, type MCPActivityEntry } from '@shared/mcp'
+import { buildMcpClientConfig, MCP_ACTIVITY_STATUS, type MCPServerStatus, type MCPToolInfo, type MCPActivityEntry } from '@shared/mcp'
+import { CONFIG_KEY } from '@shared/settings'
 
 const DEFAULT_STATUS: MCPServerStatus = { running: false, port: 3100, clients: 0, token: '', autoSelectedPort: false }
 
@@ -70,7 +71,7 @@ export function MCPSettings() {
   }
 
   const setReadOnly = async (v: boolean) => {
-    await setSetting('mcp.readOnly', v)
+    await setSetting(CONFIG_KEY.MCP_READ_ONLY, v)
     if (status.running) { await window.electronAPI.invoke(IPC_CHANNELS.MCP_RELOAD); await refresh() }
   }
 
@@ -146,7 +147,7 @@ export function MCPSettings() {
         {activity.length === 0 && <Text size="xs" color="muted">{t('settings.mcp.noActivity')}</Text>}
         {[...activity].reverse().map(a => (
           <Flex key={a.id} direction="row" align="center" gap="sm">
-            <Text as="span" size="xs" color={a.status === 'ok' ? 'success' : a.status === 'rejected' ? 'warning' : 'error'}>●</Text>
+            <Text as="span" size="xs" color={a.status === MCP_ACTIVITY_STATUS.OK ? 'success' : a.status === MCP_ACTIVITY_STATUS.REJECTED ? 'warning' : 'error'}>●</Text>
             <Text size="xs" className="font-mono">{a.toolId}</Text>
             <Text size="xs" color="muted" truncate>{a.paramsSummary}</Text>
             <Text size="xs" color="muted">{a.durationMs}ms</Text>

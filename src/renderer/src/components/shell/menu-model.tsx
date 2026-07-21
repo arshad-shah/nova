@@ -8,6 +8,7 @@ import {
 import { getLatestReleaseNote } from '@/lib/release-notes'
 import { IPC_CHANNELS } from '@shared/ipc'
 import { MENU_ACTION, menusFor, itemAccelerator, type MenuActionId } from '@shared/menus'
+import { KEYBINDING_ACTION } from '@shared/settings'
 import { useTranslation } from '@/i18n/I18nProvider'
 import { isMac } from '@/lib/platform'
 import { initialAutoCommit } from '@/lib/initial-autocommit'
@@ -124,7 +125,7 @@ export const menuActions: Record<MenuActionId, MenuAction> = {
   [MENU_ACTION.RELOAD]: { icon: RefreshCw, run: () => void window.electronAPI?.invoke(IPC_CHANNELS.WINDOW_RELOAD) },
   [MENU_ACTION.TOGGLE_DEV_TOOLS]: { icon: Wrench, run: () => void window.electronAPI?.invoke(IPC_CHANNELS.WINDOW_TOGGLE_DEVTOOLS) },
 
-  [MENU_ACTION.RUN]: { icon: Play, run: () => editorRegistry.runAction('execute-query'), enabled: hasEditor },
+  [MENU_ACTION.RUN]: { icon: Play, run: () => editorRegistry.runAction(KEYBINDING_ACTION.EXECUTE_QUERY), enabled: hasEditor },
   [MENU_ACTION.RUN_SELECTION]: { icon: ListChecks, run: runSelection, enabled: () => editorRegistry.getSelectedSql() !== '' },
   [MENU_ACTION.SAVE]: { icon: Save, run: saveActiveTab, enabled: hasActiveTab },
   [MENU_ACTION.FORMAT_DOCUMENT]: { icon: Code2, run: () => editorRegistry.runAction('editor.action.formatDocument'), enabled: hasEditor },

@@ -25,6 +25,7 @@ import {
   guardConnections,
   hasPermission,
   PermissionDeniedError,
+  PLUGIN_PERMISSION,
   type PermissionGrant,
   type PluginPermission,
 } from './permissions'
@@ -261,7 +262,9 @@ export function createPluginContext(deps: ContextDeps): PluginContext {
 
   const ipc: PluginIpc = {
     handle(channel, handler) {
-      if (!hasPermission(grant, 'ipc')) throw new PermissionDeniedError(pluginName, 'ipc')
+      if (!hasPermission(grant, PLUGIN_PERMISSION.IPC)) {
+        throw new PermissionDeniedError(pluginName, PLUGIN_PERMISSION.IPC)
+      }
       ipcMain.handle(channel, (_event, ...args) =>
         (handler as (...a: unknown[]) => unknown)(...args)
       )

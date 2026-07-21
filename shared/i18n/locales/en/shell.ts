@@ -16,6 +16,7 @@ export const shell = {
     scrollLeft: 'Scroll tabs left',
     scrollRight: 'Scroll tabs right',
     newTab: 'New Query Tab',
+    tablistLabel: 'Open tabs',
     closeTab: 'Close tab',
     closeTabUnsaved: 'Close tab (unsaved changes)',
     unsavedChanges: 'Unsaved changes',
@@ -148,7 +149,10 @@ export const shell = {
   confirmClose: {
     unsavedTitle: 'Unsaved changes',
     unsavedMessage: '{label} has unsaved changes. Close anyway?',
+    unsavedTitleMany: 'Unsaved changes in {count, plural, one {# tab} other {# tabs}}',
+    unsavedMessageMany: '{labels} have unsaved changes. Close anyway?',
     discardChanges: 'Discard changes',
+    discardChangesMany: 'Discard all',
     keepEditing: 'Keep editing',
     thisTab: 'this tab',
   },

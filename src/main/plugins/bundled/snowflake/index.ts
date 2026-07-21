@@ -4,8 +4,8 @@ import type { CompletionItem } from '@shared/plugin-ui-types'
 import { SnowflakeAdapter } from './snowflake-adapter'
 import { sqlExporter, sqlImporter } from './sql-format'
 import { createRelationalGetTableData } from '../../sdk/relational-helpers'
-import { quoteIdentifier } from '../../sdk/identifier'
-import { generateCreateTable, formatSql } from '../../sdk/sql-format'
+import { formatSql, createSampleQuery, createMigrationDdl } from '../../sdk/sql-format'
+import { extractSnowflakeName } from './naming'
 
 const SNOWFLAKE_QUOTE = '"' as const
 
@@ -196,6 +196,7 @@ export function activate(ctx: PluginContext): void {
     placeholderStyle: 'positional',
     editorLanguage: 'sql',
     statementSyntax: 'sql',
+    presentation: { abbreviation: 'SF', tone: 'info' },
     nouns: {
       object: { one: 'table', many: 'tables' },
       field: { one: 'column', many: 'columns' },
@@ -224,20 +225,10 @@ export function activate(ctx: PluginContext): void {
       { key: 'database', label: 'Database', type: 'select', fetchable: true, step: 2 },
       { key: 'schema', label: 'Schema', type: 'select', fetchable: true, step: 2, default: 'PUBLIC' },
     ],
-    sampleQuery: async (table, schema) => {
-      const qualified = schema
-        ? quoteIdentifier([schema, table], SNOWFLAKE_QUOTE)
-        : quoteIdentifier(table, SNOWFLAKE_QUOTE)
-      return `SELECT * FROM ${qualified} LIMIT 100;`
-    },
+    sampleQuery: createSampleQuery(SNOWFLAKE_QUOTE),
     getTableData: createRelationalGetTableData(SNOWFLAKE_QUOTE),
     explain: { supportsAnalyze: false, format: 'text', statement: 'EXPLAIN' },
-    generateMigrationDdl: async (tableName, columns) =>
-      generateCreateTable(
-        tableName,
-        columns.map(c => ({ ...c, isForeignKey: false, references: undefined })),
-        SNOWFLAKE_QUOTE,
-      ),
+    generateMigrationDdl: createMigrationDdl(SNOWFLAKE_QUOTE),
   })
 
   // ── Declarative UI: Toolbar selectors (Snowsight-style Role + Warehouse) ──
@@ -250,7 +241,7 @@ export function activate(ctx: PluginContext): void {
   // ── Dynamic resolvers ─────────────────────────────────────────────────────
 
   const extractName = (r: Record<string, unknown>) => {
-    const name = String(r['"name"'] ?? r.name ?? '')
+    const name = extractSnowflakeName(r)
     return { value: name, label: name }
   }
   const filterEmpty = (o: { value: string }) => o.value !== ''

@@ -1,6 +1,6 @@
 {
   "name": "verql",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "private": true,
   "description": "Verql — a fast, extensible desktop database client.",
   "license": "MIT",
@@ -21,6 +21,7 @@
     "postinstall": "electron-rebuild --only better-sqlite3",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:coverage": "vitest run --project unit --coverage",
     "changeset": "changeset",
     "version": "changeset version",
     "release:tag": "node scripts/release-tag.mjs",

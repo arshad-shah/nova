@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
-import { AlertTriangle, Loader2, RotateCcw, X, Check } from 'lucide-react'
+import { AlertTriangle, RotateCcw, X, Check } from 'lucide-react'
+import { Spinner } from '@/primitives/feedback/Spinner'
 import { useAIStore } from '@/stores/ai'
 import { useTranslation } from '@/i18n/I18nProvider'
 import { Box, Button } from '@/primitives'
@@ -113,7 +114,7 @@ export function AutoCompactBanner() {
   if (phase.kind === 'compacting') {
     return (
       <Wrapper tone="info">
-        <Loader2 size={12} className="shrink-0 animate-spin" />
+        <Spinner size="xs" className="shrink-0 text-current" />
         <Box as="span" className="flex-1 text-[11px]">{t('aiui.autoCompact.compacting')}</Box>
       </Wrapper>
     )

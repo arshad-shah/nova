@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { useAIStore } from '@/stores/ai'
+import { useAIStore, AI_CHAT_PANEL_ID } from '@/stores/ai'
 import { useUiStore } from '@/stores/ui'
 import { Box } from '@/primitives/layout/Box'
 import { MessageThread } from './MessageThread'
@@ -9,7 +9,7 @@ import { ChatPanelHeader } from './ChatPanelHeader'
 
 export function ChatPanel() {
   const panelOpen = useUiStore(
-    s => s.secondarySidebarVisible && s.secondaryActivePanel === 'plugin:ai-chat'
+    s => s.secondarySidebarVisible && s.secondaryActivePanel === AI_CHAT_PANEL_ID
   )
   const loadConfiguredProviders = useAIStore(s => s.loadConfiguredProviders)
   const loadModels = useAIStore(s => s.loadModels)

@@ -1,26 +1,14 @@
 import { useState, useEffect, useRef } from 'react'
+import { matchesFilter } from '@/lib/fuzzy-match'
 import { useConnectionsStore } from '@/stores/connections'
 import { Search, Plus, Check } from 'lucide-react'
-import { Button, Input, Text, Box, Flex, ScrollArea } from '@/primitives'
+import { Button, Input, Text, Box, Flex, ScrollArea, StatusDot } from '@/primitives'
 import { cn } from '@/primitives/utils/cn'
 import { useClickOutside } from '@/hooks/useClickOutside'
+import { useEscapeKey } from '@/hooks/useEscapeKey'
 import { useTranslation } from '@/i18n/I18nProvider'
-
-const DB_ABBREVIATIONS: Record<string, string> = {
-  postgresql: 'PG',
-  mysql: 'MY',
-  sqlite: 'SL',
-  mongodb: 'MG',
-  redis: 'RD',
-}
-
-const DB_TYPE_COLORS: Record<string, string> = {
-  postgresql: 'text-accent',
-  mysql: 'text-warning',
-  sqlite: 'text-info',
-  mongodb: 'text-data-accent',
-  redis: 'text-error',
-}
+import { useDriverPresentation } from '@/hooks/useDriverPresentation'
+import { DRIVER_TONE_TEXT } from '@/lib/driver-presentation'
 
 interface ConnectionSwitcherProps {
   isOpen: boolean
@@ -36,6 +24,10 @@ export function ConnectionSwitcher({ isOpen, onClose, onNewConnection }: Connect
   const panelRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
+  // Each driver declares its own chip label and tone; pre-fetch for every type
+  // in the list so the lookup is synchronous while rendering rows.
+  const presentationOf = useDriverPresentation(connections.map((c) => c.type))
+
   useEffect(() => {
     if (isOpen) {
       setFilter('')
@@ -43,26 +35,12 @@ export function ConnectionSwitcher({ isOpen, onClose, onNewConnection }: Connect
     }
   }, [isOpen])
 
-  useEffect(() => {
-    if (!isOpen) return
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
-    }
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [isOpen, onClose])
-
+  useEscapeKey(onClose, isOpen)
   useClickOutside(panelRef, onClose, { enabled: isOpen, deferAttach: true })
 
   if (!isOpen) return null
 
-  const lowerFilter = filter.toLowerCase()
-  const filtered = connections.filter(
-    (c) =>
-      c.name.toLowerCase().includes(lowerFilter) ||
-      c.database.toLowerCase().includes(lowerFilter) ||
-      (c.host ?? '').toLowerCase().includes(lowerFilter)
-  )
+  const filtered = connections.filter((c) => matchesFilter(filter, c.name, c.database, c.host))
 
   const activeConn = filtered.find((c) => c.id === activeConnectionId)
   const connectedConns = filtered.filter(
@@ -80,8 +58,8 @@ export function ConnectionSwitcher({ isOpen, onClose, onNewConnection }: Connect
   }
 
   const renderConnection = (c: typeof connections[0], isActive: boolean) => {
-    const abbr = DB_ABBREVIATIONS[c.type] ?? c.type.slice(0, 2).toUpperCase()
-    const color = DB_TYPE_COLORS[c.type] ?? 'text-text-primary'
+    const { abbreviation: abbr, tone } = presentationOf(c.type)
+    const color = DRIVER_TONE_TEXT[tone]
     const isLive = connectedIds.has(c.id)
 
     return (
@@ -95,11 +73,10 @@ export function ConnectionSwitcher({ isOpen, onClose, onNewConnection }: Connect
           !isLive && 'opacity-50'
         )}
       >
-        <div
-          className={cn(
-            'h-1.75 w-1.75 shrink-0 rounded-full',
-            isLive ? 'bg-success shadow-[0_0_4px_rgba(40,200,64,0.4)]' : 'bg-text-tertiary'
-          )}
+        <StatusDot
+          size="sm"
+          tone={isLive ? 'success' : 'muted'}
+          className={isLive ? 'shadow-[0_0_4px_rgba(40,200,64,0.4)]' : undefined}
         />
         <Box className="min-w-0 flex-1">
           <Flex align="center" gap="xs">
@@ -159,7 +136,7 @@ export function ConnectionSwitcher({ isOpen, onClose, onNewConnection }: Connect
         )}
 
         {savedConns.length > 0 && (
-          <Box className="px-1.5 pt-0.5 border-t border-white/3">
+          <Box className="px-1.5 pt-0.5 border-t border-border-subtle">
             <Text as="p" weight="semibold" className="px-1.5 py-1 text-[8px] uppercase tracking-wider text-text-tertiary">
               {t('shell.connectionSwitcher.saved')}
             </Text>

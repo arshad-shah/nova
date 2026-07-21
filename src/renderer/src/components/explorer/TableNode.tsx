@@ -3,7 +3,8 @@ import { ChevronRight, ChevronDown, Table2 } from 'lucide-react'
 import { useUiStore } from '@/stores/ui'
 import { useSchemaStore } from '@/stores/schema'
 import { ContextMenu } from '@/primitives/surfaces/ContextMenu'
-import { Box, Card, Text, Button } from '@/primitives'
+import type { MenuNode } from '@/primitives/surfaces/menu/types'
+import { Badge, Box, Card, Text, Button } from '@/primitives'
 import { ColumnRow } from './ColumnRow'
 import { HighlightedText } from './HighlightedText'
 import { TableHoverActions } from './TableHoverActions'
@@ -11,6 +12,7 @@ import { useTableNodeActions } from './useTableNodeActions'
 import { formatCompactNumber } from '@/lib/format'
 import { useDataNouns } from '@/hooks/useDataNouns'
 import { useTranslation } from '@/i18n/I18nProvider'
+import { treeIndent } from '@/lib/math'
 
 interface TableNodeProps {
   tableName: string
@@ -65,7 +67,7 @@ export function TableNode({
     toggleTreeNode(nodeKey)
   }
 
-  const paddingLeft = 8 + depth * 16
+  const paddingLeft = treeIndent(depth)
 
   // ── Shared header content ──────────────────────────────────────────────────
 
@@ -96,13 +98,15 @@ export function TableNode({
         >
           {chevron}
           <Table2 size={14} className="text-accent shrink-0" strokeWidth={1.8} />
-          <Box
+          <Text
             as="span"
-            className="flex-1 truncate min-w-0 text-xs text-text-primary"
+            truncate
+            size="xs"
+            className="flex-1 min-w-0"
             title={tableName}
           >
             <HighlightedText text={tableName} query={highlightQuery ?? ''} />
-          </Box>
+          </Text>
           {rowCountDisplay}
 
           <TableHoverActions
@@ -146,25 +150,28 @@ export function TableNode({
         >
           {chevron}
           <Table2 size={14} className="text-accent shrink-0" strokeWidth={1.8} />
-          <Box
+          <Text
             as="span"
-            className="flex-1 truncate min-w-0 text-xs font-medium text-text-primary"
+            truncate
+            size="xs"
+            weight="medium"
+            className="flex-1 min-w-0"
             title={tableName}
           >
             <HighlightedText text={tableName} query={highlightQuery ?? ''} />
-          </Box>
+          </Text>
 
           {/* Stat pills */}
           <Box as="span" className="flex items-center gap-1 shrink-0">
             {rowCount !== undefined && (
-              <Box as="span" className="px-2 py-0.5 rounded-full text-[10px] bg-bg-elevated text-text-secondary">
+              <Badge size="pill" className="font-normal shadow-none">
                 {t('explorer.table.rows', { value: formatCompactNumber(rowCount), records: rowCount === 1 ? nouns.record.one : nouns.record.many })}
-              </Box>
+              </Badge>
             )}
             {tableIndexes.length > 0 && (
-              <Box as="span" className="px-2 py-0.5 rounded-full text-[10px] bg-bg-elevated text-text-secondary">
+              <Badge size="pill" className="font-normal shadow-none">
                 {t('explorer.table.indexes', { value: tableIndexes.length, n: tableIndexes.length })}
-              </Box>
+              </Badge>
             )}
           </Box>
 

@@ -2,6 +2,7 @@ import type { DbAdapter } from '../../../db/adapter'
 import type { SchemaColumn } from '@shared/types'
 import type { RegisteredExporter } from '../../sdk/exporter-registry'
 import type { RegisteredImporter } from '../../sdk/importer-registry'
+import { errorMessage } from '@shared/errors'
 
 /**
  * MongoDB cannot use the relational `getTableData` helper because there is no
@@ -83,7 +84,7 @@ export const jsonLinesImporter: RegisteredImporter = {
       try {
         doc = JSON.parse(lines[i])
       } catch (err) {
-        errors.push(`Line ${i + 1}: invalid JSON — ${(err as Error).message}`)
+        errors.push(`Line ${i + 1}: invalid JSON — ${errorMessage(err)}`)
         continue
       }
       try {
@@ -94,7 +95,7 @@ export const jsonLinesImporter: RegisteredImporter = {
         }))
         executed++
       } catch (err) {
-        errors.push(`Line ${i + 1}: ${(err as Error).message}`)
+        errors.push(`Line ${i + 1}: ${errorMessage(err)}`)
       }
     }
     return { rows: [], executed, errors }

@@ -1,6 +1,7 @@
 import type { DbAdapter } from '../../db/adapter'
 import { quoteIdentifier, renderPlaceholder } from './identifier'
 import type { PlaceholderStyle } from './types'
+import { errorMessage } from '@shared/errors'
 
 export interface CsvIntoTableOptions {
   tableName: string
@@ -43,12 +44,12 @@ export async function importCsvToTable(
       if (onConflict === 'skip') {
         skipped++
       } else if (onConflict === 'error') {
-        errors.push(`Row ${i + 1}: ${(err as Error).message}`)
+        errors.push(`Row ${i + 1}: ${errorMessage(err)}`)
       } else {
         // 'update' mode: dialect-specific upsert isn't implemented yet.
         // Surface the failure via errors[] so the user sees it; the old
         // behaviour silently dropped every conflict and reported success.
-        errors.push(`Row ${i + 1}: ${(err as Error).message}`)
+        errors.push(`Row ${i + 1}: ${errorMessage(err)}`)
       }
     }
   }

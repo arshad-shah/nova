@@ -6,7 +6,7 @@ import { SqliteAdapter } from './sqlite-adapter'
 import { sqlExporter, sqlImporter } from './sql-format'
 import { createRelationalGetTableData } from '../../sdk/relational-helpers'
 import { quoteIdentifier } from '../../sdk/identifier'
-import { formatSql } from '../../sdk/sql-format'
+import { formatSql, createSampleQuery } from '../../sdk/sql-format'
 import {
   PG_TO_SQLITE, pgToSqliteFallback,
   MYSQL_TO_SQLITE, mysqlToSqliteFallback,
@@ -142,6 +142,7 @@ export function activate(ctx: PluginContext): void {
     placeholderStyle: 'positional',
     editorLanguage: 'sql',
     statementSyntax: 'sql',
+    presentation: { abbreviation: 'SL', tone: 'info' },
     nouns: {
       object: { one: 'table', many: 'tables' },
       field: { one: 'column', many: 'columns' },
@@ -152,12 +153,7 @@ export function activate(ctx: PluginContext): void {
     connectionFields: [
       { key: 'database', label: 'Database File', type: 'file-path', accept: '.db,.sqlite,.sqlite3,.db3', required: true },
     ],
-    sampleQuery: async (table, schema) => {
-      const qualified = schema && schema !== 'main'
-        ? quoteIdentifier([schema, table], SQLITE_QUOTE)
-        : quoteIdentifier(table, SQLITE_QUOTE)
-      return `SELECT * FROM ${qualified} LIMIT 100;`
-    },
+    sampleQuery: createSampleQuery(SQLITE_QUOTE, { qualifySchema: (s) => s !== 'main' }),
     getTableData: createRelationalGetTableData(SQLITE_QUOTE),
     explain: { supportsAnalyze: false, format: 'text', statement: 'EXPLAIN QUERY PLAN' },
     generateMigrationDdl: async (tableName, columns) => {

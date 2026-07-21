@@ -15,6 +15,7 @@ import { installRendererDiagnostics } from '@/lib/store-diagnostics'
 import { hydrateSavedQueries } from '@/components/saved-queries/SavedQueriesPanel'
 import './styles/globals.css'
 import { IPC_CHANNELS } from '@shared/ipc'
+import { CONFIG_KEY } from '@shared/settings'
 
 function AppLoader() {
   const hydrate = useSettingsStore((s) => s.hydrate)
@@ -36,12 +37,12 @@ function AppLoader() {
 
       if (oldTheme || oldSidebarWidth) {
         if (oldTheme) {
-          await window.electronAPI.invoke(IPC_CHANNELS.SETTINGS_SET, 'appearance.theme', oldTheme)
+          await window.electronAPI.invoke(IPC_CHANNELS.SETTINGS_SET, CONFIG_KEY.APPEARANCE_THEME, oldTheme)
         }
         if (oldSidebarWidth) {
           await window.electronAPI.invoke(
-            'settings:set',
-            'appearance.sidebarWidth',
+            IPC_CHANNELS.SETTINGS_SET,
+            CONFIG_KEY.APPEARANCE_SIDEBAR_WIDTH,
             parseFloat(oldSidebarWidth)
           )
         }

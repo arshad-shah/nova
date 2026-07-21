@@ -18,17 +18,39 @@ const progressVariants = cva(
   }
 )
 
+const progressFillVariants = cva('h-full rounded-full transition-all duration-[var(--transition-normal)]', {
+  variants: {
+    /**
+     * What the fill colour means. Same convention as Badge's `tone`: a
+     * meaning, not a weight. `default` keeps today's plain accent fill.
+     */
+    tone: {
+      default: 'bg-accent',
+      accent: 'bg-accent',
+      success: 'bg-success',
+      warning: 'bg-warning',
+      error: 'bg-error',
+    },
+  },
+  defaultVariants: {
+    tone: 'default',
+  },
+})
+
 export interface ProgressProps extends VariantProps<typeof progressVariants> {
   value: number
   max?: number
   className?: string
   'aria-label'?: string
+  /** Semantic fill colour. Defaults to the accent fill used today. */
+  tone?: VariantProps<typeof progressFillVariants>['tone']
 }
 
 export function Progress({
   value,
   max = 100,
   size,
+  tone,
   className,
   'aria-label': ariaLabel,
 }: ProgressProps) {
@@ -44,7 +66,7 @@ export function Progress({
       className={cn(progressVariants({ size }), className)}
     >
       <div
-        className="h-full bg-accent rounded-full transition-all duration-[var(--transition-normal)]"
+        className={progressFillVariants({ tone })}
         style={{ width: `${percentage}%` }}
       />
     </div>

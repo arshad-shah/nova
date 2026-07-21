@@ -3,6 +3,7 @@ import { Calendar, ChevronLeft, ChevronRight } from 'lucide-react'
 import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '../utils/cn'
 import { fieldSizeVariants } from './field-variants'
+import { useClickOutside } from '@/hooks/useClickOutside'
 
 const dateInputVariants = cva(
   [
@@ -154,16 +155,7 @@ export const DatePicker = forwardRef<HTMLInputElement, DatePickerProps>(
       [viewYear, viewMonth, min, max]
     )
 
-    useEffect(() => {
-      if (!open) return
-      const handler = (e: MouseEvent) => {
-        if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-          dispatch({ type: 'close' })
-        }
-      }
-      document.addEventListener('mousedown', handler)
-      return () => document.removeEventListener('mousedown', handler)
-    }, [open])
+    useClickOutside(containerRef, () => dispatch({ type: 'close' }), { enabled: open })
 
     const daysInMonth = getDaysInMonth(viewYear, viewMonth)
     const firstDay = getFirstDayOfWeek(viewYear, viewMonth)

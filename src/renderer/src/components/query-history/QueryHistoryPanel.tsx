@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { includesFold } from '@/lib/fuzzy-match'
 import { Search, Play, Trash2, History, CheckCircle2, XCircle } from 'lucide-react'
 import type { QueryHistoryEntry } from '@shared/appdata'
 import { useQueryHistoryStore } from '@/stores/query-history'
@@ -50,7 +51,7 @@ export function QueryHistoryPanel() {
   const clear = useQueryHistoryStore((s) => s.clear)
 
   const filtered = search.trim()
-    ? entries.filter((e) => e.sql.toLowerCase().includes(search.toLowerCase()))
+    ? entries.filter((e) => includesFold(e.sql, search))
     : entries
 
   return (
@@ -72,7 +73,7 @@ export function QueryHistoryPanel() {
         {filtered.map((entry) => (
           <Box
             key={entry.id}
-            className="group px-2 py-1.5 rounded-md hover:bg-white/5 cursor-pointer transition-colors"
+            className="group px-2 py-1.5 rounded-md hover:bg-hover cursor-pointer transition-colors"
             onClick={() => openHistoryEntry(entry)}
           >
             <Flex align="center" justify="between" gap="xs">

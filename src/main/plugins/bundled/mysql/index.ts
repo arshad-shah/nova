@@ -1,12 +1,12 @@
 import type { PluginManifest } from '../../types'
 import type { PluginContext } from '../../sdk/types'
 import { mysqlErrorRules } from './error-rules'
-import type { CompletionItem, CompletionContext } from '@shared/plugin-ui-types'
+import type { CompletionItem } from '@shared/plugin-ui-types'
+import { createSchemaCompletionProvider } from '../../sdk/completion-helpers'
 import { MysqlAdapter } from './mysql-adapter'
 import { sqlExporter, sqlImporter } from './sql-format'
 import { createRelationalGetTableData } from '../../sdk/relational-helpers'
-import { quoteIdentifier } from '../../sdk/identifier'
-import { generateCreateTable, formatSql } from '../../sdk/sql-format'
+import { formatSql, createSampleQuery, createMigrationDdl } from '../../sdk/sql-format'
 import { PG_TO_MYSQL, pgToMysqlFallback } from './type-maps'
 
 const MY_QUOTE = '`' as const
@@ -138,6 +138,7 @@ export function activate(ctx: PluginContext): void {
     placeholderStyle: 'positional',
     editorLanguage: 'sql',
     statementSyntax: 'sql',
+    presentation: { abbreviation: 'MY', tone: 'warning' },
     nouns: {
       object: { one: 'table', many: 'tables' },
       field: { one: 'column', many: 'columns' },
@@ -153,71 +154,27 @@ export function activate(ctx: PluginContext): void {
       { key: 'password', label: 'Password', type: 'password' },
       { key: 'ssl', label: 'SSL', type: 'boolean', default: false },
     ],
-    sampleQuery: async (table, schema) => {
-      const qualified = schema
-        ? quoteIdentifier([schema, table], MY_QUOTE)
-        : quoteIdentifier(table, MY_QUOTE)
-      return `SELECT * FROM ${qualified} LIMIT 100;`
-    },
+    sampleQuery: createSampleQuery(MY_QUOTE),
     getTableData: createRelationalGetTableData(MY_QUOTE),
     explain: { supportsAnalyze: true, format: 'text', statement: 'EXPLAIN ANALYZE' },
-    generateMigrationDdl: async (tableName, columns) =>
-      generateCreateTable(
-        tableName,
-        columns.map(c => ({ ...c, isForeignKey: false, references: undefined })),
-        MY_QUOTE,
-      ),
+    generateMigrationDdl: createMigrationDdl(MY_QUOTE),
   })
 
-  ctx.completions.register(async (connectionId: string, context: CompletionContext): Promise<CompletionItem[]> => {
+  // The dynamic table/column half is shared; only these static items differ.
+  ctx.completions.register(createSchemaCompletionProvider(ctx.schema, () => {
     const items: CompletionItem[] = []
-
-    // Static: keywords
     for (const kw of SQL_KEYWORDS) {
       items.push({ label: kw, kind: 'keyword', sortText: '3a' })
     }
     for (const kw of MYSQL_KEYWORDS) {
       items.push({ label: kw, kind: 'keyword', detail: 'MySQL', sortText: '3b' })
     }
-
-    // Static: data types (surfaced as keywords)
     for (const dt of MYSQL_DATA_TYPES) {
       items.push({ label: dt, kind: 'keyword', detail: 'data type', sortText: '3c' })
     }
-
-    // Static: functions
     for (const fn of MYSQL_FUNCTIONS) {
       items.push({ label: fn.label, kind: 'function', detail: fn.detail, sortText: '2' })
     }
-
-    // Dynamic: tables
-    let tables: { name: string }[] = []
-    try {
-      tables = await ctx.schema.getTables(connectionId, context.schema)
-      for (const table of tables) {
-        items.push({ label: table.name, kind: 'table', detail: context.schema ?? 'table', sortText: '0' })
-      }
-    } catch {
-      // partial results — tables unavailable
-    }
-
-    // Dynamic: columns from each table
-    for (const table of tables) {
-      try {
-        const columns = await ctx.schema.getColumns(connectionId, table.name, context.schema)
-        for (const col of columns) {
-          items.push({
-            label: col.name,
-            kind: 'column',
-            detail: `${table.name}.${col.name} (${col.dataType})`,
-            sortText: '1',
-          })
-        }
-      } catch {
-        // partial results — columns for this table unavailable
-      }
-    }
-
     return items
-  })
+  }))
 }

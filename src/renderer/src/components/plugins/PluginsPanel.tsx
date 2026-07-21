@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
+import { includesFold } from '@/lib/fuzzy-match'
 import { FolderOpen, RefreshCw, Package } from 'lucide-react'
 import { useTabsStore } from '@/stores/tabs'
 import { useTranslation } from '@/i18n/I18nProvider'
-import { Stack, ScrollArea, Flex, Text, EmptyState, IconButton, Box, Spinner, SearchInput, cn } from '@/primitives'
+import { Stack, ScrollArea, Flex, Text, EmptyState, IconButton, Box, Spinner, SearchInput, cn, StatusDot, type StatusDotTone } from '@/primitives'
 import { IPC_CHANNELS } from '@shared/ipc'
 import { PluginIcon } from './PluginIcon'
 
@@ -17,10 +18,10 @@ export interface PluginInfo {
   contributions: string[]
 }
 
-const STATUS_COLORS: Record<string, string> = {
-  active: 'bg-green-400',
-  degraded: 'bg-yellow-400',
-  error: 'bg-red-400',
+const STATUS_TONES: Record<string, StatusDotTone> = {
+  active: 'success',
+  degraded: 'warning',
+  error: 'error',
 }
 
 export function PluginsPanel() {
@@ -49,7 +50,7 @@ export function PluginsPanel() {
   }
 
   const filtered = plugins.filter(p =>
-    p.displayName.toLowerCase().includes(search.toLowerCase())
+    includesFold(p.displayName, search)
   )
   const bundledPlugins = filtered.filter(p => p.bundled)
   const installedPlugins = filtered.filter(p => !p.bundled)
@@ -138,7 +139,7 @@ export function PluginsPanel() {
 }
 
 function PluginRow({ plugin, isSelected, onClick }: { plugin: PluginInfo; isSelected: boolean; onClick: () => void }) {
-  const statusColor = STATUS_COLORS[plugin.status.state] ?? 'bg-gray-500'
+  const statusTone = STATUS_TONES[plugin.status.state] ?? 'muted'
 
   return (
     <Flex
@@ -150,14 +151,14 @@ function PluginRow({ plugin, isSelected, onClick }: { plugin: PluginInfo; isSele
         'px-2 py-1.5 rounded-md cursor-pointer transition-colors',
         isSelected
           ? 'bg-accent/10 border-l-2 border-l-accent'
-          : 'hover:bg-white/5'
+          : 'hover:bg-hover'
       )}
     >
       <PluginIcon plugin={plugin} size="md" />
       <Text size="xs" weight="medium" color="primary" truncate className="flex-1 min-w-0">
         {plugin.displayName}
       </Text>
-      <Box className={`w-1.5 h-1.5 rounded-full shrink-0 ${statusColor}`} />
+      <StatusDot size="xs" tone={statusTone} />
     </Flex>
   )
 }

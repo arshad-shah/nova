@@ -74,8 +74,8 @@ function NotificationItem({ notification }: { notification: Notification }) {
       }}
       className={cn(
         'group relative flex gap-2.5 px-3 py-2.5 cursor-default transition-colors',
-        'hover:bg-white/[0.03]',
-        !notification.read && 'bg-white/[0.02]'
+        'hover:bg-hover',
+        !notification.read && 'bg-row-tint'
       )}
     >
       {/* Unread indicator bar */}
@@ -146,7 +146,7 @@ function NotificationItem({ notification }: { notification: Notification }) {
             onClick={handleCopy}
             className={cn(
               'flex h-5 w-5 items-center justify-center rounded',
-              'text-text-disabled hover:text-text-primary hover:bg-white/5',
+              'text-text-disabled hover:text-text-primary hover:bg-hover',
               'transition-colors'
             )}
             aria-label={copied ? t('shell.notifications.copied') : t('shell.notifications.copyErrorDetails')}
@@ -164,7 +164,7 @@ function NotificationItem({ notification }: { notification: Notification }) {
           }}
           className={cn(
             'flex h-5 w-5 items-center justify-center rounded',
-            'text-text-disabled hover:text-text-primary hover:bg-white/5',
+            'text-text-disabled hover:text-text-primary hover:bg-hover',
             isError ? 'transition-colors' : 'opacity-0 group-hover:opacity-100 transition-opacity'
           )}
           aria-label={t('shell.notifications.dismiss')}

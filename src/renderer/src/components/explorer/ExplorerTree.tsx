@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
-import { Database, Loader2 } from 'lucide-react'
+import { Database } from 'lucide-react'
+import { Spinner } from '@/primitives/feedback/Spinner'
 import { useConnectionsStore } from '@/stores/connections'
 import { useSchemaStore } from '@/stores/schema'
 import { EmptyState } from '@/primitives/data-display/EmptyState'
@@ -100,7 +101,7 @@ export function ExplorerTree({ onExportTable }: ExplorerTreeProps) {
       ) : !hierarchyLoaded ? (
         /* Show loading while databases/schemas are being fetched */
         <Box className="flex-1 flex items-center justify-center p-4">
-          <Loader2 size={20} strokeWidth={1.8} className="animate-spin text-text-muted" />
+          <Spinner size="md" className="text-text-muted" />
         </Box>
       ) : (
         <>

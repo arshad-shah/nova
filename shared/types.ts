@@ -51,15 +51,21 @@ export interface SchemaTable {
   rowCount?: number
 }
 
-export type SchemaObjectKind =
-  | 'view'
-  | 'materialized_view'
-  | 'function'
-  | 'procedure'
-  | 'trigger'
-  | 'sequence'
-  | 'index'
-  | 'extension'
+// Centralised so the driver that produces these objects (e.g. postgresql's
+// getSchemaObjects) and the renderer that groups them (SchemaNode.tsx) share
+// the same values instead of re-typing the tag by hand — mirrors ACTIVITY_KIND.
+export const SCHEMA_OBJECT_KIND = {
+  VIEW: 'view',
+  MATERIALIZED_VIEW: 'materialized_view',
+  FUNCTION: 'function',
+  PROCEDURE: 'procedure',
+  TRIGGER: 'trigger',
+  SEQUENCE: 'sequence',
+  INDEX: 'index',
+  EXTENSION: 'extension',
+} as const
+
+export type SchemaObjectKind = (typeof SCHEMA_OBJECT_KIND)[keyof typeof SCHEMA_OBJECT_KIND]
 
 export interface SchemaObject {
   name: string

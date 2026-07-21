@@ -5,6 +5,18 @@
  * set. The renderer's `useTheme()` hook returns the live list. */
 export type Theme = string
 
+/** The two theme ids the app can always fall back to, regardless of what a
+ *  plugin has (un)registered: `DARK` is 'ion', the Verql brand theme baked
+ *  into the app shell as a non-plugin baseline (`stores/themes.ts`'s
+ *  `BASELINE_ION`); `LIGHT` is 'lab', the `core-themes` plugin's light-mode
+ *  default. Centralised so the default settings below, the renderer's
+ *  resolve-fallback logic (`ThemeProvider`), and Monaco's theme fallback
+ *  (`lib/monaco-themes.ts`) can't drift from each other. */
+export const DEFAULT_THEME_ID = {
+  DARK: 'ion',
+  LIGHT: 'lab',
+} as const
+
 export interface GeneralSettings {
   /** UI language (BCP-47 / locale id). 'en' is the in-bundle default. */
   language: string
@@ -186,10 +198,10 @@ export const defaultSettings: AppSettings = {
     confirmDestructiveQueries: true,
   },
   appearance: {
-    theme: 'ion',
+    theme: DEFAULT_THEME_ID.DARK,
     appearanceMode: 'dark',
-    lightTheme: 'lab',
-    darkTheme: 'ion',
+    lightTheme: DEFAULT_THEME_ID.LIGHT,
+    darkTheme: DEFAULT_THEME_ID.DARK,
     uiDensity: 'comfortable',
     sidebarPosition: 'left',
     // Empty means "follow the theme's accent". Setting any non-empty value
@@ -301,3 +313,18 @@ export function mergeWithDefaults(persisted: Partial<AppSettings>): AppSettings 
   }
   return result
 }
+
+/** `ConfigStore.getSetting`/`setSetting` (`main/config/store.ts`) take an
+ *  arbitrary dotted key-path, so most call sites are one-off literals that
+ *  don't warrant a constant. These key-paths are read/written from more
+ *  than one file, though, so they're centralised here — a rename on one side
+ *  would otherwise silently stop reading/writing the other. */
+export const CONFIG_KEY = {
+  APPEARANCE_THEME: 'appearance.theme',
+  APPEARANCE_SIDEBAR_WIDTH: 'appearance.sidebarWidth',
+  MCP_ENABLED: 'mcp.enabled',
+  MCP_READ_ONLY: 'mcp.readOnly',
+  MCP_DISABLED_TOOLS: 'mcp.disabledTools',
+  MCP_TOKEN: 'mcp.token',
+  KEYBINDINGS: 'keybindings',
+} as const

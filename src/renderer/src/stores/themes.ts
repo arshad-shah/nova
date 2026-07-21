@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { IPC_CHANNELS, IPC_EVENTS } from '@shared/ipc'
+import { DEFAULT_THEME_ID } from '@shared/settings'
 
 /** Baseline theme that ships with the app shell. Ion is the brand identity
  *  for Verql *and* the default theme, so it's not a plugin contribution — a
@@ -8,7 +9,7 @@ import { IPC_CHANNELS, IPC_EVENTS } from '@shared/ipc'
  *  always present in the picker. Nightshift, the previous brand theme, is now
  *  an ordinary selectable theme contributed by core-themes. */
 const BASELINE_ION: RegisteredThemeView = {
-  id: 'ion',
+  id: DEFAULT_THEME_ID.DARK,
   name: 'Ion',
   type: 'dark',
   preview: { bg: '#0B0F16', sidebar: '#111827', text: '#F2F4F7', accent: '#7A5CFF' },
@@ -116,7 +117,7 @@ export const useThemesStore = create<ThemesState>((set) => ({
     // Ion is the app's brand theme — always present, sourced from the
     // baseline rather than any plugin. Ignore any plugin trying to register
     // a theme with the same id to keep the brand surface authoritative.
-    const filtered = list.filter((t) => t.id !== 'ion')
+    const filtered = list.filter((t) => t.id !== DEFAULT_THEME_ID.DARK)
     set({ themes: [BASELINE_ION, ...filtered], loaded: true })
   }
 }))

@@ -1,7 +1,8 @@
 import type { Monaco } from '@monaco-editor/react'
 import { useThemesStore } from '@/stores/themes'
+import { DEFAULT_THEME_ID } from '@shared/settings'
 
-const FALLBACK_THEME_ID = 'ion'
+const FALLBACK_THEME_ID = DEFAULT_THEME_ID.DARK
 const definedThemes = new Set<string>()
 let monacoRef: Monaco | null = null
 

@@ -1,8 +1,9 @@
 /**
  * Generate every Verql brand artifact from `mark.mjs`.
  *
- *   node scripts/brand/build-brand.mjs          # everything
- *   node scripts/brand/build-brand.mjs --check  # fail if anything is stale (CI)
+ *   node scripts/brand/build-brand.mjs             # everything
+ *   node scripts/brand/build-brand.mjs --check     # fail if anything is stale (CI)
+ *   node scripts/brand/build-brand.mjs --svg-only  # skip the PNG rasters (no rsvg-convert needed)
  *
  * Emits:
  *   src/renderer/src/assets/brand/*.svg   in-app marks (colour, mono, currentColor, hero)
@@ -25,6 +26,11 @@ import { buildMark, TILE_LIGHT, TILE_DARK_DEF } from './mark.mjs'
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 const CHECK = process.argv.includes('--check')
+// The PNG rasters feed electron-builder (app icons, Store tiles) and need the
+// rsvg-convert binary. The docs site consumes only the SVGs, and its build
+// environment (Cloudflare Pages) has no librsvg — so its prebuild passes
+// --svg-only to emit the SVGs and skip rasterisation entirely.
+const SVG_ONLY = process.argv.includes('--svg-only')
 
 const written = []
 const stale = []
@@ -127,7 +133,7 @@ emit('site/src/assets/verql-logo-dark.svg', buildMark('mono-light', { comment: '
 emit('site/src/assets/verql-logo-light.svg', buildMark('mono-dark', { comment: 'Verql site header mark, for the light header.' }))
 
 // ── 4 · Rasters ──────────────────────────────────────────────────────────────
-if (!CHECK) {
+if (!CHECK && !SVG_ONLY) {
   rasterise('build/icon.svg', 'build/icon.png', 1024)
   rasterise('build/icon.svg', 'build/icon-dark.png', 1024)
   rasterise('build/icon-light.svg', 'build/icon-light.png', 1024)

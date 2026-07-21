@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { clamp } from '@/lib/math'
 
 interface PanelResizeOptions {
   /** Persisted dimension (from a settings selector) — the baseline when idle. */
@@ -41,12 +42,12 @@ export function usePanelResize({
   const [draft, setDraft] = useState<number | null>(null)
   const [prev, setPrev] = useState(value)
 
-  const clamp = (n: number) => Math.min(max, Math.max(min, n))
+  const clampToRange = (n: number) => clamp(n, min, max)
 
   return {
     effective: draft ?? value,
     onResize: (delta) =>
-      setDraft((d) => clamp((d ?? read()) + direction * delta)),
+      setDraft((d) => clampToRange((d ?? read()) + direction * delta)),
     onResizeEnd: () => {
       if (draft !== null) {
         commit(draft)
