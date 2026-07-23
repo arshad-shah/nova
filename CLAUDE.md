@@ -137,7 +137,10 @@ Three-layer theming in `primitives/theme/tokens.css`: raw color scale → semant
 
 **Type scale.** Font sizes come from the named ramp — `text-3xs`/`text-2xs` (10px/11px, fixed dense-chrome steps with their own line-heights) → `text-xs` … `text-3xl`, defined in `primitives/theme/tokens.css` + wired as Tailwind utilities in `styles/globals.css`, and exposed as `size` variants on `Text`/`Label`/`Code`/`Tag` (and `Badge`). Never hand-roll a font size with an arbitrary utility (`text-[10px]`): the `renderer-no-arbitrary-font-size` guard (`tests/unit/audit/`) fails any `text-[Npx]` in `src/renderer/src/components` and names the step to use instead.
 
-**Design-system fitness guards** live in `tests/unit/audit/` and fail CI when a documented rule is violated: no raw Tailwind palette colours (`renderer-no-raw-palette`) and no arbitrary font sizes (`renderer-no-arbitrary-font-size`).
+**Design-system fitness guards** live in `tests/unit/audit/` and fail CI when a documented rule is violated. Each rule maps to exactly one enforcing test, and a failure names the offending file, line and the sanctioned primitive/token to use instead:
+- **No raw Tailwind palette colours** (`text-white`, `bg-gray-*`, …) — express colour through the theme token layer (`renderer-no-raw-palette`).
+- **No arbitrary font sizes** (`text-[Npx]`) — use the named type ramp (`renderer-no-arbitrary-font-size`).
+- **No raw HTML elements in the component layer** (`<button>`, `<input>`, `<select>`, `<textarea>`, `<table>`, `<h1>`–`<h6>` under `src/renderer/src/components`) — a design-system primitive exists for each (`renderer-no-raw-html-primitives`). The `primitives/` layer is out of scope: a primitive is where a native element legitimately lives.
 
 ### Key Libraries
 
