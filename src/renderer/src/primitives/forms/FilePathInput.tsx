@@ -4,6 +4,7 @@ import { File, X, Upload, HardDrive } from 'lucide-react'
 import { cn } from '../utils/cn'
 import { fieldRowVariants } from './field-variants'
 import { IPC_CHANNELS } from '@shared/ipc'
+import { ipc } from '@/platform/client'
 
 type FpState = { value: string; dragOver: boolean }
 type FpAction =
@@ -73,7 +74,7 @@ export const FilePathInput = forwardRef<HTMLDivElement, FilePathInputProps>(
       const filters = accept
         ? [{ name: 'Files', extensions: accept.split(',').map((e) => e.trim().replace(/^\./, '')) }]
         : undefined
-      const result = await window.electronAPI.invoke(IPC_CHANNELS.DIALOG_OPEN_FILE_PATH, { filters })
+      const result = await ipc.invoke(IPC_CHANNELS.DIALOG_OPEN_FILE_PATH, { filters })
       if ('cancelled' in result) return
       setValue(result.filePath)
     }

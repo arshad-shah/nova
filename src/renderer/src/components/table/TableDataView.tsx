@@ -6,6 +6,7 @@ import { ResultsGrid } from '@/components/results/ResultsGrid'
 import { IPC_CHANNELS } from '@shared/ipc'
 import type { TableTab, QueryResult, SchemaColumn } from '@shared/types'
 import { useTranslation } from '@/i18n/I18nProvider'
+import { ipc } from '@/platform/client'
 
 interface LoadState {
   loading: boolean
@@ -27,7 +28,7 @@ export function TableDataView({ tab }: { tab: TableTab }) {
   const load = useCallback(async () => {
     setState((s) => ({ ...s, loading: true, error: null }))
     try {
-      const { rows, columns } = await window.electronAPI.invoke(
+      const { rows, columns } = await ipc.invoke(
         IPC_CHANNELS.DB_GET_TABLE_DATA,
         tab.connectionId,
         tab.tableName,

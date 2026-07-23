@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { IPC_CHANNELS } from '@shared/ipc'
+import { ipc } from '@/platform/client'
 
 /** Forwards files dropped anywhere on the window to the main process, which
  *  routes each path to the plugin that claims its extension (e.g. `.sqlite` →
@@ -20,7 +21,7 @@ export function useFileDropForwarding(): void {
       for (const f of files) {
         const path = (f as File & { path?: string }).path
         if (!path) continue
-        window.electronAPI.invoke(IPC_CHANNELS.PLUGINS_DRAG_DROP, path).catch(() => {})
+        ipc.invoke(IPC_CHANNELS.PLUGINS_DRAG_DROP, path).catch(() => {})
       }
     }
     window.addEventListener('dragover', handleDragOver)

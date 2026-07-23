@@ -14,6 +14,7 @@ import { useUiStore, PLUGIN_PANEL_PREFIX } from './ui'
 import { useConnectionsStore, getActiveProfile } from './connections'
 import { useNotificationsStore } from './notifications'
 import { appActions } from '@/lib/app-actions/registry'
+import { ipc } from '@/platform/client'
 
 // The AI plugin's secondary-sidebar panel id. `SecondaryPanelId` (stores/ui.ts)
 // stays open (`string & {}`) precisely so plugin-namespaced ids like this one
@@ -108,23 +109,23 @@ function deriveTitle(content: string): string {
   return firstLine.length > 48 ? `${firstLine.slice(0, 47)}…` : firstLine
 }
 
-const hasIpc = (): boolean => typeof window !== 'undefined' && !!window.electronAPI
+const hasIpc = (): boolean => ipc.available()
 
 /** Replace one conversation (and its messages) in the app-data store. */
 function persistConversation(c: Conversation): void {
   if (!hasIpc()) return
-  void window.electronAPI.invoke(IPC_CHANNELS.APPDATA_CONVERSATIONS_UPSERT, c)
+  void ipc.invoke(IPC_CHANNELS.APPDATA_CONVERSATIONS_UPSERT, c)
 }
 
 /** Remember the active conversation across restarts. */
 function persistActiveId(id: string | null): void {
   if (!hasIpc()) return
-  void window.electronAPI.invoke(IPC_CHANNELS.APPDATA_CONVERSATIONS_SET_ACTIVE, id)
+  void ipc.invoke(IPC_CHANNELS.APPDATA_CONVERSATIONS_SET_ACTIVE, id)
 }
 
 function deleteConversationRemote(id: string): void {
   if (!hasIpc()) return
-  void window.electronAPI.invoke(IPC_CHANNELS.APPDATA_CONVERSATIONS_DELETE, id)
+  void ipc.invoke(IPC_CHANNELS.APPDATA_CONVERSATIONS_DELETE, id)
 }
 
 /** Read the pre-SQLite localStorage payload for one-time migration. */
@@ -178,7 +179,7 @@ export const useAIStore = create<AIState>((set, get) => ({
 
   hydrate: async () => {
     if (!hasIpc()) return
-    const snapshot = await window.electronAPI.invoke(IPC_CHANNELS.APPDATA_CONVERSATIONS_LIST)
+    const snapshot = await ipc.invoke(IPC_CHANNELS.APPDATA_CONVERSATIONS_LIST)
     let conversations = snapshot.conversations as Conversation[]
     let activeId = snapshot.activeConversationId
 
@@ -188,7 +189,7 @@ export const useAIStore = create<AIState>((set, get) => ({
     if (conversations.length === 0) {
       const legacy = readLegacyConversations()
       if (legacy && legacy.conversations.length > 0) {
-        await window.electronAPI.invoke(
+        await ipc.invoke(
           IPC_CHANNELS.APPDATA_CONVERSATIONS_IMPORT,
           legacy.conversations,
           legacy.activeConversationId,
@@ -223,7 +224,7 @@ export const useAIStore = create<AIState>((set, get) => ({
     // restored active conversation so continuing it after a restart keeps full
     // context (otherwise only the next message would be sent).
     if (active.messages.length > 0) {
-      await window.electronAPI.invoke(IPC_CHANNELS.AI_MESSAGES_SET, active.messages)
+      await ipc.invoke(IPC_CHANNELS.AI_MESSAGES_SET, active.messages)
     }
   },
 
@@ -276,7 +277,7 @@ export const useAIStore = create<AIState>((set, get) => ({
       .slice(0, 3)
       .map((n) => `- [${n.type}] ${n.title}`)
       .join('\n')
-    const result = await window.electronAPI.invoke(IPC_CHANNELS.AI_CHAT_START, {
+    const result = await ipc.invoke(IPC_CHANNELS.AI_CHAT_START, {
       message,
       ...(connectionId ? { connectionId } : {}),
       ...(connectionMeta ? { connectionMeta } : {}),
@@ -289,7 +290,7 @@ export const useAIStore = create<AIState>((set, get) => ({
   },
 
   clearMessages: async () => {
-    await window.electronAPI.invoke(IPC_CHANNELS.AI_MESSAGES_CLEAR)
+    await ipc.invoke(IPC_CHANNELS.AI_MESSAGES_CLEAR)
     set({ messages: [], sessionStats: { ...EMPTY_STATS } })
   },
 
@@ -305,7 +306,7 @@ export const useAIStore = create<AIState>((set, get) => ({
       streamingContent: '',
       pendingApproval: null
     }))
-    void window.electronAPI.invoke(IPC_CHANNELS.AI_MESSAGES_CLEAR)
+    void ipc.invoke(IPC_CHANNELS.AI_MESSAGES_CLEAR)
     persistConversation(c)
     persistActiveId(c.id)
   },
@@ -324,7 +325,7 @@ export const useAIStore = create<AIState>((set, get) => ({
       pendingApproval: null,
       lastPreCompactMessages: null,
     })
-    await window.electronAPI.invoke(IPC_CHANNELS.AI_MESSAGES_SET, target.messages)
+    await ipc.invoke(IPC_CHANNELS.AI_MESSAGES_SET, target.messages)
     persistActiveId(id)
   },
 
@@ -346,7 +347,7 @@ export const useAIStore = create<AIState>((set, get) => ({
         streamingContent: '',
         pendingApproval: null
       })
-      await window.electronAPI.invoke(IPC_CHANNELS.AI_MESSAGES_SET, fallback.messages)
+      await ipc.invoke(IPC_CHANNELS.AI_MESSAGES_SET, fallback.messages)
     }
     persistActiveId(get().activeConversationId)
   },
@@ -381,7 +382,7 @@ export const useAIStore = create<AIState>((set, get) => ({
     const tail = messages.slice(messages.length - keepLast)
     set({ isCompacting: true })
     try {
-      const { summary } = await window.electronAPI.invoke(
+      const { summary } = await ipc.invoke(
         IPC_CHANNELS.AI_CONVERSATION_SUMMARIZE,
         toSummarize,
       ) as { summary: string }
@@ -404,7 +405,7 @@ export const useAIStore = create<AIState>((set, get) => ({
         streamingContent: '',
         lastPreCompactMessages: snapshot,
       })
-      await window.electronAPI.invoke(IPC_CHANNELS.AI_MESSAGES_SET, newMessages)
+      await ipc.invoke(IPC_CHANNELS.AI_MESSAGES_SET, newMessages)
       const compacted = nextConversations.find((c) => c.id === activeConversationId)
       if (compacted) persistConversation(compacted)
     } finally {
@@ -423,7 +424,7 @@ export const useAIStore = create<AIState>((set, get) => ({
       conversations: nextConversations,
       lastPreCompactMessages: null,
     })
-    await window.electronAPI.invoke(IPC_CHANNELS.AI_MESSAGES_SET, lastPreCompactMessages)
+    await ipc.invoke(IPC_CHANNELS.AI_MESSAGES_SET, lastPreCompactMessages)
     const restored = nextConversations.find((c) => c.id === activeConversationId)
     if (restored) persistConversation(restored)
   },
@@ -463,7 +464,7 @@ export const useAIStore = create<AIState>((set, get) => ({
       streamingContent: '',
       pendingApproval: null
     }))
-    await window.electronAPI.invoke(IPC_CHANNELS.AI_MESSAGES_SET, prefix)
+    await ipc.invoke(IPC_CHANNELS.AI_MESSAGES_SET, prefix)
     persistConversation(branched)
     persistActiveId(branched.id)
   },
@@ -482,7 +483,7 @@ export const useAIStore = create<AIState>((set, get) => ({
   abort: async () => {
     const { currentStreamId, messages, pendingApproval } = get()
     if (currentStreamId) {
-      await window.electronAPI.invoke(IPC_CHANNELS.AI_CHAT_ABORT, currentStreamId)
+      await ipc.invoke(IPC_CHANNELS.AI_CHAT_ABORT, currentStreamId)
     }
 
     // Reconcile any tool calls that were mid-flight. Without this, ToolCallCard
@@ -508,7 +509,7 @@ export const useAIStore = create<AIState>((set, get) => ({
     // Resolve any open approval prompt with "rejected" so it doesn't hang the
     // chat-loop in the plugin (waitForApproval would otherwise sit forever).
     if (pendingApproval) {
-      await window.electronAPI.invoke(IPC_CHANNELS.AI_CHAT_APPROVAL_RESPONSE, pendingApproval.requestId, false)
+      await ipc.invoke(IPC_CHANNELS.AI_CHAT_APPROVAL_RESPONSE, pendingApproval.requestId, false)
     }
 
     set((s) => ({
@@ -522,12 +523,12 @@ export const useAIStore = create<AIState>((set, get) => ({
   },
 
   loadProviders: async () => {
-    const res = await window.electronAPI.invoke(IPC_CHANNELS.AI_PROVIDERS_LIST)
+    const res = await ipc.invoke(IPC_CHANNELS.AI_PROVIDERS_LIST)
     set({ providers: Array.isArray(res) ? (res as AIProviderInfo[]) : [] })
   },
 
   loadConfiguredProviders: async () => {
-    const res = await window.electronAPI.invoke(IPC_CHANNELS.AI_PROVIDERS_LIST_CONFIGURED)
+    const res = await ipc.invoke(IPC_CHANNELS.AI_PROVIDERS_LIST_CONFIGURED)
     const providers = Array.isArray(res) ? (res as AIProviderInfo[]) : []
     set({ providers })
 
@@ -537,7 +538,7 @@ export const useAIStore = create<AIState>((set, get) => ({
       await get().setActiveProvider(providers[0])
     } else if (providers.length > 0 && !activeProvider) {
       // Restore active from the list
-      const active = await window.electronAPI.invoke(IPC_CHANNELS.AI_PROVIDERS_GET_ACTIVE) as AIProviderInfo | null
+      const active = await ipc.invoke(IPC_CHANNELS.AI_PROVIDERS_GET_ACTIVE) as AIProviderInfo | null
       if (active && providers.some(p => p.id === active.id)) {
         set({ activeProvider: active })
       } else {
@@ -547,37 +548,37 @@ export const useAIStore = create<AIState>((set, get) => ({
   },
 
   loadModels: async () => {
-    const res = await window.electronAPI.invoke(IPC_CHANNELS.AI_MODELS_LIST)
+    const res = await ipc.invoke(IPC_CHANNELS.AI_MODELS_LIST)
     set({ models: Array.isArray(res) ? (res as AIModelInfo[]) : [] })
   },
 
   setActiveProvider: async (provider) => {
     if (provider) {
-      await window.electronAPI.invoke(IPC_CHANNELS.AI_PROVIDERS_SET_ACTIVE, provider.id)
+      await ipc.invoke(IPC_CHANNELS.AI_PROVIDERS_SET_ACTIVE, provider.id)
     }
     set({ activeProvider: provider })
     // Reload models for the new provider, then mirror the active model main
     // chose (it defaults to the vendor's cheapest when switching providers).
-    const models = await window.electronAPI.invoke(IPC_CHANNELS.AI_MODELS_LIST) as AIModelInfo[]
+    const models = await ipc.invoke(IPC_CHANNELS.AI_MODELS_LIST) as AIModelInfo[]
     set({ models })
-    const activeModel = await window.electronAPI.invoke(IPC_CHANNELS.AI_MODELS_GET_ACTIVE) as string | null
+    const activeModel = await ipc.invoke(IPC_CHANNELS.AI_MODELS_GET_ACTIVE) as string | null
     set({ activeModel })
   },
 
   setActiveModel: async (model) => {
     if (model) {
-      await window.electronAPI.invoke(IPC_CHANNELS.AI_MODELS_SET_ACTIVE, model)
+      await ipc.invoke(IPC_CHANNELS.AI_MODELS_SET_ACTIVE, model)
     }
     set({ activeModel: model })
   },
 
   respondToApproval: async (requestId, approved) => {
-    await window.electronAPI.invoke(IPC_CHANNELS.AI_CHAT_APPROVAL_RESPONSE, requestId, approved)
+    await ipc.invoke(IPC_CHANNELS.AI_CHAT_APPROVAL_RESPONSE, requestId, approved)
     set({ pendingApproval: null })
   },
 
   respondToMCPApproval: async (requestId, approved) => {
-    await window.electronAPI.invoke(IPC_CHANNELS.MCP_APPROVAL_RESPONSE, requestId, approved)
+    await ipc.invoke(IPC_CHANNELS.MCP_APPROVAL_RESPONSE, requestId, approved)
     set({ mcpPendingApproval: null })
   },
 
@@ -585,11 +586,11 @@ export const useAIStore = create<AIState>((set, get) => ({
   clearComposerSeed: () => set({ composerSeed: null }),
 
   loadPermissionProfile: async () => {
-    const profile = await window.electronAPI.invoke(IPC_CHANNELS.AI_PERMISSION_GET_PROFILE) as 'read-only' | 'ask-write' | 'auto'
+    const profile = await ipc.invoke(IPC_CHANNELS.AI_PERMISSION_GET_PROFILE) as 'read-only' | 'ask-write' | 'auto'
     set({ permissionProfile: profile })
   },
   setPermissionProfile: async (p) => {
-    await window.electronAPI.invoke(IPC_CHANNELS.AI_PERMISSION_SET_PROFILE, p)
+    await ipc.invoke(IPC_CHANNELS.AI_PERMISSION_SET_PROFILE, p)
     set({ permissionProfile: p })
   },
 
@@ -726,8 +727,8 @@ useAIStore.subscribe((state, prev) => {
 })
 
 // Set up IPC listeners
-if (typeof window !== 'undefined' && window.electronAPI) {
-  window.electronAPI.on(IPC_EVENTS.AI_CHAT_EVENT, (streamId: unknown, event: unknown) => {
+if (ipc.available()) {
+  ipc.on(IPC_EVENTS.AI_CHAT_EVENT, (streamId: unknown, event: unknown) => {
     const state = useAIStore.getState()
     if (streamId === state.currentStreamId) {
       state.handleStreamEvent(event as AIStreamEvent)
@@ -735,7 +736,7 @@ if (typeof window !== 'undefined' && window.electronAPI) {
   })
 
   // MCP approval requests
-  window.electronAPI.on(IPC_EVENTS.MCP_APPROVAL_REQUEST, (request: unknown) => {
+  ipc.on(IPC_EVENTS.MCP_APPROVAL_REQUEST, (request: unknown) => {
     useAIStore.setState({ mcpPendingApproval: request as MCPApprovalRequest })
   })
 }

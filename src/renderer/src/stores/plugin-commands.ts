@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { IPC_CHANNELS, IPC_EVENTS } from '@shared/ipc'
+import { ipc } from '@/platform/client'
 
 export interface PluginCommand {
   pluginId: string
@@ -20,26 +21,26 @@ export const usePluginCommands = create<PluginCommandsState>((set) => ({
   commands: [],
   loaded: false,
   fetch: async () => {
-    if (typeof window === 'undefined' || !window.electronAPI) {
+    if (!ipc.available()) {
       set({ loaded: true })
       return
     }
     try {
-      const list = await window.electronAPI.invoke(IPC_CHANNELS.PLUGINS_GET_COMMANDS)
+      const list = await ipc.invoke(IPC_CHANNELS.PLUGINS_GET_COMMANDS)
       set({ commands: list as PluginCommand[], loaded: true })
     } catch {
       set({ loaded: true })
     }
   },
   execute: async (pluginId, commandId) => {
-    await window.electronAPI.invoke(IPC_CHANNELS.PLUGINS_UI_ACTION, pluginId, commandId, {})
+    await ipc.invoke(IPC_CHANNELS.PLUGINS_UI_ACTION, pluginId, commandId, {})
   }
 }))
 
-if (typeof window !== 'undefined' && window.electronAPI) {
+if (ipc.available()) {
   // Lifecycle changes (activate/deactivate/install/uninstall) can shift the
   // command list; refetch so the palette + keybinding listener stay current.
-  window.electronAPI.on(IPC_EVENTS.PLUGINS_LIFECYCLE, () => {
+  ipc.on(IPC_EVENTS.PLUGINS_LIFECYCLE, () => {
     usePluginCommands.getState().fetch()
   })
 }

@@ -6,6 +6,7 @@ import { useTranslation } from '@/i18n/I18nProvider'
 import { Stack, ScrollArea, Flex, Text, EmptyState, IconButton, Box, Spinner, SearchInput, cn, StatusDot, type StatusDotTone } from '@/primitives'
 import { IPC_CHANNELS } from '@shared/ipc'
 import { PluginIcon } from './PluginIcon'
+import { ipc } from '@/platform/client'
 
 export interface PluginInfo {
   name: string
@@ -34,7 +35,7 @@ export function PluginsPanel() {
   const activeTabId = useTabsStore(s => s.activeTabId)
   const loadPlugins = async () => {
     setLoading(true)
-    const list = await window.electronAPI.invoke(IPC_CHANNELS.PLUGINS_LIST)
+    const list = await ipc.invoke(IPC_CHANNELS.PLUGINS_LIST)
     setPlugins(list)
     setLoading(false)
   }

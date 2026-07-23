@@ -4,9 +4,10 @@ import { VerqlHero } from '@/components/brand/VerqlHero'
 import { useTranslation } from '@/i18n/I18nProvider'
 import { IPC_CHANNELS } from '@shared/ipc'
 import type { ReleaseNote, HighlightTone } from '@/lib/release-notes'
+import { ipc } from '@/platform/client'
 
 const openExternal = (url: string) =>
-  void window.electronAPI?.invoke(IPC_CHANNELS.WINDOW_OPEN_EXTERNAL, url)
+  void ipc.optional(IPC_CHANNELS.WINDOW_OPEN_EXTERNAL, url)
 
 /** Map a highlight tone to its Badge variant. `info` reads as "improved". */
 const TONE_VARIANT: Record<HighlightTone, 'accent' | 'info' | 'success'> = {

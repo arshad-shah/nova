@@ -10,6 +10,7 @@ import { IPC_CHANNELS } from '@shared/ipc'
 import type { MCPServerStatus } from '@shared/mcp'
 import { useTranslation } from '@/i18n/I18nProvider'
 import type { MessageKey } from '@shared/i18n'
+import { ipc } from '@/platform/client'
 
 const topItems: { id: ActivityPanel; icon: typeof Database; labelKey: MessageKey }[] = [
   { id: ACTIVITY_PANEL.EXPLORER, icon: Database, labelKey: 'shell.activityBar.explorer' },
@@ -35,7 +36,7 @@ export function ActivityBar() {
   useEffect(() => {
     const checkMcp = async () => {
       try {
-        const status = await window.electronAPI.invoke(IPC_CHANNELS.MCP_STATUS) as MCPServerStatus
+        const status = await ipc.invoke(IPC_CHANNELS.MCP_STATUS) as MCPServerStatus
         setMcpRunning(status.running)
         setMcpClients(status.clients)
       } catch { /* */ }
