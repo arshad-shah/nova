@@ -1,5 +1,137 @@
 # Changelog
 
+## 1.7.0
+
+### Minor Changes
+
+- [#193](https://github.com/arshad-shah/verql/pull/193) [`6d7eced`](https://github.com/arshad-shah/verql/commit/6d7eced31b15051a0816be06856dc2d109b0c3c0) Thanks [@arshad-shah](https://github.com/arshad-shah)! - Replace the `@xyflow/react` + `@dagrejs/dagre` ER diagram with a handrolled,
+  dependency-free renderer under `src/renderer/src/components/er/`. The diagram now
+  says what a relationship _means_: every connector carries crow's-foot
+  (Information-Engineering) cardinality — exactly one, zero or one, one or many,
+  zero or many — with identifying relationships drawn solid and non-identifying
+  dashed, plus a legend that renders from the same symbol geometry the connectors
+  use, so the two can't drift. Connectors anchor at the row of the field they
+  constrain rather than at the card's edge.
+
+  The diagram now follows the active theme. A `theme-bridge` reads the ERD palette
+  out of the semantic token layer (`--color-bg-inset`, `--color-border-strong`,
+  `--color-key-pk`/`-fk`, `--color-accent`, `--color-data-accent`, …) and the type
+  ramp, and repaints on `data-theme` change across dark, light, midnight and any
+  plugin theme — no hardcoded colours and no external stylesheet the design system
+  can't reach. Entity cards size to their content instead of a fixed 220px, and a
+  layered layout engine places referenced entities ahead of the entities that
+  reference them (left in LR, above in TB). Below a zoom threshold each card
+  switches to a density read of its key structure without shifting any geometry.
+
+  Removing both dependencies and `@xyflow/react/dist/style.css` drops roughly
+  78 KB gzipped from the renderer bundle for the one surface that used them.
+  Geometry invariants (no card overlaps, no connector leg crossing an uninvolved
+  entity, deterministic output, cyclic/orphan termination, notation ordering) are
+  guarded in `tests/unit/er/`.
+
+### Patch Changes
+
+- [#185](https://github.com/arshad-shah/verql/pull/185) [`ee8c367`](https://github.com/arshad-shah/verql/commit/ee8c367b3ae1f910d4b3aae24227327b7a398734) Thanks [@arshad-shah](https://github.com/arshad-shah)! - Driver capability declarations and adapter implementations can no longer
+  silently disagree. A driver advertises features as serializable data on its
+  factory (`session`, `explain`) that the renderer gates on, and implements the
+  matching optional methods on its adapter that the glue calls — but nothing
+  linked the two, so a driver could declare a transaction capability it never
+  implemented (a toolbar button that crashed on use) or implement one it never
+  declared (a feature that silently never appeared). The adapter factory now
+  validates, in both directions, that each declaration maps to its adapter
+  methods when it builds an adapter — the single point every connection passes
+  through: a mismatch is an actionable error naming the capability, the offending
+  method, and the fix, so the connect fails clearly instead of crashing later
+  when the declared feature is used.
+
+- [#179](https://github.com/arshad-shah/verql/pull/179) [`ad41b37`](https://github.com/arshad-shah/verql/commit/ad41b376e6802b54427f26648825edca04408963) Thanks [@arshad-shah](https://github.com/arshad-shah)! - ER diagram node labels now use a readable, themed label colour derived from the
+  node's own hue instead of a hardcoded white. Every colour in the table palette
+  is bright enough that white text fell below WCAG AA against it (as low as
+  1.7:1 on the gold and green hues); the header label is now chosen from the
+  fill's luminance, clearing AA on every hue and every theme. This closes the one
+  place the renderer's foreground colour did not follow the theme, and the same
+  `--color-on-fill-*` label tokens replace the remaining raw palette classes
+  (`text-white`, `text-black`, `bg-black/50`, `divide-white`, `border-white`)
+  across the window controls, appearance settings, avatars, modals, notifications
+  sidebar and colour picker. A renderer-wide guard test now fails if any raw
+  Tailwind palette utility is reintroduced.
+
+- [#184](https://github.com/arshad-shah/verql/pull/184) [`d8cc04f`](https://github.com/arshad-shah/verql/commit/d8cc04fbcabcd8bae6e60aa46a4a8aebbfd2aea0) Thanks [@arshad-shah](https://github.com/arshad-shah)! - MCP tool-call approvals now describe non-SQL drivers in their own terms. The
+  approval prompt previously exposed a field named `sql` and, for any driver that
+  was not SQL (MongoDB, Redis, …), stuffed the tool's parameters into it as a JSON
+  blob highlighted as SQL — mislabeling what the user was being asked to grant. The
+  approval contract is now engine-neutral (an opaque `statement` plus the
+  `language` to highlight it in), so a Mongo or Redis command shows verbatim, in
+  its own syntax, and a guard test keeps the contract from drifting back to SQL.
+
+- [#177](https://github.com/arshad-shah/verql/pull/177) [`dbbf684`](https://github.com/arshad-shah/verql/commit/dbbf684ff5b0cc9ccfb1e0c8e583d707282d6a22) Thanks [@arshad-shah](https://github.com/arshad-shah)! - MCP server: fix multi-byte UTF-8 corruption and cap the request body size. The
+  `POST /messages` handler now buffers request chunks and decodes them once, so a
+  non-ASCII character split across a TCP chunk boundary is no longer mangled into
+  replacement characters. The body is also bounded to 1 MiB (tracked by byte
+  length); an oversized request is answered with `413` and its connection is torn
+  down instead of accumulating unbounded memory in the main process.
+
+- [#186](https://github.com/arshad-shah/verql/pull/186) [`d6731b0`](https://github.com/arshad-shah/verql/commit/d6731b0fc4fade911429dee2068a3cfe2de4746d) Thanks [@arshad-shah](https://github.com/arshad-shah)! - Name the recurring surface widths instead of hand-rolling arbitrary pixel
+  values. Dialog, palette and column widths that were scattered as `w-[400px]`,
+  `w-[520px]`, `w-[230px]`, `max-w-[1280px]` and the like are now named steps:
+  the `--container-prompt` (400px), `--container-palette` (520px) and
+  `--container-hero` (230px) tokens back a new `width` variant on the `Modal`
+  primitive (`width="prompt"` for confirm/blocking dialogs, `width="palette"` for
+  the command palette), so surface width is chosen from a scale rather than left
+  to each caller. Surface widths stay pixel-exact and density-independent.
+
+  Content constraints (label truncation bounds, a suggestion-wrap max-width, a
+  popover min-width) move onto the shared Tailwind width scale (`max-w-40`,
+  `min-w-65`, …); these track UI density, so at the default comfortable density
+  they render a little larger — more room before text truncates, never less, so
+  nothing that fit before clips now. The macOS traffic-light gutter and a
+  chevron-sized row spacer, which must stay fixed pixels, become inline widths.
+
+  A new fitness guard (`renderer-no-arbitrary-width`) fails CI if any
+  `w-[Npx]`/`max-w-[Npx]`/`min-w-[Npx]` is reintroduced under
+  `src/renderer/src/components`, naming the file, line and the named step or
+  inline-style exception to use instead.
+
+- [#190](https://github.com/arshad-shah/verql/pull/190) [`531f482`](https://github.com/arshad-shah/verql/commit/531f482756f2a81afee002ad4ea32201a4530d9b) Thanks [@arshad-shah](https://github.com/arshad-shah)! - Route all renderer backend access through a single platform client. Renderer
+  code now reaches the main process via `import { ipc } from '@/platform/client'`
+  (`ipc.invoke` / `ipc.on` / `ipc.optional` / `ipc.available()` / `ipc.platform()`)
+  instead of touching `window.electronAPI` directly, giving one chokepoint where
+  cross-cutting concerns (error normalization, activity logging, retry,
+  cancellation, instrumentation) can be added once rather than per call site.
+  `useIpcQuery` is built on top of the same client. Behaviour is unchanged; an
+  architecture guard (`renderer-backend-access-through-platform`) now fails the
+  build if the bridge is referenced anywhere outside the platform layer.
+
+- [#188](https://github.com/arshad-shah/verql/pull/188) [`cf976c6`](https://github.com/arshad-shah/verql/commit/cf976c6a7216916bf8acb701a618a4e35d1305c3) Thanks [@arshad-shah](https://github.com/arshad-shah)! - The theme and AI stores no longer throw when a plugin/IPC contribution list
+  resolves to a non-array (previously `themes:list` or the AI provider/model lists
+  resolving `undefined` surfaced as a `TypeError`); they now degrade to an empty
+  list. Alongside this, the test suite is green again (7 failures fixed) and
+  coverage is collected from both the unit and Storybook browser projects and
+  merged into one gated report.
+
+- [#182](https://github.com/arshad-shah/verql/pull/182) [`c6814a1`](https://github.com/arshad-shah/verql/commit/c6814a131a565a912444de3ae7bdb2d5ac078ddb) Thanks [@arshad-shah](https://github.com/arshad-shah)! - Extend the type scale to the app's real density instead of hand-rolling sub-12px
+  font sizes. Two named steps now sit below `xs` — `text-3xs` (10px) and `text-2xs`
+  (11px), each with its own tight line-height — declared in the token layer and
+  exposed as `size` variants on `Text`, `Label`, `Code` and `Tag` (and used by
+  `Badge`). The 83 ad-hoc `text-[8/9/10/11px]` values across the renderer's chrome
+  (explorer tree, status bar, activity rows, badges, AI panels) are migrated onto
+  these steps; the handful at 8/9px round up to 10px, the desktop legibility floor.
+  A new `renderer-no-arbitrary-font-size` guard test keeps the arbitrary-value
+  escape hatch from re-opening — any `text-[Npx]` reintroduced in a component fails
+  CI and the message names the scale step to use instead.
+
+- [#181](https://github.com/arshad-shah/verql/pull/181) [`76867eb`](https://github.com/arshad-shah/verql/commit/76867eb5b9b28e78627eb0183bb2c911bd116cb4) Thanks [@arshad-shah](https://github.com/arshad-shah)! - Type the main → renderer broadcast event seam end-to-end. Listener registration
+  (`window.electronAPI.on`) is now generic over `keyof IpcEventMap`, so the event
+  constant constrains the callback payload — a wrong-arity or wrong-typed listener
+  is a compile error instead of a silent runtime mismatch. The per-window emit
+  path gains a typed `sendTo(webContents, event, …)` helper (sibling to
+  `broadcast`), and the three remaining raw `webContents.send` call sites route
+  through it. This also corrects the `AI_CHAT_EVENT` payload contract, which
+  declared a single `[event]` argument while both emitter and listener have always
+  used two (`[streamId, event]`); the wire behaviour is unchanged. A new guard
+  test (`ipc-event-seam-typed`) keeps `IpcEventShapes` and `IPC_EVENTS` in
+  bijection and fails if the listener seam ever reverts to a bare `string` key.
+
 ## 1.6.0
 
 ### Minor Changes
