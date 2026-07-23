@@ -9,6 +9,7 @@ import { Button, Text, Flex, DropdownMenu, ConnectionDot } from '@/primitives'
 import { Menu } from '@/primitives/surfaces/menu'
 import { IPC_CHANNELS } from '@shared/ipc'
 import { useTranslation } from '@/i18n/I18nProvider'
+import { ipc } from '@/platform/client'
 
 interface Props {
   tabId: string
@@ -77,7 +78,7 @@ export function ConnectionSelector({ tabId, connectionId, database, schema }: Pr
       // no session is open. Reset txn status so the new connection gets a fresh
       // BEGIN on its first transactional query instead of reusing stale state.
       try {
-        await window.electronAPI.invoke(IPC_CHANNELS.DB_SESSION_CLOSE, connectionId, tabId)
+        await ipc.invoke(IPC_CHANNELS.DB_SESSION_CLOSE, connectionId, tabId)
       } catch {
         // best-effort — the session may not exist
       }

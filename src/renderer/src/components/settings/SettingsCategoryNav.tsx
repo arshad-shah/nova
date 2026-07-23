@@ -3,6 +3,7 @@ import { Box, Button } from '@/primitives'
 import { useUiStore } from '@/stores/ui'
 import { SETTINGS_CATEGORIES, type SettingsCategoryDef } from '@/lib/settings-categories'
 import { IPC_CHANNELS, IPC_EVENTS } from '@shared/ipc'
+import { ipc } from '@/platform/client'
 
 // Re-export so existing importers (e.g. SettingsLayout) keep working.
 export { SETTINGS_CATEGORIES }
@@ -24,7 +25,7 @@ export function SettingsCategoryNav({ categories }: NavProps = {}) {
 
   const reload = useCallback(async () => {
     try {
-      const list = await window.electronAPI.invoke(IPC_CHANNELS.PLUGINS_LIST) as PluginInfo[]
+      const list = await ipc.invoke(IPC_CHANNELS.PLUGINS_LIST) as PluginInfo[]
       const active = new Set(
         list.filter((p) => p.status.state === 'active' || p.status.state === 'degraded').map((p) => p.name)
       )
@@ -36,7 +37,7 @@ export function SettingsCategoryNav({ categories }: NavProps = {}) {
 
   useEffect(() => {
     reload()
-    const off = window.electronAPI.on(IPC_EVENTS.PLUGINS_LIFECYCLE, reload)
+    const off = ipc.on(IPC_EVENTS.PLUGINS_LIFECYCLE, reload)
     return () => off?.()
   }, [reload])
 

@@ -5,6 +5,7 @@ import { VerqlMark } from '@/components/brand/VerqlMark'
 import { useClipboard } from '@/hooks/useClipboard'
 import { IPC_CHANNELS } from '@shared/ipc'
 import { useTranslation } from '@/i18n/I18nProvider'
+import { ipc } from '@/platform/client'
 
 const HOMEPAGE_URL = 'https://verql.arshadshah.com'
 const GUIDE_URL = 'https://verql.arshadshah.com/guide/'
@@ -25,7 +26,7 @@ type AboutInfo = {
 }
 
 const openExternal = (url: string) =>
-  void window.electronAPI?.invoke(IPC_CHANNELS.WINDOW_OPEN_EXTERNAL, url)
+  void ipc.optional(IPC_CHANNELS.WINDOW_OPEN_EXTERNAL, url)
 
 /** Custom in-app "About Verql" — a hero-split modal (branded panel + the build
  *  versions as KeyValue rows with a copy-all action, plus resource links) so we
@@ -39,7 +40,7 @@ export function AboutModal({ open, onClose }: { open: boolean; onClose: () => vo
   useEffect(() => {
     if (!open) return
     let active = true
-    window.electronAPI
+    ipc
       ?.invoke(IPC_CHANNELS.APP_ABOUT_INFO)
       .then((i) => { if (active) setInfo(i) })
       .catch(() => {})

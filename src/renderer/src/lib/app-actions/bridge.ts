@@ -2,6 +2,7 @@ import { IPC_CHANNELS, IPC_EVENTS } from '@shared/ipc'
 import { errorMessage } from '@shared/errors'
 import { appActions } from './registry'
 import { useToastStore } from '@/stores/toast'
+import { ipc } from '@/platform/client'
 
 let initialized = false
 
@@ -13,15 +14,15 @@ let initialized = false
  */
 export function initAppActionBridge(): void {
   if (initialized) return
-  if (typeof window === 'undefined' || !window.electronAPI) return
+  if (!ipc.available()) return
   initialized = true
 
-  window.electronAPI.on(IPC_EVENTS.APP_ACTION_PERFORM, async (payload: unknown) => {
+  ipc.on(IPC_EVENTS.APP_ACTION_PERFORM, async (payload: unknown) => {
     const p = payload as { requestId?: string; actionId?: string; params?: Record<string, unknown> } | undefined
     if (!p?.requestId || !p.actionId) return
 
     const report = (success: boolean, error?: string) => {
-      void window.electronAPI.invoke(IPC_CHANNELS.APP_ACTION_RESULT, {
+      void ipc.invoke(IPC_CHANNELS.APP_ACTION_RESULT, {
         requestId: p.requestId!, success, ...(error ? { error } : {})
       })
     }

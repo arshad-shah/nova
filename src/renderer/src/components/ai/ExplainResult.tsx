@@ -16,6 +16,7 @@ import { parseAppError } from '@/lib/db-error'
 import { IPC_CHANNELS, IPC_EVENTS } from '@shared/ipc'
 import { useTranslation } from '@/i18n/I18nProvider'
 import { t as coreT } from '@shared/i18n'
+import { ipc } from '@/platform/client'
 
 export function ExplainResult({ tabId, explanation }: { tabId: string; explanation: string | null }) {
   const { t } = useTranslation()
@@ -25,7 +26,7 @@ export function ExplainResult({ tabId, explanation }: { tabId: string; explanati
   // Subscribe to streaming events for THIS tab. The event channel is broadcast
   // to all renderers; filter by streamId to only consume our own stream.
   useEffect(() => {
-    const off = window.electronAPI.on(IPC_EVENTS.AI_EXPLAIN_EVENT, (event: unknown) => {
+    const off = ipc.on(IPC_EVENTS.AI_EXPLAIN_EVENT, (event: unknown) => {
       const e = event as { streamId: string; kind: string; text?: string; durationMs?: number; message?: string }
       const cur = useExplainStore.getState().byTab[tabId]
       if (!cur || e.streamId !== cur.streamId) return
@@ -80,7 +81,7 @@ function StopButton({ tabId, streamId }: { tabId: string; streamId: string | nul
       size="xs"
       className="!h-6 !px-1.5 gap-1 text-text-muted"
       onClick={() => {
-        if (streamId) void window.electronAPI.invoke(IPC_CHANNELS.AI_EXPLAIN_ABORT, streamId)
+        if (streamId) void ipc.invoke(IPC_CHANNELS.AI_EXPLAIN_ABORT, streamId)
         useExplainStore.getState().failStream(tabId, coreT('aiui.explain.stopped'))
       }}
     >
@@ -135,7 +136,7 @@ function ActionBar({ tabId, text }: { tabId: string; text: string }) {
       sampleRows: tab.results.rows.slice(0, 5),
     }
     try {
-      const { streamId, model } = await window.electronAPI.invoke(
+      const { streamId, model } = await ipc.invoke(
         IPC_CHANNELS.AI_EXPLAIN_START,
         request,
       ) as { streamId: string; model: string }

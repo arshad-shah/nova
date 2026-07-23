@@ -8,6 +8,7 @@ import { useConnectionsStore, getActiveProfile } from '@/stores/connections'
 import { initialAutoCommit } from '@/lib/initial-autocommit'
 import { Stack, ScrollArea, Text, EmptyState, IconButton, Box, Flex, Input, SearchInput } from '@/primitives'
 import { useTranslation } from '@/i18n/I18nProvider'
+import { ipc } from '@/platform/client'
 
 // Saved queries persist in the SQLite app-data store (main process). This module
 // keeps a synchronous in-memory mirror — so existing callers like `saveQuery`
@@ -19,17 +20,17 @@ const listeners = new Set<() => void>()
 let savedQueries: SavedQuery[] = []
 let hydrated = false
 
-const hasIpc = (): boolean => typeof window !== 'undefined' && !!window.electronAPI
+const hasIpc = (): boolean => ipc.available()
 
 function notify() { for (const l of listeners) l() }
 function subscribe(fn: () => void) { listeners.add(fn); return () => { listeners.delete(fn) } }
 function snapshot() { return savedQueries }
 
 function upsertRemote(q: SavedQuery) {
-  if (hasIpc()) void window.electronAPI.invoke(IPC_CHANNELS.APPDATA_SAVED_QUERIES_UPSERT, q)
+  if (hasIpc()) void ipc.invoke(IPC_CHANNELS.APPDATA_SAVED_QUERIES_UPSERT, q)
 }
 function deleteRemote(id: string) {
-  if (hasIpc()) void window.electronAPI.invoke(IPC_CHANNELS.APPDATA_SAVED_QUERIES_DELETE, id)
+  if (hasIpc()) void ipc.invoke(IPC_CHANNELS.APPDATA_SAVED_QUERIES_DELETE, id)
 }
 
 /** Read the pre-SQLite localStorage payload for one-time migration. Legacy
@@ -61,11 +62,11 @@ function readLegacy(): SavedQuery[] | null {
 export async function hydrateSavedQueries(): Promise<void> {
   if (hydrated || !hasIpc()) return
   hydrated = true
-  let list = await window.electronAPI.invoke(IPC_CHANNELS.APPDATA_SAVED_QUERIES_LIST)
+  let list = await ipc.invoke(IPC_CHANNELS.APPDATA_SAVED_QUERIES_LIST)
   if (list.length === 0) {
     const legacy = readLegacy()
     if (legacy && legacy.length > 0) {
-      await window.electronAPI.invoke(IPC_CHANNELS.APPDATA_SAVED_QUERIES_IMPORT, legacy)
+      await ipc.invoke(IPC_CHANNELS.APPDATA_SAVED_QUERIES_IMPORT, legacy)
       try { localStorage.removeItem(LEGACY_KEY) } catch { /* ignore */ }
       list = legacy
     }

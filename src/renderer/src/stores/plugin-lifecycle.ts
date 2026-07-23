@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { IPC_CHANNELS, IPC_EVENTS } from '@shared/ipc'
+import { ipc } from '@/platform/client'
 
 export type PluginLifecycleEvent = 'activated' | 'deactivated' | 'installed' | 'uninstalled'
 
@@ -20,7 +21,7 @@ export const usePluginLifecycleStore = create<PluginLifecycleState>((set) => ({
   pending: null,
   setPending: (change) => set({ pending: change }),
   restart: async () => {
-    await window.electronAPI.invoke(IPC_CHANNELS.APP_RESTART)
+    await ipc.invoke(IPC_CHANNELS.APP_RESTART)
   },
   dismiss: () => set({ pending: null })
 }))
@@ -31,9 +32,9 @@ declare global {
   // eslint-disable-next-line no-var
   var __pluginLifecycleListenerInstalled: boolean | undefined
 }
-if (typeof window !== 'undefined' && window.electronAPI && !globalThis.__pluginLifecycleListenerInstalled) {
+if (ipc.available() && !globalThis.__pluginLifecycleListenerInstalled) {
   globalThis.__pluginLifecycleListenerInstalled = true
-  window.electronAPI.on(IPC_EVENTS.PLUGINS_LIFECYCLE, (payload: unknown) => {
+  ipc.on(IPC_EVENTS.PLUGINS_LIFECYCLE, (payload: unknown) => {
     const p = payload as PendingChange | undefined
     if (!p?.name || !p.event) return
     const current = usePluginLifecycleStore.getState().pending

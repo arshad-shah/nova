@@ -3,6 +3,7 @@ import type { ConnectionProfile } from '@shared/types'
 import { Stack, Button, Spinner, Alert, Box } from '@/primitives'
 import { IPC_CHANNELS } from '@shared/ipc'
 import { useTranslation } from '@/i18n/I18nProvider'
+import { ipc } from '@/platform/client'
 
 interface Props {
   profile: ConnectionProfile
@@ -15,7 +16,7 @@ export function ConnectionTestButton({ profile }: Props) {
 
   const test = async () => {
     setStatus('testing')
-    const result = await window.electronAPI.invoke(IPC_CHANNELS.DB_TEST_CONNECTION, profile)
+    const result = await ipc.invoke(IPC_CHANNELS.DB_TEST_CONNECTION, profile)
     if (result.success) {
       setStatus('success')
       const parts = [result.version ?? t('connections.test.connected')]

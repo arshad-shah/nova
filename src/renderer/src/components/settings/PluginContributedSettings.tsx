@@ -3,6 +3,7 @@ import { Box, Divider, Stack, Text, Input, NumberInput, PasswordInput, Select, S
 import { useTranslation } from '@/i18n/I18nProvider'
 import { SettingRow } from './SettingRow'
 import { IPC_CHANNELS, IPC_EVENTS } from '@shared/ipc'
+import { ipc } from '@/platform/client'
 
 interface PluginSettingSchema {
   key: string
@@ -38,7 +39,7 @@ export function PluginContributedSettings({ category }: Props) {
 
   const reload = useCallback(async () => {
     try {
-      const result = await window.electronAPI.invoke(IPC_CHANNELS.PLUGINS_GET_CATEGORIZED_SETTINGS, category)
+      const result = await ipc.invoke(IPC_CHANNELS.PLUGINS_GET_CATEGORIZED_SETTINGS, category)
       setContributions(result)
     } catch {
       setContributions([])
@@ -47,12 +48,12 @@ export function PluginContributedSettings({ category }: Props) {
 
   useEffect(() => {
     reload()
-    const offLifecycle = window.electronAPI.on(IPC_EVENTS.PLUGINS_LIFECYCLE, reload)
+    const offLifecycle = ipc.on(IPC_EVENTS.PLUGINS_LIFECYCLE, reload)
     return () => offLifecycle?.()
   }, [reload])
 
   const updateValue = async (pluginName: string, key: string, value: unknown) => {
-    await window.electronAPI.invoke(IPC_CHANNELS.PLUGINS_SET_SETTING, pluginName, key, value)
+    await ipc.invoke(IPC_CHANNELS.PLUGINS_SET_SETTING, pluginName, key, value)
     setContributions((prev) =>
       prev.map((c) =>
         c.pluginName === pluginName ? { ...c, values: { ...c.values, [key]: value } } : c

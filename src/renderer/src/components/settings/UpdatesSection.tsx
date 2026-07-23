@@ -3,6 +3,7 @@ import { Stack, Flex, Button, Text } from '@/primitives'
 import { IPC_CHANNELS, IPC_EVENTS, type IpcEventMap } from '@shared/ipc'
 import { useTranslation } from '@/i18n/I18nProvider'
 import { SettingRow } from './SettingRow'
+import { ipc } from '@/platform/client'
 
 type ProgressEvent = IpcEventMap[typeof IPC_EVENTS.UPDATER_PROGRESS][0]
 
@@ -34,7 +35,7 @@ export function UpdatesSection() {
   useEffect(() => {
     let cancelled = false
     ;(async () => {
-      const s = await window.electronAPI.invoke(IPC_CHANNELS.UPDATER_STATUS)
+      const s = await ipc.invoke(IPC_CHANNELS.UPDATER_STATUS)
       if (cancelled) return
       if (!s.available) {
         setStatus({ kind: 'unsupported' })
@@ -55,7 +56,7 @@ export function UpdatesSection() {
   // `updater:update` is running so the UI can show phase changes without
   // polling.
   useEffect(() => {
-    return window.electronAPI.on(IPC_EVENTS.UPDATER_PROGRESS, (...args: unknown[]) => {
+    return ipc.on(IPC_EVENTS.UPDATER_PROGRESS, (...args: unknown[]) => {
       const payload = args[0] as ProgressEvent
       if (payload.phase === 'done') {
         setAction({ kind: 'done', restartRequired: payload.restartRequired })
@@ -72,7 +73,7 @@ export function UpdatesSection() {
 
   const check = async () => {
     setAction({ kind: 'checking' })
-    const result = await window.electronAPI.invoke(IPC_CHANNELS.UPDATER_CHECK)
+    const result = await ipc.invoke(IPC_CHANNELS.UPDATER_CHECK)
     if (!result.supported) {
       setStatus({ kind: 'unsupported' })
       return
@@ -89,12 +90,12 @@ export function UpdatesSection() {
 
   const update = async () => {
     setAction({ kind: 'updating', phase: 'downloading' })
-    await window.electronAPI.invoke(IPC_CHANNELS.UPDATER_UPDATE)
+    await ipc.invoke(IPC_CHANNELS.UPDATER_UPDATE)
     // Progress and terminal states arrive via UPDATER_PROGRESS.
   }
 
   const restart = () => {
-    void window.electronAPI.invoke(IPC_CHANNELS.APP_RESTART)
+    void ipc.invoke(IPC_CHANNELS.APP_RESTART)
   }
 
   const versionLabel = status.latestVersion && status.available

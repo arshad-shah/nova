@@ -16,6 +16,7 @@ import { hydrateSavedQueries } from '@/components/saved-queries/SavedQueriesPane
 import './styles/globals.css'
 import { IPC_CHANNELS } from '@shared/ipc'
 import { CONFIG_KEY } from '@shared/settings'
+import { ipc } from '@/platform/client'
 
 function AppLoader() {
   const hydrate = useSettingsStore((s) => s.hydrate)
@@ -37,10 +38,10 @@ function AppLoader() {
 
       if (oldTheme || oldSidebarWidth) {
         if (oldTheme) {
-          await window.electronAPI.invoke(IPC_CHANNELS.SETTINGS_SET, CONFIG_KEY.APPEARANCE_THEME, oldTheme)
+          await ipc.invoke(IPC_CHANNELS.SETTINGS_SET, CONFIG_KEY.APPEARANCE_THEME, oldTheme)
         }
         if (oldSidebarWidth) {
-          await window.electronAPI.invoke(
+          await ipc.invoke(
             IPC_CHANNELS.SETTINGS_SET,
             CONFIG_KEY.APPEARANCE_SIDEBAR_WIDTH,
             parseFloat(oldSidebarWidth)
@@ -75,7 +76,7 @@ function AppLoader() {
       // version so each surface opens at most once per transition. Non-blocking.
       void (async () => {
         try {
-          const { version } = await window.electronAPI.invoke(IPC_CHANNELS.APP_ABOUT_INFO)
+          const { version } = await ipc.invoke(IPC_CHANNELS.APP_ABOUT_INFO)
           const onboarding = useSettingsStore.getState().settings.onboarding
           const surface = decideStartupSurface({
             lastSeenVersion: onboarding.lastSeenVersion,

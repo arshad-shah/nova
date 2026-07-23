@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import type { QueryHistoryEntry } from '@shared/appdata'
 import { IPC_CHANNELS } from '@shared/ipc'
 import { useSettingsStore } from './settings'
+import { ipc } from '@/platform/client'
 
 // Query history is persisted in the SQLite app-data store (main process), which
 // owns the cap/pruning. This store keeps an in-memory mirror for the History
@@ -16,7 +17,7 @@ interface QueryHistoryState {
   clear: () => void
 }
 
-const hasIpc = (): boolean => typeof window !== 'undefined' && !!window.electronAPI
+const hasIpc = (): boolean => ipc.available()
 const maxItems = (): number =>
   Math.max(1, useSettingsStore.getState().settings.general.maxHistoryItems)
 
@@ -26,7 +27,7 @@ export const useQueryHistoryStore = create<QueryHistoryState>((set, get) => ({
 
   hydrate: async () => {
     if (get().hydrated || !hasIpc()) return
-    const entries = await window.electronAPI.invoke(
+    const entries = await ipc.invoke(
       IPC_CHANNELS.APPDATA_QUERY_HISTORY_LIST,
       maxItems(),
     )
@@ -43,17 +44,17 @@ export const useQueryHistoryStore = create<QueryHistoryState>((set, get) => ({
     // Optimistic prepend, trimmed to the same cap the store enforces.
     set((s) => ({ entries: [entry, ...s.entries].slice(0, max) }))
     if (hasIpc()) {
-      void window.electronAPI.invoke(IPC_CHANNELS.APPDATA_QUERY_HISTORY_ADD, entry, max)
+      void ipc.invoke(IPC_CHANNELS.APPDATA_QUERY_HISTORY_ADD, entry, max)
     }
   },
 
   remove: (id) => {
     set((s) => ({ entries: s.entries.filter((e) => e.id !== id) }))
-    if (hasIpc()) void window.electronAPI.invoke(IPC_CHANNELS.APPDATA_QUERY_HISTORY_DELETE, id)
+    if (hasIpc()) void ipc.invoke(IPC_CHANNELS.APPDATA_QUERY_HISTORY_DELETE, id)
   },
 
   clear: () => {
     set({ entries: [] })
-    if (hasIpc()) void window.electronAPI.invoke(IPC_CHANNELS.APPDATA_QUERY_HISTORY_CLEAR)
+    if (hasIpc()) void ipc.invoke(IPC_CHANNELS.APPDATA_QUERY_HISTORY_CLEAR)
   },
 }))

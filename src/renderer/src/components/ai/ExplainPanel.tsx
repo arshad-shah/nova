@@ -9,6 +9,7 @@ import { parseAppError } from '@/lib/db-error'
 import { IPC_CHANNELS } from '@shared/ipc'
 import { useTranslation } from '@/i18n/I18nProvider'
 import { t as coreT } from '@shared/i18n'
+import { ipc } from '@/platform/client'
 
 interface Props {
   tabId: string
@@ -31,7 +32,7 @@ export function ExplainPanel({ tabId, sql, results, explanation }: Props) {
       sampleRows: results.rows.slice(0, 5),
     }
     try {
-      const { streamId, model } = await window.electronAPI.invoke(
+      const { streamId, model } = await ipc.invoke(
         IPC_CHANNELS.AI_EXPLAIN_START,
         request,
       ) as { streamId: string; model: string }

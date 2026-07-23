@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { IpcChannelMap } from '@shared/ipc'
+import { ipc } from '@/platform/client'
 
 interface IpcQueryResult<T> {
   data: T | undefined
@@ -27,7 +28,7 @@ export function useIpcQuery<K extends keyof IpcChannelMap>(
   useEffect(() => {
     let active = true
     setLoading(true)
-    window.electronAPI
+    ipc
       .invoke(channel, ...args)
       .then((result) => {
         if (active) {

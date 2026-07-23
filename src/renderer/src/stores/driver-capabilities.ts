@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { IPC_CHANNELS, type IpcChannelMap } from '@shared/ipc'
 import { mergeCapabilities } from '@shared/driver-capabilities'
 import type { RuntimeCapabilityOverlay } from '@shared/driver-capabilities'
+import { ipc } from '@/platform/client'
 
 export type DriverCapabilities = NonNullable<IpcChannelMap[typeof IPC_CHANNELS.DB_DRIVER_CAPABILITIES]['return']>
 
@@ -43,7 +44,7 @@ export const useDriverCapabilitiesStore = create<DriverCapsState>((set, get) => 
     if (cached !== undefined) return cached
     const inflight = get().inflight[type]
     if (inflight) return inflight
-    const p = window.electronAPI
+    const p = ipc
       .invoke(IPC_CHANNELS.DB_DRIVER_CAPABILITIES, type)
       .then((caps) => {
         set((s) => ({
@@ -62,7 +63,7 @@ export const useDriverCapabilitiesStore = create<DriverCapsState>((set, get) => 
 
   async fetchConnection(profileId: string, type: string) {
     await get().fetch(type) // ensure static caps are cached
-    const overlay = await window.electronAPI.invoke(IPC_CHANNELS.DB_CONNECTION_CAPABILITIES, profileId)
+    const overlay = await ipc.invoke(IPC_CHANNELS.DB_CONNECTION_CAPABILITIES, profileId)
     set((s) => ({ byConnection: { ...s.byConnection, [profileId]: overlay } }))
   },
 
