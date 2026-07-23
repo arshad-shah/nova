@@ -60,7 +60,7 @@ const avatarVariants = cva(
        *   message failed).
        */
       tone: {
-        identity: 'text-white',
+        identity: 'text-on-fill-dark',
         accent: 'bg-accent/10 text-accent ring-1 ring-inset ring-accent/25',
         neutral: 'bg-bg-tertiary text-text-secondary ring-1 ring-inset ring-border-default',
         success: 'bg-success/10 text-success ring-1 ring-inset ring-success/25',

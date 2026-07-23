@@ -99,6 +99,14 @@
      base palette. */
   --color-overlay-strong: var(--color-overlay-strong, rgba(0, 0, 0, 0.3));
   --color-overlay-soft: var(--color-overlay-soft, rgba(0, 0, 0, 0.2));
+  /* Modal/sheet ::backdrop scrim — a token, so it is not a raw `bg-black/50`. */
+  --color-overlay-backdrop: var(--color-overlay-backdrop, rgba(0, 0, 0, 0.5));
+  /* Readable label/marker over a decorative colour fill — see tokens.css. The
+     two inks replace raw `text-white`/`text-black`/`border-white` sitting on an
+     entity's own colour (ER node headers, identity tiles, colour-picker
+     handles); the ink is chosen from the fill's lightness in lib/color-contrast. */
+  --color-on-fill-light: var(--color-on-fill-light, #141414);
+  --color-on-fill-dark: var(--color-on-fill-dark, #ffffff);
   --color-hover: var(--color-hover);
   --color-active: var(--color-active);
   --color-focus-ring: var(--color-focus-ring);

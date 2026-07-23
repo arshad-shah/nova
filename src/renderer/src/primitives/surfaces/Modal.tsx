@@ -3,7 +3,7 @@ import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '../utils/cn'
 
 const modalVariants = cva(
-  'fixed backdrop:bg-black/50 backdrop:backdrop-blur-sm bg-bg-secondary border border-border-default rounded-lg p-0 w-full text-text-primary shadow-[var(--shadow-elevated)]',
+  'fixed backdrop:bg-overlay-backdrop backdrop:backdrop-blur-sm bg-bg-secondary border border-border-default rounded-lg p-0 w-full text-text-primary shadow-[var(--shadow-elevated)]',
   {
     variants: {
       size: {
