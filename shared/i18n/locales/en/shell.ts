@@ -312,6 +312,17 @@ export const shell = {
     noTables: 'No {objects} found in "{schema}"',
     horizontal: 'Horizontal',
     vertical: 'Vertical',
+    zoomIn: 'Zoom in',
+    zoomOut: 'Zoom out',
+    fit: 'Fit to view',
+    ariaLabel: 'Entity relationship diagram, {entities} entities, {relationships} relationships',
+    legend: {
+      exactlyOne: 'Exactly one',
+      zeroOrOne: 'Zero or one',
+      oneOrMany: 'One or many',
+      zeroOrMany: 'Zero or many',
+      nonIdentifying: 'Non-identifying',
+    },
   },
   exportModal: {
     title: 'Export {tableName}',

@@ -160,8 +160,23 @@ themes; `ColorInput`'s picker portals so it isn't clipped. The new
 (`tone` × `intensity`) for hero panels, empty states, and callouts.
 
 **Key libraries:** Monaco (SQL editor, custom completion in
-`lib/monaco-sql.ts`), AG Grid (results), `@xyflow/react` (ER diagrams), Recharts
-(chart panel).
+`lib/monaco-sql.ts`), AG Grid (results), Recharts (chart panel). The ER diagram
+is **handrolled** — no external graph library (see below).
+
+**ER diagram.** `components/er/` is a self-contained, dependency-free entity-
+relationship renderer (it replaced `@xyflow/react` + `@dagrejs/dagre`). The
+split keeps every module single-purpose and the geometry testable headless:
+`model.ts` (engine-agnostic schema shapes), `adapter.ts` (the one file that maps
+a `SchemaColumn` onto that model), `theme-bridge.ts` (reads the ERD palette out
+of the semantic token layer and repaints on `data-theme` change — the canvas
+can't resolve `var(--…)`, so this is how the diagram follows the theme with zero
+hardcoded colours), `metrics.ts` (content-driven card sizing), `notation.ts`
+(crow's-foot / Information-Engineering cardinality symbols), `layout.ts` (a
+layered rank/order/place engine — the dagre replacement, LR or TB), `route.ts`
+(orthogonal corridor routing), `viewport.ts` (pan/zoom/hit-test), `paint.ts`
+(canvas painter) and `svg.ts` (export serialiser — shares layout+routing with
+the painter so the two can't disagree). `ErdView.tsx` is the only file that
+imports React. Geometry invariants are guarded in `tests/unit/er/`.
 
 **Query editor.** The query editor renders per-statement actions through a `StatementGutter` overlay rather than Monaco's built-in CodeLens. The splitter + lens actions are keyed by **statement syntax** (`'sql'` / `'redis'` / `'mongodb'`), which each driver declares via its `statementSyntax` capability — the renderer resolves the syntax from capabilities and looks up the matching contribution (no hardcoded db-type list). The gutter owns the view-zone + content-widget lifecycle and reads execution results from the `statement-status` store to show a per-statement chip (last run duration, row count, error).
 

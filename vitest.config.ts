@@ -33,6 +33,13 @@ export default defineConfig({
         // pull Electron's runtime into the jsdom project when instrumented.
         'src/renderer/src/main.tsx',
         'src/preload/**',
+        // The ERD canvas painter and its React host need a real 2D context and
+        // a live layout box; they are exercised by the `storybook` browser
+        // project (not counted here), never the jsdom `unit` project. Their
+        // pure inputs — layout, routing, metrics, notation, viewport, svg — are
+        // covered directly in tests/unit/er/.
+        'src/renderer/src/components/er/paint.ts',
+        'src/renderer/src/components/er/ErdView.tsx',
       ],
       reporter: ['text-summary', 'json-summary', 'html'],
       reportsDirectory: 'coverage',

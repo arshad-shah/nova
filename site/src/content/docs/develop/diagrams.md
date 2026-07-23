@@ -607,7 +607,7 @@ mindmap
     key libs
       Monaco SQL editor
       AG Grid results
-      xyflow ER diagram
+      handrolled ER diagram
       Recharts charts
 ```
 
