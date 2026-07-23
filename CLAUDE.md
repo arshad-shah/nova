@@ -200,6 +200,7 @@ core architecture invariants and their enforcing tests:
 | Capability availability comes from declared `DriverCapabilities`, not adapter method probing (#171) | `capability-detection-by-declaration.test.ts` |
 | HTTP request bodies are decoded once (`Buffer.concat`), never per chunk (#171) | `request-body-decoded-once.test.ts` |
 | Main orchestrator stays pure (domain logic lives in plugins) | `main-orchestrator-purity.test.ts` |
+| Redis plugin never interpolates a value into a `query()` command string (#211) | `redis-no-value-interpolation.test.ts` |
 | The menu has one implementation across all surfaces | `menu-single-implementation.test.ts` |
 | Published `@verql/plugin-sdk` surface stays curated | `sdk-public-surface.test.ts` |
 

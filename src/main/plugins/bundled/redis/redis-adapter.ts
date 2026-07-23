@@ -7,6 +7,20 @@ export interface CommandResult {
   value: unknown
 }
 
+/** A single Redis command argument. Numbers are stringified at dispatch. */
+export type RedisArg = string | number
+
+/**
+ * The structured-command escape hatch driver code (getTableData, …) uses to run
+ * Redis commands without going through the string-parsing `query()`. Arguments
+ * are handed to ioredis as an array and never re-tokenised, so a server-supplied
+ * value (a key name) containing spaces or newlines cannot smuggle in a second
+ * command. `RedisAdapter` implements it; internal callers narrow to it.
+ */
+export interface RedisCommandDispatcher {
+  command(args: RedisArg[]): Promise<QueryResult>
+}
+
 /**
  * Map a stored connection profile to ioredis options + a target database.
  *
@@ -32,12 +46,93 @@ export function buildRedisConnection(
   return { options, database: Number(config.database) || 0 }
 }
 
+const HEX = /[0-9a-fA-F]/
+
+function unescapeDoubleQuoted(ch: string): string {
+  switch (ch) {
+    case 'n': return '\n'
+    case 'r': return '\r'
+    case 't': return '\t'
+    case 'b': return '\b'
+    case 'a': return '\x07'
+    default: return ch // \" → " , \\ → \ , everything else is literal
+  }
+}
+
+/**
+ * Tokenise one line of the Redis console the way `redis-cli` does
+ * (`sdssplitargs`): whitespace separates arguments, double quotes support
+ * `\xHH` hex and `\n \r \t \b \a \" \\` escapes, single quotes are literal
+ * except for `\'`, and adjacent quoted/unquoted runs concatenate into one
+ * argument. This is what lets `SET k "hello world"` be three arguments instead
+ * of four — a value containing a space was previously unwritable.
+ */
+function tokenizeRedisLine(line: string): string[] {
+  const args: string[] = []
+  let i = 0
+  const n = line.length
+  while (i < n) {
+    while (i < n && /\s/.test(line[i])) i++
+    if (i >= n) break
+    let current = ''
+    let building = true
+    while (i < n && building) {
+      const c = line[i]
+      if (c === '"') {
+        i++
+        while (i < n && line[i] !== '"') {
+          if (line[i] === '\\' && i + 1 < n) {
+            const next = line[i + 1]
+            if (next === 'x' && i + 3 < n && HEX.test(line[i + 2]) && HEX.test(line[i + 3])) {
+              current += String.fromCharCode(parseInt(line.slice(i + 2, i + 4), 16))
+              i += 4
+            } else {
+              current += unescapeDoubleQuoted(next)
+              i += 2
+            }
+          } else {
+            current += line[i]
+            i++
+          }
+        }
+        i++ // consume closing quote (or fall off the end on an unterminated string)
+      } else if (c === "'") {
+        i++
+        while (i < n && line[i] !== "'") {
+          if (line[i] === '\\' && line[i + 1] === "'") {
+            current += "'"
+            i += 2
+          } else {
+            current += line[i]
+            i++
+          }
+        }
+        i++ // consume closing quote
+      } else if (/\s/.test(c)) {
+        building = false
+      } else {
+        current += c
+        i++
+      }
+    }
+    args.push(current)
+  }
+  return args
+}
+
+/**
+ * Split a Redis console buffer into commands: one per line, each tokenised with
+ * `redis-cli`-style quoting (see {@link tokenizeRedisLine}). This is the parser
+ * for **user-typed** console input only. Driver code that reads server-supplied
+ * values (key names) must never round-trip through here — it would let a key
+ * name containing a newline become a second command — and instead dispatches
+ * structured arrays via {@link RedisCommandDispatcher.command}.
+ */
 export function parseRedisCommands(input: string): string[][] {
   return input
     .split('\n')
-    .map(line => line.trim())
-    .filter(line => line.length > 0)
-    .map(line => line.split(/\s+/))
+    .map(line => tokenizeRedisLine(line))
+    .filter(args => args.length > 0)
 }
 
 function formatSingleValue(value: unknown): Record<string, unknown>[] {
@@ -89,7 +184,7 @@ export function formatRedisResult(results: CommandResult[]): QueryResult {
   return { rows, fields, rowCount: rows.length, duration, affectedRows }
 }
 
-export class RedisAdapter implements DbAdapter {
+export class RedisAdapter implements DbAdapter, RedisCommandDispatcher {
   private client: Redis | null = null
   private readonly connectionOptions: RedisOptions | string
   private currentDatabase: number
@@ -127,6 +222,22 @@ export class RedisAdapter implements DbAdapter {
     return this.client !== null && this.client.status === 'ready'
   }
 
+  /**
+   * Run one command from its already-split argument array. Dispatches through
+   * ioredis's `client.call(cmd, ...args)` so the array is sent as-is (never
+   * re-parsed) and unknown commands — plus Object.prototype-inherited methods
+   * like `toString` — surface as proper Redis ERR replies instead of being
+   * reachable through raw bracket access on the client instance.
+   */
+  private async callCommand(args: RedisArg[]): Promise<CommandResult> {
+    if (!this.client) throw new Error('Not connected')
+    const stringArgs = args.map(a => String(a))
+    const [cmd, ...cmdArgs] = stringArgs
+    if (cmd === undefined) throw new Error('Empty Redis command')
+    const value = await this.client.call(cmd, ...cmdArgs)
+    return { command: stringArgs.join(' '), value }
+  }
+
   async query(input: string, _params?: unknown[]): Promise<QueryResult> {
     if (!this.client) throw new Error('Not connected')
 
@@ -134,20 +245,24 @@ export class RedisAdapter implements DbAdapter {
     const commands = parseRedisCommands(input)
 
     const results: CommandResult[] = []
-
     for (const args of commands) {
-      const [cmd, ...cmdArgs] = args
-      // Dispatch through ioredis's command parser so unknown commands —
-      // and Object.prototype-inherited methods like `toString` — surface
-      // as proper Redis ERR replies instead of being reachable through
-      // raw bracket access on the client instance.
-      const value = await this.client.call(cmd, ...cmdArgs)
-      results.push({ command: args.join(' '), value })
+      results.push(await this.callCommand(args))
     }
 
     const duration = Math.round(performance.now() - start)
     const result = formatRedisResult(results)
     return { ...result, duration }
+  }
+
+  /**
+   * Structured-command dispatch for internal driver code — see
+   * {@link RedisCommandDispatcher}. The argument array is handed straight to
+   * ioredis and never tokenised, so a server-supplied value (e.g. a key name
+   * containing a newline or a space) cannot inject an extra command the way
+   * interpolating it into a `query()` string would.
+   */
+  async command(args: RedisArg[]): Promise<QueryResult> {
+    return formatRedisResult([await this.callCommand(args)])
   }
 
   async getTables(_schema?: string): Promise<SchemaTable[]> {
