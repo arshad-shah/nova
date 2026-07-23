@@ -210,7 +210,7 @@ export class SqliteAdapter implements DbAdapter {
     return [this.dbPath.split('/').pop() ?? this.dbPath]
   }
 
-  async switchDatabase(_database: string): Promise<void> {
-    throw new Error('SQLite does not support switching databases')
-  }
+  // No `switchDatabase`: SQLite cannot repoint a connection at another database
+  // in-place, so it declares no `databaseSwitch` capability and omits the method
+  // (the two are validated to agree in driver-validation.ts).
 }

@@ -15,6 +15,7 @@ import { useTranslation } from '@/i18n/I18nProvider'
 import { t as coreT } from '@shared/i18n'
 import { isSchemaMutatingSql } from '@/lib/sql-classify'
 import { getStatementContribution } from '@/lib/statement-registry'
+import { applyConnectionContext } from '@/lib/apply-connection-context'
 import { ipc } from '@/platform/client'
 
 /** Localized confirm message for a destructive statement, or null when safe.
@@ -55,23 +56,16 @@ export function useQueryExecution(
   // current database, so applying context *after* opening the session would
   // wipe the session out from under the first query. It's idempotent — a no-op
   // once the connection is already on the right database.
+  //
+  // The switch is gated on the driver's declared `databaseSwitch` capability
+  // (via applyConnectionContext), so a driver that can't switch is skipped
+  // rather than probed-by-exception. A switch that genuinely fails on a *capable*
+  // driver now propagates into runStatement's catch — the query is aborted and
+  // the error surfaced, instead of silently running against the wrong database.
   const applyContext = useCallback(async () => {
     if (!tab.connectionId) return
-    if (tab.database) {
-      try {
-        await ipc.invoke(IPC_CHANNELS.DB_SWITCH_DATABASE, tab.connectionId, tab.database)
-      } catch {
-        // ignore — some adapters don't support switchDatabase
-      }
-    }
-    if (tab.schema) {
-      try {
-        await ipc.invoke(IPC_CHANNELS.DB_SET_SCHEMA, tab.connectionId, tab.schema)
-      } catch {
-        // ignore — some adapters don't support setSchema
-      }
-    }
-  }, [tab.connectionId, tab.database, tab.schema])
+    await applyConnectionContext(tab.connectionId, { database: tab.database, schema: tab.schema }, caps)
+  }, [tab.connectionId, tab.database, tab.schema, caps])
 
   // Ask the driver to parse the results into a plan tree (db:parse-plan). The
   // renderer never parses EXPLAIN output itself; the driver returns [] for

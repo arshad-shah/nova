@@ -32,10 +32,10 @@ import type { DbAdapter } from '../../db/adapter'
 //
 // Scope: only capabilities that carry BOTH a serializable declaration AND a set
 // of adapter methods can drift, so only those are linked here (`session`,
-// `explain`). Optional methods with no declared-capability counterpart today
-// (`setSchema`, `switchWarehouse`, `switchRole`, `cancelQuery`,
-// `getSchemaObjects`) are invoked defensively by the glue and are intentionally
-// out of scope until they gain a declaration.
+// `explain`, `databaseSwitch`). Optional methods with no declared-capability
+// counterpart today (`setSchema`, `switchWarehouse`, `switchRole`,
+// `cancelQuery`, `getSchemaObjects`) are invoked defensively by the glue and are
+// intentionally out of scope until they gain a declaration.
 
 /** Adapter methods the `session.manualTransactions` declaration promises: pin a
  *  dedicated connection, toggle auto-commit, and drive begin/commit/rollback.
@@ -54,6 +54,12 @@ export const TRANSACTIONAL_METHODS = [
  *  tree-format driver must be able to parse its plan. Drivers whose `explain`
  *  is `format: 'text'` show raw plan text and need no parser. */
 export const EXPLAIN_TREE_METHODS = ['parseQueryPlan'] as const
+
+/** Adapter method the `databaseSwitch.supported` declaration promises: the
+ *  renderer shows the database selector because switching is declared, so a
+ *  declaring driver must be able to repoint the connection. Drivers that can't
+ *  switch in-connection (SQLite) omit the declaration and the method both. */
+export const DATABASE_SWITCH_METHODS = ['switchDatabase'] as const
 
 /** One capability declaration ⇔ one opt-in interface of adapter methods. */
 interface CapabilityInterface {
@@ -79,6 +85,12 @@ const CAPABILITY_INTERFACES: readonly CapabilityInterface[] = [
     declaredBy: "explain.format === 'tree'",
     isDeclared: (f) => f.explain?.format === 'tree',
     methods: EXPLAIN_TREE_METHODS,
+  },
+  {
+    name: 'SwitchesDatabase',
+    declaredBy: 'databaseSwitch.supported === true',
+    isDeclared: (f) => f.databaseSwitch?.supported === true,
+    methods: DATABASE_SWITCH_METHODS,
   },
 ]
 

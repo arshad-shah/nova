@@ -4,7 +4,7 @@ import type { DbAdapter } from '../../db/adapter'
 import type { UIRegistry } from './ui-registry'
 import type { CompletionRegistry } from './completion-registry'
 import type { AIAccess } from './ai-access'
-import type { SessionCapability, ExplainCapability, InspectionCapability, RuntimeCapabilityOverlay, DataNouns, DriverPresentation } from '@shared/driver-capabilities'
+import type { SessionCapability, ExplainCapability, InspectionCapability, DatabaseSwitchCapability, RuntimeCapabilityOverlay, DataNouns, DriverPresentation } from '@shared/driver-capabilities'
 import type { DbErrorRule } from '@shared/db-errors'
 import type { JsonSchemaObject } from './tool-schema'
 import { TOOL_PERMISSION, type ToolPermission } from '@shared/mcp'
@@ -244,6 +244,11 @@ export interface DriverFactory {
   explain?: ExplainCapability
   /** Active-session (process) inspection. Omit ⇒ no Sessions panel. */
   sessionInspection?: InspectionCapability
+  /** In-connection database switching. Declaring `{ supported: true }` promises
+   *  the optional `switchDatabase` adapter method; the factory validates the two
+   *  agree (see driver-validation.ts). Omit ⇒ the renderer hides the database
+   *  selector and never asks the connection to switch. */
+  databaseSwitch?: DatabaseSwitchCapability
   /** Optional per-connection overlay resolved at connect time (e.g. Mongo
    *  replica-set topology). SQL drivers omit it. */
   getRuntimeCapabilities?(adapter: DbAdapter): Promise<RuntimeCapabilityOverlay>

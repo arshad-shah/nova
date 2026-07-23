@@ -229,6 +229,7 @@ export function activate(ctx: PluginContext): void {
     getTableData: createRelationalGetTableData(SNOWFLAKE_QUOTE),
     explain: { supportsAnalyze: false, format: 'text', statement: 'EXPLAIN' },
     generateMigrationDdl: createMigrationDdl(SNOWFLAKE_QUOTE),
+    databaseSwitch: { supported: true },
   })
 
   // ── Declarative UI: Toolbar selectors (Snowsight-style Role + Warehouse) ──

@@ -158,6 +158,7 @@ export function activate(ctx: PluginContext): void {
     getTableData: createRelationalGetTableData(MY_QUOTE),
     explain: { supportsAnalyze: true, format: 'text', statement: 'EXPLAIN ANALYZE' },
     generateMigrationDdl: createMigrationDdl(MY_QUOTE),
+    databaseSwitch: { supported: true },
   })
 
   // The dynamic table/column half is shared; only these static items differ.

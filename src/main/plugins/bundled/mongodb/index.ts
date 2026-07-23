@@ -259,7 +259,8 @@ Examples:
       { key: 'authSource', label: 'Auth Source', type: 'text', default: 'admin' },
       { key: 'srv', label: 'Use SRV', type: 'boolean', default: false },
       { key: 'ssl', label: 'SSL', type: 'boolean', default: false }
-    ]
+    ],
+    databaseSwitch: { supported: true }
   })
 
   // ── Completion provider ────────────────────────────────────────────────────

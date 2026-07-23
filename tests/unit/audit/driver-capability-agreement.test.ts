@@ -26,6 +26,7 @@ import {
   validateDriverCapabilities,
   TRANSACTIONAL_METHODS,
   EXPLAIN_TREE_METHODS,
+  DATABASE_SWITCH_METHODS,
 } from '../../../src/main/plugins/sdk/driver-validation'
 import type { DriverFactory } from '../../../src/main/plugins/sdk/types'
 import type { DbAdapter } from '../../../src/main/db/adapter'
@@ -113,6 +114,40 @@ describe('driver capability declaration ↔ implementation agreement (#168)', ()
       const report = validateDriverCapabilities('stray-parser', f)
       expect(report.ok).toBe(false)
       expect(report.errors.join('\n')).toMatch(/ExplainsTree/)
+    })
+  })
+
+  describe('validateDriverCapabilities — SwitchesDatabase', () => {
+    it('accepts databaseSwitch declared with a switchDatabase method', () => {
+      const f = factory({ databaseSwitch: { supported: true } }, [...DATABASE_SWITCH_METHODS])
+      expect(validateDriverCapabilities('switcher', f).ok).toBe(true)
+    })
+
+    it('accepts a driver that neither declares nor implements switching (SQLite-shaped)', () => {
+      const f = factory({}, [])
+      expect(validateDriverCapabilities('no-switch', f).ok).toBe(true)
+    })
+
+    it('rejects databaseSwitch declared without a switchDatabase method', () => {
+      const f = factory({ databaseSwitch: { supported: true } }, [])
+      const report = validateDriverCapabilities('claims-switch', f)
+      expect(report.ok).toBe(false)
+      expect(report.errors.join('\n')).toMatch(/SwitchesDatabase/)
+      expect(report.errors.join('\n')).toMatch(/switchDatabase/)
+    })
+
+    it('rejects a switchDatabase method with no databaseSwitch declaration', () => {
+      const f = factory({}, ['switchDatabase'])
+      const report = validateDriverCapabilities('stray-switch', f)
+      expect(report.ok).toBe(false)
+      expect(report.errors.join('\n')).toMatch(/does not declare/)
+      expect(report.errors.join('\n')).toMatch(/databaseSwitch/)
+    })
+
+    it('treats databaseSwitch: { supported: false } as not declared', () => {
+      // A driver that says it can't switch must not implement the method either.
+      const f = factory({ databaseSwitch: { supported: false } }, [])
+      expect(validateDriverCapabilities('opted-out', f).ok).toBe(true)
     })
   })
 

@@ -36,6 +36,7 @@ import path from 'path'
 import {
   TRANSACTIONAL_METHODS,
   EXPLAIN_TREE_METHODS,
+  DATABASE_SWITCH_METHODS,
 } from '../../../src/main/plugins/sdk/driver-validation'
 
 const repoRoot = path.join(__dirname, '..', '..', '..')
@@ -46,6 +47,7 @@ const repoRoot = path.join(__dirname, '..', '..', '..')
 const CAPABILITY_METHODS: readonly string[] = [
   ...TRANSACTIONAL_METHODS,
   ...EXPLAIN_TREE_METHODS,
+  ...DATABASE_SWITCH_METHODS,
 ]
 
 /** Recursively collect .ts/.tsx sources under a directory. */

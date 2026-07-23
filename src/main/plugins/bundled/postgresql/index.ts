@@ -157,6 +157,7 @@ export function activate(ctx: PluginContext): void {
       transactionLabel: 'Transaction',
       rollbackKind: 'full',
     },
+    databaseSwitch: { supported: true },
   })
 
   // The dynamic table/column half is shared; only these static items differ.

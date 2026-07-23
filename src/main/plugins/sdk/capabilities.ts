@@ -19,5 +19,6 @@ export function serializeStaticCapabilities(factory: DriverFactory): DriverCapab
     session: factory.session,
     explain: factory.explain,
     sessionInspection: factory.sessionInspection,
+    databaseSwitch: factory.databaseSwitch,
   }
 }
