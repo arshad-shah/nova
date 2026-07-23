@@ -239,7 +239,8 @@ Do not use SQL syntax. Use standard Redis commands.`
       { key: 'password', label: 'Password', type: 'password' },
       { key: 'database', label: 'Database (0-15)', type: 'number', default: 0 },
       { key: 'ssl', label: 'SSL', type: 'boolean', default: false }
-    ]
+    ],
+    databaseSwitch: { supported: true }
   })
 
   // ── Completion provider ────────────────────────────────────────────────────

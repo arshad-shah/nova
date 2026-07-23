@@ -29,15 +29,22 @@ vi.mock('../../../../src/renderer/src/stores/connections', () => ({
 
 const mockFetchDatabases = vi.fn().mockResolvedValue(['app', 'analytics'])
 const mockFetchSchemas = vi.fn().mockResolvedValue(['public', 'sales'])
-const mockSwitchDatabase = vi.fn().mockResolvedValue(undefined)
 
 vi.mock('../../../../src/renderer/src/stores/schema', () => ({
   useSchemaStore: () => ({
     fetchDatabases: mockFetchDatabases,
     fetchSchemas: mockFetchSchemas,
-    switchDatabase: mockSwitchDatabase,
   }),
 }))
+
+const mockNotifyError = vi.fn()
+vi.mock('../../../../src/renderer/src/lib/notify-error', () => ({
+  notifyError: (...args: unknown[]) => mockNotifyError(...args),
+}))
+
+/** Capabilities that declare in-connection database switching, so the database
+ *  selector renders. Drivers that omit `databaseSwitch` hide the selector. */
+const CAPS_WITH_SWITCH = { hasSampleQuery: true, hasGetTableData: true, databaseSwitch: { supported: true } }
 
 const mockSetTabConnection = vi.fn()
 const mockSetTabDatabase = vi.fn()
@@ -74,6 +81,7 @@ function renderSelector(props?: Partial<React.ComponentProps<typeof ConnectionSe
       connectionId="conn-1"
       database="app"
       schema="public"
+      caps={CAPS_WITH_SWITCH}
       {...props}
     />
   )
@@ -85,6 +93,9 @@ describe('ConnectionSelector', () => {
     mockConnect.mockResolvedValue({ success: true })
     mockFetchDatabases.mockResolvedValue(['app', 'analytics'])
     mockFetchSchemas.mockResolvedValue(['public', 'sales'])
+    // Reset the IPC bridge to a benign resolver so a per-test failure override
+    // (the capable-switch-fails case) doesn't leak into later tests.
+    ;(window.electronAPI.invoke as ReturnType<typeof vi.fn>).mockResolvedValue(undefined)
   })
 
   it('lists connected connections and disconnected ones under a separate section', async () => {
@@ -163,9 +174,42 @@ describe('ConnectionSelector', () => {
     await screen.findByRole('menu')
     await user.click(screen.getByRole('menuitemradio', { name: /analytics/ }))
 
-    expect(mockSwitchDatabase).toHaveBeenCalledWith('conn-1', 'analytics')
+    // The switch goes through the shared applyConnectionContext helper → IPC,
+    // gated on the declared databaseSwitch capability.
+    await waitFor(() =>
+      expect(window.electronAPI.invoke).toHaveBeenCalledWith('db:switch-database', 'conn-1', 'analytics')
+    )
     expect(mockSetTabDatabase).toHaveBeenCalledWith('tab-1', 'analytics')
     expect(mockSetTabSchema).toHaveBeenCalledWith('tab-1', '')
+  })
+
+  it('hides the database selector when the driver does not declare databaseSwitch', async () => {
+    renderSelector({ database: 'app', caps: { hasSampleQuery: true, hasGetTableData: true } })
+
+    // The connection pill is still there, but no database menu trigger renders
+    // because the driver can't switch databases in-connection.
+    await waitFor(() => expect(mockFetchDatabases).toHaveBeenCalled())
+    const dbButtons = screen.queryAllByRole('button').filter((b) => b.textContent === 'app')
+    expect(dbButtons).toHaveLength(0)
+  })
+
+  it('surfaces an error and leaves the tab database unchanged when a capable switch fails', async () => {
+    ;(window.electronAPI.invoke as ReturnType<typeof vi.fn>).mockImplementation((channel: string) =>
+      channel === 'db:switch-database'
+        ? Promise.reject(new Error('permission denied'))
+        : Promise.resolve(undefined)
+    )
+    const user = userEvent.setup()
+    renderSelector({ database: 'app' })
+
+    const dbTrigger = await screen.findByRole('button', { name: /app/ })
+    await user.click(dbTrigger)
+    await screen.findByRole('menu')
+    await user.click(screen.getByRole('menuitemradio', { name: /analytics/ }))
+
+    await waitFor(() => expect(mockNotifyError).toHaveBeenCalled())
+    // The tab must NOT be moved to a database the connection failed to switch to.
+    expect(mockSetTabDatabase).not.toHaveBeenCalled()
   })
 
   it('lists fetched schemas and marks the active one as checked', async () => {

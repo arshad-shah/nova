@@ -3,7 +3,16 @@ import { useEffect } from 'react'
 import { ConnectionSelector } from './ConnectionSelector'
 import { useConnectionsStore } from '@/stores/connections'
 import { useSchemaStore } from '@/stores/schema'
+import type { DriverCapabilities } from '@/stores/driver-capabilities'
 import type { ConnectionProfile } from '@shared/types'
+
+/** Minimal capability object for the stories — the database selector only shows
+ *  when `databaseSwitch.supported` is declared, mirroring the real drivers. */
+const CAPS_WITH_SWITCH: DriverCapabilities = {
+  hasSampleQuery: true,
+  hasGetTableData: true,
+  databaseSwitch: { supported: true },
+}
 
 // ConnectionSelector reads the connections store (profiles + which ids are
 // connected) and resolves the database/schema lists through the schema store's
@@ -25,6 +34,7 @@ interface SeedOpts {
   connectedIds?: string[]
   databases?: string[]
   schemas?: string[]
+  caps?: DriverCapabilities | null
 }
 
 function seed(opts: SeedOpts) {
@@ -48,6 +58,7 @@ function seed(opts: SeedOpts) {
         connectionId={opts.connectionId}
         database={opts.database}
         schema={opts.schema}
+        caps={opts.caps ?? null}
       />
     )
   }
@@ -90,6 +101,7 @@ export const MultiDatabase: Story = {
     schema: 'public',
     databases: ['app', 'app_staging', 'reporting'],
     schemas: ['public', 'auth'],
+    caps: CAPS_WITH_SWITCH,
   }),
 }
 

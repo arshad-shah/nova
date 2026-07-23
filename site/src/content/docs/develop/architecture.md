@@ -89,8 +89,10 @@ drivers that support manual transactions, and an optional
 db type.** Beyond SQL generation, a driver declares serializable capabilities the
 renderer consumes generically: `statementSyntax` (which statement splitter the
 CodeLens gutter uses), `errorRules` (regexes that classify query errors —
-messages stay in the renderer's i18n catalogue), `explain`/`session` support, and
-`parseQueryPlan` for plan trees. This is enforced by the `export-import-no-hardcoding`
+messages stay in the renderer's i18n catalogue), `explain`/`session` support,
+`databaseSwitch` (whether the connection selector may repoint the connection at
+another database — gated on the declaration, not on catching a thrown error),
+and `parseQueryPlan` for plan trees. This is enforced by the `export-import-no-hardcoding`
 test, which fails if a db-type literal/branch reappears in the orchestrator or the
 key renderer files. See [proposals/db-boundary-renderer-migration.md](https://github.com/arshad-shah/verql/blob/main/docs/proposals/db-boundary-renderer-migration.md).
 

@@ -30,6 +30,15 @@ export interface InspectionCapability {
   canKill: boolean
 }
 
+/** Whether a driver can repoint a live connection at a different database
+ *  without reconnecting. Data-only so it serializes over IPC. The renderer gates
+ *  the database selector on `supported`; the `switchDatabase` adapter method is
+ *  the implementation half the factory validates against this declaration
+ *  (see driver-validation.ts). */
+export interface DatabaseSwitchCapability {
+  supported: boolean
+}
+
 /** A singular/plural noun pair the driver uses for one of its data concepts. */
 export interface DataNoun {
   /** Singular, lower-case (e.g. "table", "collection", "key"). */
@@ -130,6 +139,10 @@ export interface DriverCapabilities {
   session?: SessionCapability
   explain?: ExplainCapability
   sessionInspection?: InspectionCapability
+  /** Whether the driver can switch the active database on a live connection.
+   *  The renderer gates the database selector on this instead of discovering
+   *  support by catching a thrown error. Omit ⇒ no in-connection switch. */
+  databaseSwitch?: DatabaseSwitchCapability
 }
 
 /**

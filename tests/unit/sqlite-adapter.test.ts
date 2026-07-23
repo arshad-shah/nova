@@ -108,13 +108,12 @@ describe('SqliteAdapter.getRowCount', () => {
 })
 
 describe('SqliteAdapter — switchDatabase / getDatabases', () => {
-  it('switchDatabase always throws — SQLite has no server-side database switch', async () => {
-    const dbPath = path.join(os.tmpdir(), `test-switchdb-${Date.now()}.db`)
-    const adapter = new SqliteAdapter({ database: dbPath })
-    await adapter.connect()
-    await expect(adapter.switchDatabase('other')).rejects.toThrow(/does not support switching databases/)
-    await adapter.disconnect()
-    fs.unlinkSync(dbPath)
+  it('does not implement switchDatabase — SQLite has no server-side database switch', () => {
+    // switchDatabase is the optional implementation half of the `databaseSwitch`
+    // capability; SQLite declares neither. Its absence (rather than a throwing
+    // stub) is what keeps the driver-capability agreement consistent.
+    const adapter = new SqliteAdapter({ database: ':memory:' })
+    expect((adapter as { switchDatabase?: unknown }).switchDatabase).toBeUndefined()
   })
 
   it('getDatabases returns the basename of the configured file path', async () => {

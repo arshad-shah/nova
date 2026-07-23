@@ -10,18 +10,24 @@ import { Menu } from '@/primitives/surfaces/menu'
 import { IPC_CHANNELS } from '@shared/ipc'
 import { useTranslation } from '@/i18n/I18nProvider'
 import { ipc } from '@/platform/client'
+import { applyConnectionContext } from '@/lib/apply-connection-context'
+import { notifyError } from '@/lib/notify-error'
+import type { DriverCapabilities } from '@/stores/driver-capabilities'
 
 interface Props {
   tabId: string
   connectionId: string | null
   database: string | null
   schema: string | null
+  /** Resolved capabilities for this tab's driver. Gates the database selector
+   *  (shown only when `databaseSwitch` is declared) and the switch itself. */
+  caps: DriverCapabilities | null
 }
 
-export function ConnectionSelector({ tabId, connectionId, database, schema }: Props) {
+export function ConnectionSelector({ tabId, connectionId, database, schema, caps }: Props) {
   const { t } = useTranslation()
   const { connections, connectedIds, connect } = useConnectionsStore()
-  const { fetchSchemas, fetchDatabases, switchDatabase } = useSchemaStore()
+  const { fetchSchemas, fetchDatabases } = useSchemaStore()
   const { setTabConnection, setTabDatabase, setTabSchema, setTabTxnStatus } = useTabsStore()
   const fetchCaps = useDriverCapabilitiesStore((s) => s.fetch)
   const [schemaList, setSchemaList] = useState<string[]>([])
@@ -30,7 +36,11 @@ export function ConnectionSelector({ tabId, connectionId, database, schema }: Pr
   const connectedList = connections.filter(c => connectedIds.has(c.id))
   const disconnectedList = connections.filter(c => !connectedIds.has(c.id))
   const activeConn = connections.find(c => c.id === connectionId)
-  const hasMultipleDatabases = databaseList.length > 1
+  // The database selector only makes sense when the driver can actually repoint
+  // the connection — gate on the declared capability rather than discovering it
+  // by catching a thrown error at switch time.
+  const canSwitchDatabase = Boolean(caps?.databaseSwitch?.supported)
+  const hasMultipleDatabases = databaseList.length > 1 && canSwitchDatabase
 
   // Fetch databases when connection changes
   useEffect(() => {
@@ -95,9 +105,13 @@ export function ConnectionSelector({ tabId, connectionId, database, schema }: Pr
   const handleSelectDatabase = async (db: string) => {
     if (connectionId) {
       try {
-        await switchDatabase(connectionId, db)
-      } catch {
-        // ignore — some adapters don't support switchDatabase
+        await applyConnectionContext(connectionId, { database: db }, caps)
+      } catch (err) {
+        // A switch on a capable driver genuinely failed (target missing,
+        // permission denied, connection dropped). Surface it and leave the tab
+        // pointed at its current database — do NOT claim it moved.
+        notifyError(err, { titlePrefix: t('query.connection.database') })
+        return
       }
     }
     setTabDatabase(tabId, db)

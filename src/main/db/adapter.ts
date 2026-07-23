@@ -16,7 +16,8 @@ import type { SessionOpts } from '@shared/driver-capabilities'
  * Today:
  * `session.manualTransactions` ⇔ the transaction lifecycle methods
  * (`openSession`/`closeSession`/`setAutoCommit`/`beginTransaction`/`commit`/
- * `rollback`); `explain.format === 'tree'` ⇔ `parseQueryPlan`.
+ * `rollback`); `explain.format === 'tree'` ⇔ `parseQueryPlan`;
+ * `databaseSwitch.supported` ⇔ `switchDatabase`.
  */
 export interface DbAdapter {
   connect(): Promise<void>
@@ -29,7 +30,10 @@ export interface DbAdapter {
   getRowCount(table: string, schema?: string): Promise<number>
   getSchemas(): Promise<string[]>
   getDatabases(): Promise<string[]>
-  switchDatabase(database: string): Promise<void>
+  /** Repoint the live connection at another database. Optional: the
+   *  implementation half of the `databaseSwitch` capability. Drivers that can't
+   *  switch in-connection (e.g. SQLite) omit both. */
+  switchDatabase?(database: string): Promise<void>
   setSchema?(schema: string): Promise<void>
   switchWarehouse?(warehouse: string): Promise<void>
   switchRole?(role: string): Promise<void>

@@ -217,7 +217,12 @@ export function registerDbHandlers(
 
   handle(IPC_CHANNELS.DB_SWITCH_DATABASE, async (profileId, database) => {
     if (!database) throw new Error('Database name is required')
-    await requireAdapter(profileId).switchDatabase(database)
+    const adapter = requireAdapter(profileId)
+    // switchDatabase is the optional implementation half of the `databaseSwitch`
+    // capability; the renderer gates the selector on the declaration, but guard
+    // here too so a stray call surfaces a clear error instead of a TypeError.
+    if (!adapter.switchDatabase) throw new Error('This driver does not support switching databases')
+    await adapter.switchDatabase(database)
   })
 
   handle(IPC_CHANNELS.DB_SET_SCHEMA, async (profileId, schema) => {

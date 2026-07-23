@@ -72,7 +72,7 @@ export function QueryPanel({ tab }: Props) {
       {/* Connection + schema selector + toolbar */}
       <Flex direction="column" className="border-b border-border bg-bg-secondary shrink-0">
         <Flex direction="row" align="center" gap="sm" className="px-3 py-1.5">
-          <ConnectionSelector tabId={tab.id} connectionId={tab.connectionId} database={tab.database} schema={tab.schema} />
+          <ConnectionSelector tabId={tab.id} connectionId={tab.connectionId} database={tab.database} schema={tab.schema} caps={caps} />
           <Divider orientation="vertical" className="h-4" />
           <QueryToolbar
             onExecute={handleExecute}
