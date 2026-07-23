@@ -46,7 +46,22 @@ export interface MCPApprovalRequest {
   requestId: string
   toolId: string
   toolName: string
-  sql: string
+  /**
+   * The tool-call payload the user is being asked to approve, as opaque text.
+   * Engine-neutral: **never assume this is SQL.** For a SQL query tool it is the
+   * statement; for any other tool (a Mongo/Redis command, a structured action)
+   * it is the tool's parameters serialized for display. Approving a non-SQL tool
+   * call must never present a JSON blob under a field that claims to be `sql` —
+   * that mislabels what the human is granting. Pair with {@link language} so the
+   * renderer highlights it in the right syntax rather than hardcoding SQL.
+   */
+  statement: string
+  /**
+   * Editor language id used to syntax-highlight {@link statement} (e.g. `'sql'`
+   * for a SQL statement, `'json'` for serialized params). The renderer must read
+   * this instead of assuming SQL; unknown values degrade to plain text.
+   */
+  language: string
   permission: ToolPermission
 }
 
