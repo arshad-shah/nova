@@ -258,11 +258,12 @@ the Store being configured. To turn it on:
    `verql` / `CN=ms` identity that Partner Center refuses.
    > The `build.appx` block also pins `minVersion`/`maxVersionTested`. The Store
    > refuses any MSIX whose `TargetDeviceFamily` `MinVersion` is `<= 10.0.17134.0`
-   > (electron-builder's default is `10.0.14316.0`, which trips this), so we set
-   > `minVersion` to `10.0.17763.0` (Windows 10 1809). Don't lower it below the
-   > Store floor. `minVersion` is a floor, not a ceiling, so this still runs on
-   > Windows 11; `maxVersionTested` is `10.0.22621.0` (Windows 11 22H2) to
-   > declare Windows 11 as tested.
+   > (electron-builder's default is `10.0.14316.0`, which trips this). Verql
+   > targets **Windows 11 only**, so `minVersion` is `10.0.22000.0` (Windows 11
+   > 21H2 — the first Windows 11 build) and `maxVersionTested` is `10.0.22621.0`
+   > (Windows 11 22H2). This is well above the Store floor and drops Windows 10.
+   > Don't lower `minVersion` below `10.0.22000.0` without also revisiting the
+   > "Windows 11 or later" requirement in the user install docs.
 3. **Seed the listing with one manual submission.** `msstore publish` only
    *updates* an app that is already live. MSIX/appx can only be built on Windows,
    so produce the seed package on a Windows CI runner:
