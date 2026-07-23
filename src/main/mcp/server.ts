@@ -124,6 +124,23 @@ export function summarizeParams(params: Record<string, unknown>): string {
   return s.length > 120 ? s.slice(0, 117) + '…' : s
 }
 
+/**
+ * Describe a tool call for the approval prompt in the tool's *own* terms —
+ * engine-neutral, so the human sees what they are actually granting.
+ *
+ * A SQL query tool carries its statement in a string `sql` param, and that text
+ * is what should be shown and highlighted as SQL. Any other tool (a Mongo/Redis
+ * command, a structured action) has no such param; presenting its raw params as
+ * SQL would lie about the payload. Those fall back to the params serialized as
+ * JSON, highlighted as JSON. This is the fix for the field that used to be named
+ * `sql` and stuffed a `JSON.stringify(params)` blob into it for every non-SQL
+ * driver.
+ */
+export function describeToolCall(params: Record<string, unknown>): { statement: string; language: string } {
+  if (typeof params.sql === 'string') return { statement: params.sql, language: 'sql' }
+  return { statement: JSON.stringify(params, null, 2), language: 'json' }
+}
+
 // ─── Server ──────────────────────────────────────────────────────────────────
 
 export function createMCPServer(deps: MCPServerDeps): MCPServerInstance {
@@ -156,9 +173,10 @@ export function createMCPServer(deps: MCPServerDeps): MCPServerInstance {
       pendingApprovals.set(requestId, resolve)
       const win = BrowserWindow.getAllWindows()[0]
       if (!win) { pendingApprovals.delete(requestId); resolve(false); return }
+      const { statement, language } = describeToolCall(params)
       const req: MCPApprovalRequest = {
         requestId, toolId: tool.id, toolName: tool.name,
-        sql: typeof params.sql === 'string' ? params.sql : JSON.stringify(params, null, 2),
+        statement, language,
         permission: tool.permission,
       }
       sendTo(win.webContents, IPC_EVENTS.MCP_APPROVAL_REQUEST, req)
@@ -167,7 +185,7 @@ export function createMCPServer(deps: MCPServerDeps): MCPServerInstance {
         kind: 'approval',
         source: 'mcp',
         title: 'MCP query approval',
-        body: `${tool.name}: ${req.sql.slice(0, 200)}`,
+        body: `${tool.name}: ${req.statement.slice(0, 200)}`,
       })
       setTimeout(() => {
         if (pendingApprovals.delete(requestId)) {

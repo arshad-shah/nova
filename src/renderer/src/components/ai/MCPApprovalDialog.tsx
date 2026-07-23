@@ -31,7 +31,7 @@ export function MCPApprovalDialog() {
           })}
         </Text>
         <Box className="max-h-48 overflow-y-auto">
-          <CodeView code={req.sql} language="sql" />
+          <CodeView code={req.statement} language={req.language} />
         </Box>
       </Box>
       <Box className="flex justify-end gap-2 px-4 py-3 border-t border-border">

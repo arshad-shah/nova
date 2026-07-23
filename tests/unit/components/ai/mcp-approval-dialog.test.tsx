@@ -21,7 +21,8 @@ const request = {
   requestId: 'req-1',
   toolName: 'query',
   permission: 'write' as const,
-  sql: 'DELETE FROM users',
+  statement: 'DELETE FROM users',
+  language: 'sql',
 }
 
 function setStore(pending: unknown) {
@@ -84,5 +85,25 @@ describe('MCPApprovalDialog — fails closed', () => {
   it('distinguishes a write request from a read request', () => {
     render(<MCPApprovalDialog />)
     expect(screen.getByText(/write/i)).toBeInTheDocument()
+  })
+
+  it('presents a non-SQL tool call in its own terms, not as SQL', () => {
+    // The motivating bug: a Mongo/Redis tool call has no `sql` param, so its
+    // payload was serialized to JSON and stuffed into a field named `sql`,
+    // then highlighted as SQL — mislabeling what the human is approving. The
+    // payload must show verbatim, in the driver's own language.
+    const payload = JSON.stringify({ command: 'DEL', key: 'session:abc' }, null, 2)
+    setStore({
+      requestId: 'req-2',
+      toolName: 'redis_command',
+      permission: 'write' as const,
+      statement: payload,
+      language: 'json',
+    })
+    render(<MCPApprovalDialog />)
+    expect(screen.getByText(/"command": "DEL"/)).toBeInTheDocument()
+    // The code view must be told the payload is JSON, never assume SQL.
+    expect(screen.getByText('JSON')).toBeInTheDocument()
+    expect(screen.queryByText('SQL')).toBeNull()
   })
 })

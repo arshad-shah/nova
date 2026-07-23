@@ -33,7 +33,8 @@ export const WriteRequest: Story = {
     requestId: 'req-1',
     toolId: 'execute_query',
     toolName: 'execute_query',
-    sql: 'DELETE FROM sessions WHERE expires_at < now();',
+    statement: 'DELETE FROM sessions WHERE expires_at < now();',
+    language: 'sql',
     permission: 'write',
   }),
 }
@@ -43,8 +44,22 @@ export const ReadRequest: Story = {
     requestId: 'req-2',
     toolId: 'execute_query',
     toolName: 'execute_query',
-    sql: 'SELECT id, email FROM users ORDER BY created_at DESC LIMIT 50;',
+    statement: 'SELECT id, email FROM users ORDER BY created_at DESC LIMIT 50;',
+    language: 'sql',
     permission: 'read',
+  }),
+}
+
+// A non-SQL tool call: the payload is the tool's params, shown in the tool's own
+// terms (JSON) rather than mislabeled and highlighted as SQL.
+export const NonSqlRequest: Story = {
+  render: seed({
+    requestId: 'req-3',
+    toolId: 'redis_command',
+    toolName: 'redis_command',
+    statement: JSON.stringify({ command: 'DEL', key: 'session:abc' }, null, 2),
+    language: 'json',
+    permission: 'write',
   }),
 }
 
