@@ -220,7 +220,7 @@ export function ChatPanelHeader() {
 
       {/* Row 2: model + context window bar (prominent) */}
       <Box className="px-3 pb-2 space-y-1">
-        <Flex align="center" justify="between" className="text-[11px]">
+        <Flex align="center" justify="between" className="text-2xs">
           <Flex align="center" gap="xs">
             <Sparkles size={11} className="text-accent" />
             <Text size="xs" color="muted">{t('aiui.header.model')}</Text>
@@ -238,7 +238,7 @@ export function ChatPanelHeader() {
               className="bg-bg-tertiary shadow-none"
               aria-label={t('aiui.header.used', { used: formatCompactNumber(totalTokens), total: formatCompactNumber(contextWindow) })}
             />
-            <Flex align="center" justify="between" className="text-[10px]">
+            <Flex align="center" justify="between" className="text-3xs">
               <Text size="xs" color="muted">
                 {t('aiui.header.used', { used: formatCompactNumber(totalTokens), total: formatCompactNumber(contextWindow) })}
               </Text>

@@ -38,7 +38,7 @@ function TableNodeComponent({ data }: NodeProps) {
 
       <Box className="divide-y divide-border">
         {columns.map((col) => (
-          <Flex key={col.name} align="center" gap="xs" className="px-2.5 py-1 text-[11px]">
+          <Flex key={col.name} align="center" gap="xs" className="px-2.5 py-1 text-2xs">
             {col.isPrimaryKey ? (
               <Key size={10} strokeWidth={1.8} className="text-key-pk shrink-0" />
             ) : col.isForeignKey ? (

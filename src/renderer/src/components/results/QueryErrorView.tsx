@@ -48,7 +48,7 @@ export function QueryErrorView({ error, dbType }: Props) {
           {/* Footer: stable code chip (analytics + bug reports) + raw disclosure. */}
           <Flex align="center" justify="between" gap="sm" className="pt-1">
             {!isUnknown && (
-              <Badge tone="default" size="sm" className="font-mono text-[10px] uppercase">
+              <Badge tone="default" size="sm" className="font-mono text-3xs uppercase">
                 {parsed.code}
               </Badge>
             )}
@@ -57,7 +57,7 @@ export function QueryErrorView({ error, dbType }: Props) {
               size="none"
               type="button"
               onClick={() => setShowRaw(s => !s)}
-              className="inline-flex items-center gap-1 text-[11px] text-text-muted hover:text-text-primary transition-colors ml-auto"
+              className="inline-flex items-center gap-1 text-2xs text-text-muted hover:text-text-primary transition-colors ml-auto"
             >
               {showRaw ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
               {showRaw ? t('query.error.hideDriverMessage') : t('query.error.showDriverMessage')}
@@ -65,7 +65,7 @@ export function QueryErrorView({ error, dbType }: Props) {
           </Flex>
 
           {showRaw && (
-            <Box className="rounded-md bg-bg-inset border border-border-default px-3 py-2 font-mono text-[11px] text-text-secondary whitespace-pre-wrap break-words">
+            <Box className="rounded-md bg-bg-inset border border-border-default px-3 py-2 font-mono text-2xs text-text-secondary whitespace-pre-wrap break-words">
               {parsed.raw}
             </Box>
           )}

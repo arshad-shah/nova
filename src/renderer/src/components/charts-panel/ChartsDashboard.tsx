@@ -43,11 +43,11 @@ export function ChartsDashboard() {
             <Flex direction="row" align="center" gap="sm">
               <BarChart3 size={12} className="text-accent shrink-0" />
               <Text size="xs" color="primary" truncate className="flex-1">{tab.title}</Text>
-              <Text size="xs" color="muted" className="text-[10px] ml-auto">
+              <Text size="xs" color="muted" className="text-3xs ml-auto">
                 {t('shell.charts.rowsCount', { count: tab.results?.rowCount ?? 0 })}
               </Text>
             </Flex>
-            <Text size="xs" color="muted" truncate className="text-[10px] mt-0.5 font-mono pl-5 block">
+            <Text size="xs" color="muted" truncate className="text-3xs mt-0.5 font-mono pl-5 block">
               {tab.sql.slice(0, 60)}{tab.sql.length > 60 ? '...' : ''}
             </Text>
           </Box>

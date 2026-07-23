@@ -53,7 +53,7 @@ export function SchemaObjectGroup({
             <HighlightedText text={it.label} query={filterText} />
           </Box>
           {it.sub && (
-            <Box as="span" className="opacity-50 truncate text-[10px] shrink min-w-0 italic">
+            <Box as="span" className="opacity-50 truncate text-3xs shrink min-w-0 italic">
               {it.sub}
             </Box>
           )}

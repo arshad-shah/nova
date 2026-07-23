@@ -248,7 +248,7 @@ export function CommandPalette({ open, onClose }: Props) {
             }`}
           >
             <Flex align="center" gap="sm">
-              {cmd.category && <Text size="xs" color="muted" className="text-[10px] uppercase">{cmd.category}</Text>}
+              {cmd.category && <Text size="xs" color="muted" className="text-3xs uppercase">{cmd.category}</Text>}
               <Text size="xs">{cmd.title}</Text>
             </Flex>
             {cmd.keybinding && <KbdGroup accelerator={cmd.keybinding} size="sm" />}

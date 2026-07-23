@@ -135,6 +135,10 @@ Primitives in `src/renderer/src/primitives/` organized by category: `forms/`, `l
 
 Three-layer theming in `primitives/theme/tokens.css`: raw color scale → semantic tokens (remapped per theme) → component tokens. Themes: dark, light, midnight. Applied via `data-theme` attribute, managed by `ThemeProvider`.
 
+**Type scale.** Font sizes come from the named ramp — `text-3xs`/`text-2xs` (10px/11px, fixed dense-chrome steps with their own line-heights) → `text-xs` … `text-3xl`, defined in `primitives/theme/tokens.css` + wired as Tailwind utilities in `styles/globals.css`, and exposed as `size` variants on `Text`/`Label`/`Code`/`Tag` (and `Badge`). Never hand-roll a font size with an arbitrary utility (`text-[10px]`): the `renderer-no-arbitrary-font-size` guard (`tests/unit/audit/`) fails any `text-[Npx]` in `src/renderer/src/components` and names the step to use instead.
+
+**Design-system fitness guards** live in `tests/unit/audit/` and fail CI when a documented rule is violated: no raw Tailwind palette colours (`renderer-no-raw-palette`) and no arbitrary font sizes (`renderer-no-arbitrary-font-size`).
+
 ### Key Libraries
 
 - **Monaco Editor** — query editor with custom completion provider (`lib/monaco-sql.ts`); the language is driver-declared via the `editorLanguage` capability (SQL by default), not assumed

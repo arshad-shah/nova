@@ -36,7 +36,7 @@ export function NotificationItem({ notification, onClick }: NotificationItemProp
         />
         <Box className="min-w-0 flex-1 text-left">
           <Text size="xs" color="primary" truncate>{message}</Text>
-          <Text size="xs" color="muted" className="mt-0.5 text-[9px]">
+          <Text size="xs" color="muted" className="mt-0.5 text-3xs">
             {source && <Box as="span">{source.label} · </Box>}
             {formatRelativeTime(timestamp)}
           </Text>

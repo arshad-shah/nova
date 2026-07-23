@@ -28,11 +28,11 @@ export function ErrorsTab({ errors, expandedError, onToggleError }: {
               <XCircle size={14} className="text-error mt-0.5 shrink-0" />
               <Box className="flex-1 min-w-0">
                 <Text size="xs" color="secondary" truncate className="block">{err.error}</Text>
-                <Text size="xs" color="muted" className="text-[10px]">{new Date(err.timestamp).toLocaleString()}</Text>
+                <Text size="xs" color="muted" className="text-3xs">{new Date(err.timestamp).toLocaleString()}</Text>
               </Box>
             </Flex>
             {expandedError === i && err.stack && (
-              <Code block className="text-[11px] text-text-muted bg-bg-tertiary rounded p-3 mt-1 overflow-x-auto whitespace-pre-wrap">
+              <Code block className="text-2xs text-text-muted bg-bg-tertiary rounded p-3 mt-1 overflow-x-auto whitespace-pre-wrap">
                 {err.stack}
               </Code>
             )}

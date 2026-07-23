@@ -24,18 +24,18 @@ export function OverviewTab({ plugin, stateConfig, errors }: {
       {/* Stat Cards */}
       <Flex direction="row" gap="md">
         <Card padding="md" className="flex-1">
-          <Text size="xs" color="muted" weight="medium" className="text-[10px] uppercase tracking-wide mb-2 block">{t('plugins.detail.overview.statusLabel')}</Text>
+          <Text size="xs" color="muted" weight="medium" className="text-3xs uppercase tracking-wide mb-2 block">{t('plugins.detail.overview.statusLabel')}</Text>
           <Flex direction="row" align="center" gap="xs">
             <StateIcon size={16} />
             <Text size="sm" weight="medium">{t(stateConfig.labelKey)}</Text>
           </Flex>
         </Card>
         <Card padding="md" className="flex-1">
-          <Text size="xs" color="muted" weight="medium" className="text-[10px] uppercase tracking-wide mb-2 block">{t('plugins.detail.overview.contributionsLabel')}</Text>
+          <Text size="xs" color="muted" weight="medium" className="text-3xs uppercase tracking-wide mb-2 block">{t('plugins.detail.overview.contributionsLabel')}</Text>
           <Text size="sm" weight="medium">{t('plugins.detail.overview.contributionsValue', { count: plugin.contributions.length })}</Text>
         </Card>
         <Card padding="md" className="flex-1">
-          <Text size="xs" color="muted" weight="medium" className="text-[10px] uppercase tracking-wide mb-2 block">{t('plugins.detail.overview.errorsLabel')}</Text>
+          <Text size="xs" color="muted" weight="medium" className="text-3xs uppercase tracking-wide mb-2 block">{t('plugins.detail.overview.errorsLabel')}</Text>
           <Text size="sm" weight="medium">{errors.length > 0 ? t('plugins.detail.overview.errorsValue', { count: errors.length }) : t('plugins.detail.overview.errorsNone')}</Text>
         </Card>
       </Flex>
@@ -47,7 +47,7 @@ export function OverviewTab({ plugin, stateConfig, errors }: {
 
       {/* Details Card */}
       <Card padding="md">
-        <Text size="xs" color="muted" weight="medium" className="text-[10px] uppercase tracking-wide mb-3 block">{t('plugins.detail.overview.detailsLabel')}</Text>
+        <Text size="xs" color="muted" weight="medium" className="text-3xs uppercase tracking-wide mb-3 block">{t('plugins.detail.overview.detailsLabel')}</Text>
         <Stack gap="sm">
           <DetailRow label={t('plugins.detail.overview.identifier')} value={plugin.name} mono />
           <DetailRow label={t('plugins.detail.overview.version')} value={plugin.version} />
