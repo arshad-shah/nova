@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
-import { fn, expect, userEvent } from 'storybook/test'
+import { fn, expect, userEvent, screen } from 'storybook/test'
 import { ColorInput } from './ColorInput'
 
 const meta: Meta<typeof ColorInput> = {
@@ -33,10 +33,10 @@ export const Default: Story = {
     // Open picker
     const swatch = canvas.getByLabelText('Pick color')
     await userEvent.click(swatch)
-    // Verify picker panel appeared — format buttons visible
-    await expect(canvas.getByRole('button', { name: 'hex' })).toBeInTheDocument()
-    await expect(canvas.getByRole('button', { name: 'rgb' })).toBeInTheDocument()
-    await expect(canvas.getByRole('button', { name: 'hsl' })).toBeInTheDocument()
+    // The picker panel portals to document.body — query via screen, not canvas.
+    await expect(await screen.findByRole('button', { name: 'hex' })).toBeVisible()
+    await expect(screen.getByRole('button', { name: 'rgb' })).toBeVisible()
+    await expect(screen.getByRole('button', { name: 'hsl' })).toBeVisible()
   },
 }
 
