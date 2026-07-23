@@ -230,6 +230,17 @@ The Windows build emits a single artifact (`package.json` → `build.win.target:
 > it out) — it only goes to the Store. There is no non-Store Windows install
 > path.
 
+> **Flaky Store commit API.** The Dev Center submission API allows only **one
+> pending submission per app**, and its Commit endpoint intermittently returns
+> an HTML error page instead of JSON (surfacing as a `System.Text.Json '<' is
+> an invalid start of a value` crash in the `msstore` CLI). The publish step
+> handles both: before each attempt it clears any dangling pending submission
+> (`msstore submission delete "$PRODUCT_ID" --no-confirm`) and it retries the
+> publish up to 4 times with backoff. If it still fails after that, the API is
+> likely degraded — just **re-run the `publish-msstore` job** (the build
+> artifacts are reused; the next run cleans up and retries). To clear a stuck
+> submission by hand: `msstore submission delete <productId> --no-confirm`.
+
 #### One-time Microsoft Store setup — do this before the first Store release
 
 The CI job is **skipped automatically** until the repository variable
@@ -247,11 +258,12 @@ the Store being configured. To turn it on:
    `verql` / `CN=ms` identity that Partner Center refuses.
    > The `build.appx` block also pins `minVersion`/`maxVersionTested`. The Store
    > refuses any MSIX whose `TargetDeviceFamily` `MinVersion` is `<= 10.0.17134.0`
-   > (electron-builder's default is `10.0.14316.0`, which trips this), so we set
-   > `minVersion` to `10.0.17763.0` (Windows 10 1809). Don't lower it below the
-   > Store floor. `minVersion` is a floor, not a ceiling, so this still runs on
-   > Windows 11; `maxVersionTested` is `10.0.22621.0` (Windows 11 22H2) to
-   > declare Windows 11 as tested.
+   > (electron-builder's default is `10.0.14316.0`, which trips this). Verql
+   > targets **Windows 11 only**, so `minVersion` is `10.0.22000.0` (Windows 11
+   > 21H2 — the first Windows 11 build) and `maxVersionTested` is `10.0.22621.0`
+   > (Windows 11 22H2). This is well above the Store floor and drops Windows 10.
+   > Don't lower `minVersion` below `10.0.22000.0` without also revisiting the
+   > "Windows 11 or later" requirement in the user install docs.
 3. **Seed the listing with one manual submission.** `msstore publish` only
    *updates* an app that is already live. MSIX/appx can only be built on Windows,
    so produce the seed package on a Windows CI runner:

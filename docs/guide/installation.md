@@ -83,10 +83,11 @@ can register it for you.
 
 ## Windows
 
-Verql for Windows is distributed exclusively as an MSIX package through the
+Verql for Windows requires **Windows 11** (build 22000 or later); Windows 10 is
+not supported. It is distributed exclusively as an MSIX package through the
 **Microsoft Store** — there is no standalone `.exe` installer.
 
-1. Open the Microsoft Store app on Windows.
+1. Open the Microsoft Store app on Windows 11.
 2. Search for **Verql** and install it.
 3. The Store keeps it updated automatically — see
    [Keeping Verql updated](./updating.md).

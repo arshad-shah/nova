@@ -301,5 +301,34 @@ jobs:
           # byte-identical, so rename before publishing.
           msix="${appx%.appx}.msix"
           mv "$appx" "$msix"
-          echo "Publishing $msix to product $PRODUCT_ID"
-          msstore publish "$msix" -id "$PRODUCT_ID"
+
+          # Dev Center allows only ONE pending submission per app. A `msstore
+          # publish` that dies mid-flight leaves a half-created submission that
+          # blocks the next "Create new Submission" — and the legacy Commit
+          # endpoint intermittently returns an HTML error page instead of JSON,
+          # surfacing as a `System.Text.Json '<' is an invalid start of a value`
+          # crash. So clear any dangling pending submission, then retry the
+          # publish with backoff. `submission delete` is best-effort: a "no
+          # pending submission" error just means there's nothing to clean up.
+          clear_pending() {
+            echo "Clearing any dangling pending submission…"
+            msstore submission delete "$PRODUCT_ID" --no-confirm || true
+          }
+
+          attempts=4
+          for i in $(seq 1 "$attempts"); do
+            clear_pending
+            echo "Publishing $msix to product $PRODUCT_ID (attempt $i/$attempts)"
+            if msstore publish "$msix" -id "$PRODUCT_ID"; then
+              echo "Store submission committed."
+              exit 0
+            fi
+            echo "::warning::msstore publish attempt $i/$attempts failed."
+            if [ "$i" -lt "$attempts" ]; then
+              backoff=$((i * 30))
+              echo "Retrying in ${backoff}s…"
+              sleep "$backoff"
+            fi
+          done
+          echo "::error::msstore publish failed after $attempts attempts. The Dev Center submission API may be degraded — re-run this job, or submit the .appx by hand (see .github/maintainers/release.md)."
+          exit 1
