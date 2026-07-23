@@ -88,7 +88,10 @@ drivers that support manual transactions, and an optional
 **Drivers own their dialect knowledge end-to-end — the renderer never branches on
 db type.** Beyond SQL generation, a driver declares serializable capabilities the
 renderer consumes generically: `statementSyntax` (which statement splitter the
-CodeLens gutter uses), `errorRules` (regexes that classify query errors —
+CodeLens gutter uses) and `supportsDollarQuoting` (whether that splitter treats
+`$$…$$` bodies as opaque — the single tokeniser both surfaces share lives in
+`shared/sql/statement-splitter.ts`, guarded by a single-implementation fitness
+function), `errorRules` (regexes that classify query errors —
 messages stay in the renderer's i18n catalogue), `explain`/`session` support,
 `databaseSwitch` (whether the connection selector may repoint the connection at
 another database — gated on the declaration, not on catching a thrown error),

@@ -24,6 +24,9 @@ interface Props {
   /** Driver-declared statement syntax (capability) used to select the splitter +
    *  lens actions. No gutter renders when the driver declares none. */
   statementSyntax: string | undefined
+  /** Driver-declared dollar-quoting support, threaded into the splitter so a
+   *  Postgres function body's internal semicolons don't split the statement. */
+  supportsDollarQuoting: boolean | undefined
 }
 
 interface ZoneEntry {
@@ -32,7 +35,7 @@ interface ZoneEntry {
   stmt: Statement
 }
 
-export function StatementGutter({ editor, tabId, connectionId, dbType, statementSyntax }: Props) {
+export function StatementGutter({ editor, tabId, connectionId, dbType, statementSyntax, supportsDollarQuoting }: Props) {
   const entriesRef = useRef<ZoneEntry[]>([])
   const [, setTick] = useState(0)
   const bump = () => setTick((n) => n + 1)
@@ -47,7 +50,7 @@ export function StatementGutter({ editor, tabId, connectionId, dbType, statement
       if (!model) return
       let stmts: Statement[] = []
       try {
-        stmts = contribution.splitStatements(model.getValue())
+        stmts = contribution.splitStatements(model.getValue(), { dollarQuoting: supportsDollarQuoting })
       } catch (err) {
         console.warn('[statement-gutter] splitter threw:', err)
       }
@@ -111,7 +114,7 @@ export function StatementGutter({ editor, tabId, connectionId, dbType, statement
         entriesRef.current = []
       })
     }
-  }, [editor, statementSyntax])
+  }, [editor, statementSyntax, supportsDollarQuoting])
 
   // Need the syntax (to pick the splitter/actions) and the real db type (passed
   // to lens-action handlers via the context).

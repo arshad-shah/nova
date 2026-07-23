@@ -187,6 +187,11 @@ export interface DriverFactory {
    *  renderer owns the (Monaco-coupled) splitter implementations. Omit to
    *  disable the per-statement gutter for this driver. */
   statementSyntax?: string
+  /** Whether this dialect uses Postgres-style dollar-quoted bodies
+   *  (`$$…$$`, `$tag$…$tag$`). When set, the shared statement splitter treats a
+   *  dollar-quoted region as opaque so a `;` inside a function body doesn't
+   *  split the statement. Only Postgres declares it today. */
+  supportsDollarQuoting?: boolean
   /** Error-classification rules for this dialect's query-semantic errors
    *  (bad column/table/schema, syntax, constraint violations, type mismatch,
    *  duplicate table, division-by-zero, deadlock, aborted txn). The renderer

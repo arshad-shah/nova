@@ -10,6 +10,7 @@ import type { SchemaColumn } from '@shared/types'
 import { errorMessage } from '@shared/errors'
 import { quoteIdentifier } from './identifier'
 import { splitSqlStatements } from './sql-statements'
+import { isCommentOnly } from '@shared/sql/statement-splitter'
 import type { RegisteredExporter } from './exporter-registry'
 import type { RegisteredImporter } from './importer-registry'
 
@@ -161,6 +162,9 @@ export function createSampleQuery(
 export function createSqlImporter(config: {
   displayName: string
   appliesToTypes: string[]
+  /** Set for dialects with `$$…$$` function bodies (Postgres) so the splitter
+   *  doesn't break a body apart on its internal semicolons. */
+  supportsDollarQuoting?: boolean
 }): RegisteredImporter {
   return {
     format: 'sql',
@@ -170,7 +174,9 @@ export function createSqlImporter(config: {
     driverExecutes: true,
     async parse(content, options) {
       const text = typeof content === 'string' ? content : content.toString('utf-8')
-      const statements = splitSqlStatements(text)
+      const statements = splitSqlStatements(text, {
+        dollarQuoting: config.supportsDollarQuoting,
+      }).filter((s) => !isCommentOnly(s))
       const adapter = options.adapter
       if (!adapter) throw new Error('SQL importer requires an active adapter')
       let executed = 0

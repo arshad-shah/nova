@@ -22,6 +22,15 @@ export interface Statement {
   text: string
 }
 
+/** Per-call splitting knobs a syntax may honour. Threaded from the connection's
+ *  driver capabilities at split time (a syntax registered once is shared by
+ *  several drivers, so per-driver behaviour can't be baked into registration). */
+export interface StatementSplitOptions {
+  /** Recognise dollar-quoted bodies (`$$…$$`) — set from the driver's
+   *  `supportsDollarQuoting` capability. Syntaxes without the notion ignore it. */
+  dollarQuoting?: boolean
+}
+
 export interface LensActionContext {
   stmt: Statement
   tabId: string
@@ -39,7 +48,7 @@ export interface LensAction {
 }
 
 export interface StatementContribution {
-  splitStatements(source: string): Statement[]
+  splitStatements(source: string, opts?: StatementSplitOptions): Statement[]
   lensActions: LensAction[]
   /** Classify a statement as destructive (drives the run-confirm prompt), or
    *  null when it's safe. Optional — a syntax with no notion of destructive

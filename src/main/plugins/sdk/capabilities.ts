@@ -9,6 +9,7 @@ export function serializeStaticCapabilities(factory: DriverFactory): DriverCapab
     sqlDialect: factory.sqlDialect,
     editorLanguage: factory.editorLanguage,
     statementSyntax: factory.statementSyntax,
+    supportsDollarQuoting: factory.supportsDollarQuoting,
     errorRules: factory.errorRules,
     defaultSchemaUseConnectionDatabase: factory.defaultSchemaUseConnectionDatabase,
     defaultSchemaCandidates: factory.defaultSchemaCandidates,

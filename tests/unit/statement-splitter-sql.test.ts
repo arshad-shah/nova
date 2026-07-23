@@ -95,6 +95,32 @@ describe('splitSqlStatements', () => {
     expect(stmts[0].endLine).toBe(2)
     expect(stmts[1].startLine).toBe(2)
   })
+
+  it('treats a doubled quote inside a string as an escape, not a terminator', () => {
+    const r = splitSqlStatements("SELECT 'it''s; fine'; SELECT 2")
+    expect(r.map((s) => s.text)).toEqual(["SELECT 'it''s; fine'", 'SELECT 2'])
+  })
+
+  it('retains comment text in the emitted statement', () => {
+    const r = splitSqlStatements('SELECT 1 /* keep */ FROM t')
+    expect(r).toHaveLength(1)
+    expect(r[0].text).toBe('SELECT 1 /* keep */ FROM t')
+  })
+
+  it('keeps a $$-quoted body intact when dollarQuoting is enabled', () => {
+    const src = 'CREATE FUNCTION f() AS $$ BEGIN a; b; END $$ LANGUAGE plpgsql;\nSELECT 2'
+    const r = splitSqlStatements(src, { dollarQuoting: true })
+    expect(r.map((s) => s.text)).toEqual([
+      'CREATE FUNCTION f() AS $$ BEGIN a; b; END $$ LANGUAGE plpgsql',
+      'SELECT 2',
+    ])
+  })
+
+  it('splits a $$-quoted body on internal semicolons when dollarQuoting is off', () => {
+    const src = 'CREATE FUNCTION f() AS $$ BEGIN a; b; END $$ LANGUAGE plpgsql'
+    const r = splitSqlStatements(src)
+    expect(r.length).toBeGreaterThan(1)
+  })
 })
 
 describe('sqlStatementContribution', () => {
