@@ -100,25 +100,25 @@ export function ConnectionListItem({
 
       <Flex direction="column" className="flex-1 min-w-0">
         <Flex align="center" gap="xs">
-          <Badge tone={DRIVER_TONE_BADGE[tone]} size="sm" className="font-mono text-[9px] leading-none px-1.5 py-0.5 shrink-0">
+          <Badge tone={DRIVER_TONE_BADGE[tone]} size="sm" className="font-mono text-3xs leading-none px-1.5 py-0.5 shrink-0">
             {abbreviation}
           </Badge>
           <Text size="xs" weight={active ? 'medium' : 'normal'} truncate className="flex-1">
             {connection.name}
           </Text>
           {connected && !active && (
-            <Badge tone="success" size="sm" className="text-[9px] uppercase tracking-wider shrink-0">
+            <Badge tone="success" size="sm" className="text-3xs uppercase tracking-wider shrink-0">
               {t('connections.active.badgeLive')}
             </Badge>
           )}
           {active && (
-            <Badge tone="accent" size="sm" className="text-[9px] uppercase tracking-wider shrink-0">
+            <Badge tone="accent" size="sm" className="text-3xs uppercase tracking-wider shrink-0">
               {t('connections.active.badgeActive')}
             </Badge>
           )}
         </Flex>
         {summary && (
-          <Text size="xs" color="muted" truncate className="text-[10px] font-mono">
+          <Text size="xs" color="muted" truncate className="text-3xs font-mono">
             {summary}
           </Text>
         )}

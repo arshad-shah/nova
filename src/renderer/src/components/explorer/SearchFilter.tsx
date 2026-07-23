@@ -51,7 +51,7 @@ export function SearchFilter({ resultCount }: SearchFilterProps) {
         {filterText && resultCount !== undefined && (
           <Box
             as="span"
-            className="pointer-events-none absolute right-7 top-1/2 -translate-y-1/2 text-[10px] tabular-nums px-1.5 py-0.5 rounded"
+            className="pointer-events-none absolute right-7 top-1/2 -translate-y-1/2 text-3xs tabular-nums px-1.5 py-0.5 rounded"
             style={{
               background: 'var(--color-bg-elevated)',
               color: 'var(--color-text-tertiary)',

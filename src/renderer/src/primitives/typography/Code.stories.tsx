@@ -7,6 +7,7 @@ const meta = {
   component: Code,
   argTypes: {
     block: { control: 'boolean' },
+    size: { control: 'select', options: ['3xs', '2xs', 'xs', 'sm'] },
   },
 } satisfies Meta<typeof Code>
 
@@ -32,6 +33,23 @@ export const Block: Story = {
   },
   play: async ({ canvas }) => {
     await expect(canvas.getByText(/function greet/)).toBeInTheDocument()
+  },
+}
+
+// The two sub-`xs` steps (`3xs`/`2xs`) keep inline code and stack traces legible
+// in dense chrome (tooltips, error panels) without an ad-hoc `text-[10px]`.
+export const Sizes: Story = {
+  render: () => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      {(['3xs', '2xs', 'xs', 'sm'] as const).map((size) => (
+        <Code key={size} size={size}>
+          {`size="${size}"  SELECT * FROM t`}
+        </Code>
+      ))}
+    </div>
+  ),
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText(/size="3xs"/)).toBeInTheDocument()
   },
 }
 

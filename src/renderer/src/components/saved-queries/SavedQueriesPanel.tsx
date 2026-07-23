@@ -135,7 +135,7 @@ export function SavedQueriesPanel() {
                 </IconButton>
               </Flex>
             </Flex>
-            <Text size="xs" color="muted" truncate className="text-[10px] mt-0.5 font-mono block">{query.sql}</Text>
+            <Text size="xs" color="muted" truncate className="text-3xs mt-0.5 font-mono block">{query.sql}</Text>
           </Box>
         ))}
       </ScrollArea>

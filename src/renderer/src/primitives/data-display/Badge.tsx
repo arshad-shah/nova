@@ -27,13 +27,13 @@ const badgeVariants = cva(
         unique: 'bg-transparent text-text-secondary border border-border-strong',
       },
       size: {
-        xs: 'text-[10px] px-1 py-0',
+        xs: 'text-3xs px-1 py-0',
         // Standalone metadata/status pill scale (row counts, index counts, a
         // status label) — `xs`'s 10px text with `md`'s roomier padding. Not a
         // point on the xs→xl continuum; a distinct combination those two
         // scales don't otherwise express. See `docs/ui-modularity-followups.md`
         // item 8.
-        pill: 'text-[10px] px-2 py-0.5',
+        pill: 'text-3xs px-2 py-0.5',
         sm: 'text-xs px-1.5 py-0.5',
         md: 'text-xs px-2 py-0.5',
         lg: 'text-sm px-2.5 py-1',

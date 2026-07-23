@@ -98,7 +98,7 @@ export function PluginsPanel() {
         {bundledPlugins.length > 0 && (
           <>
             <Box className="px-2 pt-2 pb-1">
-              <Text size="xs" color="muted" weight="medium" className="text-[10px] uppercase tracking-wide">{t('plugins.list.builtIn')}</Text>
+              <Text size="xs" color="muted" weight="medium" className="text-3xs uppercase tracking-wide">{t('plugins.list.builtIn')}</Text>
             </Box>
             {bundledPlugins.map(plugin => (
               <PluginRow
@@ -114,7 +114,7 @@ export function PluginsPanel() {
         {installedPlugins.length > 0 && (
           <>
             <Box className="px-2 pt-3 pb-1">
-              <Text size="xs" color="muted" weight="medium" className="text-[10px] uppercase tracking-wide">{t('plugins.list.installed')}</Text>
+              <Text size="xs" color="muted" weight="medium" className="text-3xs uppercase tracking-wide">{t('plugins.list.installed')}</Text>
             </Box>
             {installedPlugins.map(plugin => (
               <PluginRow
@@ -128,7 +128,7 @@ export function PluginsPanel() {
         )}
 
         {filtered.length > 0 && (
-          <Text size="xs" color="muted" className="text-[10px] text-center py-3 block">
+          <Text size="xs" color="muted" className="text-3xs text-center py-3 block">
             {t('plugins.list.count', { count: plugins.length })}
           </Text>
         )}

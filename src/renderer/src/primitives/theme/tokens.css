@@ -153,7 +153,19 @@
   --radius-lg: 8px;
   --radius-full: 9999px;
 
-  /* Typography */
+  /* Typography.
+     The two steps below `xs` exist because Verql is a dense, IDE-shaped app
+     whose chrome (tree meta, status-bar segments, badges, activity rows) reads
+     below the 12px `xs` floor. They were 83 ad-hoc `text-[8/9/10/11px]` values
+     before being consolidated into two named steps — see issue #173 and the
+     `renderer-no-arbitrary-font-size` guard. 8px/9px round up to `3xs` (10px):
+     below 10px is past the desktop legibility floor and was never a real step.
+     Unlike `xs`–`base`, these micro steps are NOT scaled by [data-density]
+     (see globals.css) — they are fixed chrome sizes, matching the fixed-pixel
+     values they replaced. Each ships its own tight line-height because vertical
+     rhythm matters more than glyph size at 10–11px. */
+  --font-3xs: 0.625rem; /* 10px */
+  --font-2xs: 0.6875rem; /* 11px */
   --font-xs: 0.75rem;
   --font-sm: 0.875rem;
   --font-base: 1rem;
@@ -162,6 +174,8 @@
   --font-2xl: 1.5rem;
   --font-3xl: 1.875rem;
 
+  --leading-3xs: 0.8125rem; /* 13px — line box for 10px chrome */
+  --leading-2xs: 0.875rem; /* 14px — line box for 11px chrome */
   --leading-tight: 1.25;
   --leading-normal: 1.5;
   --leading-relaxed: 1.75;

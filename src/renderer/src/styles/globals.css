@@ -21,6 +21,16 @@
 
 @theme {
   --font-mono: var(--app-font-mono);
+  /* Sub-`xs` type-scale steps for dense chrome. Tailwind ships `--text-xs`
+     upward by default (density remaps them below); these two extend the ramp
+     downward so `text-2xs`/`text-3xs` are real, named utilities instead of the
+     83 ad-hoc `text-[10px]`-style values they replaced (issue #173). Each pairs
+     a fixed size with its own line-height — see primitives/theme/tokens.css for
+     why they are fixed rather than density-scaled. */
+  --text-3xs: var(--font-3xs);
+  --text-3xs--line-height: var(--leading-3xs);
+  --text-2xs: var(--font-2xs);
+  --text-2xs--line-height: var(--leading-2xs);
   --color-bg-primary: var(--color-bg-primary);
   --color-bg-secondary: var(--color-bg-secondary);
   --color-bg-tertiary: var(--color-bg-tertiary);

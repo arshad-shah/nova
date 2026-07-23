@@ -80,10 +80,10 @@ export function ConnectionSwitcher({ isOpen, onClose, onNewConnection }: Connect
         />
         <Box className="min-w-0 flex-1">
           <Flex align="center" gap="xs">
-            <Text as="span" weight="semibold" className={cn('text-[10px]', color)}>{abbr}</Text>
-            <Text as="span" truncate className="text-[10px] text-text-primary">{c.name}</Text>
+            <Text as="span" weight="semibold" className={cn('text-3xs', color)}>{abbr}</Text>
+            <Text as="span" truncate className="text-3xs text-text-primary">{c.name}</Text>
           </Flex>
-          <Text as="p" truncate className="text-[9px] text-text-tertiary">
+          <Text as="p" truncate className="text-3xs text-text-tertiary">
             {c.host ? `${c.host}${c.port ? `:${c.port}` : ''}` : c.database}
           </Text>
         </Box>
@@ -111,7 +111,7 @@ export function ConnectionSwitcher({ isOpen, onClose, onNewConnection }: Connect
             onChange={(e) => setFilter(e.target.value)}
             placeholder={t('shell.connectionSwitcher.filterPlaceholder')}
             size="sm"
-            className="flex-1 bg-transparent border-0 focus:ring-0 px-0 text-[10px]"
+            className="flex-1 bg-transparent border-0 focus:ring-0 px-0 text-3xs"
           />
         </Flex>
       </Box>
@@ -119,7 +119,7 @@ export function ConnectionSwitcher({ isOpen, onClose, onNewConnection }: Connect
       <ScrollArea direction="vertical">
         {activeConn && (
           <Box className="px-1.5 pt-1">
-            <Text as="p" weight="semibold" className="px-1.5 py-1 text-[8px] uppercase tracking-wider text-text-tertiary">
+            <Text as="p" weight="semibold" className="px-1.5 py-1 text-3xs uppercase tracking-wider text-text-tertiary">
               {t('shell.connectionSwitcher.active')}
             </Text>
             {renderConnection(activeConn, true)}
@@ -128,7 +128,7 @@ export function ConnectionSwitcher({ isOpen, onClose, onNewConnection }: Connect
 
         {connectedConns.length > 0 && (
           <Box className="px-1.5 pt-0.5">
-            <Text as="p" weight="semibold" className="px-1.5 py-1 text-[8px] uppercase tracking-wider text-text-tertiary">
+            <Text as="p" weight="semibold" className="px-1.5 py-1 text-3xs uppercase tracking-wider text-text-tertiary">
               {t('shell.connectionSwitcher.connected')}
             </Text>
             {connectedConns.map((c) => renderConnection(c, false))}
@@ -137,7 +137,7 @@ export function ConnectionSwitcher({ isOpen, onClose, onNewConnection }: Connect
 
         {savedConns.length > 0 && (
           <Box className="px-1.5 pt-0.5 border-t border-border-subtle">
-            <Text as="p" weight="semibold" className="px-1.5 py-1 text-[8px] uppercase tracking-wider text-text-tertiary">
+            <Text as="p" weight="semibold" className="px-1.5 py-1 text-3xs uppercase tracking-wider text-text-tertiary">
               {t('shell.connectionSwitcher.saved')}
             </Text>
             {savedConns.map((c) => renderConnection(c, false))}
@@ -152,7 +152,7 @@ export function ConnectionSwitcher({ isOpen, onClose, onNewConnection }: Connect
             onNewConnection()
             onClose()
           }}
-          className="flex w-full items-center justify-center gap-1 rounded-md py-1 text-[10px] text-accent hover:bg-hover h-auto"
+          className="flex w-full items-center justify-center gap-1 rounded-md py-1 text-3xs text-accent hover:bg-hover h-auto"
         >
           <Plus size={10} />
           {t('shell.connectionSwitcher.newConnection')}

@@ -10,7 +10,7 @@ export function PluginStatusSegment() {
     return (
       <StatusBarSegment tone="default" side="right" aria-label={t('shell.statusBar.pluginsLoading')}>
         <Spinner size="xs" label={t('shell.statusBar.loadingPlugins')} />
-        <Box as="span" className="text-[10px]">{t('shell.statusBar.loading')}</Box>
+        <Box as="span" className="text-3xs">{t('shell.statusBar.loading')}</Box>
       </StatusBarSegment>
     )
   }
@@ -22,7 +22,7 @@ export function PluginStatusSegment() {
       aria-label={warn ? t('shell.statusBar.pluginsFailed', { count: status.failed }) : t('shell.statusBar.pluginsActive', { count: status.active })}
     >
       <StatusDot size="xs" tone={warn ? 'warning' : 'success'} />
-      <Box as="span" className="text-[10px]">
+      <Box as="span" className="text-3xs">
         {warn ? t('shell.statusBar.pluginsCount', { active: status.active, total: status.total }) : t('shell.statusBar.pluginsActiveShort', { count: status.active })}
       </Box>
     </StatusBarSegment>

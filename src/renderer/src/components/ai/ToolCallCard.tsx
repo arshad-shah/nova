@@ -107,13 +107,13 @@ export function ToolCallCard({ message, result }: ToolCallCardProps) {
         )}
         <Text as="span" size="xs" weight="medium" className="flex-1">{label}</Text>
         {isWaitingApproval && (
-          <Box as="span" className="text-[10px] text-warning">{t('aiui.tool.awaitingApproval')}</Box>
+          <Box as="span" className="text-3xs text-warning">{t('aiui.tool.awaitingApproval')}</Box>
         )}
         {isExecuting && (
-          <Box as="span" className="text-[10px] text-[var(--color-text-tertiary)]">{t('aiui.tool.running')}</Box>
+          <Box as="span" className="text-3xs text-[var(--color-text-tertiary)]">{t('aiui.tool.running')}</Box>
         )}
         {parsed && (
-          <Box as="span" className={`text-[10px] ${parsed.success ? 'text-[var(--color-success)]' : 'text-[var(--color-error)]'}`}>
+          <Box as="span" className={`text-3xs ${parsed.success ? 'text-[var(--color-success)]' : 'text-[var(--color-error)]'}`}>
             {parsed.success ? t('aiui.tool.done') : t('aiui.tool.failed')}
           </Box>
         )}

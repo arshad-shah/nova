@@ -33,7 +33,7 @@ export function PermissionModeRow() {
   }))
 
   return (
-    <Flex align="center" gap="sm" className="px-3 py-1.5 border-b border-border-default/40 text-[10px]">
+    <Flex align="center" gap="sm" className="px-3 py-1.5 border-b border-border-default/40 text-3xs">
       <Shield size={11} className="text-text-tertiary" />
       <Text size="xs" color="muted">{t('aiui.permission.mode')}</Text>
       <SegmentedControl

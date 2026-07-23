@@ -5,6 +5,12 @@ import { cn } from '../utils/cn'
 const textVariants = cva('', {
   variants: {
     size: {
+      // Dense-chrome steps below `xs` — fixed 10px/11px with their own tight
+      // line-heights (see primitives/theme/tokens.css). Use these instead of
+      // an ad-hoc `text-[10px]`; the renderer-no-arbitrary-font-size guard
+      // enforces it.
+      '3xs': 'text-3xs',
+      '2xs': 'text-2xs',
       xs: 'text-xs',
       sm: 'text-sm',
       base: 'text-base',
