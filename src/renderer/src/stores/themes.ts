@@ -75,6 +75,7 @@ interface ThemesState {
 const STYLE_ELEMENT_ID = 'plugin-themes-injected'
 
 function injectThemes(themes: RegisteredThemeView[]): void {
+  const list = Array.isArray(themes) ? themes : []
   const head = document.head
   let style = document.getElementById(STYLE_ELEMENT_ID) as HTMLStyleElement | null
   if (!style) {
@@ -83,7 +84,7 @@ function injectThemes(themes: RegisteredThemeView[]): void {
     head.appendChild(style)
   }
   const blocks: string[] = []
-  for (const t of themes) {
+  for (const t of list) {
     const parts: string[] = []
     if (t.tokens) {
       const vars = Object.entries(t.tokens)
@@ -109,7 +110,8 @@ export const useThemesStore = create<ThemesState>((set) => ({
     }
     let list: RegisteredThemeView[] = []
     try {
-      list = await window.electronAPI.invoke(IPC_CHANNELS.THEMES_LIST)
+      const res = await window.electronAPI.invoke(IPC_CHANNELS.THEMES_LIST)
+      list = Array.isArray(res) ? (res as RegisteredThemeView[]) : []
     } catch {
       list = []
     }
