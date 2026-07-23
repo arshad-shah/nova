@@ -17,10 +17,16 @@ import { IPC_CHANNELS, IPC_EVENTS } from '@shared/ipc'
 // invoke (request / response)
 const result = await window.electronAPI.invoke(IPC_CHANNELS.DB_QUERY, id, sql)
 
-// subscribe (one-way push)
-const off = window.electronAPI.on(IPC_EVENTS.AI_CHAT_EVENT, (event) => { … })
+// subscribe (one-way push) — the channel constrains the callback payload,
+// so `streamId`/`event` here infer from IpcEventMap without annotation.
+const off = window.electronAPI.on(IPC_EVENTS.AI_CHAT_EVENT, (streamId, event) => { … })
 off() // unsubscribe
 ```
+
+Both seams are fully typed against the maps in `shared/ipc.ts`: `invoke()`
+against `IpcChannelMap`, and `on()` against `IpcEventMap` — the event constant
+picks the payload tuple, so a wrong-arity or wrong-typed listener is a compile
+error, not a silent runtime mismatch.
 
 Never use a string literal at a call site. The CI test
 `tests/unit/ipc-channels-coverage.test.ts` scans the source tree for
@@ -173,7 +179,10 @@ and `IpcEventMap` derived from the two.
    code use the typed `broadcast(IPC_EVENTS.X, payload)` helper from
    [`ipc/broadcast.ts`](../src/main/ipc/broadcast.ts) — never hand-roll a
    `BrowserWindow.getAllWindows()` loop (the helper is typed by `IpcEventMap`,
-   so a wrong payload is a compile error).
+   so a wrong payload is a compile error). To push to **one** window rather than
+   all of them (a menu click's own window, a per-frame state change), use the
+   sibling `sendTo(win.webContents, IPC_EVENTS.X, payload)` — the same
+   `IpcEventMap` contract, never a raw `webContents.send`.
 
 4. Subscribe in the renderer:
 
@@ -191,7 +200,8 @@ and `IpcEventMap` derived from the two.
 | Single-source key coverage | `IPC_CHANNELS` / `IPC_EVENTS` use `satisfies Record<keyof IpcChannelShapes, string>` | Constant without a shape (or shape without a constant) → build fail |
 | Compile-time map coverage | `tests/unit/ipc-channels-coverage.test.ts` re-asserts the shape↔constant key sets match | Drift between the two halves → build fail |
 | Call-site single-sourcing | `tests/unit/audit/ipc-channels-single-sourced.test.ts` scans **all** processes for a raw `'domain:action'` literal passed to `invoke`/`on`/`send`/`handle`/`h`/`broadcast`/`emit` | Hand-rolled wire string at any call site (renderer **or** main `handle`/`broadcast`) → test fail. Always pass `IPC_CHANNELS.X` / `IPC_EVENTS.X`, never the literal |
-| Renderer typing | `window.electronAPI.invoke<K>()` | Wrong args / wrong return → build fail |
+| Typed event seam | `tests/unit/audit/ipc-event-seam-typed.test.ts` — `IpcEventShapes`↔`IPC_EVENTS` bijection (no orphan events) and `preload/index.ts` `on()` is generic over `keyof IpcEventMap`, not `channel: string` | A `string`-keyed listener lets emitter and listener drift with no compiler check → test fail (this is how `AI_CHAT_EVENT` shipped a one-arg shape for a two-arg wire contract) |
+| Renderer typing | `window.electronAPI.invoke<K>()` and `on<E>()` | Wrong args / wrong return / wrong-arity listener → build fail |
 | Handler typing | `handle: Handle` in `ipc/context.ts` | Wrong args / wrong return → build fail |
 
 ## Picking a channel name

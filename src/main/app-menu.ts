@@ -1,4 +1,5 @@
 import { app, BrowserWindow, Menu, type MenuItemConstructorOptions } from 'electron'
+import { sendTo } from './ipc/broadcast'
 import { IPC_EVENTS } from '@shared/ipc'
 import { t } from '@shared/i18n'
 import { menusFor, itemAccelerator, type MenuNode, type MenuSpec } from '@shared/menus'
@@ -43,8 +44,10 @@ function toTemplate(node: MenuNode, keybindings: readonly KeyBinding[]): MenuIte
   return {
     label,
     ...(accelerator ? { accelerator } : {}),
-    click: (_item, win) =>
-      (win as BrowserWindow | undefined)?.webContents.send(IPC_EVENTS.MENU_ACTION, action),
+    click: (_item, win) => {
+      const wc = (win as BrowserWindow | undefined)?.webContents
+      if (wc) sendTo(wc, IPC_EVENTS.MENU_ACTION, action)
+    },
   }
 }
 

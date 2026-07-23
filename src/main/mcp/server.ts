@@ -9,7 +9,7 @@ import type { Tool, ToolRegistry } from '../plugins/sdk/types'
 import { TOOL_PERMISSION, TOOL_SURFACE } from '../plugins/sdk/types'
 import type { AttentionHub } from '../attention/attention-hub'
 import { IPC_EVENTS } from '@shared/ipc'
-import { broadcast } from '../ipc/broadcast'
+import { broadcast, sendTo } from '../ipc/broadcast'
 import { errorMessage } from '@shared/errors'
 import { MCP_ACTIVITY_STATUS, type MCPServerStatus, type MCPStartResult, type MCPActivityEntry, type MCPApprovalRequest } from '@shared/mcp'
 import { CONFIG_KEY } from '@shared/settings'
@@ -161,7 +161,7 @@ export function createMCPServer(deps: MCPServerDeps): MCPServerInstance {
         sql: typeof params.sql === 'string' ? params.sql : JSON.stringify(params, null, 2),
         permission: tool.permission,
       }
-      win.webContents.send(IPC_EVENTS.MCP_APPROVAL_REQUEST, req)
+      sendTo(win.webContents, IPC_EVENTS.MCP_APPROVAL_REQUEST, req)
       deps.attention?.request({
         id: requestId,
         kind: 'approval',
