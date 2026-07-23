@@ -26,6 +26,33 @@ describe('parseRedisCommands', () => {
     const cmds = parseRedisCommands('  GET  key  ')
     expect(cmds).toEqual([['GET', 'key']])
   })
+
+  it('keeps a double-quoted value with spaces as a single argument', () => {
+    // Previously `SET k "hello world"` split into four tokens and the value
+    // could not be written at all.
+    expect(parseRedisCommands('SET k "hello world"')).toEqual([['SET', 'k', 'hello world']])
+  })
+
+  it('keeps a single-quoted value with spaces as a single argument', () => {
+    expect(parseRedisCommands("SET k 'hello world'")).toEqual([['SET', 'k', 'hello world']])
+  })
+
+  it('unescapes \\n, \\t and \\xHH inside double quotes', () => {
+    expect(parseRedisCommands('SET k "a\\nb\\tc\\x41"')).toEqual([['SET', 'k', 'a\nb\tc\x41']])
+  })
+
+  it('treats backslash escapes literally inside single quotes (except \\\')', () => {
+    expect(parseRedisCommands("SET k 'a\\nb'")).toEqual([['SET', 'k', 'a\\nb']])
+    expect(parseRedisCommands("SET k 'it\\'s'")).toEqual([['SET', 'k', "it's"]])
+  })
+
+  it('concatenates adjacent quoted and unquoted runs into one argument', () => {
+    expect(parseRedisCommands('SET k "foo"bar')).toEqual([['SET', 'k', 'foobar']])
+  })
+
+  it('preserves an empty double-quoted argument', () => {
+    expect(parseRedisCommands('SET k ""')).toEqual([['SET', 'k', '']])
+  })
 })
 
 describe('formatRedisResult', () => {
