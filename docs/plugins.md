@@ -307,6 +307,18 @@ Your **adapter** (returned by `createAdapter`) may also implement
 `db:parse-plan` to render the Query Plan tab, so EXPLAIN-format parsing stays in
 the driver. Return `[]` (or omit the method) if the rows aren't a plan.
 
+**Declaration and implementation must agree.** Some capability declarations
+promise adapter methods, and the two are checked (in both directions) when the
+adapter is built — a mismatch fails the connect with an actionable message
+rather than crashing later. If you declare `session.manualTransactions: true`
+your adapter must implement the whole transaction lifecycle
+(`openSession`/`closeSession`/`setAutoCommit`/`beginTransaction`/`commit`/
+`rollback`); if you declare `explain.format: 'tree'` it must implement
+`parseQueryPlan`. The reverse holds too: implement those methods only if you
+declare the matching capability, or the feature never surfaces. The mapping
+lives in `src/main/plugins/sdk/driver-validation.ts` (guarded by
+`tests/unit/audit/driver-capability-agreement.test.ts`).
+
 The orchestrator never branches on driver type. If you need behaviour the
 existing capability flags don't cover, **add a flag to `DriverFactory`**
 (in `src/main/plugins/sdk/types.ts`) rather than adding a special case in
