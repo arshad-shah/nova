@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useEffect } from 'react'
+import { expect, userEvent } from 'storybook/test'
 import { ConnectionFormView } from '@/components/connections/ConnectionFormView'
 import { useConnectionsStore } from '@/stores/connections'
 import type { ConnectionProfile } from '@shared/types'
@@ -50,6 +51,19 @@ export const New: Story = {
       return <Story />
     },
   ],
+  play: async ({ canvas }) => {
+    // Typing into the controlled "Connection Name" field updates its value.
+    const nameInput = canvas.getByLabelText('Connection Name')
+    await userEvent.type(nameInput, 'staging-orders')
+    await expect(nameInput).toHaveValue('staging-orders')
+
+    // The "Auto-commit by default" checkbox defaults to checked; toggling it
+    // flips the underlying draft state.
+    const autoCommit = canvas.getByRole('checkbox', { name: 'Auto-commit by default' })
+    await expect(autoCommit).toBeChecked()
+    await userEvent.click(autoCommit)
+    await expect(autoCommit).not.toBeChecked()
+  },
 }
 
 export const Edit: Story = {
