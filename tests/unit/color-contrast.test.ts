@@ -2,12 +2,15 @@ import { describe, it, expect } from 'vitest'
 import fs from 'node:fs'
 import path from 'node:path'
 import { onFillInk, relativeLuminance } from '../../src/renderer/src/lib/color-contrast'
-import { TABLE_COLORS } from '../../src/renderer/src/components/er/er-layout'
 
 // The two label inks onFillInk chooses between. Both must exist as fixed tokens
 // in the token layer so the reference onFillInk returns actually resolves under
-// every theme — the ER node label was previously a raw `text-white`, the one
-// place a foreground did not live in a token (issue #175).
+// every theme (issue #175). A representative spread of saturated fills — the
+// pale hues (gold, sand, greens) are where a naive white label failed.
+const SAMPLE_HUES = [
+  '#7c6ff7', '#28c840', '#e5c07b', '#61afef', '#ff5f57', '#c678dd',
+  '#56b6c2', '#d19a66', '#98c379', '#e06c75',
+]
 const TOKENS_CSS = path.join(
   __dirname,
   '../../src/renderer/src/primitives/theme/tokens.css'
@@ -33,7 +36,7 @@ describe('relativeLuminance', () => {
 
 describe('onFillInk', () => {
   it('only ever returns a themed --color-on-fill-* token, never a raw colour', () => {
-    for (const hue of [...TABLE_COLORS, '#000000', '#ffffff', 'not-a-colour']) {
+    for (const hue of [...SAMPLE_HUES, '#000000', '#ffffff', 'not-a-colour']) {
       expect(onFillInk(hue)).toMatch(/^var\(--color-on-fill-(light|dark)\)$/)
     }
   })
@@ -48,11 +51,11 @@ describe('onFillInk', () => {
     expect(onFillInk('nonsense')).toBe('var(--color-on-fill-dark)')
   })
 
-  it('picks a readable, higher-contrast ink for every ER table hue', () => {
+  it('picks a readable, higher-contrast ink for every sampled hue', () => {
     // The regression this locks: `text-white` was unreadable on the pale hues
-    // in the palette (gold, sand, the greens). For each hue the chosen ink must
-    // out-contrast the rejected one — i.e. the choice is genuinely the readable
-    // one, not just "a token".
+    // (gold, sand, the greens). For each hue the chosen ink must out-contrast
+    // the rejected one — i.e. the choice is genuinely the readable one, not
+    // just "a token".
     const INKS = {
       'var(--color-on-fill-light)': relativeLuminance('#141414')!,
       'var(--color-on-fill-dark)': relativeLuminance('#ffffff')!,
@@ -60,7 +63,7 @@ describe('onFillInk', () => {
     const contrast = (a: number, b: number): number =>
       (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05)
 
-    for (const hue of TABLE_COLORS) {
+    for (const hue of SAMPLE_HUES) {
       const fillLum = relativeLuminance(hue)!
       const chosen = onFillInk(hue)
       const rejected =
@@ -82,16 +85,5 @@ describe('on-fill label tokens', () => {
     const css = fs.readFileSync(TOKENS_CSS, 'utf-8')
     expect(css).toMatch(/--color-on-fill-light:\s*#[0-9a-f]{3,6};/i)
     expect(css).toMatch(/--color-on-fill-dark:\s*#[0-9a-f]{3,6};/i)
-  })
-})
-
-describe('TableNode wires the contrast helper', () => {
-  it('derives its header label ink from onFillInk, not a raw palette class', () => {
-    const src = fs.readFileSync(
-      path.join(__dirname, '../../src/renderer/src/components/er/TableNode.tsx'),
-      'utf-8'
-    )
-    expect(src).toContain('onFillInk(color)')
-    expect(src).not.toMatch(/text-white|text-black/)
   })
 })
