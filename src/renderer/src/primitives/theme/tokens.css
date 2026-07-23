@@ -286,6 +286,21 @@
   --color-error-fg: #ffffff;
   --color-info: var(--raw-vcyan-400);
 
+  /* Readable label over a *decorative colour fill* — a diagram node painted
+     its own hue, an identity tile, a colour-picker handle sitting on the
+     colour the user is choosing. The fill is the entity's colour, not a theme
+     surface, so the label cannot come from the theme's text tokens; it is
+     picked from the FILL's own lightness (see lib/color-contrast). Fixed for
+     the same reason --color-error-fg is: the fill is theme-independent, so its
+     label is too. `-light` is the dark ink for a pale fill; `-dark` the light
+     ink for a saturated/dark one. */
+  --color-on-fill-light: #141414;
+  --color-on-fill-dark: #ffffff;
+  /* Modal/sheet ::backdrop scrim. A dedicated overlay so the dim is a token,
+     not a raw `bg-black/50` that never inverts and bypasses the token layer —
+     the same reason --color-overlay-strong/soft exist. */
+  --color-overlay-backdrop: rgba(0, 0, 0, 0.5);
+
   /* Identity — a decorative palette for telling entities apart when they have
      no icon of their own (a plugin's letter tile, and anything else that needs
      a stable colour derived from a name).

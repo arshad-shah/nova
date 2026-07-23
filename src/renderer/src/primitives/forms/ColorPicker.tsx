@@ -207,7 +207,7 @@ export function ColorPicker({
         <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, #000, transparent)' }} />
         {/* Pointer */}
         <div
-          className="absolute w-3.5 h-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow-md pointer-events-none"
+          className="absolute w-3.5 h-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-on-fill-dark shadow-md pointer-events-none"
           style={{ left: `${s}%`, top: `${100 - v}%` }}
         />
       </div>
@@ -231,7 +231,7 @@ export function ColorPicker({
             onPointerDown={handleHueDrag}
           >
             <div
-              className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full border-2 border-white shadow-md pointer-events-none"
+              className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full border-2 border-on-fill-dark shadow-md pointer-events-none"
               style={{ left: `${(h / 360) * 100}%` }}
             />
           </div>
@@ -245,7 +245,7 @@ export function ColorPicker({
           >
             <div className="absolute inset-0 rounded-full" style={{ background: alphaGradient }} />
             <div
-              className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full border-2 border-white shadow-md pointer-events-none"
+              className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full border-2 border-on-fill-dark shadow-md pointer-events-none"
               style={{ left: `${a * 100}%` }}
             />
           </div>

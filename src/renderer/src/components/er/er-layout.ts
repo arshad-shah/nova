@@ -52,7 +52,11 @@ export function layoutErDiagram(
   return { nodes: layoutedNodes, edges }
 }
 
-const TABLE_COLORS = [
+// The per-table hue palette. A node's header is painted its entry here; the
+// readable label ink is derived from the hue (see lib/color-contrast), so these
+// stay decorative colours with no contrast obligation of their own. Exported so
+// the contrast guard can prove every one resolves to a themed label token.
+export const TABLE_COLORS = [
   '#7c6ff7', '#28c840', '#e5c07b', '#61afef', '#ff5f57', '#c678dd',
   '#56b6c2', '#d19a66', '#98c379', '#e06c75'
 ]

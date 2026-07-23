@@ -3,6 +3,7 @@ import { Handle, Position, type NodeProps } from '@xyflow/react'
 import { Key, Link } from 'lucide-react'
 import type { TableNodeData } from './er-layout'
 import { Box, Card, Flex, Text } from '@/primitives'
+import { onFillInk } from '@/lib/color-contrast'
 
 function TableNodeComponent({ data }: NodeProps) {
   const { tableName, columns, color } = data as TableNodeData
@@ -20,9 +21,20 @@ function TableNodeComponent({ data }: NodeProps) {
       <Handle type="target" position={Position.Left} className="!bg-accent !w-2 !h-2" />
       <Handle type="source" position={Position.Right} className="!bg-accent !w-2 !h-2" />
 
-      <Box className="px-3 py-1.5 text-xs font-semibold text-white" style={{ backgroundColor: color }}>
+      {/* The header is painted the table's own hue, which is fixed across
+          themes — so the label can't be a theme text token (that would flip to
+          a dark label on a saturated hue on dark themes). onFillInk picks the
+          readable ink from the fill itself; the value it returns is a
+          `--color-on-fill-*` token, so nothing here is a raw palette colour. */}
+      <Text
+        as="div"
+        size="xs"
+        weight="semibold"
+        className="px-3 py-1.5"
+        style={{ backgroundColor: color, color: onFillInk(color) }}
+      >
         {tableName}
-      </Box>
+      </Text>
 
       <Box className="divide-y divide-border">
         {columns.map((col) => (

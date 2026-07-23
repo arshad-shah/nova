@@ -5,7 +5,7 @@ import { cn } from '../utils/cn'
 type SheetSide = 'right' | 'left' | 'bottom'
 
 const sheetVariants = cva(
-  'backdrop:bg-black/50 bg-bg-secondary border border-border-default p-0 max-h-full text-text-primary shadow-[var(--shadow-elevated)]',
+  'backdrop:bg-overlay-backdrop bg-bg-secondary border border-border-default p-0 max-h-full text-text-primary shadow-[var(--shadow-elevated)]',
   {
     variants: {
       size: {

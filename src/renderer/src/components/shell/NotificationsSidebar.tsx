@@ -224,7 +224,7 @@ export function NotificationsSidebar() {
           className="py-12 px-4"
         />
       ) : (
-        <Box className="flex-1 divide-y divide-white/[0.04]">
+        <Box className="flex-1 divide-y divide-border-subtle">
           {notifications.map((n) => (
             <NotificationItem key={n.id} notification={n} />
           ))}
