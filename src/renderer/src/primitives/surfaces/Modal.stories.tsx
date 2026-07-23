@@ -76,3 +76,35 @@ export const Sizes: Story = {
     )
   },
 }
+
+// `width` pins a fixed dialog width from the named surface scale (issue #174),
+// unlike `size` which only caps the max-width. `prompt` (400px) is the confirm/
+// blocking-dialog step; `palette` (520px) is the command palette. Shown here at
+// a single short line, where a fixed width reads as intentional rather than
+// shrinking to hug the content.
+export const Widths: Story = {
+  args: { open: false, onClose: fn() },
+  render: () => {
+    const [width, setWidth] = useState<'prompt' | 'palette' | null>(null)
+    return (
+      <div style={{ display: 'flex', gap: 8 }}>
+        {(['prompt', 'palette'] as const).map((w) => (
+          <Button key={w} variant="outline" onClick={() => setWidth(w)}>
+            Open {w}
+          </Button>
+        ))}
+        <Modal open={width !== null} onClose={() => setWidth(null)} width={width ?? 'prompt'}>
+          <div style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--color-text-primary)' }}>width="{width}"</div>
+            <div style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>
+              Fixed-width surface — keeps its shape regardless of content length.
+            </div>
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+              <Button variant="ghost" onClick={() => setWidth(null)}>Close</Button>
+            </div>
+          </div>
+        </Modal>
+      </div>
+    )
+  },
+}

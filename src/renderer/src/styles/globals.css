@@ -31,6 +31,20 @@
   --text-3xs--line-height: var(--leading-3xs);
   --text-2xs: var(--font-2xs);
   --text-2xs--line-height: var(--leading-2xs);
+  /* Named surface-width steps. Panel, modal and column widths used to be
+     hand-rolled as arbitrary `w-[Npx]` values (issue #174) — a set of surfaces
+     that look almost aligned but are not. These three name the recurring cases
+     in the `--container-*` namespace, so they generate `w-*`/`min-w-*`/`max-w-*`
+     utilities and back the `width` variant on the `Modal` primitive. Content
+     constraints (label truncation, a popover min-width) stay on the shared
+     Tailwind width scale (`max-w-40`, `min-w-65`, …); the few fixed-pixel cases
+     that must not scale with density (the macOS traffic-light gutter, a
+     chevron-sized row spacer) use an inline `style={{ width }}`. Only genuine
+     surfaces earn a name here.
+     Guarded by tests/unit/audit/renderer-no-arbitrary-width.test.ts. */
+  --container-prompt: 25rem;    /* 400px — confirmation / blocking prompt dialogs */
+  --container-palette: 32.5rem; /* 520px — command palette */
+  --container-hero: 14.375rem;  /* 230px — modal brand / hero column */
   --color-bg-primary: var(--color-bg-primary);
   --color-bg-secondary: var(--color-bg-secondary);
   --color-bg-tertiary: var(--color-bg-tertiary);

@@ -76,7 +76,7 @@ export function AIStatusSegment() {
   )
 
   const popoverContent = (
-    <Box className="min-w-[260px] p-1 space-y-2">
+    <Box className="min-w-65 p-1 space-y-2">
       <Box className="flex items-center gap-2 px-1">
         <Sparkles size={12} className="text-accent" />
         <Text size="xs" weight="medium">{t('aiui.status.title')}</Text>
@@ -147,7 +147,7 @@ function Row({ label, value, valueNode }: { label: string; value?: string; value
   return (
     <Box className="flex items-center justify-between px-1 py-0.5 text-3xs">
       <Text size="xs" color="muted">{label}</Text>
-      {valueNode ? valueNode : <Text size="xs" className="truncate max-w-[160px]">{value}</Text>}
+      {valueNode ? valueNode : <Text size="xs" className="truncate max-w-40">{value}</Text>}
     </Box>
   )
 }

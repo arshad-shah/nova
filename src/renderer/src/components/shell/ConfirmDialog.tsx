@@ -26,7 +26,7 @@ export function ConfirmDialog({
   const confirmText = confirmLabel ?? t('common.confirm')
   const cancelText = cancelLabel ?? t('common.cancel')
   return (
-    <Modal open={open} onClose={onCancel} className="w-[400px] max-w-[90vw]">
+    <Modal open={open} onClose={onCancel} width="prompt">
       <Stack gap="md" className="p-4">
         <Text size="sm" weight="semibold">{title}</Text>
         {message && <Text size="sm" color="secondary">{message}</Text>}

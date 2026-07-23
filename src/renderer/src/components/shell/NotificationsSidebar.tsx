@@ -124,7 +124,7 @@ function NotificationItem({ notification }: { notification: Notification }) {
               <Text
                 size="xs"
                 color="muted"
-                className="text-3xs truncate max-w-[120px]"
+                className="text-3xs truncate max-w-30"
               >
                 {notification.source.label}
               </Text>
