@@ -58,8 +58,8 @@ const MAX_RENDERED = 400
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <Box className="flex gap-2">
-      <Box as="span" className="w-20 shrink-0 text-[10px] uppercase tracking-wider text-text-muted">{label}</Box>
-      <Box as="span" className="flex-1 min-w-0 break-words font-mono text-[10px] text-text-secondary">{children}</Box>
+      <Box as="span" className="w-20 shrink-0 text-3xs uppercase tracking-wider text-text-muted">{label}</Box>
+      <Box as="span" className="flex-1 min-w-0 break-words font-mono text-3xs text-text-secondary">{children}</Box>
     </Box>
   )
 }
@@ -67,7 +67,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 function Pre({ text, tone }: { text: string; tone?: 'error' }) {
   return (
     <Box as="pre" className={cn(
-      'mt-1 whitespace-pre-wrap break-words font-mono text-[10px] rounded p-2 max-h-56 overflow-auto bg-bg-inset',
+      'mt-1 whitespace-pre-wrap break-words font-mono text-3xs rounded p-2 max-h-56 overflow-auto bg-bg-inset',
       tone === 'error' ? 'text-error/90' : 'text-text-secondary',
     )}>
       {text}
@@ -95,19 +95,19 @@ function ActivityRow({ entry }: { entry: ActivityEntry }) {
       <Flex align="center" gap="sm" className="min-w-0">
         {expandable
           ? (open ? <ChevronDown size={11} className="shrink-0 text-text-muted" /> : <ChevronRight size={11} className="shrink-0 text-text-muted" />)
-          : <Box as="span" className="w-[11px] shrink-0" />}
+          : <Box as="span" className="shrink-0" style={{ width: 11 }} />}{/* reserves the 11px chevron slot so non-expandable rows stay aligned — an inline pixel width tied to the icon size, not a design width step */}
         <Icon size={13} className={cn('shrink-0', LEVEL_CLASS[entry.level])} />
-        <Box as="span" className="font-mono text-[10px] text-text-muted shrink-0 tabular-nums">
+        <Box as="span" className="font-mono text-3xs text-text-muted shrink-0 tabular-nums">
           {formatClockTime(entry.ts)}
         </Box>
         <Box as="span" className={cn('truncate flex-1 min-w-0', entry.level === 'error' && 'text-error')}>
           {entry.title}
         </Box>
         {entry.durationMs !== undefined && (
-          <Box as="span" className="font-mono text-[10px] text-text-muted shrink-0 tabular-nums">{Math.round(entry.durationMs)}ms</Box>
+          <Box as="span" className="font-mono text-3xs text-text-muted shrink-0 tabular-nums">{Math.round(entry.durationMs)}ms</Box>
         )}
         {entry.source && (
-          <Box as="span" className="text-[10px] text-text-muted shrink-0 max-w-[30%] truncate">
+          <Box as="span" className="text-3xs text-text-muted shrink-0 max-w-[30%] truncate">
             {entry.source}
           </Box>
         )}
@@ -216,7 +216,7 @@ export function ActivityList({ entries, onClear }: ActivityListProps) {
               value={search}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
               placeholder={t('shell.activity.search')}
-              className="flex-1 min-w-0 bg-transparent text-[11px] text-text-primary placeholder:text-text-muted outline-none"
+              className="flex-1 min-w-0 bg-transparent text-2xs text-text-primary placeholder:text-text-muted outline-none"
             />
           </Flex>
           {/* Session severity summary — click to filter that level. */}
@@ -226,7 +226,7 @@ export function ActivityList({ entries, onClear }: ActivityListProps) {
               size="none"
               type="button"
               onClick={() => setLevels((p) => toggle(p, 'error'))}
-              className={cn('flex items-center gap-0.5 rounded px-1 py-0.5 text-[10px]', levels.has('error') ? 'bg-error/15 text-error' : 'text-error hover:bg-hover')}
+              className={cn('flex items-center gap-0.5 rounded px-1 py-0.5 text-3xs', levels.has('error') ? 'bg-error/15 text-error' : 'text-error hover:bg-hover')}
             >
               <AlertCircle size={11} />{errorCount}
             </Button>
@@ -237,7 +237,7 @@ export function ActivityList({ entries, onClear }: ActivityListProps) {
               size="none"
               type="button"
               onClick={() => setLevels((p) => toggle(p, 'warn'))}
-              className={cn('flex items-center gap-0.5 rounded px-1 py-0.5 text-[10px]', levels.has('warn') ? 'bg-warning/15 text-warning' : 'text-warning hover:bg-hover')}
+              className={cn('flex items-center gap-0.5 rounded px-1 py-0.5 text-3xs', levels.has('warn') ? 'bg-warning/15 text-warning' : 'text-warning hover:bg-hover')}
             >
               <TriangleAlert size={11} />{warnCount}
             </Button>
@@ -327,7 +327,7 @@ export function ActivityList({ entries, onClear }: ActivityListProps) {
           {paused && (
             <>
               <Box as="span" className="flex-1" />
-              <Box as="span" className="text-[10px] text-warning">{t('shell.activity.paused')}</Box>
+              <Box as="span" className="text-3xs text-warning">{t('shell.activity.paused')}</Box>
             </>
           )}
         </Flex>

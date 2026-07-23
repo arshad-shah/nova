@@ -32,12 +32,12 @@ export function GroupHeader({
         : <ChevronRight size={10} strokeWidth={1.8} className="text-text-muted shrink-0" />}
       {icon}
       <span
-        className="uppercase tracking-wider opacity-60 text-[10px] font-medium flex-1 truncate text-text-secondary"
+        className="uppercase tracking-wider opacity-60 text-3xs font-medium flex-1 truncate text-text-secondary"
       >
         {label}
       </span>
       <span
-        className="text-[10px] opacity-50 tabular-nums text-text-muted"
+        className="text-3xs opacity-50 tabular-nums text-text-muted"
       >
         {count}
       </span>

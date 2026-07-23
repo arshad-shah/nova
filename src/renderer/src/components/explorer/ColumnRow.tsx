@@ -89,7 +89,7 @@ export function ColumnRow({ column, tableName, connectionId }: ColumnRowProps) {
           {column.name}
         </Box>
 
-        <Box as="span" className="text-[10px] shrink-0 text-text-muted">
+        <Box as="span" className="text-3xs shrink-0 text-text-muted">
           {column.dataType}
         </Box>
 

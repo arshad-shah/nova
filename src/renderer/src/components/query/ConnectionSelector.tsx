@@ -152,7 +152,7 @@ export function ConnectionSelector({ tabId, connectionId, database, schema }: Pr
                   <Flex align="center" gap="xs" className="flex-1 min-w-0">
                     <ConnectionDot size="sm" state="neutral" color="var(--color-text-muted)" />
                     <Text size="xs" color="muted" truncate>{conn.name}</Text>
-                    <Text size="xs" color="muted" className="ml-auto text-[10px]">{t('query.connection.clickToConnect')}</Text>
+                    <Text size="xs" color="muted" className="ml-auto text-3xs">{t('query.connection.clickToConnect')}</Text>
                   </Flex>
                 </Menu.Item>
               ))}

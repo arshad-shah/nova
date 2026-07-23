@@ -23,7 +23,7 @@ export const Default: Story = {
 export const Sizes: Story = {
   render: () => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      {(['sm', 'md', 'lg'] as const).map((size) => (
+      {(['3xs', '2xs', 'sm', 'md', 'lg'] as const).map((size) => (
         <Label key={size} size={size}>
           {`Label size="${size}"`}
         </Label>

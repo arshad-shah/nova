@@ -124,14 +124,14 @@ function NotificationItem({ notification }: { notification: Notification }) {
               <Text
                 size="xs"
                 color="muted"
-                className="text-[10px] truncate max-w-[120px]"
+                className="text-3xs truncate max-w-30"
               >
                 {notification.source.label}
               </Text>
-              <Box as="span" className="text-text-disabled text-[10px]">·</Box>
+              <Box as="span" className="text-text-disabled text-3xs">·</Box>
             </>
           )}
-          <Text size="xs" color="disabled" className="text-[10px] shrink-0">
+          <Text size="xs" color="disabled" className="text-3xs shrink-0">
             {formatRelativeTime(notification.timestamp)}
           </Text>
         </Flex>
@@ -197,7 +197,7 @@ export function NotificationsSidebar() {
               variant="ghost"
               size="xs"
               onClick={markAllRead}
-              className="text-[10px] text-accent hover:text-accent-hover gap-1"
+              className="text-3xs text-accent hover:text-accent-hover gap-1"
             >
               <CheckCheck size={10} />
               {t('shell.notifications.markAllRead')}
@@ -207,7 +207,7 @@ export function NotificationsSidebar() {
             variant="ghost"
             size="xs"
             onClick={clearAll}
-            className="text-[10px] text-text-muted hover:text-error gap-1"
+            className="text-3xs text-text-muted hover:text-error gap-1"
           >
             <Trash2 size={10} />
             {t('shell.notifications.clear')}

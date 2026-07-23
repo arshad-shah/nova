@@ -220,12 +220,12 @@ export function ChatPanelHeader() {
 
       {/* Row 2: model + context window bar (prominent) */}
       <Box className="px-3 pb-2 space-y-1">
-        <Flex align="center" justify="between" className="text-[11px]">
+        <Flex align="center" justify="between" className="text-2xs">
           <Flex align="center" gap="xs">
             <Sparkles size={11} className="text-accent" />
             <Text size="xs" color="muted">{t('aiui.header.model')}</Text>
           </Flex>
-          <Text size="xs" weight="medium" className="truncate max-w-[180px]">
+          <Text size="xs" weight="medium" className="truncate max-w-45">
             {models.find((m) => m.id === activeModel)?.name ?? activeModel ?? t('aiui.header.noModel')}
           </Text>
         </Flex>
@@ -238,7 +238,7 @@ export function ChatPanelHeader() {
               className="bg-bg-tertiary shadow-none"
               aria-label={t('aiui.header.used', { used: formatCompactNumber(totalTokens), total: formatCompactNumber(contextWindow) })}
             />
-            <Flex align="center" justify="between" className="text-[10px]">
+            <Flex align="center" justify="between" className="text-3xs">
               <Text size="xs" color="muted">
                 {t('aiui.header.used', { used: formatCompactNumber(totalTokens), total: formatCompactNumber(contextWindow) })}
               </Text>

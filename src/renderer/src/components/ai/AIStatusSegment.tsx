@@ -76,7 +76,7 @@ export function AIStatusSegment() {
   )
 
   const popoverContent = (
-    <Box className="min-w-[260px] p-1 space-y-2">
+    <Box className="min-w-65 p-1 space-y-2">
       <Box className="flex items-center gap-2 px-1">
         <Sparkles size={12} className="text-accent" />
         <Text size="xs" weight="medium">{t('aiui.status.title')}</Text>
@@ -96,9 +96,9 @@ export function AIStatusSegment() {
 
       {contextWindow != null ? (
         <Box className="rounded bg-bg-secondary p-2 space-y-1">
-          <Box className="flex items-center justify-between text-[10px] uppercase tracking-wide text-accent">
+          <Box className="flex items-center justify-between text-3xs uppercase tracking-wide text-accent">
             <Box as="span">{t('aiui.status.contextWindow')}</Box>
-            <Box as="span" className="font-mono text-text-primary text-[10.5px] normal-case tracking-normal">
+            <Box as="span" className="font-mono text-text-primary text-3xs normal-case tracking-normal">
               {formatCompactNumber(totalTokens)} / {formatCompactNumber(contextWindow)}
             </Box>
           </Box>
@@ -145,9 +145,9 @@ export function AIStatusSegment() {
 
 function Row({ label, value, valueNode }: { label: string; value?: string; valueNode?: ReactNode }) {
   return (
-    <Box className="flex items-center justify-between px-1 py-0.5 text-[10.5px]">
+    <Box className="flex items-center justify-between px-1 py-0.5 text-3xs">
       <Text size="xs" color="muted">{label}</Text>
-      {valueNode ? valueNode : <Text size="xs" className="truncate max-w-[160px]">{value}</Text>}
+      {valueNode ? valueNode : <Text size="xs" className="truncate max-w-40">{value}</Text>}
     </Box>
   )
 }
@@ -159,7 +159,7 @@ function ActionBtn({ icon: Icon, label, onClick }: { icon: ComponentType<{ size?
       size="none"
       type="button"
       onClick={onClick}
-      className="flex-1 inline-flex items-center justify-center gap-1 rounded border border-border-default bg-bg-primary px-1.5 py-1 text-[10px] text-text-secondary hover:bg-bg-tertiary hover:text-text-primary"
+      className="flex-1 inline-flex items-center justify-center gap-1 rounded border border-border-default bg-bg-primary px-1.5 py-1 text-3xs text-text-secondary hover:bg-bg-tertiary hover:text-text-primary"
     >
       <Icon size={10} /> {label}
     </Button>

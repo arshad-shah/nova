@@ -98,12 +98,12 @@ export function AutoCompactBanner() {
     return (
       <Wrapper tone="warn">
         <AlertTriangle size={12} className="shrink-0" />
-        <Box as="span" className="flex-1 text-[11px]"><strong>{t('aiui.autoCompact.usedPct', { pct: Math.round(pct * 100) })}</strong> {t('aiui.autoCompact.pending')}</Box>
-        <Button variant="bare" size="none" className="rounded bg-warning text-[10px] font-medium px-2 py-0.5 text-bg-primary"
+        <Box as="span" className="flex-1 text-2xs"><strong>{t('aiui.autoCompact.usedPct', { pct: Math.round(pct * 100) })}</strong> {t('aiui.autoCompact.pending')}</Box>
+        <Button variant="bare" size="none" className="rounded bg-warning text-3xs font-medium px-2 py-0.5 text-bg-primary"
           onClick={() => { window.clearTimeout(timer.current); justCompactedRef.current = true; void compact() }}>
           {t('aiui.autoCompact.now')}
         </Button>
-        <Button variant="bare" size="none" className="rounded border border-warning/50 text-warning text-[10px] px-2 py-0.5"
+        <Button variant="bare" size="none" className="rounded border border-warning/50 text-warning text-3xs px-2 py-0.5"
           onClick={() => { window.clearTimeout(timer.current); suppress(); setPhase({ kind: 'idle' }) }}>
           {t('aiui.autoCompact.skip')}
         </Button>
@@ -115,7 +115,7 @@ export function AutoCompactBanner() {
     return (
       <Wrapper tone="info">
         <Spinner size="xs" className="shrink-0 text-current" />
-        <Box as="span" className="flex-1 text-[11px]">{t('aiui.autoCompact.compacting')}</Box>
+        <Box as="span" className="flex-1 text-2xs">{t('aiui.autoCompact.compacting')}</Box>
       </Wrapper>
     )
   }
@@ -124,9 +124,9 @@ export function AutoCompactBanner() {
     return (
       <Wrapper tone="ok">
         <Check size={12} className="shrink-0" />
-        <Box as="span" className="flex-1 text-[11px]">{t('aiui.autoCompact.success')}</Box>
+        <Box as="span" className="flex-1 text-2xs">{t('aiui.autoCompact.success')}</Box>
         {lastSnapshot ? (
-          <Button variant="bare" size="none" className="rounded border border-success/50 text-success text-[10px] px-2 py-0.5 inline-flex items-center gap-1"
+          <Button variant="bare" size="none" className="rounded border border-success/50 text-success text-3xs px-2 py-0.5 inline-flex items-center gap-1"
             onClick={() => { void undo(); setPhase({ kind: 'idle' }) }}>
             <RotateCcw size={10} /> {t('aiui.autoCompact.undo')}
           </Button>
@@ -143,8 +143,8 @@ export function AutoCompactBanner() {
   return (
     <Wrapper tone="error">
       <AlertTriangle size={12} className="shrink-0" />
-      <Box as="span" className="flex-1 text-[11px]"><strong>{t('aiui.autoCompact.usedPct', { pct: Math.round(pct * 100) })}</strong> {t('aiui.autoCompact.forced')}</Box>
-      <Button variant="bare" size="none" className="rounded bg-error text-[10px] font-medium px-2 py-0.5 text-bg-primary"
+      <Box as="span" className="flex-1 text-2xs"><strong>{t('aiui.autoCompact.usedPct', { pct: Math.round(pct * 100) })}</strong> {t('aiui.autoCompact.forced')}</Box>
+      <Button variant="bare" size="none" className="rounded bg-error text-3xs font-medium px-2 py-0.5 text-bg-primary"
         onClick={() => { justCompactedRef.current = true; void compact() }}>
         {t('aiui.autoCompact.compactNow')}
       </Button>

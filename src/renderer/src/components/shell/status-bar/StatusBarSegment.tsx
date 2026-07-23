@@ -5,15 +5,15 @@ import { cn } from '@/primitives/utils/cn'
 import { Box, Button } from '@/primitives'
 
 const segmentVariants = cva(
-  'inline-flex items-center gap-1.5 h-full px-2.5 text-[11px] leading-none whitespace-nowrap select-none transition-colors',
+  'inline-flex items-center gap-1.5 h-full px-2.5 text-2xs leading-none whitespace-nowrap select-none transition-colors',
   {
     variants: {
       tone: {
         default: 'text-text-secondary',
         primary: 'bg-accent text-text-inverse font-semibold',
-        schema: 'bg-accent/12 text-accent font-mono text-[10.5px]',
+        schema: 'bg-accent/12 text-accent font-mono text-3xs',
         'accent-soft': 'text-warning',
-        dev: 'bg-accent text-text-inverse font-bold uppercase tracking-wider text-[10px]',
+        dev: 'bg-accent text-text-inverse font-bold uppercase tracking-wider text-3xs',
         muted: 'bg-bg-tertiary text-text-primary',
       },
       side: {

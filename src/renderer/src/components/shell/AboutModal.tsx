@@ -73,7 +73,7 @@ export function AboutModal({ open, onClose }: { open: boolean; onClose: () => vo
     <Modal open={open} onClose={onClose} size="lg" className="overflow-hidden">
       <Flex className="max-sm:flex-col">
         {/* Brand hero */}
-        <GradientSurface className="w-[230px] shrink-0 max-sm:w-full border-r border-border-default max-sm:border-r-0 max-sm:border-b">
+        <GradientSurface className="w-hero shrink-0 max-sm:w-full border-r border-border-default max-sm:border-r-0 max-sm:border-b">
           <Flex direction="column" gap="lg" justify="center" className="h-full p-7">
             <VerqlMark size={60} />
             <Stack gap="xs">

@@ -68,7 +68,7 @@ describe('Badge', () => {
     const { container } = render(<Badge size="pill">Pill</Badge>)
     expect(container.firstChild).toHaveClass('px-2')
     expect(container.firstChild).toHaveClass('py-0.5')
-    expect(container.firstChild).toHaveClass('text-[10px]')
+    expect(container.firstChild).toHaveClass('text-3xs')
   })
 
   it('has base classes', () => {

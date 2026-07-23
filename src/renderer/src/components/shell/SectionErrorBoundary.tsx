@@ -68,7 +68,7 @@ export class SectionErrorBoundary extends Component<Props, State> {
             {t('shell.sectionError.description')}
           </Text>
           {this.state.error && (
-            <Code block className="text-[11px] max-h-32 overflow-auto text-left w-full whitespace-pre-wrap">
+            <Code block className="text-2xs max-h-32 overflow-auto text-left w-full whitespace-pre-wrap">
               {this.state.error.message}
             </Code>
           )}

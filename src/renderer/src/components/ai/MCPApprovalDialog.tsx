@@ -20,7 +20,7 @@ export function MCPApprovalDialog() {
       <Box className="flex items-center gap-3 px-4 py-3 border-b border-border bg-warning/10">
         <AlertTriangle size={18} className="text-warning shrink-0" />
         <Text as="span" size="sm" weight="medium">{t('aiui.approval.mcpTitle')}</Text>
-        <Box as="span" className={`ml-auto text-[10px] px-1.5 py-0.5 rounded ${req.permission === TOOL_PERMISSION.WRITE ? 'bg-warning/20 text-warning' : 'bg-bg-secondary text-text-secondary'}`}>
+        <Box as="span" className={`ml-auto text-3xs px-1.5 py-0.5 rounded ${req.permission === TOOL_PERMISSION.WRITE ? 'bg-warning/20 text-warning' : 'bg-bg-secondary text-text-secondary'}`}>
           {req.permission === TOOL_PERMISSION.WRITE ? t('aiui.approval.write') : t('aiui.approval.read')}
         </Box>
       </Box>
@@ -31,7 +31,7 @@ export function MCPApprovalDialog() {
           })}
         </Text>
         <Box className="max-h-48 overflow-y-auto">
-          <CodeView code={req.sql} language="sql" />
+          <CodeView code={req.statement} language={req.language} />
         </Box>
       </Box>
       <Box className="flex justify-end gap-2 px-4 py-3 border-t border-border">

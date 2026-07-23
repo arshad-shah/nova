@@ -71,8 +71,14 @@ export function TitleBar({ platform = detectedPlatform }: TitleBarProps = {}) {
             not a spacing step: the OS draws the lights at a fixed size, so an
             inset that scaled with UI density would strand them in dead space.
             They end at 67px (15px in, three 12px buttons, 8px apart); the rest
-            is breathing room. */}
-        <div className={`shrink-0 ${isMac ? 'w-[88px]' : 'w-4'}`} aria-hidden />
+            is breathing room. Carried as an inline width — the sanctioned way to
+            pin a density-independent pixel value (a named width step would be
+            density-scaled). The Windows/Linux side is a normal spacing step. */}
+        <div
+          className={`shrink-0 ${isMac ? '' : 'w-4'}`}
+          style={isMac ? { width: 88 } : undefined}
+          aria-hidden
+        />
         {/* Windows/Linux render our app-designed menu bar here (macOS uses the
             global native menu). */}
         {!isMac && <MenuBar />}

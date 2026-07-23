@@ -1,6 +1,23 @@
 import type { QueryResult, SchemaTable, SchemaColumn, SchemaIndex, SchemaObject, TestConnectionResult, PlanNode } from '@shared/types'
 import type { SessionOpts } from '@shared/driver-capabilities'
 
+/**
+ * The adapter every driver implements. Several methods are optional because a
+ * driver may be genuinely different in shape (Mongo, Redis, Snowflake).
+ *
+ * Some optional methods are the *implementation* half of a capability the
+ * driver also *declares* as serializable data on its `DriverFactory`, and the
+ * two must agree — a declared feature with no implementation crashes on use; an
+ * implemented feature with no declaration never surfaces. The adapter factory
+ * (`db/factory.ts`) enforces that link when it builds an adapter, so a mismatch
+ * fails the connect with an actionable message; the mapping (which declaration
+ * promises which methods) lives in `src/main/plugins/sdk/driver-validation.ts`
+ * and is guarded by `tests/unit/audit/driver-capability-agreement.test.ts`.
+ * Today:
+ * `session.manualTransactions` ⇔ the transaction lifecycle methods
+ * (`openSession`/`closeSession`/`setAutoCommit`/`beginTransaction`/`commit`/
+ * `rollback`); `explain.format === 'tree'` ⇔ `parseQueryPlan`.
+ */
 export interface DbAdapter {
   connect(): Promise<void>
   disconnect(): Promise<void>

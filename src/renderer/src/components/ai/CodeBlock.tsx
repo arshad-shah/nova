@@ -41,7 +41,7 @@ export function CodeBlock({ code, language, showInsert = true }: CodeBlockProps)
           size="none"
           type="button"
           onClick={insertIntoEditor}
-          className="px-1.5 py-0.5 rounded text-[10px] text-[var(--color-text-secondary)] hover:text-[var(--color-accent)] hover:bg-[var(--color-hover)]"
+          className="px-1.5 py-0.5 rounded text-3xs text-[var(--color-text-secondary)] hover:text-[var(--color-accent)] hover:bg-[var(--color-hover)]"
         >
           {t('aiui.chat.insert')}
         </Button>

@@ -20,7 +20,7 @@ export function StatusIndicatorWidgetRenderer({ widget }: Props) {
   return (
     <Flex align="center" gap="xs">
       <StatusDot size="xs" tone={statusTones[status]} pulse={status === 'loading'} />
-      <Text size="xs" color="secondary" className="text-[10px]">
+      <Text size="xs" color="secondary" className="text-3xs">
         {widget.label}
       </Text>
     </Flex>
