@@ -16,7 +16,6 @@ function makeStubAdapter(): DbAdapter {
     getRowCount: async () => 0,
     getSchemas: async () => [],
     getDatabases: async () => [],
-    switchDatabase: async () => {},
     isConnected: () => true
   }
 }
