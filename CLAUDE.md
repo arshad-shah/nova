@@ -181,6 +181,31 @@ that raises coverage, and never pad the percentage with render-without-assert
 tests. Run one file with `pnpm exec vitest run <file>` (not `pnpm test -- --run`,
 which runs the whole suite).
 
+### Architecture invariant suite
+
+The documented architectural rules are not left to reviewer habit — each is an
+executable **fitness function** in `tests/unit/audit/`, one file per rule, that
+fails CI when the rule is violated and whose failure message names the rule, the
+offending location, and the sanctioned alternative (a red build teaches, it
+doesn't just block). The design-system guards above are part of this suite; the
+core architecture invariants and their enforcing tests:
+
+| Rule | Enforcing test |
+| --- | --- |
+| Renderer backend access only through the platform layer (#165) | `renderer-backend-access-through-platform.test.ts` |
+| No `string`-keyed IPC event registration; every `IPC_EVENTS` entry has a shape and vice versa (#166) | `ipc-event-seam-typed.test.ts` |
+| IPC channels + shared constants are single-sourced | `ipc-channels-single-sourced.test.ts`, `constants-single-sourced.test.ts` |
+| No driver-type special-casing in `src/main/db/` (registry-purity) | `db-factory-registry-purity.test.ts` |
+| A driver's declared capabilities ⇔ its implemented adapter methods (#168) | `driver-capability-agreement.test.ts` |
+| Capability availability comes from declared `DriverCapabilities`, not adapter method probing (#171) | `capability-detection-by-declaration.test.ts` |
+| HTTP request bodies are decoded once (`Buffer.concat`), never per chunk (#171) | `request-body-decoded-once.test.ts` |
+| Main orchestrator stays pure (domain logic lives in plugins) | `main-orchestrator-purity.test.ts` |
+| The menu has one implementation across all surfaces | `menu-single-implementation.test.ts` |
+| Published `@verql/plugin-sdk` surface stays curated | `sdk-public-surface.test.ts` |
+
+When you add or change an architectural invariant, add (or update) its guard in
+`tests/unit/audit/` and its row here in the same change — demonstrate the guard
+red against a deliberately-introduced violation before relying on it.
 
 When working on UI components, always use the `your-project-sb-mcp` MCP tools to access Storybook's component and documentation knowledge before answering or taking any action.
 
