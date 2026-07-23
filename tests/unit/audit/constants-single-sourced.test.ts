@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeAll } from 'vitest'
 import fs from 'fs'
 import path from 'path'
 
@@ -379,10 +379,16 @@ function findViolations(rules: Rule[]): Hit[] {
 }
 
 describe('internal id constants are single-sourced', () => {
-  it('has no raw literals at known call sites for a guarded constant set', async () => {
+  // The scan walks the whole repo tree reading every file; run it once for the
+  // describe (raising the timeout for the one-off FS pass) rather than once per
+  // `it`, which under full-suite CPU load tipped past the 5s default.
+  let hits: Hit[]
+  beforeAll(async () => {
     const rules = await loadRules()
-    const hits = findViolations(rules)
+    hits = findViolations(rules)
+  }, 30_000)
 
+  it('has no raw literals at known call sites for a guarded constant set', () => {
     const fresh = hits.filter((h) => !BASELINE_ALLOWLIST.has(h.key))
     expect(
       fresh,
@@ -392,10 +398,9 @@ describe('internal id constants are single-sourced', () => {
     ).toEqual([])
   })
 
-  it('the baseline allowlist has no stale entries', async () => {
-    const rules = await loadRules()
-    const hits = new Set(findViolations(rules).map((h) => h.key))
-    const stale = [...BASELINE_ALLOWLIST].filter((key) => !hits.has(key))
+  it('the baseline allowlist has no stale entries', () => {
+    const found = new Set(hits.map((h) => h.key))
+    const stale = [...BASELINE_ALLOWLIST].filter((key) => !found.has(key))
     expect(
       stale,
       `\nThese BASELINE_ALLOWLIST entries no longer have a matching violation — remove them so the list can shrink:\n${stale.join('\n')}\n`,
