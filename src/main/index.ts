@@ -4,6 +4,7 @@ import fs from 'fs'
 import { registerIpcHandlers } from './ipc-handlers'
 import { buildAppMenu } from './app-menu'
 import { TRAFFIC_LIGHT_X, trafficLightY } from './ipc/window'
+import { sendTo } from './ipc/broadcast'
 import { IPC_EVENTS } from '@shared/ipc'
 import { CONFIG_KEY } from '@shared/settings'
 
@@ -124,7 +125,7 @@ function createWindow(): BrowserWindow {
   // state (covers OS-level changes too: double-clicking the drag region,
   // snap/aero, the window menu — not just our own toggle button).
   const emitMaximizeState = (): void =>
-    win.webContents.send(IPC_EVENTS.WINDOW_MAXIMIZE_CHANGED, win.isMaximized())
+    sendTo(win.webContents, IPC_EVENTS.WINDOW_MAXIMIZE_CHANGED, win.isMaximized())
   win.on('maximize', emitMaximizeState)
   win.on('unmaximize', emitMaximizeState)
 

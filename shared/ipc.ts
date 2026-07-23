@@ -954,8 +954,10 @@ export type IpcChannelMap = {
 // `IPC_EVENTS`; `IpcEventMap` is derived from the two.
 
 export interface IpcEventShapes {
-  /** Stream events for an in-flight AI chat (delta tokens, tool calls, …). */
-  AI_CHAT_EVENT: [event: AIStreamEvent]
+  /** Stream events for an in-flight AI chat (delta tokens, tool calls, …).
+   *  Emitted with the owning stream id so the renderer can ignore events from a
+   *  superseded stream (`stores/ai.ts`). */
+  AI_CHAT_EVENT: [streamId: string, event: AIStreamEvent]
   /** Stream events for an in-flight explain-results stream. */
   AI_EXPLAIN_EVENT: [event:
     | { streamId: string; kind: 'token'; text: string }
