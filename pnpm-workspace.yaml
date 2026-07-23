@@ -34,11 +34,18 @@ onlyBuiltDependencies:
 
 # Pinned safe-versions for known-vulnerable transitives.
 overrides:
-  axios@<1.15.1: '>=1.15.1'
+  # axios <1.18.0: Node HTTP adapter can reuse an inherited proxy after
+  # interceptor config cloning (GHSA-gcfj-64vw-6mp9). Via snowflake-sdk, which
+  # requires ^1.13.4, so the patched 1.18.x satisfies.
+  axios@<1.18.0: '>=1.18.0'
   form-data@<2.5.4: '>=2.5.4'
   # form-data 4.x line CVE (via snowflake-sdk -> axios).
   form-data@>=4.0.0 <4.0.6: '>=4.0.6'
-  fast-uri@<3.1.2: '>=3.1.2'
+  # fast-uri <3.1.4: host confusion via backslash authority delimiter and
+  # failed IDN canonicalization (GHSA-v2hh-gcrm-f6hx, GHSA-4c8g-83qw-93j6).
+  # Via @modelcontextprotocol/sdk -> ajv, which requires ^3.0.1 — STAY IN 3.x
+  # (<4), a 4.x jump breaks ajv's resolution.
+  fast-uri@<3.1.4: '>=3.1.4 <4'
   # Pin xmldom to 0.8.x. The 0.9 line made mimeType mandatory in
   # parseFromString, which breaks `plist` (called by electron-builder when
   # parsing the Electron prebuild's Info.plist):
@@ -56,7 +63,15 @@ overrides:
   postcss@<8.5.10: '>=8.5.10'
   hono@<4.12.25: '>=4.12.25'
   ip-address@<10.2.0: '>=10.2.0'
-  brace-expansion: '>=5.0.6'
+  # brace-expansion <5.0.7: ReDoS via exponential expansion of consecutive
+  # non-expanding {} groups (GHSA-3jxr-9vmj-r5cp). Via minimatch chains under
+  # @storybook/react-vite and electron-builder.
+  brace-expansion: '>=5.0.7'
+  # @vitest/browser <4.1.10: Browser Mode provider commands bypass the
+  # file-access permission gate (GHSA-p63j-vcc4-9vmv). Pulled transitively via
+  # @storybook/addon-vitest; the direct vitest toolchain is pinned to 4.1.10 in
+  # devDependencies so the family stays in lockstep.
+  '@vitest/browser@<4.1.10': '>=4.1.10'
   ws@<8.21.0: '>=8.21.0'
   fast-xml-parser@<5.7.0: '>=5.7.0'
   uuid@<11.1.1: '>=11.1.1'
