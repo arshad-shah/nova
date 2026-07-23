@@ -230,6 +230,17 @@ The Windows build emits a single artifact (`package.json` → `build.win.target:
 > it out) — it only goes to the Store. There is no non-Store Windows install
 > path.
 
+> **Flaky Store commit API.** The Dev Center submission API allows only **one
+> pending submission per app**, and its Commit endpoint intermittently returns
+> an HTML error page instead of JSON (surfacing as a `System.Text.Json '<' is
+> an invalid start of a value` crash in the `msstore` CLI). The publish step
+> handles both: before each attempt it clears any dangling pending submission
+> (`msstore submission delete "$PRODUCT_ID" --no-confirm`) and it retries the
+> publish up to 4 times with backoff. If it still fails after that, the API is
+> likely degraded — just **re-run the `publish-msstore` job** (the build
+> artifacts are reused; the next run cleans up and retries). To clear a stuck
+> submission by hand: `msstore submission delete <productId> --no-confirm`.
+
 #### One-time Microsoft Store setup — do this before the first Store release
 
 The CI job is **skipped automatically** until the repository variable
