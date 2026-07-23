@@ -14,6 +14,11 @@ export class DriverRegistryImpl implements DriverRegistry {
     if (this.drivers.has(id)) {
       throw new Error(`Driver '${id}' is already registered`)
     }
+    // Registration is deliberately pure — it stores the factory and constructs
+    // nothing. A driver's capability declaration↔implementation agreement is
+    // validated at the single adapter-construction chokepoint instead
+    // (src/main/db/factory.ts, via driver-validation.ts), so this stays free of
+    // the side effect of building a probe adapter. See issue #168.
     this.drivers.set(id, factory)
     return { dispose: () => { this.drivers.delete(id) } }
   }

@@ -1,6 +1,7 @@
 import type { ConnectionProfile } from '@shared/types'
 import type { DbAdapter } from './adapter'
 import type { DriverRegistryImpl } from '../plugins/sdk/driver-registry'
+import { assertDriverCapabilities } from '../plugins/sdk/driver-validation'
 
 // INVARIANT: no special-cased built-in drivers live here.
 //
@@ -37,5 +38,14 @@ export function createAdapter(profile: ConnectionProfile): DbAdapter {
   if (!factory) {
     throw new Error(`No driver registered for type: ${profile.type}`)
   }
-  return factory.createAdapter(profile as unknown as Record<string, unknown>)
+  const adapter = factory.createAdapter(profile as unknown as Record<string, unknown>)
+  // A driver's capability *declaration* (serializable data the renderer gates
+  // features on) and its adapter *implementation* (the optional methods the glue
+  // calls) must agree, or a declared feature crashes on use and an undeclared
+  // one never appears. This is the single chokepoint every real adapter passes
+  // through, so validate the freshly-built instance here: a mismatch fails the
+  // connect with an actionable message instead of crashing later. See
+  // ../plugins/sdk/driver-validation.ts and issue #168.
+  assertDriverCapabilities(profile.type, factory, adapter)
+  return adapter
 }
