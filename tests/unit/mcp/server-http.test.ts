@@ -8,8 +8,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { z } from 'zod'
 import { createServer, request as httpRequest } from 'http'
+import { connect as netConnect } from 'net'
 import { Client } from '@modelcontextprotocol/sdk/client/index.js'
 import { SSEClientTransport } from '@modelcontextprotocol/sdk/client/sse.js'
+import { MAX_MCP_BODY_BYTES } from '../../../src/main/mcp/server'
 
 // electron's BrowserWindow list drives both the approval-request notification
 // and generic `broadcast()`; tests mutate this array to simulate a window
@@ -150,6 +152,35 @@ function rawGet(port: number, path: string, headers: Record<string, string>): Pr
   })
 }
 
+/** Raw-socket POST. undici (Node's fetch) insists on flushing the entire
+ *  request body before it will surface the response, which fights an endpoint
+ *  that answers 413 *before* reading the whole payload — the very behaviour
+ *  under test. A hand-written socket lets us read whatever the server sends
+ *  back even if it tears the connection down mid-upload. */
+function rawPost(port: number, path: string, headers: Record<string, string>, body: string): Promise<{ status: number; raw: string }> {
+  return new Promise((resolve) => {
+    const socket = netConnect(port, '127.0.0.1', () => {
+      const head = [
+        `POST ${path} HTTP/1.1`,
+        `Host: 127.0.0.1:${port}`,
+        ...Object.entries(headers).map(([k, v]) => `${k}: ${v}`),
+        `Content-Length: ${Buffer.byteLength(body)}`,
+        'Connection: close',
+        '', '',
+      ].join('\r\n')
+      socket.write(head)
+      socket.write(body, () => {})
+    })
+    let raw = ''
+    const done = () => resolve({ status: Number((raw.match(/^HTTP\/1\.1 (\d+)/) ?? [])[1] ?? 0), raw })
+    socket.on('data', (d) => { raw += d.toString() })
+    socket.on('close', done)
+    // A mid-upload teardown surfaces as EPIPE/ECONNRESET on our write; by then
+    // the 413 response line is already in `raw`, so resolve with what we have.
+    socket.on('error', done)
+  })
+}
+
 describe('MCP HTTP dispatch (raw fetch, no MCP client)', () => {
   it('rejects a rebound Host header with 403 before auth is even checked', async () => {
     const s = await startServer()
@@ -227,6 +258,22 @@ describe('MCP HTTP dispatch (raw fetch, no MCP client)', () => {
       })
       expect(res.status).toBe(400)
       // The server must still be alive and answering other requests.
+      const health = await fetch(`http://127.0.0.1:${s.port}/health`, { headers: { Authorization: `Bearer ${s.token}` } })
+      expect(health.status).toBe(200)
+    } finally { await client.close().catch(() => {}); await s.close() }
+  })
+
+  it('rejects an over-limit POST /messages body with 413 and stays alive (no unbounded buffering)', async () => {
+    const s = await startServer()
+    const client = await connectClient(s.port, s.token) // establishes the SSE stream /messages needs
+    try {
+      const oversized = 'x'.repeat(MAX_MCP_BODY_BYTES + 1024)
+      const res = await rawPost(s.port, '/messages', {
+        Authorization: `Bearer ${s.token}`,
+        'Content-Type': 'application/json',
+      }, oversized)
+      expect(res.status).toBe(413)
+      // The oversized request must not have taken the server down.
       const health = await fetch(`http://127.0.0.1:${s.port}/health`, { headers: { Authorization: `Bearer ${s.token}` } })
       expect(health.status).toBe(200)
     } finally { await client.close().catch(() => {}); await s.close() }

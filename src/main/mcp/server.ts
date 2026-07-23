@@ -16,6 +16,65 @@ import { CONFIG_KEY } from '@shared/settings'
 
 interface MCPGate { disabledTools: string[]; readOnly: boolean }
 
+/**
+ * Max bytes accepted for a POST /messages request body. MCP JSON-RPC messages
+ * are small — a tool call plus its arguments — so 1 MiB sits far above any
+ * legitimate request while still bounding how much a single request can force
+ * the *main* process to allocate. The body accumulates in the main process
+ * (not a worker), so an unbounded read would take the whole app down, and the
+ * realistic trigger is a buggy or runaway MCP client — precisely the
+ * population this endpoint serves.
+ */
+export const MAX_MCP_BODY_BYTES = 1024 * 1024
+
+/** Rejection raised by {@link readRequestBody} when the body exceeds its cap. */
+export interface BodyTooLargeError extends Error { code: 'BODY_TOO_LARGE' }
+
+/**
+ * Assemble a request body from its data chunks, correctly and with a size cap.
+ *
+ * Two things this does that the naive `body += chunk.toString()` did not:
+ *  - **Decode once.** Chunks are collected as Buffers and decoded a single time
+ *    with `Buffer.concat(...).toString('utf8')`. Decoding each TCP chunk
+ *    independently corrupts any multi-byte character that straddles a chunk
+ *    boundary (it becomes U+FFFD), silently altering the body once a payload is
+ *    large enough to fragment and its content is non-ASCII.
+ *  - **Cap by byte length.** `size` tracks `chunk.length` (bytes), never string
+ *    length, which would undercount multi-byte input. On exceed we stop
+ *    accumulating, pause the stream, and reject with a `BODY_TOO_LARGE` code so
+ *    the caller can answer 413 and tear the connection down.
+ */
+export function readRequestBody(req: IncomingMessage, maxBytes = MAX_MCP_BODY_BYTES): Promise<string> {
+  return new Promise<string>((resolve, reject) => {
+    const chunks: Buffer[] = []
+    let size = 0
+    let settled = false
+    req.on('data', (chunk: Buffer) => {
+      if (settled) return
+      size += chunk.length // byte length — string .length would undercount multi-byte input
+      if (size > maxBytes) {
+        settled = true
+        chunks.length = 0 // release what we buffered; do not keep accumulating
+        req.pause() // stop 'data' events so a runaway client can't grow memory further
+        const err = Object.assign(new Error('Request body exceeds maximum size'), { code: 'BODY_TOO_LARGE' as const })
+        reject(err)
+        return
+      }
+      chunks.push(chunk)
+    })
+    req.on('end', () => {
+      if (settled) return
+      settled = true
+      resolve(Buffer.concat(chunks).toString('utf8'))
+    })
+    req.on('error', (err) => {
+      if (settled) return
+      settled = true
+      reject(err)
+    })
+  })
+}
+
 interface MCPServerDeps {
   toolRegistry: ToolRegistry
   getActiveConnectionId: () => string | null
@@ -203,11 +262,22 @@ export function createMCPServer(deps: MCPServerDeps): MCPServerInstance {
       }
       if (url.pathname === '/messages' && req.method === 'POST') {
         if (!transport) { res.writeHead(503, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: 'No active SSE connection' })); return }
-        let body = ''
-        req.on('data', (chunk: Buffer) => { body += chunk.toString() })
-        req.on('end', () => {
+        readRequestBody(req).then((body) => {
           try { transport!.handlePostMessage(req, res, JSON.parse(body)) }
           catch { res.writeHead(400, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: 'Invalid JSON' })) }
+        }).catch((err: unknown) => {
+          if ((err as { code?: string })?.code === 'BODY_TOO_LARGE') {
+            if (!res.headersSent) {
+              res.writeHead(413, { 'Content-Type': 'application/json' })
+              res.end(JSON.stringify({ error: 'Request body too large' }))
+            }
+            // Tear the connection down once the 413 is flushed so a runaway
+            // client stops uploading; destroying before flush could truncate it.
+            res.on('finish', () => req.destroy())
+          } else if (!res.headersSent) {
+            res.writeHead(400, { 'Content-Type': 'application/json' })
+            res.end(JSON.stringify({ error: 'Invalid request' }))
+          }
         })
         return
       }
