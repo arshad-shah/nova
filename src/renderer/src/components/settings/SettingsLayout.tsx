@@ -132,7 +132,7 @@ export function SettingsLayout() {
               label on one coast and the control on the other. Padding scales
               with breakpoint so the body breathes when the user widens the
               tab. */}
-          <Box className="w-full max-w-[1280px] mx-auto px-4 py-5 sm:px-6 lg:px-8 xl:px-10">
+          <Box className="w-full max-w-7xl mx-auto px-4 py-5 sm:px-6 lg:px-8 xl:px-10">
             <SectionErrorBoundary label={t('settings.layout.sectionLabel', { label: currentLabel })} resetKey={activeCategory}>
               <ActiveComponent />
             </SectionErrorBoundary>

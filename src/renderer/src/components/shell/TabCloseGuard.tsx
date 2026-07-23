@@ -22,7 +22,7 @@ export function TabCloseGuard({ txnQueue, dirtyBatch, resolveHead, clearBatch, c
 
   if (txnId !== null) {
     return (
-      <Modal open onClose={resolveHead} className="w-[400px] max-w-[90vw]">
+      <Modal open onClose={resolveHead} width="prompt">
         <Stack gap="md" className="p-4">
           <Text size="sm" weight="semibold">{t('shell.confirmTransaction.title')}</Text>
           <Text size="sm" color="secondary">

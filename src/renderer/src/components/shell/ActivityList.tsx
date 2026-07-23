@@ -95,7 +95,7 @@ function ActivityRow({ entry }: { entry: ActivityEntry }) {
       <Flex align="center" gap="sm" className="min-w-0">
         {expandable
           ? (open ? <ChevronDown size={11} className="shrink-0 text-text-muted" /> : <ChevronRight size={11} className="shrink-0 text-text-muted" />)
-          : <Box as="span" className="w-[11px] shrink-0" />}
+          : <Box as="span" className="shrink-0" style={{ width: 11 }} />}{/* reserves the 11px chevron slot so non-expandable rows stay aligned — an inline pixel width tied to the icon size, not a design width step */}
         <Icon size={13} className={cn('shrink-0', LEVEL_CLASS[entry.level])} />
         <Box as="span" className="font-mono text-3xs text-text-muted shrink-0 tabular-nums">
           {formatClockTime(entry.ts)}

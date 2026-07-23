@@ -143,6 +143,7 @@ Three-layer theming in `primitives/theme/tokens.css`: raw color scale → semant
 - **No raw Tailwind palette colours** (`text-white`, `bg-gray-*`, …) — express colour through the theme token layer (`renderer-no-raw-palette`).
 - **No arbitrary font sizes** (`text-[Npx]`) — use the named type ramp (`renderer-no-arbitrary-font-size`).
 - **No raw HTML elements in the component layer** (`<button>`, `<input>`, `<select>`, `<textarea>`, `<table>`, `<h1>`–`<h6>` under `src/renderer/src/components`) — a design-system primitive exists for each (`renderer-no-raw-html-primitives`). The `primitives/` layer is out of scope: a primitive is where a native element legitimately lives.
+- **No arbitrary pixel widths** (`w-[Npx]`, `max-w-[Npx]`, `min-w-[Npx]` under `src/renderer/src/components`) — recurring surface widths are named `--container-*` steps (`--container-prompt`/`palette`/`hero` in `styles/globals.css`) exposed as the `width` variant on `Modal`; content constraints use the shared Tailwind width scale (`max-w-40`, …). Genuinely dynamic or density-independent pixel widths use an inline `style={{ width }}`, the sanctioned exception (`renderer-no-arbitrary-width`).
 
 ### Key Libraries
 

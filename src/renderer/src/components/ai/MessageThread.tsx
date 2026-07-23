@@ -42,7 +42,7 @@ function ChatEmptyState() {
       }
       title={t('aiui.chat.emptyPrompt')}
       action={
-        <Box className="flex flex-wrap justify-center gap-1.5 max-w-[300px]">
+        <Box className="flex flex-wrap justify-center gap-1.5 max-w-75">
           {SUGGESTIONS.map(key => {
             const text = t(key)
             return (
