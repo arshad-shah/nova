@@ -5,6 +5,7 @@ import { Modal, Button, Checkbox, Text, Flex, Spinner, Stack, Box, SegmentedCont
 import { IPC_CHANNELS } from '@shared/ipc'
 import type { ExportFormatInfo } from '@shared/export-import'
 import { useTranslation } from '@/i18n/I18nProvider'
+import { ipc } from '@/platform/client'
 
 interface Props {
   tableName?: string
@@ -24,7 +25,7 @@ export function ExportModal({ tableName, connectionId, onClose }: Props) {
 
   useEffect(() => {
     let active = true
-    window.electronAPI
+    ipc
       .invoke(IPC_CHANNELS.EXPORT_FORMATS_LIST, connectionId)
       .then((list) => {
         if (!active) return
@@ -41,7 +42,7 @@ export function ExportModal({ tableName, connectionId, onClose }: Props) {
     if (!tableName || !format) return
     setExporting(true)
     try {
-      const res = await window.electronAPI.invoke(IPC_CHANNELS.EXPORT_TABLE, connectionId, tableName, format, { includeSchema })
+      const res = await ipc.invoke(IPC_CHANNELS.EXPORT_TABLE, connectionId, tableName, format, { includeSchema })
       if ('filePath' in res) {
         setResult({ text: t('shell.exportModal.exportedTo', { filePath: res.filePath }), isError: false })
         setTimeout(onClose, 1500)

@@ -4,6 +4,7 @@ import type { QueryResult } from '@shared/types'
 import { Flex, Text, Button } from '@/primitives'
 import { IPC_CHANNELS } from '@shared/ipc'
 import { useTranslation } from '@/i18n/I18nProvider'
+import { ipc } from '@/platform/client'
 
 interface Props {
   results: QueryResult
@@ -19,7 +20,7 @@ export function ResultsStatusBar({ results, actions }: Props) {
     setExporting(true)
     try {
       const fields = results.fields.map(f => f.name)
-      await window.electronAPI.invoke(IPC_CHANNELS.EXPORT_QUERY_RESULT, results.rows, fields, format)
+      await ipc.invoke(IPC_CHANNELS.EXPORT_QUERY_RESULT, results.rows, fields, format)
     } catch {
       // ignore — user may have cancelled
     }

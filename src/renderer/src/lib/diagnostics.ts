@@ -1,5 +1,6 @@
 import { IPC_CHANNELS } from '@shared/ipc'
 import type { ActivityKind, ActivityLevel } from '@shared/activity'
+import { ipc } from '@/platform/client'
 
 export interface DiagnosticInput {
   kind: ActivityKind
@@ -24,5 +25,5 @@ export function isDiagnosticsVerbose(): boolean { return verbose }
 
 /** Push a renderer-originated entry into the unified, main-owned activity stream. */
 export function recordActivity(input: DiagnosticInput): void {
-  void window.electronAPI?.invoke(IPC_CHANNELS.ACTIVITY_RECORD, input)
+  void ipc.optional(IPC_CHANNELS.ACTIVITY_RECORD, input)
 }

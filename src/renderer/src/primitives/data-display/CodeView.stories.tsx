@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
+import { expect, userEvent, waitFor } from 'storybook/test'
 import { CodeView } from './CodeView'
 
 const meta = {
@@ -13,6 +14,18 @@ export const Sql: Story = {
   args: {
     code: 'SELECT id, name FROM users WHERE active = true;',
     language: 'sql',
+  },
+  play: async ({ canvas }) => {
+    const copyButton = canvas.getByRole('button', { name: 'Copy' })
+    await userEvent.click(copyButton)
+    // useClipboard flips its `copied` flag synchronously, before the
+    // (possibly-blocked) clipboard write settles.
+    await waitFor(() => expect(canvas.getByRole('button', { name: 'Copied' })).toBeInTheDocument())
+    // ...and reverts back after the reset delay.
+    await waitFor(
+      () => expect(canvas.getByRole('button', { name: 'Copy' })).toBeInTheDocument(),
+      { timeout: 3000 },
+    )
   },
 }
 

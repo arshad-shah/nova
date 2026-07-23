@@ -18,6 +18,7 @@ import { useUiStore, ACTIVITY_PANEL } from '@/stores/ui'
 import { useSettingsStore } from '@/stores/settings'
 import { editorRegistry } from '@/stores/editor'
 import { tabActions, requestCloseTab } from '@/stores/tab-actions'
+import { ipc } from '@/platform/client'
 
 const GUIDE_URL = 'https://verql.arshadshah.com/guide/'
 const SDK_URL = 'https://verql.arshadshah.com/plugins/sdk/'
@@ -51,11 +52,11 @@ function newQuery(): void {
 }
 
 function editRole(role: 'undo' | 'redo' | 'cut' | 'copy' | 'paste' | 'selectAll'): void {
-  void window.electronAPI?.invoke(IPC_CHANNELS.WINDOW_EDIT_ROLE, role)
+  void ipc.optional(IPC_CHANNELS.WINDOW_EDIT_ROLE, role)
 }
 
 function openExternal(url: string): void {
-  void window.electronAPI?.invoke(IPC_CHANNELS.WINDOW_OPEN_EXTERNAL, url)
+  void ipc.optional(IPC_CHANNELS.WINDOW_OPEN_EXTERNAL, url)
 }
 
 const hasEditor = (): boolean => editorRegistry.get() !== null
@@ -121,9 +122,9 @@ export const menuActions: Record<MenuActionId, MenuAction> = {
   [MENU_ACTION.TOGGLE_SIDEBAR]: { icon: PanelLeft, run: () => useUiStore.getState().toggleSidebar() },
   [MENU_ACTION.TOGGLE_SECONDARY_SIDEBAR]: { icon: PanelRight, run: () => useUiStore.getState().toggleSecondarySidebar() },
   [MENU_ACTION.TOGGLE_BOTTOM_DOCK]: { icon: PanelBottom, run: () => useUiStore.getState().toggleBottomDock() },
-  [MENU_ACTION.TOGGLE_FULL_SCREEN]: { icon: Maximize, run: () => void window.electronAPI?.invoke(IPC_CHANNELS.WINDOW_TOGGLE_FULLSCREEN) },
-  [MENU_ACTION.RELOAD]: { icon: RefreshCw, run: () => void window.electronAPI?.invoke(IPC_CHANNELS.WINDOW_RELOAD) },
-  [MENU_ACTION.TOGGLE_DEV_TOOLS]: { icon: Wrench, run: () => void window.electronAPI?.invoke(IPC_CHANNELS.WINDOW_TOGGLE_DEVTOOLS) },
+  [MENU_ACTION.TOGGLE_FULL_SCREEN]: { icon: Maximize, run: () => void ipc.optional(IPC_CHANNELS.WINDOW_TOGGLE_FULLSCREEN) },
+  [MENU_ACTION.RELOAD]: { icon: RefreshCw, run: () => void ipc.optional(IPC_CHANNELS.WINDOW_RELOAD) },
+  [MENU_ACTION.TOGGLE_DEV_TOOLS]: { icon: Wrench, run: () => void ipc.optional(IPC_CHANNELS.WINDOW_TOGGLE_DEVTOOLS) },
 
   [MENU_ACTION.RUN]: { icon: Play, run: () => editorRegistry.runAction(KEYBINDING_ACTION.EXECUTE_QUERY), enabled: hasEditor },
   [MENU_ACTION.RUN_SELECTION]: { icon: ListChecks, run: runSelection, enabled: () => editorRegistry.getSelectedSql() !== '' },

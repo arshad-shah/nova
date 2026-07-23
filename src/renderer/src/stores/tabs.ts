@@ -5,6 +5,7 @@ import { useSelectionStore } from './selection'
 import { useUiStore } from './ui'
 import type { SettingsCategoryId } from '@/lib/settings-categories'
 import { t } from '@shared/i18n'
+import { ipc } from '@/platform/client'
 
 let tabCounter = 0
 
@@ -13,7 +14,7 @@ let tabCounter = 0
  *  always safe. Fire-and-forget; cleanup must never block tab close. */
 function releaseTabSession(tab: Tab): void {
   if (tab.type === 'query' && tab.connectionId) {
-    window.electronAPI?.invoke(IPC_CHANNELS.DB_SESSION_CLOSE, tab.connectionId, tab.id).catch(() => {})
+    ipc.optional(IPC_CHANNELS.DB_SESSION_CLOSE, tab.connectionId, tab.id)?.catch(() => {})
   }
 }
 

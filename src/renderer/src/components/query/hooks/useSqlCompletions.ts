@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { updateCompletionItems } from '@/lib/monaco-sql'
 import { setAICompletionContext } from '@/lib/monaco-ai-completion'
 import { IPC_CHANNELS } from '@shared/ipc'
+import { ipc } from '@/platform/client'
 
 /** Keeps the SQL editor's completion sources in sync with the active
  *  connection: it points the AI inline-completion at the live connection and
@@ -21,7 +22,7 @@ export function useSqlCompletions(
       updateCompletionItems([])
       return
     }
-    window.electronAPI.invoke(IPC_CHANNELS.PLUGINS_COMPLETIONS, databaseType, connectionId, {
+    ipc.invoke(IPC_CHANNELS.PLUGINS_COMPLETIONS, databaseType, connectionId, {
       connectionId,
       schema: schema ?? undefined
     })

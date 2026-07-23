@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import type { ActivityEntry } from '@shared/activity'
 import { IPC_CHANNELS, IPC_EVENTS } from '@shared/ipc'
+import { ipc } from '@/platform/client'
 
 const CAP = 1000
 
@@ -21,7 +22,7 @@ export const useActivityStore = create<ActivityState>((set, get) => ({
     if (get().started) return
     set({ started: true })
     try {
-      const list = await window.electronAPI.invoke(IPC_CHANNELS.ACTIVITY_LIST, { limit: CAP })
+      const list = await ipc.invoke(IPC_CHANNELS.ACTIVITY_LIST, { limit: CAP })
       set({ entries: list, loaded: true })
     } catch {
       set({ loaded: true })
@@ -29,14 +30,14 @@ export const useActivityStore = create<ActivityState>((set, get) => ({
     // Live stream: the main process coalesces entries into batches (oldest-first
     // within a batch). Prepend the reversed batch so the store stays newest-first,
     // and apply each batch in a single update to avoid per-entry re-renders.
-    window.electronAPI.on(IPC_EVENTS.ACTIVITY_BATCH, (batch: unknown) => {
+    ipc.on(IPC_EVENTS.ACTIVITY_BATCH, (batch: unknown) => {
       const entries = batch as ActivityEntry[]
       if (entries.length === 0) return
       set((s) => ({ entries: [...entries.slice().reverse(), ...s.entries].slice(0, CAP) }))
     })
   },
   clear: async () => {
-    await window.electronAPI.invoke(IPC_CHANNELS.ACTIVITY_CLEAR)
+    await ipc.invoke(IPC_CHANNELS.ACTIVITY_CLEAR)
     set({ entries: [] })
   },
 }))

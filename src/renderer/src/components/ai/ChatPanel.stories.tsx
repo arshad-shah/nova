@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useEffect } from 'react'
+import { expect, within } from 'storybook/test'
 import { ChatPanel } from './ChatPanel'
 import { useAIStore, type Conversation } from '@/stores/ai'
 import { useUiStore } from '@/stores/ui'
@@ -7,7 +8,7 @@ import type { AIChatMessage, AIModelInfo, AIProviderInfo } from '@shared/ai-type
 
 function stubElectronAPI() {
   ;(window as unknown as { electronAPI: unknown }).electronAPI = {
-    invoke: async () => undefined,
+    invoke: async () => [],
     on: () => () => {},
   }
 }
@@ -29,6 +30,7 @@ function seed(messages: AIChatMessage[], used: number) {
       useAIStore.setState({
         activeModel: 'claude-opus',
         activeProvider: provider,
+        providers: [provider],
         models,
         conversations,
         activeConversationId: 'c1',
@@ -66,4 +68,10 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 export const Empty: Story = { render: seed([], 8_000) }
-export const WithConversation: Story = { render: seed(conversation, 42_000) }
+export const WithConversation: Story = {
+  render: seed(conversation, 42_000),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    await expect(await canvas.findByText(/12 tables/)).toBeVisible()
+  },
+}

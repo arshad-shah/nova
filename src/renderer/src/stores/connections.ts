@@ -7,6 +7,7 @@ import { useTabsStore } from './tabs'
 import { IPC_CHANNELS } from '@shared/ipc'
 import { t } from '@shared/i18n'
 import { useDriverCapabilitiesStore } from './driver-capabilities'
+import { ipc } from '@/platform/client'
 
 interface ConnectionsState {
   connections: ConnectionProfile[]
@@ -36,7 +37,7 @@ export const useConnectionsStore = create<ConnectionsState>((set, get) => ({
     // Mirror the active connection into the main process so AI tools and the
     // MCP server target the connection the user is actually looking at — even
     // when switching between two already-connected connections (no db:connect).
-    void window.electronAPI?.invoke(IPC_CHANNELS.DB_SET_ACTIVE_CONNECTION, id)
+    void ipc.optional(IPC_CHANNELS.DB_SET_ACTIVE_CONNECTION, id)
   },
   addConnected: (id) => set((s) => ({ connectedIds: new Set([...s.connectedIds, id]) })),
   removeConnected: (id) => set((s) => {
@@ -47,15 +48,15 @@ export const useConnectionsStore = create<ConnectionsState>((set, get) => ({
   setLoading: (loading) => set({ loading }),
   loadConnections: async () => {
     set({ loading: true })
-    const connections = await window.electronAPI.invoke(IPC_CHANNELS.CONNECTIONS_LIST)
+    const connections = await ipc.invoke(IPC_CHANNELS.CONNECTIONS_LIST)
     set({ connections, loading: false })
   },
   saveConnection: async (profile) => {
-    await window.electronAPI.invoke(IPC_CHANNELS.CONNECTIONS_SAVE, profile)
+    await ipc.invoke(IPC_CHANNELS.CONNECTIONS_SAVE, profile)
     await get().loadConnections()
   },
   deleteConnection: async (id) => {
-    await window.electronAPI.invoke(IPC_CHANNELS.CONNECTIONS_DELETE, id)
+    await ipc.invoke(IPC_CHANNELS.CONNECTIONS_DELETE, id)
     const state = get()
     if (state.activeConnectionId === id) set({ activeConnectionId: null })
     // The schema cache and any tabs anchored to this connection now point at
@@ -79,7 +80,7 @@ export const useConnectionsStore = create<ConnectionsState>((set, get) => ({
       persistent: true,
     })
 
-    const result = await window.electronAPI.invoke(IPC_CHANNELS.DB_CONNECT, id)
+    const result = await ipc.invoke(IPC_CHANNELS.DB_CONNECT, id)
     if (result.success) {
       get().addConnected(id)
       set({ activeConnectionId: id })
@@ -123,7 +124,7 @@ export const useConnectionsStore = create<ConnectionsState>((set, get) => ({
       type: 'info',
       title: t('connections.disconnectedFrom', { name }),
     })
-    await window.electronAPI.invoke(IPC_CHANNELS.DB_DISCONNECT, id)
+    await ipc.invoke(IPC_CHANNELS.DB_DISCONNECT, id)
     get().removeConnected(id)
     useDriverCapabilitiesStore.getState().clearConnection(id)
     // Drop the cached schema metadata so a re-connect re-fetches against the

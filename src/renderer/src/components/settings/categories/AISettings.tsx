@@ -6,6 +6,7 @@ import { useTranslation } from '@/i18n/I18nProvider'
 import { SettingRow } from '../SettingRow'
 import { PluginContributedSettings } from '../PluginContributedSettings'
 import { IPC_CHANNELS } from '@shared/ipc'
+import { ipc } from '@/platform/client'
 
 type Provider = 'openai' | 'anthropic'
 
@@ -21,13 +22,13 @@ function ApiKeyField({ provider, label, description, placeholder }: {
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
-    window.electronAPI.invoke(IPC_CHANNELS.AI_KEYS_HAS, provider).then(setHasKey).catch(() => {})
+    ipc.invoke(IPC_CHANNELS.AI_KEYS_HAS, provider).then(setHasKey).catch(() => {})
   }, [provider])
 
   const save = async () => {
     setSaving(true)
     try {
-      await window.electronAPI.invoke(IPC_CHANNELS.AI_KEYS_SET, provider, draft)
+      await ipc.invoke(IPC_CHANNELS.AI_KEYS_SET, provider, draft)
       setHasKey(Boolean(draft))
       setDraft('')
     } finally {
@@ -36,7 +37,7 @@ function ApiKeyField({ provider, label, description, placeholder }: {
   }
 
   const clear = async () => {
-    await window.electronAPI.invoke(IPC_CHANNELS.AI_KEYS_SET, provider, '')
+    await ipc.invoke(IPC_CHANNELS.AI_KEYS_SET, provider, '')
     setHasKey(false)
     setDraft('')
   }

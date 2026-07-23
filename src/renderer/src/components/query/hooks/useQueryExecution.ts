@@ -15,6 +15,7 @@ import { useTranslation } from '@/i18n/I18nProvider'
 import { t as coreT } from '@shared/i18n'
 import { isSchemaMutatingSql } from '@/lib/sql-classify'
 import { getStatementContribution } from '@/lib/statement-registry'
+import { ipc } from '@/platform/client'
 
 /** Localized confirm message for a destructive statement, or null when safe.
  *  Detection is driver-aware: it routes through the statement contribution for
@@ -58,14 +59,14 @@ export function useQueryExecution(
     if (!tab.connectionId) return
     if (tab.database) {
       try {
-        await window.electronAPI.invoke(IPC_CHANNELS.DB_SWITCH_DATABASE, tab.connectionId, tab.database)
+        await ipc.invoke(IPC_CHANNELS.DB_SWITCH_DATABASE, tab.connectionId, tab.database)
       } catch {
         // ignore — some adapters don't support switchDatabase
       }
     }
     if (tab.schema) {
       try {
-        await window.electronAPI.invoke(IPC_CHANNELS.DB_SET_SCHEMA, tab.connectionId, tab.schema)
+        await ipc.invoke(IPC_CHANNELS.DB_SET_SCHEMA, tab.connectionId, tab.schema)
       } catch {
         // ignore — some adapters don't support setSchema
       }
@@ -78,7 +79,7 @@ export function useQueryExecution(
   const refreshQueryPlan = useCallback(async (result: QueryResult) => {
     if (!tab.connectionId) return
     try {
-      const plan = await window.electronAPI.invoke(IPC_CHANNELS.DB_PARSE_PLAN, tab.connectionId, result)
+      const plan = await ipc.invoke(IPC_CHANNELS.DB_PARSE_PLAN, tab.connectionId, result)
       useTabsStore.getState().setTabQueryPlan(tab.id, plan)
     } catch { /* plan parsing is best-effort */ }
   }, [tab.connectionId, tab.id])
@@ -122,14 +123,14 @@ export function useQueryExecution(
       await applyContext()
       if (useSession) {
         // db:session:open is idempotent (no-op if already open) — safe to call every time.
-        await window.electronAPI.invoke(IPC_CHANNELS.DB_SESSION_OPEN, tab.connectionId!, tab.id, { autoCommit: false })
+        await ipc.invoke(IPC_CHANNELS.DB_SESSION_OPEN, tab.connectionId!, tab.id, { autoCommit: false })
         if (tab.txn!.status !== 'active') {
           // Explicit BEGIN applies isolation level + read-only so those settings
           // actually reach the database. The implicit BEGIN used previously
           // silently ignored both. Status is set BEFORE the query so that a
           // query timeout/error leaves status as 'active' (the server txn IS
           // open), rather than leaving it as 'none' which is incorrect.
-          await window.electronAPI.invoke(IPC_CHANNELS.DB_TXN_BEGIN, tab.connectionId!, tab.id, {
+          await ipc.invoke(IPC_CHANNELS.DB_TXN_BEGIN, tab.connectionId!, tab.id, {
             isolationLevel: tab.txn!.isolationLevel,
             readOnly: tab.txn!.readOnly,
           })
@@ -137,7 +138,7 @@ export function useQueryExecution(
         }
       }
       const txnOpts = useSession ? { sessionId: tab.id } : undefined
-      const queryPromise = window.electronAPI.invoke(IPC_CHANNELS.DB_QUERY, tab.connectionId, sql, undefined, txnOpts)
+      const queryPromise = ipc.invoke(IPC_CHANNELS.DB_QUERY, tab.connectionId, sql, undefined, txnOpts)
       const timeoutPromise = new Promise<never>((_, reject) =>
         setTimeout(() => reject(new Error(t('query.timeout.message', { seconds: queryTimeout }))), timeoutMs)
       )
@@ -191,7 +192,7 @@ export function useQueryExecution(
       // Cancel the running query on timeout (use the parsed code, not the
       // raw text, so driver locale/wording changes don't break this).
       if (parsed.code === 'TIMEOUT' && tab.connectionId) {
-        window.electronAPI.invoke(IPC_CHANNELS.DB_CANCEL_QUERY, tab.connectionId).catch(() => {})
+        ipc.invoke(IPC_CHANNELS.DB_CANCEL_QUERY, tab.connectionId).catch(() => {})
       }
     }
   }, [tab.id, tab.connectionId, tab.sql, tab.schema, tab.title, tab.txn, dbType, caps, queryTimeout, confirmDestructive, applyContext, setTabExecuting, setTabResults, setTabError, setTabTxnStatus, refreshQueryPlan, t])
@@ -201,7 +202,7 @@ export function useQueryExecution(
   const handleCancel = useCallback(async () => {
     if (!tab.connectionId) return
     try {
-      await window.electronAPI.invoke(IPC_CHANNELS.DB_CANCEL_QUERY, tab.connectionId)
+      await ipc.invoke(IPC_CHANNELS.DB_CANCEL_QUERY, tab.connectionId)
     } catch {
       // ignore cancel errors
     }
@@ -219,7 +220,7 @@ export function useQueryExecution(
     setTabExecuting(tab.id, true)
     try {
       await applyContext()
-      const result = await window.electronAPI.invoke(IPC_CHANNELS.DB_QUERY, tab.connectionId, `${explain.statement} ${sql}`)
+      const result = await ipc.invoke(IPC_CHANNELS.DB_QUERY, tab.connectionId, `${explain.statement} ${sql}`)
       if (result) {
         setTabResults(tab.id, result)
         void refreshQueryPlan(result)

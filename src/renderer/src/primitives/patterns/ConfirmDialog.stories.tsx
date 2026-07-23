@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { fn } from 'storybook/test'
+import { fn, expect, userEvent, screen } from 'storybook/test'
 import { ConfirmDialog } from '@/components/shell/ConfirmDialog'
 
 /**
@@ -25,7 +25,18 @@ const meta: Meta<typeof ConfirmDialog> = {
 export default meta
 type Story = StoryObj<typeof ConfirmDialog>
 
-export const Danger: Story = {}
+export const Danger: Story = {
+  // Fresh mocks: the meta-level onCancel/onConfirm are shared across every
+  // story, so a play here must not read call counts another story's play
+  // already bumped on that same fn() instance.
+  args: { onConfirm: fn(), onCancel: fn() },
+  play: async ({ canvas, args }) => {
+    await expect(await screen.findByText('Discard changes?')).toBeVisible()
+    await userEvent.click(canvas.getByRole('button', { name: 'Discard' }))
+    await expect(args.onConfirm).toHaveBeenCalledTimes(1)
+    await expect(args.onCancel).not.toHaveBeenCalled()
+  },
+}
 
 export const Default: Story = {
   args: {
@@ -34,6 +45,13 @@ export const Default: Story = {
     confirmLabel: 'Run',
     cancelLabel: 'Cancel',
     variant: 'default',
+    onConfirm: fn(),
+    onCancel: fn(),
+  },
+  play: async ({ canvas, args }) => {
+    await userEvent.click(canvas.getByRole('button', { name: 'Cancel' }))
+    await expect(args.onCancel).toHaveBeenCalledTimes(1)
+    await expect(args.onConfirm).not.toHaveBeenCalled()
   },
 }
 

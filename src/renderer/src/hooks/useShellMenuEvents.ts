@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { IPC_EVENTS } from '@shared/ipc'
 import { MENU_ACTION, type MenuActionId } from '@shared/menus'
 import { runMenuAction } from '@/components/shell/menu-model'
+import { ipc } from '@/platform/client'
 
 /** The status bar's new-connection shortcut is a plain DOM `CustomEvent`
  *  rather than an IPC one (it never leaves the renderer), but it still
@@ -28,7 +29,7 @@ export function useShellMenuEvents(): void {
     // `electronAPI.on` hands callbacks `unknown` args, and this one crosses a
     // process boundary, so check the shape rather than assert it. Ids that
     // aren't in the registry are ignored by runMenuAction.
-    const offMenuAction = window.electronAPI.on(IPC_EVENTS.MENU_ACTION, (action) => {
+    const offMenuAction = ipc.on(IPC_EVENTS.MENU_ACTION, (action) => {
       if (typeof action === 'string') runMenuAction(action as MenuActionId)
     })
 

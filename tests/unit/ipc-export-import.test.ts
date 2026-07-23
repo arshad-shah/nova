@@ -183,6 +183,101 @@ describe('import:csv', () => {
   })
 })
 
+describe('export:query-result', () => {
+  it('throws a descriptive error when no exporter is registered for the requested format', async () => {
+    const { invoke } = buildHarness()
+    await expect(invoke('export:query-result', [{ a: 1 }], ['a'], 'nonexistent-format')).rejects.toThrow(
+      /No exporter registered for format 'nonexistent-format'/,
+    )
+  })
+
+  it('builds unknown/nullable columns from the field list and writes the exporter output', async () => {
+    const { invoke, exporterRegistry } = buildHarness()
+    let capturedColumns: unknown
+    exporterRegistry.register('csv', {
+      format: 'csv', extension: 'csv', displayName: 'CSV',
+      execute: (rows, columns) => { capturedColumns = columns; return 'a,b\n1,2' },
+    })
+    const result = await invoke('export:query-result', [{ a: 1, b: 2 }], ['a', 'b'], 'csv')
+    expect(result).toEqual({ filePath: '/tmp/out.csv' })
+    expect(capturedColumns).toEqual([
+      { name: 'a', dataType: 'unknown', nullable: true, isPrimaryKey: false, isForeignKey: false, defaultValue: null },
+      { name: 'b', dataType: 'unknown', nullable: true, isPrimaryKey: false, isForeignKey: false, defaultValue: null },
+    ])
+    expect(writeFileSyncMock).toHaveBeenCalledWith('/tmp/out.csv', 'a,b\n1,2')
+  })
+
+  it('returns {cancelled:true} without writing a file when the save dialog is dismissed', async () => {
+    showSaveDialogMock.mockResolvedValue({ canceled: true, filePath: undefined })
+    const { invoke, exporterRegistry } = buildHarness()
+    exporterRegistry.register('csv', {
+      format: 'csv', extension: 'csv', displayName: 'CSV', execute: () => 'a,b',
+    })
+    const result = await invoke('export:query-result', [], ['a'], 'csv')
+    expect(result).toEqual({ cancelled: true })
+    expect(writeFileSyncMock).not.toHaveBeenCalled()
+  })
+
+  it('uses a fixed "query-result" default filename regardless of table context', async () => {
+    const { invoke, exporterRegistry } = buildHarness()
+    exporterRegistry.register('csv', {
+      format: 'csv', extension: 'csv', displayName: 'CSV', execute: () => 'x',
+    })
+    await invoke('export:query-result', [], ['a'], 'csv')
+    expect(showSaveDialogMock.mock.calls[0][0].defaultPath).toBe('query-result.csv')
+  })
+})
+
+describe('import:formats-list — dedup', () => {
+  it('keeps only the first registration when two importers share the same advertised format', async () => {
+    const { invoke, importerRegistry } = buildHarness()
+    importerRegistry.register('csv-generic', {
+      format: 'csv', extensions: ['csv'], displayName: 'Generic CSV importer', parse: () => ({ rows: [] }),
+    })
+    importerRegistry.register('csv-postgres', {
+      format: 'csv', extensions: ['csv'], displayName: 'Postgres CSV importer', parse: () => ({ rows: [] }),
+    })
+    const list = await invoke('import:formats-list', 'p1')
+    const csvEntries = list.filter(f => f.format === 'csv')
+    expect(csvEntries).toHaveLength(1)
+    expect(csvEntries[0].displayName).toBe('Generic CSV importer')
+  })
+})
+
+describe('import:csv — generic fallback', () => {
+  it('uses the driver-contributed quoteChar/placeholderStyle to build inserts when the importer is not driverExecutes', async () => {
+    const { invoke, importerRegistry } = buildHarness({
+      driver: { quoteChar: '"', placeholderStyle: '?' },
+    })
+    importerRegistry.register('csv', {
+      format: 'csv', extensions: ['csv'], displayName: 'CSV',
+      parse: () => ({ rows: [{ id: '1', name: 'Ada' }] }),
+    })
+    const result = await invoke('import:csv', 'p1', 'users', { id: 'id', name: 'name' }, 'skip')
+    // The test adapter has no query() method, so each insert attempt throws
+    // and — with onConflict:'skip' — is counted as skipped rather than
+    // inserted or errored. This confirms the generic fallback path actually
+    // ran (built SQL from quoteChar/placeholderStyle and iterated CSV rows)
+    // rather than short-circuiting.
+    expect(result).toEqual({ inserted: 0, skipped: 1, errors: [] })
+  })
+
+  it('reports per-row errors instead of silently skipping when onConflict is "error"', async () => {
+    const { invoke, importerRegistry } = buildHarness({
+      driver: { quoteChar: '"', placeholderStyle: '?' },
+    })
+    importerRegistry.register('csv', {
+      format: 'csv', extensions: ['csv'], displayName: 'CSV',
+      parse: () => ({ rows: [{ id: '1', name: 'Ada' }] }),
+    })
+    const result = await invoke('import:csv', 'p1', 'users', { id: 'id', name: 'name' }, 'error')
+    expect(result.inserted).toBe(0)
+    expect(result.skipped).toBe(0)
+    expect(result.errors).toHaveLength(1)
+    expect(result.errors[0]).toMatch(/Row 1:/)
+  })
+})
+
 describe('import:sql', () => {
   it('throws when there is no active adapter', async () => {
     const { invoke } = buildHarness({ adapter: null })

@@ -16,6 +16,7 @@ import { resolveConnection } from './resolve'
 import { appActions } from './registry'
 import { APP_ACTION } from './ids'
 import type { AppAction } from './types'
+import { ipc } from '@/platform/client'
 
 const str = (v: unknown): string | undefined => (typeof v === 'string' && v ? v : undefined)
 
@@ -156,7 +157,7 @@ const BUILTINS: AppAction[] = [
       const { activeConnectionId } = useConnectionsStore.getState()
       const connId = (tab && tab.type === 'query' ? tab.connectionId : null) ?? activeConnectionId
       const connType = getProfile(connId)?.type ?? ''
-      const { formatted, changed } = await window.electronAPI.invoke(
+      const { formatted, changed } = await ipc.invoke(
         IPC_CHANNELS.DB_FORMAT_QUERY, model.getLanguageId(), connType, source
       )
       if (!changed) return
@@ -248,7 +249,7 @@ const BUILTINS: AppAction[] = [
       const results = activeQueryResults()
       if (!results) throw new Error(t('actions.errors.noResultsToExport'))
       const fields = results.fields.map((f) => f.name)
-      await window.electronAPI.invoke(IPC_CHANNELS.EXPORT_QUERY_RESULT, results.rows, fields, format)
+      await ipc.invoke(IPC_CHANNELS.EXPORT_QUERY_RESULT, results.rows, fields, format)
     }
   },
   {

@@ -16,13 +16,14 @@ import { initialAutoCommit } from '@/lib/initial-autocommit'
 import { getLatestReleaseNote } from '@/lib/release-notes'
 import { IPC_CHANNELS } from '@shared/ipc'
 import { GetStartedStep } from './GetStartedStep'
+import { ipc } from '@/platform/client'
 
 const GUIDE_URL = 'https://verql.arshadshah.com/guide/'
 const SDK_URL = 'https://verql.arshadshah.com/plugins/sdk/'
 const ISSUES_URL = 'https://github.com/arshad-shah/verql/issues'
 
 const openExternal = (url: string) =>
-  void window.electronAPI?.invoke(IPC_CHANNELS.WINDOW_OPEN_EXTERNAL, url)
+  void ipc.optional(IPC_CHANNELS.WINDOW_OPEN_EXTERNAL, url)
 
 interface StepDef {
   id: string
@@ -97,8 +98,8 @@ export function WelcomeView() {
 
   useEffect(() => {
     let active = true
-    window.electronAPI?.invoke(IPC_CHANNELS.APP_ABOUT_INFO)
-      .then((i) => { if (active) setVersion(i.version) })
+    ipc.optional(IPC_CHANNELS.APP_ABOUT_INFO)
+      ?.then((i) => { if (active) setVersion(i.version) })
       .catch(() => {})
     return () => { active = false }
   }, [])

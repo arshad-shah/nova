@@ -7,6 +7,7 @@ import type { MenuNode } from '../surfaces/menu/types'
 import { Textarea } from './Textarea'
 import { fieldRowVariants } from './field-variants'
 import { IPC_CHANNELS } from '@shared/ipc'
+import { ipc } from '@/platform/client'
 
 type FcState = { mode: 'browse' | 'paste'; value: string; fileName: string | null; dragOver: boolean }
 type FcAction =
@@ -97,7 +98,7 @@ export const FileContentInput = forwardRef<HTMLDivElement, FileContentInputProps
       const filters = accept
         ? [{ name: 'Files', extensions: accept.split(',').map((e) => e.trim().replace(/^\./, '')) }]
         : undefined
-      const result = await window.electronAPI.invoke(IPC_CHANNELS.DIALOG_OPEN_FILE, { filters })
+      const result = await ipc.invoke(IPC_CHANNELS.DIALOG_OPEN_FILE, { filters })
       if ('cancelled' in result) return
       dispatch({ type: 'fileLoaded', name: result.filePath, content: result.content })
       onChange?.(result.content)

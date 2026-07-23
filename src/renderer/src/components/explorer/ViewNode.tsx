@@ -15,6 +15,7 @@ import { HighlightedText } from './HighlightedText'
 import { IPC_CHANNELS } from '@shared/ipc'
 import { useTranslation } from '@/i18n/I18nProvider'
 import { treeIndent } from '@/lib/math'
+import { ipc } from '@/platform/client'
 
 interface ViewNodeProps {
   viewName: string
@@ -43,7 +44,7 @@ export function ViewNode({ viewName, connectionId, schema, depth, highlightQuery
 
   async function getSampleQuery(): Promise<string> {
     try {
-      return await window.electronAPI.invoke(IPC_CHANNELS.DB_SAMPLE_QUERY, connectionId, viewName, schema) as string
+      return await ipc.invoke(IPC_CHANNELS.DB_SAMPLE_QUERY, connectionId, viewName, schema) as string
     } catch {
       return `SELECT * FROM "${viewName}" LIMIT 100;`
     }

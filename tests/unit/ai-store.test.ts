@@ -69,6 +69,20 @@ describe('AI Store', () => {
     expect(useAIStore.getState().providers).toEqual([{ id: 'openai', name: 'OpenAI' }])
   })
 
+  it('loadConfiguredProviders tolerates an undefined IPC resolve', async () => {
+    mockInvoke.mockResolvedValueOnce(undefined)
+    useAIStore.setState({ providers: [], activeProvider: null })
+    await expect(useAIStore.getState().loadConfiguredProviders()).resolves.toBeUndefined()
+    expect(useAIStore.getState().providers).toEqual([])
+  })
+
+  it('loadProviders tolerates an undefined IPC resolve', async () => {
+    mockInvoke.mockResolvedValueOnce(undefined)
+    useAIStore.setState({ providers: [] })
+    await useAIStore.getState().loadProviders()
+    expect(useAIStore.getState().providers).toEqual([])
+  })
+
   it('handles stream chunk event', () => {
     useAIStore.setState({ isStreaming: true, currentStreamId: 'stream-1' })
     useAIStore.getState().handleStreamEvent({ type: 'chunk', content: 'Hello' })

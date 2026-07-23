@@ -17,6 +17,7 @@ import type { PluginCommand } from '@/stores/plugin-commands'
 import { useTranslation } from '@/i18n/I18nProvider'
 import { IPC_CHANNELS, IPC_EVENTS } from '@shared/ipc'
 import { KEYBINDING_ACTION } from '@shared/settings'
+import { ipc } from '@/platform/client'
 
 interface Command {
   id: string
@@ -56,12 +57,12 @@ export function CommandPalette({ open, onClose }: Props) {
   useEffect(() => {
     let cancelled = false
     const load = () => {
-      window.electronAPI.invoke(IPC_CHANNELS.PLUGINS_GET_COMMANDS).then((list) => {
+      ipc.invoke(IPC_CHANNELS.PLUGINS_GET_COMMANDS).then((list) => {
         if (!cancelled) setPluginCommands(list)
       }).catch(() => { if (!cancelled) setPluginCommands([]) })
     }
     load()
-    const offLifecycle = window.electronAPI.on(IPC_EVENTS.PLUGINS_LIFECYCLE, load)
+    const offLifecycle = ipc.on(IPC_EVENTS.PLUGINS_LIFECYCLE, load)
     return () => { cancelled = true; offLifecycle?.() }
   }, [])
 
@@ -162,7 +163,7 @@ export function CommandPalette({ open, onClose }: Props) {
         category: pc.pluginDisplayName,
         keybinding: pc.keybinding,
         action: () => {
-          window.electronAPI
+          ipc
             .invoke(IPC_CHANNELS.PLUGINS_UI_ACTION, pc.pluginId, pc.commandId, {})
             // Empty catches turn every plugin failure into invisible silence —
             // the user wonders why the command did nothing. At minimum we
