@@ -145,7 +145,7 @@
         "en-US"
       ],
       "minVersion": "10.0.17763.0",
-      "maxVersionTested": "10.0.19041.0"
+      "maxVersionTested": "10.0.22621.0"
     },
     "linux": {
       "target": "AppImage",
