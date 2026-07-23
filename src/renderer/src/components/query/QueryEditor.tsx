@@ -135,6 +135,7 @@ export function QueryEditor({ tabId, value, onChange, onExecute, onSave, connect
           connectionId={connectionId}
           dbType={databaseType}
           statementSyntax={cachedCaps?.statementSyntax}
+          supportsDollarQuoting={cachedCaps?.supportsDollarQuoting}
         />
       ) : null}
     </>

@@ -222,6 +222,12 @@ ctx.drivers.register('cassandra', {
   // the destructive confirm for this driver.
   statementSyntax: 'sql',               // 'sql' | 'redis' | 'mongodb'
 
+  // Whether this dialect uses Postgres-style dollar-quoted bodies ($$…$$,
+  // $tag$…$tag$). When set, the shared SQL statement splitter treats a
+  // dollar-quoted region as opaque, so a `;` inside a function body doesn't
+  // split the statement (gutter + SQL importer). Only Postgres declares it.
+  supportsDollarQuoting: true,
+
   // What this driver calls its data concepts, so the schema explorer labels
   // things in *your* terms instead of assuming SQL "table/column/row". The
   // renderer resolves these via `useDataNouns` and falls back to generic words

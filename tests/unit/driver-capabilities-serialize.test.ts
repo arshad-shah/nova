@@ -35,4 +35,9 @@ describe('serializeStaticCapabilities', () => {
     expect(caps.session).toBeUndefined()
     expect(caps.explain).toBeUndefined()
   })
+
+  it('passes the supportsDollarQuoting flag through for the renderer splitter', () => {
+    expect(serializeStaticCapabilities(factory({ supportsDollarQuoting: true })).supportsDollarQuoting).toBe(true)
+    expect(serializeStaticCapabilities(factory({})).supportsDollarQuoting).toBeUndefined()
+  })
 })

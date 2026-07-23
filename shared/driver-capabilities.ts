@@ -115,6 +115,11 @@ export interface DriverCapabilities {
    *  generic, Monaco-coupled splitter implementations and selects one by this id
    *  (no hardcoded db-type enumeration). Omit for drivers with no statements. */
   statementSyntax?: string
+  /** Whether this dialect uses Postgres-style dollar-quoted bodies (`$$…$$`).
+   *  The renderer's statement gutter passes it to the shared splitter so a `;`
+   *  inside a function body doesn't split the statement. Omit ⇒ no dollar
+   *  quoting. */
+  supportsDollarQuoting?: boolean
   /** Driver-contributed error-classification rules for this dialect's
    *  query-semantic errors (bad column/table, syntax, constraints, …). The
    *  renderer matches them to classify errors and pick a friendly message,

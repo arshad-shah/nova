@@ -9,4 +9,5 @@ export const sqlExporter = createSqlExporter({
 export const sqlImporter = createSqlImporter({
   displayName: 'SQL (PostgreSQL)',
   appliesToTypes: ['postgresql', 'postgres'],
+  supportsDollarQuoting: true,
 })
