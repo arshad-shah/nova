@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import type { SchemaTable, SchemaColumn, SchemaIndex, SchemaObject } from '@shared/types'
 import { IPC_CHANNELS } from '@shared/ipc'
+import { ipc } from '@/platform/client'
 
 interface SchemaState {
   tables: Map<string, SchemaTable[]>
@@ -51,7 +52,7 @@ export const useSchemaStore = create<SchemaState>((set, get) => ({
     const cached = get().databases.get(key)
     if (cached && cached.every(Boolean)) return cached
     try {
-      const result = (await window.electronAPI.invoke(IPC_CHANNELS.DB_GET_DATABASES, connectionId)).filter(Boolean)
+      const result = (await ipc.invoke(IPC_CHANNELS.DB_GET_DATABASES, connectionId)).filter(Boolean)
       set((s) => {
         const next = new Map(s.databases)
         next.set(key, result)
@@ -72,7 +73,7 @@ export const useSchemaStore = create<SchemaState>((set, get) => ({
   switchDatabase: async (connectionId, database) => {
     if (!database) throw new Error('Database name is required')
     try {
-      await window.electronAPI.invoke(IPC_CHANNELS.DB_SWITCH_DATABASE, connectionId, database)
+      await ipc.invoke(IPC_CHANNELS.DB_SWITCH_DATABASE, connectionId, database)
     } catch {
       // switchDatabase may fail for databases user can't access (e.g. rdsadmin)
       throw new Error(`Cannot switch to database "${database}"`)
@@ -86,7 +87,7 @@ export const useSchemaStore = create<SchemaState>((set, get) => ({
     if (cached) return cached
     set({ loading: true })
     try {
-      const result = await window.electronAPI.invoke(IPC_CHANNELS.DB_GET_SCHEMAS, connectionId)
+      const result = await ipc.invoke(IPC_CHANNELS.DB_GET_SCHEMAS, connectionId)
       set((s) => {
         const next = new Map(s.schemas)
         next.set(key, result)
@@ -110,7 +111,7 @@ export const useSchemaStore = create<SchemaState>((set, get) => ({
     if (cached) return cached
     set({ loading: true })
     try {
-      const result = await window.electronAPI.invoke(IPC_CHANNELS.DB_GET_TABLES, connectionId, schema)
+      const result = await ipc.invoke(IPC_CHANNELS.DB_GET_TABLES, connectionId, schema)
       set((s) => {
         const next = new Map(s.tables)
         next.set(key, result)
@@ -128,7 +129,7 @@ export const useSchemaStore = create<SchemaState>((set, get) => ({
     const cached = get().columns.get(key)
     if (cached) return cached
     try {
-      const result = await window.electronAPI.invoke(IPC_CHANNELS.DB_GET_COLUMNS, connectionId, table, schema)
+      const result = await ipc.invoke(IPC_CHANNELS.DB_GET_COLUMNS, connectionId, table, schema)
       set((s) => {
         const next = new Map(s.columns)
         next.set(key, result)
@@ -144,7 +145,7 @@ export const useSchemaStore = create<SchemaState>((set, get) => ({
     const key = cacheKey(connectionId, schema, table)
     const cached = get().indexes.get(key)
     if (cached) return cached
-    const result = await window.electronAPI.invoke(IPC_CHANNELS.DB_GET_INDEXES, connectionId, table, schema)
+    const result = await ipc.invoke(IPC_CHANNELS.DB_GET_INDEXES, connectionId, table, schema)
     set((s) => {
       const next = new Map(s.indexes)
       next.set(key, result)
@@ -158,7 +159,7 @@ export const useSchemaStore = create<SchemaState>((set, get) => ({
     const cached = get().objects.get(key)
     if (cached) return cached
     try {
-      const result = await window.electronAPI.invoke(IPC_CHANNELS.DB_GET_SCHEMA_OBJECTS, connectionId, schema)
+      const result = await ipc.invoke(IPC_CHANNELS.DB_GET_SCHEMA_OBJECTS, connectionId, schema)
       set((s) => {
         const next = new Map(s.objects)
         next.set(key, result)
@@ -188,7 +189,7 @@ export const useSchemaStore = create<SchemaState>((set, get) => ({
   fetchRowCount: async (connectionId, table, schema) => {
     const key = cacheKey(connectionId, schema, table)
     if (get().rowCounts.has(key)) return
-    const count = await window.electronAPI.invoke(IPC_CHANNELS.DB_GET_ROW_COUNT, connectionId, table, schema)
+    const count = await ipc.invoke(IPC_CHANNELS.DB_GET_ROW_COUNT, connectionId, table, schema)
     set((s) => {
       const next = new Map(s.rowCounts)
       next.set(key, count)

@@ -94,6 +94,8 @@ Three-layer split: **main** (Node.js), **preload** (IPC bridge), **renderer** (R
 
 All renderer-to-main communication goes through typed IPC channels defined in `shared/ipc.ts` (`IpcChannelMap`). Handlers are registered in `src/main/ipc-handlers.ts`. Channel naming convention: `domain:action` (e.g., `db:query`, `connections:save`, `plugins:list`).
 
+**Renderer backend access has one chokepoint.** The renderer never touches `window.electronAPI` directly — it goes through the **platform client** (`src/renderer/src/platform/client.ts`), imported as `import { ipc } from '@/platform/client'` (`ipc.invoke` / `ipc.on` / `ipc.optional` / `ipc.available()` / `ipc.platform()`). That single seam is where cross-cutting concerns (error normalization, activity logging, retry, cancellation, instrumentation) are added once instead of per call site, and `useIpcQuery` is built on top of it. The invariant is enforced by `tests/unit/audit/renderer-backend-access-through-platform.test.ts` (#165), which fails the build if the bridge is referenced anywhere outside `src/renderer/src/platform/` (Storybook stories, which stub the bridge as their test seam, are the sanctioned exception). See `docs/ipc.md`.
+
 ### State Management
 
 Zustand stores in `src/renderer/src/stores/`:

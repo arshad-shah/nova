@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNotificationsStore } from '@/stores/notifications'
 import { IPC_CHANNELS } from '@shared/ipc'
 import { t } from '@shared/i18n'
+import { ipc } from '@/platform/client'
 
 export interface PluginStatus {
   total: number
@@ -24,7 +25,7 @@ export function usePluginStatus(): PluginStatus {
 
     const check = async () => {
       try {
-        const list = (await window.electronAPI.invoke(IPC_CHANNELS.PLUGINS_LIST)) as Array<{
+        const list = (await ipc.invoke(IPC_CHANNELS.PLUGINS_LIST)) as Array<{
           status: { state: string }
         }>
         if (cancelled) return

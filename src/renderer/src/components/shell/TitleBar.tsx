@@ -3,6 +3,7 @@ import { platform as detectedPlatform } from '@/lib/platform'
 import { IPC_CHANNELS } from '@shared/ipc'
 import { WindowControls } from './WindowControls'
 import { MenuBar } from './MenuBar'
+import { ipc } from '@/platform/client'
 
 /** Override the detected host platform — used by Storybook to preview the bar
  *  as it renders on each OS. In the app it's left unset and auto-detected. */
@@ -47,7 +48,7 @@ export function TitleBar({ platform = detectedPlatform }: TitleBarProps = {}) {
     // first-paint measurement and leave the lights a pixel high.
     const report = (): void => {
       const h = el.getBoundingClientRect().height
-      if (h > 0) void window.electronAPI?.invoke(IPC_CHANNELS.WINDOW_SET_TITLEBAR_HEIGHT, h)
+      if (h > 0) void ipc.optional(IPC_CHANNELS.WINDOW_SET_TITLEBAR_HEIGHT, h)
     }
     report()
     const ro = new ResizeObserver(report)

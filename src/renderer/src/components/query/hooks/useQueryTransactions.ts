@@ -3,6 +3,7 @@ import { notifyError } from '@/lib/notify-error'
 import { useTabsStore } from '@/stores/tabs'
 import type { QueryTab } from '@shared/types'
 import { IPC_CHANNELS } from '@shared/ipc'
+import { ipc } from '@/platform/client'
 
 export interface QueryTransactions {
   onToggleAutoCommit: (enabled: boolean) => Promise<void>
@@ -33,12 +34,12 @@ export function useQueryTransactions(tab: QueryTab): QueryTransactions {
         // in a dangling transaction, then release the session. Opening a new
         // session is deferred lazily to the next query (see runSql prelude).
         if (tab.txn?.status === 'active') {
-          await window.electronAPI.invoke(IPC_CHANNELS.DB_TXN_COMMIT, tab.connectionId, tab.id)
+          await ipc.invoke(IPC_CHANNELS.DB_TXN_COMMIT, tab.connectionId, tab.id)
         }
         // DB_SESSION_CLOSE is a tolerant no-op when no session is open, so this
         // is safe even if the user toggles OFF then immediately back ON without
         // ever running a query (i.e. no session was ever opened).
-        await window.electronAPI.invoke(IPC_CHANNELS.DB_SESSION_CLOSE, tab.connectionId, tab.id)
+        await ipc.invoke(IPC_CHANNELS.DB_SESSION_CLOSE, tab.connectionId, tab.id)
         setTabTxnStatus(tab.id, 'none')
       }
       // Turning OFF is lazy — no IPC here; the session opens on the next query.
@@ -55,13 +56,13 @@ export function useQueryTransactions(tab: QueryTab): QueryTransactions {
   // dialog open and does NOT close the tab, preventing an orphaned server txn.
   const doCommit = useCallback(async () => {
     if (!tab.connectionId) return
-    await window.electronAPI.invoke(IPC_CHANNELS.DB_TXN_COMMIT, tab.connectionId, tab.id)
+    await ipc.invoke(IPC_CHANNELS.DB_TXN_COMMIT, tab.connectionId, tab.id)
     setTabTxnStatus(tab.id, 'none')
   }, [tab.connectionId, tab.id, setTabTxnStatus])
 
   const doRollback = useCallback(async () => {
     if (!tab.connectionId) return
-    await window.electronAPI.invoke(IPC_CHANNELS.DB_TXN_ROLLBACK, tab.connectionId, tab.id)
+    await ipc.invoke(IPC_CHANNELS.DB_TXN_ROLLBACK, tab.connectionId, tab.id)
     setTabTxnStatus(tab.id, 'none')
   }, [tab.connectionId, tab.id, setTabTxnStatus])
 

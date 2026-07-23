@@ -5,6 +5,7 @@ import { Modal, Button, Input, Text, Flex, Spinner, Stack, Box, SegmentedControl
 import { IPC_CHANNELS } from '@shared/ipc'
 import type { ImportFormatInfo } from '@shared/export-import'
 import { useTranslation } from '@/i18n/I18nProvider'
+import { ipc } from '@/platform/client'
 
 interface Props {
   connectionId: string
@@ -23,7 +24,7 @@ export function ImportModal({ connectionId, onClose }: Props) {
 
   useEffect(() => {
     let active = true
-    window.electronAPI
+    ipc
       .invoke(IPC_CHANNELS.IMPORT_FORMATS_LIST, connectionId)
       .then((list) => {
         if (!active) return
@@ -42,7 +43,7 @@ export function ImportModal({ connectionId, onClose }: Props) {
   const handleImportSql = async () => {
     setImporting(true)
     try {
-      const res = await window.electronAPI.invoke(IPC_CHANNELS.IMPORT_SQL, connectionId)
+      const res = await ipc.invoke(IPC_CHANNELS.IMPORT_SQL, connectionId)
       if ('cancelled' in res) { setImporting(false); return }
       const msg = res.errors.length > 0
         ? t('shell.importModal.executedStatementsErrors', { count: res.executed, errors: res.errors.length })
@@ -62,7 +63,7 @@ export function ImportModal({ connectionId, onClose }: Props) {
     try {
       // 1:1 column mapping — the backend matches file headers to columns.
       const mapping: Record<string, string> = {}
-      const res = await window.electronAPI.invoke(IPC_CHANNELS.IMPORT_CSV, connectionId, tableName, mapping, 'skip')
+      const res = await ipc.invoke(IPC_CHANNELS.IMPORT_CSV, connectionId, tableName, mapping, 'skip')
       if ('cancelled' in res) { setImporting(false); return }
       const msg =
         t('shell.importModal.insertedRows', { count: res.inserted }) +

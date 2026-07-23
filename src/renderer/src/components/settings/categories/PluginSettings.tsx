@@ -5,6 +5,7 @@ import { usePluginUIStore } from '@/stores/plugin-ui'
 import { useTranslation } from '@/i18n/I18nProvider'
 import { SettingRow } from '../SettingRow'
 import { IPC_CHANNELS, IPC_EVENTS } from '@shared/ipc'
+import { ipc } from '@/platform/client'
 
 interface PluginInfo {
   name: string
@@ -60,7 +61,7 @@ export function PluginSettings() {
     const entries = await Promise.all(
       active.map(async (p) => {
         try {
-          const bundle = await window.electronAPI.invoke(IPC_CHANNELS.PLUGINS_GET_SETTINGS, p.name)
+          const bundle = await ipc.invoke(IPC_CHANNELS.PLUGINS_GET_SETTINGS, p.name)
           return [p.name, bundle as PluginSettingsBundle] as const
         } catch {
           return [p.name, { schema: [], values: {} }] as const
@@ -71,7 +72,7 @@ export function PluginSettings() {
   }, [])
 
   const reload = useCallback(async () => {
-    const list = await window.electronAPI.invoke(IPC_CHANNELS.PLUGINS_LIST)
+    const list = await ipc.invoke(IPC_CHANNELS.PLUGINS_LIST)
     setPlugins(list)
     await loadSettings(list)
     setLoading(false)
@@ -79,12 +80,12 @@ export function PluginSettings() {
 
   useEffect(() => {
     reload()
-    const off = window.electronAPI.on(IPC_EVENTS.PLUGINS_LIFECYCLE, reload)
+    const off = ipc.on(IPC_EVENTS.PLUGINS_LIFECYCLE, reload)
     return () => off?.()
   }, [reload])
 
   const updateSetting = async (pluginName: string, key: string, value: unknown) => {
-    await window.electronAPI.invoke(IPC_CHANNELS.PLUGINS_SET_SETTING, pluginName, key, value)
+    await ipc.invoke(IPC_CHANNELS.PLUGINS_SET_SETTING, pluginName, key, value)
     setPluginSettings(prev => ({
       ...prev,
       [pluginName]: prev[pluginName]
@@ -95,9 +96,9 @@ export function PluginSettings() {
 
   const handleToggle = async (name: string, active: boolean) => {
     if (active) {
-      await window.electronAPI.invoke(IPC_CHANNELS.PLUGINS_ACTIVATE, name)
+      await ipc.invoke(IPC_CHANNELS.PLUGINS_ACTIVATE, name)
     } else {
-      await window.electronAPI.invoke(IPC_CHANNELS.PLUGINS_DEACTIVATE, name)
+      await ipc.invoke(IPC_CHANNELS.PLUGINS_DEACTIVATE, name)
     }
     // Force immediate UI cleanup/refresh
     const uiStore = usePluginUIStore.getState()
@@ -108,7 +109,7 @@ export function PluginSettings() {
       uiStore.fetchContributions('panels'),
       uiStore.fetchContributions('contextMenu'),
     ])
-    const list = await window.electronAPI.invoke(IPC_CHANNELS.PLUGINS_LIST)
+    const list = await ipc.invoke(IPC_CHANNELS.PLUGINS_LIST)
     setPlugins(list)
   }
 

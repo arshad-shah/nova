@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { IPC_CHANNELS, IPC_EVENTS } from '@shared/ipc'
 import { DEFAULT_THEME_ID } from '@shared/settings'
+import { ipc } from '@/platform/client'
 
 /** Baseline theme that ships with the app shell. Ion is the brand identity
  *  for Verql *and* the default theme, so it's not a plugin contribution — a
@@ -103,13 +104,13 @@ export const useThemesStore = create<ThemesState>((set) => ({
   themes: [],
   loaded: false,
   fetch: async () => {
-    if (typeof window === 'undefined' || !window.electronAPI) {
+    if (!ipc.available()) {
       set({ themes: [BASELINE_ION], loaded: true })
       return
     }
     let list: RegisteredThemeView[] = []
     try {
-      list = await window.electronAPI.invoke(IPC_CHANNELS.THEMES_LIST)
+      list = await ipc.invoke(IPC_CHANNELS.THEMES_LIST)
     } catch {
       list = []
     }
@@ -122,9 +123,9 @@ export const useThemesStore = create<ThemesState>((set) => ({
   }
 }))
 
-if (typeof window !== 'undefined' && window.electronAPI) {
+if (ipc.available()) {
   // Subscribe to mutations: refetch + reinject on every theme change.
-  window.electronAPI.on(IPC_EVENTS.THEMES_CHANGED, () => {
+  ipc.on(IPC_EVENTS.THEMES_CHANGED, () => {
     useThemesStore.getState().fetch()
   })
 }

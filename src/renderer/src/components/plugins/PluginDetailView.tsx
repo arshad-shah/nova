@@ -14,6 +14,7 @@ import { ContributionsTab } from './plugin-detail/ContributionsTab'
 import { PermissionsTab } from './plugin-detail/PermissionsTab'
 import { ErrorsTab } from './plugin-detail/ErrorsTab'
 import { SettingsTab } from './plugin-detail/SettingsTab'
+import { ipc } from '@/platform/client'
 
 interface Props {
   pluginName: string
@@ -32,7 +33,7 @@ export function PluginDetailView({ pluginName }: Props) {
   const addToast = useToastStore(s => s.addToast)
 
   const loadPlugin = async () => {
-    const list: PluginInfo[] = await window.electronAPI.invoke(IPC_CHANNELS.PLUGINS_LIST)
+    const list: PluginInfo[] = await ipc.invoke(IPC_CHANNELS.PLUGINS_LIST)
     const found = list.find(p => p.name === pluginName)
     if (found) setPlugin(found)
   }
@@ -40,13 +41,13 @@ export function PluginDetailView({ pluginName }: Props) {
   useEffect(() => { loadPlugin() }, [pluginName])
 
   useEffect(() => {
-    window.electronAPI.invoke(IPC_CHANNELS.PLUGINS_ERRORS, pluginName)
+    ipc.invoke(IPC_CHANNELS.PLUGINS_ERRORS, pluginName)
       .then(setErrors)
       .catch(() => {})
   }, [pluginName])
 
   useEffect(() => {
-    window.electronAPI.invoke(IPC_CHANNELS.PLUGINS_GET_SETTINGS, pluginName)
+    ipc.invoke(IPC_CHANNELS.PLUGINS_GET_SETTINGS, pluginName)
       .then(({ schema, values }: { schema: SettingSchema[]; values: Record<string, unknown> }) => {
         setSettingsSchema(schema)
         setSettingsValues(values)
@@ -55,7 +56,7 @@ export function PluginDetailView({ pluginName }: Props) {
   }, [pluginName])
 
   useEffect(() => {
-    window.electronAPI.invoke(IPC_CHANNELS.PLUGINS_GET_PERMISSIONS, pluginName)
+    ipc.invoke(IPC_CHANNELS.PLUGINS_GET_PERMISSIONS, pluginName)
       .then((state: PermissionState | null) => setPermissions(state))
       .catch(() => {})
   }, [pluginName])
@@ -65,7 +66,7 @@ export function PluginDetailView({ pluginName }: Props) {
     const next = granted
       ? [...new Set([...permissions.granted, permission])]
       : permissions.granted.filter(p => p !== permission)
-    const result = await window.electronAPI.invoke(IPC_CHANNELS.PLUGINS_SET_PERMISSIONS, pluginName, next)
+    const result = await ipc.invoke(IPC_CHANNELS.PLUGINS_SET_PERMISSIONS, pluginName, next)
     setPermissions({ ...permissions, granted: result.granted })
     if (isActive) {
       addToast({
@@ -77,7 +78,7 @@ export function PluginDetailView({ pluginName }: Props) {
   }
 
   const handleActivate = async () => {
-    const result = await window.electronAPI.invoke(IPC_CHANNELS.PLUGINS_ACTIVATE, pluginName)
+    const result = await ipc.invoke(IPC_CHANNELS.PLUGINS_ACTIVATE, pluginName)
     if (!result.success) addToast({ type: 'error', title: t('plugins.detail.toast.activateFailed'), message: result.error })
     // Force immediate UI refresh
     const uiStore = usePluginUIStore.getState()
@@ -92,7 +93,7 @@ export function PluginDetailView({ pluginName }: Props) {
   }
 
   const handleDeactivate = async () => {
-    await window.electronAPI.invoke(IPC_CHANNELS.PLUGINS_DEACTIVATE, pluginName)
+    await ipc.invoke(IPC_CHANNELS.PLUGINS_DEACTIVATE, pluginName)
     // Force immediate UI cleanup — don't wait for debounced event
     const uiStore = usePluginUIStore.getState()
     uiStore.invalidateAll()
@@ -107,12 +108,12 @@ export function PluginDetailView({ pluginName }: Props) {
 
   const handleUninstall = async () => {
     setShowUninstallConfirm(false)
-    await window.electronAPI.invoke(IPC_CHANNELS.PLUGINS_UNINSTALL, pluginName)
+    await ipc.invoke(IPC_CHANNELS.PLUGINS_UNINSTALL, pluginName)
   }
 
   const handleSettingChange = async (key: string, value: unknown) => {
     setSettingsValues(prev => ({ ...prev, [key]: value }))
-    await window.electronAPI.invoke(IPC_CHANNELS.PLUGINS_SET_SETTING, pluginName, key, value)
+    await ipc.invoke(IPC_CHANNELS.PLUGINS_SET_SETTING, pluginName, key, value)
   }
 
   if (!plugin) {

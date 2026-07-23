@@ -9,6 +9,7 @@ import { Copy, Check, RefreshCw } from 'lucide-react'
 import { IPC_CHANNELS, IPC_EVENTS } from '@shared/ipc'
 import { buildMcpClientConfig, MCP_ACTIVITY_STATUS, type MCPServerStatus, type MCPToolInfo, type MCPActivityEntry } from '@shared/mcp'
 import { CONFIG_KEY } from '@shared/settings'
+import { ipc } from '@/platform/client'
 
 const DEFAULT_STATUS: MCPServerStatus = { running: false, port: 3100, clients: 0, token: '', autoSelectedPort: false }
 
@@ -25,16 +26,16 @@ export function MCPSettings() {
 
   const refresh = useCallback(async () => {
     try {
-      setStatus(await window.electronAPI.invoke(IPC_CHANNELS.MCP_STATUS) as MCPServerStatus)
-      setTools(await window.electronAPI.invoke(IPC_CHANNELS.MCP_TOOLS) as MCPToolInfo[])
-      setActivity(await window.electronAPI.invoke(IPC_CHANNELS.MCP_ACTIVITY) as MCPActivityEntry[])
+      setStatus(await ipc.invoke(IPC_CHANNELS.MCP_STATUS) as MCPServerStatus)
+      setTools(await ipc.invoke(IPC_CHANNELS.MCP_TOOLS) as MCPToolInfo[])
+      setActivity(await ipc.invoke(IPC_CHANNELS.MCP_ACTIVITY) as MCPActivityEntry[])
     } catch { /* */ }
   }, [])
 
   useEffect(() => {
     refresh()
     const interval = setInterval(refresh, 5000)
-    const off = window.electronAPI.on(IPC_EVENTS.MCP_ACTIVITY_EVENT, (entry: unknown) => {
+    const off = ipc.on(IPC_EVENTS.MCP_ACTIVITY_EVENT, (entry: unknown) => {
       setActivity(prev => [...prev.slice(-99), entry as MCPActivityEntry])
     })
     return () => { clearInterval(interval); off() }
@@ -43,8 +44,8 @@ export function MCPSettings() {
   const toggleServer = async () => {
     setLoading(true); setError(null)
     try {
-      if (status.running) await window.electronAPI.invoke(IPC_CHANNELS.MCP_STOP)
-      else await window.electronAPI.invoke(IPC_CHANNELS.MCP_START)
+      if (status.running) await ipc.invoke(IPC_CHANNELS.MCP_STOP)
+      else await ipc.invoke(IPC_CHANNELS.MCP_START)
       await refresh()
     } catch (err) {
       // Electron IPC strips custom error props (code/port), so detect the
@@ -66,18 +67,18 @@ export function MCPSettings() {
   }
 
   const regenerate = async () => {
-    setStatus(await window.electronAPI.invoke(IPC_CHANNELS.MCP_REGENERATE_TOKEN) as MCPServerStatus)
+    setStatus(await ipc.invoke(IPC_CHANNELS.MCP_REGENERATE_TOKEN) as MCPServerStatus)
     await refresh()
   }
 
   const setReadOnly = async (v: boolean) => {
     await setSetting(CONFIG_KEY.MCP_READ_ONLY, v)
-    if (status.running) { await window.electronAPI.invoke(IPC_CHANNELS.MCP_RELOAD); await refresh() }
+    if (status.running) { await ipc.invoke(IPC_CHANNELS.MCP_RELOAD); await refresh() }
   }
 
   const setToolEnabled = async (id: string, enabled: boolean) => {
     setTools(prev => prev.map(t => t.id === id ? { ...t, enabled } : t))
-    await window.electronAPI.invoke(IPC_CHANNELS.MCP_SET_TOOL_ENABLED, id, enabled)
+    await ipc.invoke(IPC_CHANNELS.MCP_SET_TOOL_ENABLED, id, enabled)
     await refresh()
   }
 

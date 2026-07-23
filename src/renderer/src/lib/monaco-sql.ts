@@ -5,6 +5,7 @@ import { IPC_CHANNELS } from '@shared/ipc'
 import { editorRegistry } from '@/stores/editor'
 import { useTabsStore } from '@/stores/tabs'
 import { useConnectionsStore } from '@/stores/connections'
+import { ipc } from '@/platform/client'
 
 let cachedItems: CompletionItem[] = []
 
@@ -72,7 +73,7 @@ export function registerQueryFormattingProvider(monaco: Monaco, language: string
       const text = model.getValue()
       if (!text.trim()) return []
       try {
-        const { formatted, changed } = await window.electronAPI.invoke(
+        const { formatted, changed } = await ipc.invoke(
           IPC_CHANNELS.DB_FORMAT_QUERY,
           model.getLanguageId(),
           connectionTypeForModel(model),

@@ -9,24 +9,37 @@ goes through a typed, centrally-registered set of channels declared in
 | **Invoke** | renderer → main → renderer | `IPC_CHANNELS.X` | one-shot request / response, awaited Promise |
 | **Event** | main → renderer (one-way) | `IPC_EVENTS.X` | broadcast push (streaming, lifecycle notifications) |
 
-The renderer talks to both via the preload bridge:
+The renderer talks to both through the **platform client**
+([`src/renderer/src/platform/client.ts`](../src/renderer/src/platform/client.ts)) —
+the single chokepoint that wraps the preload bridge (`window.electronAPI`).
+Renderer code never touches `window.electronAPI` directly; that invariant is
+enforced by `tests/unit/audit/renderer-backend-access-through-platform.test.ts`
+(#165), which fails the build if the bridge is referenced anywhere outside
+`src/renderer/src/platform/`.
 
 ```ts
 import { IPC_CHANNELS, IPC_EVENTS } from '@shared/ipc'
+import { ipc } from '@/platform/client'
 
 // invoke (request / response)
-const result = await window.electronAPI.invoke(IPC_CHANNELS.DB_QUERY, id, sql)
+const result = await ipc.invoke(IPC_CHANNELS.DB_QUERY, id, sql)
 
 // subscribe (one-way push) — the channel constrains the callback payload,
 // so `streamId`/`event` here infer from IpcEventMap without annotation.
-const off = window.electronAPI.on(IPC_EVENTS.AI_CHAT_EVENT, (streamId, event) => { … })
+const off = ipc.on(IPC_EVENTS.AI_CHAT_EVENT, (streamId, event) => { … })
 off() // unsubscribe
 ```
 
-Both seams are fully typed against the maps in `shared/ipc.ts`: `invoke()`
-against `IpcChannelMap`, and `on()` against `IpcEventMap` — the event constant
-picks the payload tuple, so a wrong-arity or wrong-typed listener is a compile
-error, not a silent runtime mismatch.
+Both seams are fully typed against the maps in `shared/ipc.ts`: `ipc.invoke()`
+against `IpcChannelMap`, and `ipc.on()` against `IpcEventMap` — the event
+constant picks the payload tuple, so a wrong-arity or wrong-typed listener is a
+compile error, not a silent runtime mismatch. The client also exposes
+`ipc.optional(...)` (fire-and-forget that no-ops outside Electron — the seam for
+the former `window.electronAPI?.invoke(...)` idiom), `ipc.available()`, and
+`ipc.platform()`. Because it is the one place backend access flows through, it is
+where cross-cutting concerns (error normalization, activity logging, retry,
+cancellation, instrumentation) are added once rather than per call site — the
+reason `useIpcQuery` is built on top of it, not beside it.
 
 Never use a string literal at a call site. The CI test
 `tests/unit/ipc-channels-coverage.test.ts` scans the source tree for
@@ -57,7 +70,7 @@ It's a two-step edit, **all in `shared/ipc.ts`**:
 
 1. Add the channel's contract to `IpcChannelShapes`, keyed by its constant
    name. Be precise about the `args` tuple and the `return` type — these are
-   what the renderer actually sees through `window.electronAPI.invoke()`.
+   what the renderer actually sees through `ipc.invoke()`.
 
    ```ts
    export interface IpcChannelShapes {
@@ -138,16 +151,18 @@ It's a two-step edit, **all in `shared/ipc.ts`**:
 
    ```ts
    import { IPC_CHANNELS } from '@shared/ipc'
+   import { ipc } from '@/platform/client'
 
-   const { plan } = await window.electronAPI.invoke(
+   const { plan } = await ipc.invoke(
      IPC_CHANNELS.DB_EXPLAIN_QUERY,
      profileId,
      sql
    )
    ```
 
-No `preload/index.ts` change is needed: the generic `invoke<K>(channel, …args)`
-signature already passes through any channel that's in the map.
+No `preload/index.ts` or `platform/client.ts` change is needed: the generic
+`invoke<K>(channel, …args)` signature already passes through any channel that's
+in the map.
 
 ## Adding a new broadcast event
 

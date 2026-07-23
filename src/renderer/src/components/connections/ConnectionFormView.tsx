@@ -21,6 +21,7 @@ import {
   COLOR_PRESETS, driverTypeOption, fieldSpan,
   type PluginDriver, type MiddlewareField, type AuthStatus
 } from './form/types'
+import { ipc } from '@/platform/client'
 
 interface Props {
   tabId: string
@@ -57,8 +58,8 @@ export function ConnectionFormView({ tabId, editingId }: Props) {
   })
 
   useEffect(() => {
-    window.electronAPI.invoke(IPC_CHANNELS.PLUGINS_CONNECTION_FIELDS).then(setPluginDrivers).catch(() => { })
-    window.electronAPI.invoke(IPC_CHANNELS.PLUGINS_MIDDLEWARE_FIELDS).then(setMiddlewareFields).catch(() => { })
+    ipc.invoke(IPC_CHANNELS.PLUGINS_CONNECTION_FIELDS).then(setPluginDrivers).catch(() => { })
+    ipc.invoke(IPC_CHANNELS.PLUGINS_MIDDLEWARE_FIELDS).then(setMiddlewareFields).catch(() => { })
   }, [])
 
   const allTypes = pluginDrivers.map(driverTypeOption)
@@ -101,7 +102,7 @@ export function ConnectionFormView({ tabId, editingId }: Props) {
     try {
       // Fetch ALL fetchable fields in one connection (single browser auth)
       const fieldKeys = fetchableFields.map(f => f.key)
-      const options = await window.electronAPI.invoke(
+      const options = await ipc.invoke(
         IPC_CHANNELS.DB_CONNECTION_OPTIONS,
         profile as unknown as ConnectionProfile,
         fieldKeys

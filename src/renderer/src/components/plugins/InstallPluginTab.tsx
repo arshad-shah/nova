@@ -5,6 +5,7 @@ import { useToastStore } from '@/stores/toast'
 import { useTranslation } from '@/i18n/I18nProvider'
 import { Flex, Box, Text, Button, Spinner, Alert } from '@/primitives'
 import { IPC_CHANNELS } from '@shared/ipc'
+import { ipc } from '@/platform/client'
 
 type InstallState = 'idle' | 'drag-over' | 'installing' | 'error'
 
@@ -19,8 +20,8 @@ export function InstallPluginTab() {
     setErrorMessage(null)
     try {
       const result = filePath.endsWith('.zip')
-        ? await window.electronAPI.invoke(IPC_CHANNELS.PLUGINS_INSTALL_FROM_ZIP, filePath)
-        : await window.electronAPI.invoke(IPC_CHANNELS.PLUGINS_INSTALL_FROM_PATH, filePath)
+        ? await ipc.invoke(IPC_CHANNELS.PLUGINS_INSTALL_FROM_ZIP, filePath)
+        : await ipc.invoke(IPC_CHANNELS.PLUGINS_INSTALL_FROM_PATH, filePath)
       if (result.success) {
         addToast({ type: 'success', title: t('plugins.install.installedToast'), message: result.name ?? undefined })
       } else {
@@ -65,7 +66,7 @@ export function InstallPluginTab() {
 
   const handleBrowse = useCallback(async () => {
     if (state === 'installing') return
-    const filePath = await window.electronAPI.invoke(IPC_CHANNELS.PLUGINS_OPEN_INSTALL_DIALOG)
+    const filePath = await ipc.invoke(IPC_CHANNELS.PLUGINS_OPEN_INSTALL_DIALOG)
     if (!filePath) return
     installFromPath(filePath)
   }, [state, installFromPath])
