@@ -17,9 +17,9 @@ concurrency:
 
 jobs:
   unit-tests:
-    name: Unit tests
+    name: Tests (unit + storybook)
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     strategy:
       fail-fast: false
       matrix:
@@ -42,15 +42,21 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       # The postinstall script rebuilds better-sqlite3 for Electron's ABI.
-      # Unit tests run under Node, so rebuild against the host Node ABI
-      # before invoking vitest.
+      # The unit (jsdom/Node) project runs under Node, so rebuild against the
+      # host Node ABI before invoking vitest.
       - name: Rebuild native modules for Node
         run: pnpm rebuild better-sqlite3
+
+      # `pnpm test:coverage` runs BOTH the unit (jsdom) and storybook (Chromium
+      # via Playwright) projects and merges their coverage, so the runner needs
+      # the Playwright browser + its system libraries.
+      - name: Install Playwright Chromium
+        run: pnpm exec playwright install --with-deps chromium
 
       # Coverage thresholds in vitest.config.ts are a ratchet pinned to the
       # measured floor: this step fails if a change drops coverage below it.
       # Raising coverage means raising the floor in the same PR.
-      - name: Run unit tests with coverage
+      - name: Run tests with merged coverage
         run: pnpm test:coverage
 
   typecheck:
