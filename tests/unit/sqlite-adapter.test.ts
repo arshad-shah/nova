@@ -106,3 +106,134 @@ describe('SqliteAdapter.getRowCount', () => {
     expect(count).toBe(2)
   })
 })
+
+describe('SqliteAdapter — switchDatabase / getDatabases', () => {
+  it('switchDatabase always throws — SQLite has no server-side database switch', async () => {
+    const dbPath = path.join(os.tmpdir(), `test-switchdb-${Date.now()}.db`)
+    const adapter = new SqliteAdapter({ database: dbPath })
+    await adapter.connect()
+    await expect(adapter.switchDatabase('other')).rejects.toThrow(/does not support switching databases/)
+    await adapter.disconnect()
+    fs.unlinkSync(dbPath)
+  })
+
+  it('getDatabases returns the basename of the configured file path', async () => {
+    const dbPath = path.join(os.tmpdir(), `test-getdb-${Date.now()}.db`)
+    const adapter = new SqliteAdapter({ database: dbPath })
+    await adapter.connect()
+    expect(await adapter.getDatabases()).toEqual([path.basename(dbPath)])
+    await adapter.disconnect()
+    fs.unlinkSync(dbPath)
+  })
+})
+
+describe('SqliteAdapter — manual transactions across sessions', () => {
+  let adapter: SqliteAdapter
+  let dbPath: string
+
+  beforeEach(async () => {
+    dbPath = path.join(os.tmpdir(), `test-txn-${Date.now()}-${Math.random()}.db`)
+    const db = new Database(dbPath)
+    db.exec('CREATE TABLE t (id INTEGER PRIMARY KEY, v TEXT)')
+    db.close()
+    adapter = new SqliteAdapter({ database: dbPath })
+    await adapter.connect()
+  })
+
+  afterEach(async () => {
+    await adapter.disconnect()
+    fs.unlinkSync(dbPath)
+  })
+
+  it('an autoCommit=false session lazily BEGINs on first query, then commit() persists it', async () => {
+    await adapter.openSession('s1', { autoCommit: false })
+    await adapter.query("INSERT INTO t (v) VALUES ('a')", undefined, { sessionId: 's1' })
+    await adapter.commit('s1')
+    const rows = (await adapter.query('SELECT * FROM t')).rows
+    expect(rows).toHaveLength(1)
+  })
+
+  it('rollback() undoes the in-flight transaction', async () => {
+    await adapter.openSession('s1', { autoCommit: false })
+    await adapter.query("INSERT INTO t (v) VALUES ('a')", undefined, { sessionId: 's1' })
+    await adapter.rollback('s1')
+    const rows = (await adapter.query('SELECT * FROM t')).rows
+    expect(rows).toHaveLength(0)
+  })
+
+  it('rejects opening a second transaction while another session already holds one', async () => {
+    await adapter.openSession('s1', { autoCommit: false })
+    await adapter.openSession('s2', { autoCommit: false })
+    await adapter.beginTransaction('s1')
+    await expect(adapter.beginTransaction('s2')).rejects.toThrow(/only one active transaction/)
+  })
+
+  it('query() on an unknown sessionId throws instead of silently using the shared connection', async () => {
+    await expect(adapter.query('SELECT 1', undefined, { sessionId: 'ghost' })).rejects.toThrow(/no open session/i)
+  })
+
+  it('setAutoCommit(true) while a transaction is open commits it first', async () => {
+    await adapter.openSession('s1', { autoCommit: false })
+    await adapter.query("INSERT INTO t (v) VALUES ('a')", undefined, { sessionId: 's1' })
+    await adapter.setAutoCommit('s1', true)
+    // The transaction is committed — a fresh session should see the row
+    // without needing an explicit commit() call.
+    const rows = (await adapter.query('SELECT * FROM t')).rows
+    expect(rows).toHaveLength(1)
+  })
+
+  it('closeSession() rolls back an uncommitted transaction before dropping the session', async () => {
+    await adapter.openSession('s1', { autoCommit: false })
+    await adapter.query("INSERT INTO t (v) VALUES ('a')", undefined, { sessionId: 's1' })
+    await adapter.closeSession('s1')
+    const rows = (await adapter.query('SELECT * FROM t')).rows
+    expect(rows).toHaveLength(0)
+  })
+
+  it('disconnect() rolls back any sessions left with an open transaction', async () => {
+    await adapter.openSession('s1', { autoCommit: false })
+    await adapter.query("INSERT INTO t (v) VALUES ('a')", undefined, { sessionId: 's1' })
+    await adapter.disconnect()
+    // Reconnect to inspect persisted state (disconnect() closed the shared db handle).
+    const check = new SqliteAdapter({ database: dbPath })
+    await check.connect()
+    const rows = (await check.query('SELECT * FROM t')).rows
+    expect(rows).toHaveLength(0)
+    await check.disconnect()
+  })
+
+  it('commit()/rollback() on a session with no open transaction are silent no-ops', async () => {
+    await adapter.openSession('s1')
+    await expect(adapter.commit('s1')).resolves.toBeUndefined()
+    await expect(adapter.rollback('s1')).resolves.toBeUndefined()
+  })
+})
+
+describe('SqliteAdapter.query — RETURNING vs plain write statements', () => {
+  let adapter: SqliteAdapter
+  let dbPath: string
+
+  beforeEach(async () => {
+    dbPath = path.join(os.tmpdir(), `test-returning-${Date.now()}-${Math.random()}.db`)
+    adapter = new SqliteAdapter({ database: dbPath })
+    await adapter.connect()
+    await adapter.query('CREATE TABLE t (id INTEGER PRIMARY KEY, v TEXT)')
+  })
+
+  afterEach(async () => {
+    await adapter.disconnect()
+    fs.unlinkSync(dbPath)
+  })
+
+  it('an INSERT ... RETURNING is treated as a reader: rows come back, not just affectedRows', async () => {
+    const result = await adapter.query("INSERT INTO t (v) VALUES ('x') RETURNING id, v")
+    expect(result.rows).toEqual([{ id: 1, v: 'x' }])
+    expect(result.fields.map(f => f.name)).toEqual(['id', 'v'])
+  })
+
+  it('a plain INSERT (no RETURNING) reports affectedRows and no rows', async () => {
+    const result = await adapter.query("INSERT INTO t (v) VALUES ('y')")
+    expect(result.rows).toEqual([])
+    expect(result.affectedRows).toBe(1)
+  })
+})
