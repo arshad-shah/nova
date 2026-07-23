@@ -41,7 +41,6 @@ class FailingAdapter implements DbAdapter {
   async getRowCount() { return 0 }
   async getSchemas() { return [] }
   async getDatabases() { return [] }
-  async switchDatabase() { /* no-op */ }
 }
 
 function buildHarness(): {
