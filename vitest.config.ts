@@ -44,16 +44,16 @@ export default defineConfig({
       ],
       reporter: ['text-summary', 'json-summary', 'html'],
       reportsDirectory: 'coverage',
-      // Floor measured 2026-07-23 (merged unit + storybook, istanbul): 3630
-      // passing tests across 458 files.
-      // statements 69.44 · branches 65.11 · functions 64.29 · lines 71.05
+      // Floor measured 2026-07-23 (merged unit + storybook, istanbul): 4104
+      // passing tests across 485 files.
+      // statements 76.46 · branches 71.62 · functions 70.82 · lines 78.19
       // Pinned a touch below to absorb browser-timing variance run-to-run;
-      // raised as behavioural tests land (see docs/testing.md).
+      // raise as behavioural tests land (see docs/testing.md).
       thresholds: {
-        statements: 68,
-        branches: 64,
-        functions: 63,
-        lines: 70,
+        statements: 75,
+        branches: 70,
+        functions: 69,
+        lines: 77,
         autoUpdate: false,
       },
     },
