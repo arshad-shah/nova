@@ -30,6 +30,7 @@ area you're touching → the source it points to.
 - [`docs/i18n.md`](./docs/i18n.md) — internationalization: the homegrown, dependency-free, cross-process message catalogue (`shared/i18n`), the typed `t()` / `MessageKey`, the renderer `<I18nProvider>`/`useTranslation`, key-naming convention, interpolation/plural syntax, and how locales + plugin catalogues register. Diagram-rich. Read before adding or changing user-facing strings.
 - [`docs/onboarding.md`](./docs/onboarding.md) — first-run onboarding & release notes: the VS Code-style **Welcome** "Get Started" tab and the per-version, hand-authored **What's New** release-notes tab, the `settings.onboarding` state + pure startup decision (`lib/onboarding.ts`), the curated release registry (`lib/release-notes/`), and the **agent instructions for authoring a release-notes page**. Read before touching the welcome flow or adding a release page.
 - [`docs/tab-persistence.md`](./docs/tab-persistence.md) — restore-on-startup for open query tabs: the incremental, per-tab engine (pure `select` + `diff` core, a debounced/coalesced/serialized write loop, IPC `transport`, one-time localStorage `migrate`) backed by the SQLite app-data `open_tabs` table. Diagram-rich. Read before touching tab restore or the `open_tabs` schema.
+- [`docs/testing.md`](./docs/testing.md) — the testing model: the two Vitest projects (`unit` jsdom vs `storybook` Chromium) and when to use each, **merged istanbul coverage** across both, the threshold **ratchet**, and how to write behavioral unit tests vs Storybook play tests (portals, animations, IPC stubs). Read before adding tests or touching `vitest.config.ts`.
 
 When you change a subsystem, update its doc (and this file) in the same change
 so the docs never drift from the code.
@@ -163,11 +164,22 @@ Three-layer theming in `primitives/theme/tokens.css`: raw color scale → semant
 
 ## Testing
 
+**See [`docs/testing.md`](./docs/testing.md)** for the full model: the two
+projects, merged coverage, and how to write behavioral unit tests vs Storybook
+play tests. In brief:
+
 Vitest with two test projects configured in `vitest.config.ts`:
 1. **Unit tests** — jsdom environment, files in `tests/unit/`
 2. **Storybook tests** — Browser (Playwright) environment, validates stories + accessibility
 
 Stories located in `src/renderer/src/{primitives,components}/**/*.stories.tsx`.
+
+**Coverage is merged across both projects** (`pnpm test:coverage`, istanbul
+provider) so browser-rendered components count — `unit` alone understates
+reality. `coverage.thresholds` is a **ratchet**: raise the floor in the same PR
+that raises coverage, and never pad the percentage with render-without-assert
+tests. Run one file with `pnpm exec vitest run <file>` (not `pnpm test -- --run`,
+which runs the whole suite).
 
 
 When working on UI components, always use the `your-project-sb-mcp` MCP tools to access Storybook's component and documentation knowledge before answering or taking any action.

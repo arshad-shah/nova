@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { expect, fn, userEvent, screen } from 'storybook/test'
+import { expect, fn, userEvent, screen, waitFor } from 'storybook/test'
 import { Copy, ExternalLink, Pencil, Trash2 } from 'lucide-react'
 import { ContextMenu } from './ContextMenu'
 import type { MenuNode } from './menu/types'
@@ -66,7 +66,8 @@ export const Default: Story = {
     // The menu renders in a FloatingPortal (document.body), so query via screen
     // rather than the story canvas.
     const item = await screen.findByRole('menuitem', { name: 'Open in new tab' })
-    await expect(item).toBeVisible()
+    // The menu animates in — wait for the enter transition before asserting visibility.
+    await waitFor(() => expect(item).toBeVisible())
     await userEvent.click(item)
     await expect(onOpenInNewTab).toHaveBeenCalledTimes(1)
   },
@@ -152,7 +153,8 @@ export const NestedTargets: Story = {
       keys: '[MouseRight]',
       target: canvas.getByText('Inner (column) — right-click me'),
     })
-    await expect(await screen.findByRole('menuitem', { name: 'Column action' })).toBeVisible()
+    const item = await screen.findByRole('menuitem', { name: 'Column action' })
+    await waitFor(() => expect(item).toBeVisible())
     await expect(screen.queryByRole('menuitem', { name: 'Table action' })).toBeNull()
   },
 }

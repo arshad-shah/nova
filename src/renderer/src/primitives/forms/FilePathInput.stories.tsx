@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { fn } from 'storybook/test'
+import { fn, expect, userEvent } from 'storybook/test'
 import { FilePathInput } from './FilePathInput'
 
 const meta: Meta<typeof FilePathInput> = {
@@ -28,6 +28,16 @@ export const WithValue: Story = {
   args: {
     defaultValue: 'C:\\Users\\you\\Documents\\export.csv',
     style: { width: 360 },
+  },
+  play: async ({ canvas, args }) => {
+    // The selected file is shown with its basename and a "selected" badge.
+    await expect(canvas.getByText('export.csv')).toBeInTheDocument()
+    const clearButton = canvas.getByLabelText('Clear')
+    await userEvent.click(clearButton)
+    await expect(args.onChange).toHaveBeenCalledWith('')
+    // Clearing reverts the uncontrolled value back to the empty/placeholder state.
+    await expect(canvas.getByText('No file selected')).toBeInTheDocument()
+    await expect(canvas.queryByText('export.csv')).toBeNull()
   },
 }
 

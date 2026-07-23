@@ -16,15 +16,23 @@ export default defineConfig({
     // them. When you raise coverage, raise the floor in the same PR so it can
     // never silently slide back.
     //
-    // Measured against the `unit` project only (`pnpm test:coverage`), which is
-    // what CI gates on. The `storybook` project renders components in a real
-    // browser and is not counted here — so component numbers understate reality.
+    // Measured against BOTH projects, merged (`pnpm test:coverage` runs the
+    // whole suite with `--coverage`). The `unit` project (jsdom/node) and the
+    // `storybook` project (real Chromium via Playwright) both instrument the
+    // same sources with istanbul and their coverage is merged into one report,
+    // so component numbers reflect reality instead of understating it. See
+    // `docs/testing.md`.
     //
     // A threshold is not a goal. Percentage is trivially gamed by tests that
     // render code without asserting behaviour; prefer a smaller number of tests
     // that fail when the logic breaks.
     coverage: {
-      provider: 'v8',
+      // istanbul, not v8: coverage is merged across the `unit` (jsdom/node) and
+      // `storybook` (Playwright/Chromium browser) projects in one run. v8's
+      // provider races on its per-worker `.tmp/coverage-*.json` files when a
+      // browser project and a node project report together (ENOENT during
+      // merge); istanbul instruments the source and merges both cleanly.
+      provider: 'istanbul',
       include: ['src/**/*.{ts,tsx}', 'shared/**/*.{ts,tsx}'],
       exclude: [
         '**/*.stories.{ts,tsx}',
@@ -36,15 +44,16 @@ export default defineConfig({
       ],
       reporter: ['text-summary', 'json-summary', 'html'],
       reportsDirectory: 'coverage',
-      // Floor measured 2026-07-17: 2978 passing tests across 293 files,
-      // after merging main's tab-bar redesign (#149) into this branch.
-      // statements 58.45 · branches 53.39 · functions 51.15 · lines 60.18
-      // (33.52 / 28.95 / 28.40 / 35.34 when this ratchet was first pinned.)
+      // Floor measured 2026-07-23 (merged unit + storybook, istanbul): 4104
+      // passing tests across 485 files.
+      // statements 76.46 · branches 71.62 · functions 70.82 · lines 78.19
+      // Pinned a touch below to absorb browser-timing variance run-to-run;
+      // raise as behavioural tests land (see docs/testing.md).
       thresholds: {
-        statements: 58.4,
-        branches: 53.3,
-        functions: 51.1,
-        lines: 60.1,
+        statements: 75,
+        branches: 70,
+        functions: 69,
+        lines: 77,
         autoUpdate: false,
       },
     },

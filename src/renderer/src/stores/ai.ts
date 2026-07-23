@@ -523,12 +523,13 @@ export const useAIStore = create<AIState>((set, get) => ({
   },
 
   loadProviders: async () => {
-    const providers = await ipc.invoke(IPC_CHANNELS.AI_PROVIDERS_LIST) as AIProviderInfo[]
-    set({ providers })
+    const res = await ipc.invoke(IPC_CHANNELS.AI_PROVIDERS_LIST)
+    set({ providers: Array.isArray(res) ? (res as AIProviderInfo[]) : [] })
   },
 
   loadConfiguredProviders: async () => {
-    const providers = await ipc.invoke(IPC_CHANNELS.AI_PROVIDERS_LIST_CONFIGURED) as AIProviderInfo[]
+    const res = await ipc.invoke(IPC_CHANNELS.AI_PROVIDERS_LIST_CONFIGURED)
+    const providers = Array.isArray(res) ? (res as AIProviderInfo[]) : []
     set({ providers })
 
     // Auto-select if only one configured
@@ -547,8 +548,8 @@ export const useAIStore = create<AIState>((set, get) => ({
   },
 
   loadModels: async () => {
-    const models = await ipc.invoke(IPC_CHANNELS.AI_MODELS_LIST) as AIModelInfo[]
-    set({ models })
+    const res = await ipc.invoke(IPC_CHANNELS.AI_MODELS_LIST)
+    set({ models: Array.isArray(res) ? (res as AIModelInfo[]) : [] })
   },
 
   setActiveProvider: async (provider) => {

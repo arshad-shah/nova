@@ -1,13 +1,13 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useEffect } from 'react'
-import { userEvent, within } from 'storybook/test'
+import { expect, screen, userEvent, within } from 'storybook/test'
 import { AIStatusSegment } from './AIStatusSegment'
 import { useAIStore } from '@/stores/ai'
 import type { AIModelInfo, AIProviderInfo } from '@shared/ai-types'
 
 function stubElectronAPI() {
   ;(window as unknown as { electronAPI: unknown }).electronAPI = {
-    invoke: async () => undefined,
+    invoke: async () => [],
     on: () => () => {},
   }
 }
@@ -63,7 +63,12 @@ export const PopoverOpen: Story = {
   render: seed({ used: 80_000, permissionProfile: 'read-only' }),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
-    const trigger = canvas.getByRole('button')
+    // The trigger is a status-bar segment (a div with aria-haspopup), not a
+    // button — query it by its accessible name.
+    const trigger = canvas.getByLabelText('AI status')
     await userEvent.click(trigger)
+    // Popover content portals to document.body — assert it opened by finding a
+    // row that only exists inside the popover.
+    await expect(await screen.findByText('Provider')).toBeVisible()
   },
 }

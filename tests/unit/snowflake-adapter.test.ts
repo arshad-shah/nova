@@ -278,6 +278,103 @@ describe('SnowflakeAdapter — schema introspection', () => {
   })
 })
 
+describe('SnowflakeAdapter.query', () => {
+  async function connectedAdapter(): Promise<SnowflakeAdapter> {
+    const adapter = new SnowflakeAdapter({ account: 'acct', username: 'b', password: 'x' })
+    await adapter.connect()
+    return adapter
+  }
+
+  it('shapes rows/fields from the SDK statement columns, and reports affectedRows = rows.length', async () => {
+    const adapter = await connectedAdapter()
+    queuedResponses.push({
+      rows: [{ ID: 1 }, { ID: 2 }],
+      columns: [
+        { getName: () => 'ID', getType: () => 'NUMBER', isNullable: () => false },
+      ],
+    })
+    const result = await adapter.query('SELECT ID FROM USERS')
+    expect(result.rows).toEqual([{ ID: 1 }, { ID: 2 }])
+    expect(result.fields).toEqual([{ name: 'ID', dataType: 'NUMBER', nullable: false }])
+    expect(result.rowCount).toBe(2)
+    expect(result.affectedRows).toBe(2)
+    expect(result.duration).toBeGreaterThanOrEqual(0)
+  })
+
+  it('rejects when the SDK execute callback reports an error', async () => {
+    const adapter = await connectedAdapter()
+    const conn = adapter['connection'] as unknown as { execute: ReturnType<typeof vi.fn> }
+    conn.execute.mockImplementationOnce((opts: { complete: (err: unknown, stmt: unknown, rows: unknown[]) => void }) => {
+      opts.complete(new Error('syntax error'), null, [])
+      return { getColumns: () => [], cancel: vi.fn((cb: (e?: Error) => void) => cb()) }
+    })
+    await expect(adapter.query('SELECT bogus')).rejects.toThrow(/syntax error/)
+  })
+
+  it('throws "Not connected" before connect()', async () => {
+    const adapter = new SnowflakeAdapter({ account: 'acct' })
+    await expect(adapter.query('SELECT 1')).rejects.toThrow(/Not connected/)
+  })
+})
+
+describe('SnowflakeAdapter.testConnection', () => {
+  it('runs SELECT CURRENT_VERSION() and extracts the version from the first row', async () => {
+    const adapter = new SnowflakeAdapter({ account: 'acct', username: 'b', password: 'x' })
+    await adapter.connect()
+    queuedResponses.push({ rows: [{ version: '8.1.2' }] })
+    const result = await adapter.testConnection()
+    expect(executedSql.at(-1)).toBe('SELECT CURRENT_VERSION() as version')
+    expect(result.version).toBe('8.1.2')
+  })
+
+  it('falls back to "unknown" when no row is returned', async () => {
+    const adapter = new SnowflakeAdapter({ account: 'acct', username: 'b', password: 'x' })
+    await adapter.connect()
+    queuedResponses.push({ rows: [] })
+    expect((await adapter.testConnection()).version).toBe('unknown')
+  })
+})
+
+describe('SnowflakeAdapter.cancelQuery', () => {
+  it('is a no-op when there is no active statement', async () => {
+    const adapter = new SnowflakeAdapter({ account: 'acct', username: 'b', password: 'x' })
+    await adapter.connect()
+    await expect(adapter.cancelQuery()).resolves.toBeUndefined()
+  })
+
+  it('calls cancel() on the statement tracked from the last execute() call', async () => {
+    // The fake connection's execute() completes synchronously, so by the time
+    // query() resolves, `activeStatement` has been set back to that just-
+    // completed statement (complete() nulls it, then execute() returns and
+    // the adapter re-assigns it) — this still exercises the real cancelQuery()
+    // code path of "cancel whatever `activeStatement` currently references".
+    const adapter = new SnowflakeAdapter({ account: 'acct', username: 'b', password: 'x' })
+    await adapter.connect()
+    queuedResponses.push({ rows: [] })
+    await adapter.query('SELECT 1')
+    const stmt = adapter['activeStatement'] as unknown as { cancel: ReturnType<typeof vi.fn> } | null
+    expect(stmt).not.toBeNull()
+    await adapter.cancelQuery()
+    expect(stmt!.cancel).toHaveBeenCalled()
+  })
+})
+
+describe('SnowflakeAdapter.getSchemas', () => {
+  it('excludes INFORMATION_SCHEMA from the schema list', async () => {
+    const adapter = new SnowflakeAdapter({ account: 'acct', username: 'b', password: 'x' })
+    await adapter.connect()
+    queuedResponses.push({ rows: [{ SCHEMA_NAME: 'PUBLIC' }, { SCHEMA_NAME: 'ANALYTICS' }] })
+    const schemas = await adapter.getSchemas()
+    expect(executedSql.at(-1)).toContain("NOT IN ('INFORMATION_SCHEMA')")
+    expect(schemas).toEqual(['PUBLIC', 'ANALYTICS'])
+  })
+
+  it('throws "Not connected" before connect()', async () => {
+    const adapter = new SnowflakeAdapter({ account: 'acct' })
+    await expect(adapter.getSchemas()).rejects.toThrow(/Not connected/)
+  })
+})
+
 describe('SnowflakeAdapter — disconnect', () => {
   it('destroys the connection and flips isConnected back to false', async () => {
     const adapter = new SnowflakeAdapter({ account: 'acct', username: 'b', password: 'x' })

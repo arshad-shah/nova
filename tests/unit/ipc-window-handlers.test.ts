@@ -170,6 +170,136 @@ describe('window:toggle-maximize', () => {
   })
 })
 
+describe('window:minimize / window:close / window:is-maximized', () => {
+  it('minimizes the requesting window', async () => {
+    const win = { minimize: vi.fn() }
+    ;(await import('electron')).BrowserWindow.fromWebContents = vi.fn(() => win) as never
+    const handlers = getHandlers()
+    handlers.get(IPC_CHANNELS.WINDOW_MINIMIZE)!({})
+    expect(win.minimize).toHaveBeenCalled()
+  })
+
+  it('does not throw when there is no resolvable window to minimize', async () => {
+    ;(await import('electron')).BrowserWindow.fromWebContents = vi.fn(() => null) as never
+    const handlers = getHandlers()
+    expect(() => handlers.get(IPC_CHANNELS.WINDOW_MINIMIZE)!({})).not.toThrow()
+  })
+
+  it('closes the requesting window', async () => {
+    const win = { close: vi.fn() }
+    ;(await import('electron')).BrowserWindow.fromWebContents = vi.fn(() => win) as never
+    const handlers = getHandlers()
+    handlers.get(IPC_CHANNELS.WINDOW_CLOSE)!({})
+    expect(win.close).toHaveBeenCalled()
+  })
+
+  it('reports the window maximized state', async () => {
+    const win = { isMaximized: vi.fn(() => true) }
+    ;(await import('electron')).BrowserWindow.fromWebContents = vi.fn(() => win) as never
+    const handlers = getHandlers()
+    expect(handlers.get(IPC_CHANNELS.WINDOW_IS_MAXIMIZED)!({})).toBe(true)
+  })
+
+  it('reports false when there is no resolvable window', async () => {
+    ;(await import('electron')).BrowserWindow.fromWebContents = vi.fn(() => null) as never
+    const handlers = getHandlers()
+    expect(handlers.get(IPC_CHANNELS.WINDOW_IS_MAXIMIZED)!({})).toBe(false)
+  })
+})
+
+describe('window:menu:list', () => {
+  it('returns [] when there is no native application menu', async () => {
+    ;(await import('electron')).Menu.getApplicationMenu = vi.fn(() => null) as never
+    const handlers = getHandlers()
+    expect(handlers.get(IPC_CHANNELS.WINDOW_MENU_LIST)!({})).toEqual([])
+  })
+
+  it('lists only visible top-level submenu items, indexed by their position', async () => {
+    const menu = {
+      items: [
+        { type: 'submenu', visible: true, label: 'File', enabled: true },
+        { type: 'normal', visible: true, label: 'Quit', enabled: true },
+        { type: 'submenu', visible: false, label: 'Hidden', enabled: true },
+        { type: 'submenu', visible: true, label: 'Edit', enabled: false },
+      ],
+    }
+    ;(await import('electron')).Menu.getApplicationMenu = vi.fn(() => menu) as never
+    const handlers = getHandlers()
+    const result = handlers.get(IPC_CHANNELS.WINDOW_MENU_LIST)!({})
+    expect(result).toEqual([
+      { id: 0, label: 'File', enabled: true },
+      { id: 3, label: 'Edit', enabled: false },
+    ])
+  })
+})
+
+describe('window:edit-role', () => {
+  it.each(['undo', 'redo', 'cut', 'copy', 'paste', 'selectAll'] as const)(
+    'invokes webContents.%s() for role %s',
+    async (role) => {
+      const wc = { undo: vi.fn(), redo: vi.fn(), cut: vi.fn(), copy: vi.fn(), paste: vi.fn(), selectAll: vi.fn() }
+      ;(await import('electron')).BrowserWindow.fromWebContents = vi.fn(() => ({ webContents: wc })) as never
+      const handlers = getHandlers()
+      handlers.get(IPC_CHANNELS.WINDOW_EDIT_ROLE)!({}, role)
+      expect(wc[role]).toHaveBeenCalled()
+    },
+  )
+
+  it('does not throw when there is no resolvable window', async () => {
+    ;(await import('electron')).BrowserWindow.fromWebContents = vi.fn(() => null) as never
+    const handlers = getHandlers()
+    expect(() => handlers.get(IPC_CHANNELS.WINDOW_EDIT_ROLE)!({}, 'copy')).not.toThrow()
+  })
+})
+
+describe('window:toggle-fullscreen', () => {
+  it('enters fullscreen and reports true when not currently fullscreen', async () => {
+    let fullscreen = false
+    const win = {
+      isFullScreen: vi.fn(() => fullscreen),
+      setFullScreen: vi.fn((v: boolean) => { fullscreen = v }),
+    }
+    ;(await import('electron')).BrowserWindow.fromWebContents = vi.fn(() => win) as never
+    const handlers = getHandlers()
+    const result = handlers.get(IPC_CHANNELS.WINDOW_TOGGLE_FULLSCREEN)!({})
+    expect(win.setFullScreen).toHaveBeenCalledWith(true)
+    expect(result).toBe(true)
+  })
+
+  it('exits fullscreen and reports false when currently fullscreen', async () => {
+    const win = { isFullScreen: vi.fn(() => true), setFullScreen: vi.fn() }
+    ;(await import('electron')).BrowserWindow.fromWebContents = vi.fn(() => win) as never
+    const handlers = getHandlers()
+    const result = handlers.get(IPC_CHANNELS.WINDOW_TOGGLE_FULLSCREEN)!({})
+    expect(win.setFullScreen).toHaveBeenCalledWith(false)
+    expect(result).toBe(false)
+  })
+
+  it('returns false when there is no resolvable window', async () => {
+    ;(await import('electron')).BrowserWindow.fromWebContents = vi.fn(() => null) as never
+    const handlers = getHandlers()
+    expect(handlers.get(IPC_CHANNELS.WINDOW_TOGGLE_FULLSCREEN)!({})).toBe(false)
+  })
+})
+
+describe('window:reload / window:toggle-devtools', () => {
+  it('reloads the requesting window webContents', async () => {
+    const wc = { reload: vi.fn() }
+    ;(await import('electron')).BrowserWindow.fromWebContents = vi.fn(() => ({ webContents: wc })) as never
+    const handlers = getHandlers()
+    handlers.get(IPC_CHANNELS.WINDOW_RELOAD)!({})
+    expect(wc.reload).toHaveBeenCalled()
+  })
+
+  it('toggles devtools on the requesting window webContents', async () => {
+    const wc = { toggleDevTools: vi.fn() }
+    ;(await import('electron')).BrowserWindow.fromWebContents = vi.fn(() => ({ webContents: wc })) as never
+    const handlers = getHandlers()
+    handlers.get(IPC_CHANNELS.WINDOW_TOGGLE_DEVTOOLS)!({})
+    expect(wc.toggleDevTools).toHaveBeenCalled()
+  })
+})
+
 describe('window:menu:popup', () => {
   it('is a no-op (does not throw) when the submenu id is out of range', async () => {
     const menu = { items: [{ label: 'File', submenu: { popup: vi.fn() } }] }
