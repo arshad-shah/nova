@@ -109,7 +109,7 @@ Zustand stores in `src/renderer/src/stores/`:
 
 ### Database Adapters
 
-`DbAdapter` interface in `src/main/db/adapter.ts`. Every driver — including the native sqlite/postgresql/mysql ones — is a **bundled plugin** that implements `DbAdapter` and registers a factory with the SDK `DriverRegistry`. `createAdapter` in `src/main/db/factory.ts` resolves a profile's adapter purely through that registry; there are no special-cased built-ins in `src/main/db/`.
+`DbAdapter` interface in `src/main/db/adapter.ts`. Every driver — including the native sqlite/postgresql/mysql ones — is a **bundled plugin** that implements `DbAdapter` and registers a factory with the SDK `DriverRegistry`. `createAdapter` in `src/main/db/factory.ts` resolves a profile's adapter purely through that registry; there are no special-cased built-ins in `src/main/db/`. This invariant is enforced — the rationale lives beside the code in `factory.ts` and is guarded by `tests/unit/audit/db-factory-registry-purity.test.ts` (registry-only resolution + no driver names or bundled-driver imports under `src/main/db/`).
 
 ### Plugin System
 
