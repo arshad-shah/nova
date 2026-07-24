@@ -148,6 +148,37 @@ export default defineConfig({
         '@brand': resolve('build')
       }
     },
-    plugins: [react(), tailwindcss()]
+    plugins: [react(), tailwindcss()],
+    build: {
+      rollupOptions: {
+        output: {
+          // Keep the heaviest, non-first-paint dependencies out of the entry
+          // chunk and in dedicated vendor chunks. Combined with the React.lazy
+          // boundaries at each render site (QueryEditor, ResultsGrid, ERDiagram,
+          // ChatPanel, ChartPanel/ChartsDashboard), these chunks download on
+          // first use instead of before first paint. See issue #205.
+          manualChunks(id) {
+            if (!id.includes('node_modules')) return
+            if (id.includes('monaco-editor') || id.includes('@monaco-editor')) return 'monaco'
+            if (id.includes('ag-grid')) return 'ag-grid'
+            if (id.includes('shiki')) return 'shiki'
+            if (
+              id.includes('react-markdown') ||
+              id.includes('remark') ||
+              id.includes('mdast') ||
+              id.includes('micromark') ||
+              id.includes('hast') ||
+              id.includes('unified') ||
+              id.includes('unist') ||
+              id.includes('vfile') ||
+              id.includes('decode-named-character-reference') ||
+              id.includes('property-information')
+            ) {
+              return 'markdown'
+            }
+          }
+        }
+      }
+    }
   }
 })

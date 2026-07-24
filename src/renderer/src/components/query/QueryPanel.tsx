@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { QueryEditor } from './QueryEditor'
+import { QueryEditor } from './QueryEditor.lazy'
 import { QueryToolbar } from './QueryToolbar'
 import { TransactionToolbar } from './TransactionToolbar'
 import { ConnectionSelector } from './ConnectionSelector'

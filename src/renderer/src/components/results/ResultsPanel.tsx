@@ -1,4 +1,4 @@
-import { ResultsGrid } from './ResultsGrid'
+import { ResultsGrid } from './ResultsGrid.lazy'
 import { ResultsStatusBar } from './ResultsStatusBar'
 import { PluginSlot } from '@/components/plugins/PluginSlot'
 import { ExplainResult } from '@/components/ai/ExplainResult'

@@ -5,4 +5,5 @@ export const common = {
   close: 'Close',
   save: 'Save',
   refresh: 'Refresh',
+  loading: 'Loading…',
 } as const
