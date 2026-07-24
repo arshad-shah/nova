@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
+import { useAsyncEffect } from '@/hooks/useAsyncEffect'
 import { Stack, Divider, Flex, Button, Text } from '@/primitives'
 import { Input } from '@/primitives'
 import { useSettingsStore } from '@/stores/settings'
@@ -21,8 +22,11 @@ function ApiKeyField({ provider, label, description, placeholder }: {
   const [draft, setDraft] = useState('')
   const [saving, setSaving] = useState(false)
 
-  useEffect(() => {
-    ipc.invoke(IPC_CHANNELS.AI_KEYS_HAS, provider).then(setHasKey).catch(() => {})
+  useAsyncEffect(async (isCancelled) => {
+    try {
+      const has = await ipc.invoke(IPC_CHANNELS.AI_KEYS_HAS, provider)
+      if (!isCancelled()) setHasKey(has)
+    } catch { /* best-effort — no key is the safe default */ }
   }, [provider])
 
   const save = async () => {

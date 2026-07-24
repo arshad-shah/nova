@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
+import { useAsyncEffect } from '@/hooks/useAsyncEffect'
 import { Power, PowerOff, Trash2 } from 'lucide-react'
 import { ConfirmDialog } from '@/components/shell/ConfirmDialog'
 import { PluginIcon } from './PluginIcon'
@@ -32,33 +33,40 @@ export function PluginDetailView({ pluginName }: Props) {
   const [permissions, setPermissions] = useState<PermissionState | null>(null)
   const addToast = useToastStore(s => s.addToast)
 
-  const loadPlugin = async () => {
+  // Shared by the mount effect and the activate/deactivate handlers. The effect
+  // passes an `isCancelled` probe so a list that resolves after the viewer has
+  // navigated to a different plugin is dropped; handler calls omit it (the
+  // component is still mounted on the same plugin) and always apply.
+  const loadPlugin = useCallback(async (isCancelled?: () => boolean) => {
     const list: PluginInfo[] = await ipc.invoke(IPC_CHANNELS.PLUGINS_LIST)
     const found = list.find(p => p.name === pluginName)
-    if (found) setPlugin(found)
-  }
-
-  useEffect(() => { loadPlugin() }, [pluginName])
-
-  useEffect(() => {
-    ipc.invoke(IPC_CHANNELS.PLUGINS_ERRORS, pluginName)
-      .then(setErrors)
-      .catch(() => {})
+    if (found && !isCancelled?.()) setPlugin(found)
   }, [pluginName])
 
-  useEffect(() => {
-    ipc.invoke(IPC_CHANNELS.PLUGINS_GET_SETTINGS, pluginName)
-      .then(({ schema, values }: { schema: SettingSchema[]; values: Record<string, unknown> }) => {
-        setSettingsSchema(schema)
-        setSettingsValues(values)
-      })
-      .catch(() => {})
+  useAsyncEffect((isCancelled) => loadPlugin(isCancelled), [loadPlugin])
+
+  useAsyncEffect(async (isCancelled) => {
+    try {
+      const errors = await ipc.invoke(IPC_CHANNELS.PLUGINS_ERRORS, pluginName)
+      if (!isCancelled()) setErrors(errors)
+    } catch { /* best-effort */ }
   }, [pluginName])
 
-  useEffect(() => {
-    ipc.invoke(IPC_CHANNELS.PLUGINS_GET_PERMISSIONS, pluginName)
-      .then((state: PermissionState | null) => setPermissions(state))
-      .catch(() => {})
+  useAsyncEffect(async (isCancelled) => {
+    try {
+      const { schema, values }: { schema: SettingSchema[]; values: Record<string, unknown> } =
+        await ipc.invoke(IPC_CHANNELS.PLUGINS_GET_SETTINGS, pluginName)
+      if (isCancelled()) return
+      setSettingsSchema(schema)
+      setSettingsValues(values)
+    } catch { /* best-effort */ }
+  }, [pluginName])
+
+  useAsyncEffect(async (isCancelled) => {
+    try {
+      const state: PermissionState | null = await ipc.invoke(IPC_CHANNELS.PLUGINS_GET_PERMISSIONS, pluginName)
+      if (!isCancelled()) setPermissions(state)
+    } catch { /* best-effort */ }
   }, [pluginName])
 
   const handleTogglePermission = async (permission: string, granted: boolean) => {

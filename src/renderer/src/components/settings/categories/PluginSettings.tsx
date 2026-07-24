@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Stack, Flex, Divider, Text, Box, Input, NumberInput, PasswordInput, Select, Switch } from '@/primitives'
 import { Spinner } from '@/primitives'
+import { useIsMounted } from '@/hooks/useIsMounted'
 import { usePluginUIStore } from '@/stores/plugin-ui'
 import { useTranslation } from '@/i18n/I18nProvider'
 import { SettingRow } from '../SettingRow'
@@ -55,6 +56,7 @@ export function PluginSettings() {
   const [plugins, setPlugins] = useState<PluginInfo[]>([])
   const [loading, setLoading] = useState(true)
   const [pluginSettings, setPluginSettings] = useState<Record<string, PluginSettingsBundle>>({})
+  const isMounted = useIsMounted()
 
   const loadSettings = useCallback(async (list: PluginInfo[]) => {
     const active = list.filter(p => p.status.state === 'active' || p.status.state === 'degraded')
@@ -68,15 +70,19 @@ export function PluginSettings() {
         }
       })
     )
+    if (!isMounted()) return
     setPluginSettings(Object.fromEntries(entries))
-  }, [])
+  }, [isMounted])
 
+  // Re-run on plugin lifecycle events, which can fire after this pane closes.
   const reload = useCallback(async () => {
     const list = await ipc.invoke(IPC_CHANNELS.PLUGINS_LIST)
+    if (!isMounted()) return
     setPlugins(list)
     await loadSettings(list)
+    if (!isMounted()) return
     setLoading(false)
-  }, [loadSettings])
+  }, [loadSettings, isMounted])
 
   useEffect(() => {
     reload()

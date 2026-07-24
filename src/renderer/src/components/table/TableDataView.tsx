@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
+import { useAsyncEffect } from '@/hooks/useAsyncEffect'
 import { parseAppError } from '@/lib/db-error'
 import { RefreshCw } from 'lucide-react'
 import { Flex, Box, Text, IconButton, Spinner, EmptyState } from '@/primitives'
@@ -25,7 +26,10 @@ export function TableDataView({ tab }: { tab: TableTab }) {
   const { t } = useTranslation()
   const [state, setState] = useState<LoadState>({ loading: true, result: null, error: null })
 
-  const load = useCallback(async () => {
+  // `isCancelled` is supplied by the effect so a slow load for a table the user
+  // has already navigated away from can't overwrite the new table's grid; the
+  // manual refresh button omits it and always applies.
+  const load = useCallback(async (isCancelled?: () => boolean) => {
     setState((s) => ({ ...s, loading: true, error: null }))
     try {
       const { rows, columns } = await ipc.invoke(
@@ -34,6 +38,7 @@ export function TableDataView({ tab }: { tab: TableTab }) {
         tab.tableName,
         tab.schema,
       )
+      if (isCancelled?.()) return
       const result: QueryResult = {
         rows,
         fields: columns.map((c: SchemaColumn) => ({ name: c.name, dataType: c.dataType, nullable: c.nullable })),
@@ -43,11 +48,12 @@ export function TableDataView({ tab }: { tab: TableTab }) {
       }
       setState({ loading: false, result, error: null })
     } catch (err) {
+      if (isCancelled?.()) return
       setState({ loading: false, result: null, error: parseAppError(err).message })
     }
   }, [tab.connectionId, tab.tableName, tab.schema])
 
-  useEffect(() => { void load() }, [load])
+  useAsyncEffect((isCancelled) => load(isCancelled), [load])
 
   return (
     <Flex direction="column" className="h-full min-h-0">

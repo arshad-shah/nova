@@ -36,16 +36,18 @@ export function ActivityBar() {
 
   // Poll MCP server status
   useEffect(() => {
+    let cancelled = false
     const checkMcp = async () => {
       try {
         const status = await ipc.invoke(IPC_CHANNELS.MCP_STATUS) as MCPServerStatus
+        if (cancelled) return
         setMcpRunning(status.running)
         setMcpClients(status.clients)
       } catch { /* */ }
     }
     checkMcp()
     const interval = setInterval(checkMcp, 10000)
-    return () => clearInterval(interval)
+    return () => { cancelled = true; clearInterval(interval) }
   }, [])
 
   const renderButton = (id: ActivityPanel, Icon: typeof Database, label: string) => {
