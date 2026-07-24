@@ -17,6 +17,21 @@ interface SchemaState {
   /** Incremented on clearCache — lets components know to re-fetch */
   cacheVersion: number
 
+  // In-flight request de-duplication. Each fetcher caches its *promise* keyed
+  // identically to its result cache, so N concurrent callers for the same key
+  // (e.g. the explorer, the inspector, and an ER diagram all asking for the
+  // same table's columns) share one round trip instead of firing N. These are
+  // internal bookkeeping, not reactive UI state — they are mutated in place and
+  // never trigger a re-render; entries are evicted the moment the request
+  // settles so a later call re-fetches. See #206.
+  databasesPending: Map<string, Promise<string[]>>
+  schemasPending: Map<string, Promise<string[]>>
+  tablesPending: Map<string, Promise<SchemaTable[]>>
+  columnsPending: Map<string, Promise<SchemaColumn[]>>
+  indexesPending: Map<string, Promise<SchemaIndex[]>>
+  objectsPending: Map<string, Promise<SchemaObject[]>>
+  rowCountsPending: Map<string, Promise<void>>
+
   fetchDatabases: (connectionId: string) => Promise<string[]>
   switchDatabase: (connectionId: string, database: string) => Promise<void>
   fetchSchemas: (connectionId: string, database?: string) => Promise<string[]>
@@ -34,6 +49,28 @@ function cacheKey(connectionId: string, ...parts: string[]): string {
   return [connectionId, ...parts].join(':')
 }
 
+/**
+ * De-duplicate concurrent identical requests by caching the in-flight promise.
+ * The first caller for `key` runs `request()` and stores its promise; callers
+ * arriving before it settles await the same promise. The entry is evicted on
+ * settle (resolve *or* reject) so a subsequent call re-fetches — a failed
+ * request never poisons the key. `pending` is mutated in place and is not
+ * reactive state, so this never causes a render.
+ */
+function dedupe<T>(
+  pending: Map<string, Promise<T>>,
+  key: string,
+  request: () => Promise<T>
+): Promise<T> {
+  const inflight = pending.get(key)
+  if (inflight) return inflight
+  const promise = request().finally(() => {
+    pending.delete(key)
+  })
+  pending.set(key, promise)
+  return promise
+}
+
 export const useSchemaStore = create<SchemaState>((set, get) => ({
   tables: new Map(),
   columns: new Map(),
@@ -47,27 +84,37 @@ export const useSchemaStore = create<SchemaState>((set, get) => ({
   loading: false,
   cacheVersion: 0,
 
+  databasesPending: new Map(),
+  schemasPending: new Map(),
+  tablesPending: new Map(),
+  columnsPending: new Map(),
+  indexesPending: new Map(),
+  objectsPending: new Map(),
+  rowCountsPending: new Map(),
+
   fetchDatabases: async (connectionId) => {
     const key = connectionId
     const cached = get().databases.get(key)
     if (cached && cached.every(Boolean)) return cached
-    try {
-      const result = (await ipc.invoke(IPC_CHANNELS.DB_GET_DATABASES, connectionId)).filter(Boolean)
-      set((s) => {
-        const next = new Map(s.databases)
-        next.set(key, result)
-        return { databases: next }
-      })
-      return result
-    } catch {
-      // Store empty array so hierarchyLoaded can become true
-      set((s) => {
-        const next = new Map(s.databases)
-        next.set(key, [])
-        return { databases: next }
-      })
-      return []
-    }
+    return dedupe(get().databasesPending, key, async () => {
+      try {
+        const result = (await ipc.invoke(IPC_CHANNELS.DB_GET_DATABASES, connectionId)).filter(Boolean)
+        set((s) => {
+          const next = new Map(s.databases)
+          next.set(key, result)
+          return { databases: next }
+        })
+        return result
+      } catch {
+        // Store empty array so hierarchyLoaded can become true
+        set((s) => {
+          const next = new Map(s.databases)
+          next.set(key, [])
+          return { databases: next }
+        })
+        return []
+      }
+    })
   },
 
   switchDatabase: async (connectionId, database) => {
@@ -85,23 +132,25 @@ export const useSchemaStore = create<SchemaState>((set, get) => ({
     const key = database ? cacheKey(connectionId, database) : connectionId
     const cached = get().schemas.get(key)
     if (cached) return cached
-    set({ loading: true })
-    try {
-      const result = await ipc.invoke(IPC_CHANNELS.DB_GET_SCHEMAS, connectionId)
-      set((s) => {
-        const next = new Map(s.schemas)
-        next.set(key, result)
-        return { schemas: next, loading: false }
-      })
-      return result
-    } catch {
-      set((s) => {
-        const next = new Map(s.schemas)
-        next.set(key, [])
-        return { schemas: next, loading: false }
-      })
-      return []
-    }
+    return dedupe(get().schemasPending, key, async () => {
+      set({ loading: true })
+      try {
+        const result = await ipc.invoke(IPC_CHANNELS.DB_GET_SCHEMAS, connectionId)
+        set((s) => {
+          const next = new Map(s.schemas)
+          next.set(key, result)
+          return { schemas: next, loading: false }
+        })
+        return result
+      } catch {
+        set((s) => {
+          const next = new Map(s.schemas)
+          next.set(key, [])
+          return { schemas: next, loading: false }
+        })
+        return []
+      }
+    })
   },
 
   fetchTables: async (connectionId, schema, database) => {
@@ -109,71 +158,79 @@ export const useSchemaStore = create<SchemaState>((set, get) => ({
     const key = database ? cacheKey(connectionId, database, schema) : cacheKey(connectionId, schema)
     const cached = get().tables.get(key)
     if (cached) return cached
-    set({ loading: true })
-    try {
-      const result = await ipc.invoke(IPC_CHANNELS.DB_GET_TABLES, connectionId, schema)
-      set((s) => {
-        const next = new Map(s.tables)
-        next.set(key, result)
-        return { tables: next, loading: false }
-      })
-      return result
-    } catch {
-      set({ loading: false })
-      return []
-    }
+    return dedupe(get().tablesPending, key, async () => {
+      set({ loading: true })
+      try {
+        const result = await ipc.invoke(IPC_CHANNELS.DB_GET_TABLES, connectionId, schema)
+        set((s) => {
+          const next = new Map(s.tables)
+          next.set(key, result)
+          return { tables: next, loading: false }
+        })
+        return result
+      } catch {
+        set({ loading: false })
+        return []
+      }
+    })
   },
 
   fetchColumns: async (connectionId, table, schema) => {
     const key = cacheKey(connectionId, schema, table)
     const cached = get().columns.get(key)
     if (cached) return cached
-    try {
-      const result = await ipc.invoke(IPC_CHANNELS.DB_GET_COLUMNS, connectionId, table, schema)
-      set((s) => {
-        const next = new Map(s.columns)
-        next.set(key, result)
-        return { columns: next }
-      })
-      return result
-    } catch {
-      return []
-    }
+    return dedupe(get().columnsPending, key, async () => {
+      try {
+        const result = await ipc.invoke(IPC_CHANNELS.DB_GET_COLUMNS, connectionId, table, schema)
+        set((s) => {
+          const next = new Map(s.columns)
+          next.set(key, result)
+          return { columns: next }
+        })
+        return result
+      } catch {
+        return []
+      }
+    })
   },
 
   fetchIndexes: async (connectionId, table, schema) => {
     const key = cacheKey(connectionId, schema, table)
     const cached = get().indexes.get(key)
     if (cached) return cached
-    const result = await ipc.invoke(IPC_CHANNELS.DB_GET_INDEXES, connectionId, table, schema)
-    set((s) => {
-      const next = new Map(s.indexes)
-      next.set(key, result)
-      return { indexes: next }
+    return dedupe(get().indexesPending, key, async () => {
+      const result = await ipc.invoke(IPC_CHANNELS.DB_GET_INDEXES, connectionId, table, schema)
+      set((s) => {
+        const next = new Map(s.indexes)
+        next.set(key, result)
+        return { indexes: next }
+      })
+      return result
     })
-    return result
   },
 
   fetchSchemaObjects: async (connectionId, schema, database) => {
     const key = database ? cacheKey(connectionId, database, schema) : cacheKey(connectionId, schema)
     const cached = get().objects.get(key)
     if (cached) return cached
-    try {
-      const result = await ipc.invoke(IPC_CHANNELS.DB_GET_SCHEMA_OBJECTS, connectionId, schema)
-      set((s) => {
-        const next = new Map(s.objects)
-        next.set(key, result)
-        return { objects: next }
-      })
-      return result
-    } catch {
-      set((s) => {
-        const next = new Map(s.objects)
-        next.set(key, [])
-        return { objects: next }
-      })
-      return []
-    }
+    return dedupe(get().objectsPending, key, async () => {
+      try {
+        const result = await ipc.invoke(IPC_CHANNELS.DB_GET_SCHEMA_OBJECTS, connectionId, schema)
+        set((s) => {
+          const next = new Map(s.objects)
+          next.set(key, result)
+          return { objects: next }
+        })
+        return result
+      } catch {
+        set((s) => {
+          const next = new Map(s.objects)
+          next.set(key, [])
+          return { objects: next }
+        })
+        return []
+      }
+    })
   },
 
   toggleTable: (key) => {
@@ -189,17 +246,29 @@ export const useSchemaStore = create<SchemaState>((set, get) => ({
   fetchRowCount: async (connectionId, table, schema) => {
     const key = cacheKey(connectionId, schema, table)
     if (get().rowCounts.has(key)) return
-    const count = await ipc.invoke(IPC_CHANNELS.DB_GET_ROW_COUNT, connectionId, table, schema)
-    set((s) => {
-      const next = new Map(s.rowCounts)
-      next.set(key, count)
-      return { rowCounts: next }
+    return dedupe(get().rowCountsPending, key, async () => {
+      const count = await ipc.invoke(IPC_CHANNELS.DB_GET_ROW_COUNT, connectionId, table, schema)
+      set((s) => {
+        const next = new Map(s.rowCounts)
+        next.set(key, count)
+        return { rowCounts: next }
+      })
     })
   },
 
   clearCache: (connectionId) => {
     if (!connectionId) {
-      set((s) => ({ tables: new Map(), columns: new Map(), indexes: new Map(), schemas: new Map(), databases: new Map(), objects: new Map(), rowCounts: new Map(), filterText: '', cacheVersion: s.cacheVersion + 1 }))
+      set((s) => ({
+        tables: new Map(), columns: new Map(), indexes: new Map(), schemas: new Map(),
+        databases: new Map(), objects: new Map(), rowCounts: new Map(),
+        // Drop in-flight promises too, so a request that was mid-flight when the
+        // cache was invalidated cannot be served to a caller that arrives after
+        // the clear — the next call starts a fresh fetch.
+        databasesPending: new Map(), schemasPending: new Map(), tablesPending: new Map(),
+        columnsPending: new Map(), indexesPending: new Map(), objectsPending: new Map(),
+        rowCountsPending: new Map(),
+        filterText: '', cacheVersion: s.cacheVersion + 1
+      }))
       return
     }
     set((s) => {
@@ -221,6 +290,15 @@ export const useSchemaStore = create<SchemaState>((set, get) => ({
         schemas: filterMap(s.schemas),
         databases: filterMap(s.databases),
         rowCounts: filterMap(s.rowCounts),
+        // In-flight promises for this connection are dropped alongside the
+        // results they would populate.
+        tablesPending: filterMap(s.tablesPending),
+        columnsPending: filterMap(s.columnsPending),
+        indexesPending: filterMap(s.indexesPending),
+        objectsPending: filterMap(s.objectsPending),
+        schemasPending: filterMap(s.schemasPending),
+        databasesPending: filterMap(s.databasesPending),
+        rowCountsPending: filterMap(s.rowCountsPending),
         cacheVersion: s.cacheVersion + 1
       }
     })
