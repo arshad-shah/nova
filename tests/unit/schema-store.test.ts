@@ -25,7 +25,25 @@ function resetStore(): void {
     rowCounts: new Map(),
     loading: false,
     cacheVersion: 0,
+    databasesPending: new Map(),
+    schemasPending: new Map(),
+    tablesPending: new Map(),
+    columnsPending: new Map(),
+    indexesPending: new Map(),
+    objectsPending: new Map(),
+    rowCountsPending: new Map(),
   })
+}
+
+/** A promise whose resolution is controllable from the test body. */
+function deferred<T>(): { promise: Promise<T>; resolve: (v: T) => void; reject: (e: unknown) => void } {
+  let resolve!: (v: T) => void
+  let reject!: (e: unknown) => void
+  const promise = new Promise<T>((res, rej) => {
+    resolve = res
+    reject = rej
+  })
+  return { promise, resolve, reject }
 }
 
 describe('Schema cache logic', () => {
@@ -293,5 +311,140 @@ describe('useSchemaStore (behavioral)', () => {
     expect(s.schemas.has('conn2')).toBe(true)
     expect(s.databases.has('conn1')).toBe(false)
     expect(s.cacheVersion).toBe(1)
+  })
+})
+
+describe('useSchemaStore — in-flight request de-duplication (#206)', () => {
+  beforeEach(() => {
+    mockInvoke.mockReset()
+    resetStore()
+  })
+
+  it('two concurrent fetchColumns for the same key produce exactly one ipc.invoke', async () => {
+    const d = deferred<SchemaColumn[]>()
+    mockInvoke.mockReturnValueOnce(d.promise)
+
+    const p1 = useSchemaStore.getState().fetchColumns('conn1', 'users', 'public')
+    const p2 = useSchemaStore.getState().fetchColumns('conn1', 'users', 'public')
+
+    // Both callers arrived before the request settled: one round trip only.
+    expect(mockInvoke).toHaveBeenCalledTimes(1)
+
+    const columns: SchemaColumn[] = [
+      { name: 'id', dataType: 'integer', nullable: false, defaultValue: null, isPrimaryKey: true, isForeignKey: false }
+    ]
+    d.resolve(columns)
+    const [r1, r2] = await Promise.all([p1, p2])
+
+    // Both callers receive the shared result…
+    expect(r1).toEqual(columns)
+    expect(r2).toEqual(columns)
+    // …and it is cached for later callers, still one invoke total.
+    expect(useSchemaStore.getState().columns.get('conn1:public:users')).toEqual(columns)
+    expect(mockInvoke).toHaveBeenCalledTimes(1)
+  })
+
+  it('distinct keys are not de-duplicated — each fires its own request', async () => {
+    mockInvoke.mockResolvedValue([])
+    await Promise.all([
+      useSchemaStore.getState().fetchColumns('conn1', 'users', 'public'),
+      useSchemaStore.getState().fetchColumns('conn1', 'orders', 'public'),
+    ])
+    expect(mockInvoke).toHaveBeenCalledTimes(2)
+  })
+
+  it('de-duplicates concurrent fetchIndexes, fetchTables, and fetchRowCount', async () => {
+    const indexes = deferred<SchemaIndex[]>()
+    mockInvoke.mockReturnValueOnce(indexes.promise)
+    const ip1 = useSchemaStore.getState().fetchIndexes('conn1', 'users', 'public')
+    const ip2 = useSchemaStore.getState().fetchIndexes('conn1', 'users', 'public')
+    expect(mockInvoke).toHaveBeenCalledTimes(1)
+    indexes.resolve([{ name: 'users_pkey', columns: ['id'], unique: true }])
+    await Promise.all([ip1, ip2])
+
+    mockInvoke.mockReset()
+    const tables = deferred<SchemaTable[]>()
+    mockInvoke.mockReturnValueOnce(tables.promise)
+    const tp1 = useSchemaStore.getState().fetchTables('conn1', 'public')
+    const tp2 = useSchemaStore.getState().fetchTables('conn1', 'public')
+    expect(mockInvoke).toHaveBeenCalledTimes(1)
+    tables.resolve([{ name: 'users', schema: 'public', type: 'table' }])
+    await Promise.all([tp1, tp2])
+
+    mockInvoke.mockReset()
+    const count = deferred<number>()
+    mockInvoke.mockReturnValueOnce(count.promise)
+    const rc1 = useSchemaStore.getState().fetchRowCount('conn1', 'users', 'public')
+    const rc2 = useSchemaStore.getState().fetchRowCount('conn1', 'users', 'public')
+    expect(mockInvoke).toHaveBeenCalledTimes(1)
+    count.resolve(42)
+    await Promise.all([rc1, rc2])
+    expect(useSchemaStore.getState().rowCounts.get('conn1:public:users')).toBe(42)
+  })
+
+  it('a rejected request evicts its pending entry so the next call retries', async () => {
+    // fetchIndexes propagates errors (no internal catch), so a failure must not
+    // leave a poisoned pending promise behind.
+    const first = deferred<SchemaIndex[]>()
+    mockInvoke.mockReturnValueOnce(first.promise)
+    const failing = useSchemaStore.getState().fetchIndexes('conn1', 'users', 'public')
+    first.reject(new Error('transient'))
+    await expect(failing).rejects.toThrow('transient')
+
+    // Pending entry gone → a fresh call issues a new invoke and succeeds.
+    const indexes: SchemaIndex[] = [{ name: 'idx', columns: ['a'], unique: false }]
+    mockInvoke.mockResolvedValueOnce(indexes)
+    const result = await useSchemaStore.getState().fetchIndexes('conn1', 'users', 'public')
+    expect(result).toEqual(indexes)
+    expect(mockInvoke).toHaveBeenCalledTimes(2)
+  })
+
+  it('a failed fetchColumns (which returns []) also retries on the next call', async () => {
+    mockInvoke.mockRejectedValueOnce(new Error('boom'))
+    const first = await useSchemaStore.getState().fetchColumns('conn1', 'users', 'public')
+    expect(first).toEqual([])
+    // The empty result was not cached and no pending entry lingers, so a retry
+    // hits IPC again rather than returning the stale empty list.
+    const columns: SchemaColumn[] = [
+      { name: 'id', dataType: 'integer', nullable: false, defaultValue: null, isPrimaryKey: true, isForeignKey: false }
+    ]
+    mockInvoke.mockResolvedValueOnce(columns)
+    const second = await useSchemaStore.getState().fetchColumns('conn1', 'users', 'public')
+    expect(second).toEqual(columns)
+    expect(mockInvoke).toHaveBeenCalledTimes(2)
+  })
+
+  it('clearCache(connectionId) drops in-flight promises for that connection', async () => {
+    const d = deferred<SchemaColumn[]>()
+    mockInvoke.mockReturnValueOnce(d.promise)
+    const first = useSchemaStore.getState().fetchColumns('conn1', 'users', 'public')
+    expect(useSchemaStore.getState().columnsPending.has('conn1:public:users')).toBe(true)
+
+    useSchemaStore.getState().clearCache('conn1')
+    expect(useSchemaStore.getState().columnsPending.has('conn1:public:users')).toBe(false)
+
+    // A caller arriving after the invalidation must start a fresh request rather
+    // than latch onto the promise that predates the clear.
+    const fresh: SchemaColumn[] = [
+      { name: 'id', dataType: 'integer', nullable: false, defaultValue: null, isPrimaryKey: true, isForeignKey: false }
+    ]
+    mockInvoke.mockResolvedValueOnce(fresh)
+    const second = await useSchemaStore.getState().fetchColumns('conn1', 'users', 'public')
+    expect(second).toEqual(fresh)
+    expect(mockInvoke).toHaveBeenCalledTimes(2)
+
+    // Settle the abandoned first request; it must not throw unhandled.
+    d.resolve([])
+    await first
+  })
+
+  it('clearCache() with no connectionId clears every pending map', () => {
+    useSchemaStore.setState({
+      columnsPending: new Map([['conn1:public:users', Promise.resolve([])]]),
+      tablesPending: new Map([['conn1:public', Promise.resolve([])]]),
+    })
+    useSchemaStore.getState().clearCache()
+    expect(useSchemaStore.getState().columnsPending.size).toBe(0)
+    expect(useSchemaStore.getState().tablesPending.size).toBe(0)
   })
 })
