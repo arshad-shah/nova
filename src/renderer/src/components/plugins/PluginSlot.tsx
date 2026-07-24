@@ -1,6 +1,6 @@
 import { useEffect, type ComponentType, type ReactNode } from 'react'
 import { selectContributions, usePluginUIStore } from '@/stores/plugin-ui'
-import { ChatPanel } from '@/components/ai/ChatPanel'
+import { ChatPanel } from '@/components/ai/ChatPanel.lazy'
 import { AIToggleButton } from '@/components/ai/AIToggleButton'
 import { ExplainPanel } from '@/components/ai/ExplainPanel'
 import { AIStatusSegment } from '@/components/ai/AIStatusSegment'

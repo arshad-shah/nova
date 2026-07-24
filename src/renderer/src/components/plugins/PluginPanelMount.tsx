@@ -1,6 +1,6 @@
 import { useEffect, type ComponentType } from 'react'
 import { selectContributions, usePluginUIStore } from '@/stores/plugin-ui'
-import { ChatPanel } from '@/components/ai/ChatPanel'
+import { ChatPanel } from '@/components/ai/ChatPanel.lazy'
 
 /**
  * Mounts host-side React components contributed by plugins.

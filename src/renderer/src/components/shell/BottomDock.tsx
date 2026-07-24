@@ -8,7 +8,7 @@ import { ResultsPanel } from '@/components/results/ResultsPanel'
 import { QueryErrorView } from '@/components/results/QueryErrorView'
 import { QueryPlanView } from '@/components/query-plan/QueryPlanView'
 // (plan parsing now lives in the driver via db:parse-plan; tab.queryPlan holds it)
-import { ChartPanel } from '@/components/charts/ChartPanel'
+import { ChartPanel } from '@/components/charts/ChartPanel.lazy'
 import { PluginPanelMount } from '@/components/plugins/PluginPanelMount'
 import { BottomDockTabs, type BottomTab } from './BottomDockTabs'
 import type { QueryTab } from '@shared/types'
