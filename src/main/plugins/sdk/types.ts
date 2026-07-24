@@ -1,10 +1,10 @@
 // src/main/plugins/sdk/types.ts
-import type { ConnectionProfile, QueryResult, SchemaTable, SchemaColumn, SchemaIndex } from '@shared/types'
+import type { ConnectionProfile, QueryResult, SchemaTable, SchemaColumn, SchemaIndex, TableDataOptions, TableDataResult } from '@shared/types'
 import type { DbAdapter } from '../../db/adapter'
 import type { UIRegistry } from './ui-registry'
 import type { CompletionRegistry } from './completion-registry'
 import type { AIAccess } from './ai-access'
-import type { SessionCapability, ExplainCapability, InspectionCapability, DatabaseSwitchCapability, RuntimeCapabilityOverlay, DataNouns, DriverPresentation } from '@shared/driver-capabilities'
+import type { SessionCapability, ExplainCapability, InspectionCapability, DatabaseSwitchCapability, RuntimeCapabilityOverlay, DataNouns, DriverPresentation, PaginationCapability } from '@shared/driver-capabilities'
 import type { DbErrorRule } from '@shared/db-errors'
 import type { JsonSchemaObject } from './tool-schema'
 import { TOOL_PERMISSION, type ToolPermission } from '@shared/mcp'
@@ -212,14 +212,21 @@ export interface DriverFactory {
    *  a fallback — drivers own this. Async so a process-isolated driver can
    *  answer over the RPC bridge. */
   sampleQuery?(table: string, schema?: string): Promise<string>
-  /** Reads every row of a table/collection for export. The driver decides how
-   *  (SQL SELECT, Mongo find, Redis SCAN, …); the orchestrator never assumes
-   *  the source is a relational database. Must use safe identifier escaping
-   *  for whichever query language it speaks. */
-  getTableData?(adapter: DbAdapter, table: string, schema?: string): Promise<{
-    rows: Record<string, unknown>[]
-    columns: SchemaColumn[]
-  }>
+  /** Reads a table/collection's rows for the "View data" grid and for export.
+   *  The driver decides how (SQL SELECT, Mongo find, Redis SCAN, …); the
+   *  orchestrator never assumes a relational source. Must use safe identifier
+   *  escaping for whichever query language it speaks.
+   *
+   *  `options.limit` bounds the read (the browse path always passes one, so a
+   *  huge table can't be pulled whole into memory); omitting it is an unbounded
+   *  read (the export path, until streaming lands — see #214). When a limit is
+   *  given, the reader should set `hasMore` so the UI can offer "load more". */
+  getTableData?(
+    adapter: DbAdapter,
+    table: string,
+    schema?: string,
+    options?: TableDataOptions,
+  ): Promise<TableDataResult>
   /** Emit a CREATE TABLE for a migration target. Lets the orchestrator route
    *  the structural conversion to the receiving driver — Postgres / MySQL /
    *  SQLite each have their own quirks (SQLite's INTEGER-PRIMARY-KEY rowid
@@ -254,6 +261,10 @@ export interface DriverFactory {
    *  agree (see driver-validation.ts). Omit ⇒ the renderer hides the database
    *  selector and never asks the connection to switch. */
   databaseSwitch?: DatabaseSwitchCapability
+  /** How this driver pages a bounded read of a table's rows (the "View data"
+   *  browse reader). Declaring it routes the paging clause through the driver
+   *  rather than hardcoding `LIMIT`. Omit ⇒ `LIMIT n OFFSET m`. */
+  pagination?: PaginationCapability
   /** Optional per-connection overlay resolved at connect time (e.g. Mongo
    *  replica-set topology). SQL drivers omit it. */
   getRuntimeCapabilities?(adapter: DbAdapter): Promise<RuntimeCapabilityOverlay>

@@ -8,6 +8,7 @@ import {
   createMigrationDdl,
   createSampleQuery,
   createSqlImporter,
+  renderPageClause,
 } from '../../src/main/plugins/sdk/sql-format'
 import type { SchemaColumn } from '@shared/types'
 import type { DbAdapter } from '../../src/main/db/adapter'
@@ -189,6 +190,26 @@ describe('createSampleQuery', () => {
     const sample = createSampleQuery('"', { qualifySchema: s => s !== 'main' })
     expect(await sample('users', 'main')).toBe('SELECT * FROM "users" LIMIT 100;')
     expect(await sample('users', 'other')).toBe('SELECT * FROM "other"."users" LIMIT 100;')
+  })
+})
+
+describe('renderPageClause', () => {
+  it('renders LIMIT for the limit-offset style with no offset', () => {
+    expect(renderPageClause('limit-offset', 100)).toBe('LIMIT 100')
+  })
+
+  it('renders LIMIT … OFFSET when an offset is given', () => {
+    expect(renderPageClause('limit-offset', 100, 200)).toBe('LIMIT 100 OFFSET 200')
+  })
+
+  it('renders OFFSET … FETCH NEXT for the offset-fetch style', () => {
+    expect(renderPageClause('offset-fetch', 100, 200)).toBe('OFFSET 200 ROWS FETCH NEXT 100 ROWS ONLY')
+  })
+
+  it('coerces limit/offset to non-negative integers so nothing can be injected', () => {
+    // A caller can never smuggle SQL through the numeric arguments.
+    expect(renderPageClause('limit-offset', 10.9, -5)).toBe('LIMIT 10')
+    expect(renderPageClause('limit-offset', -1)).toBe('LIMIT 0')
   })
 })
 

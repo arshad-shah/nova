@@ -179,14 +179,16 @@ export function registerDbHandlers(
   // the same getTableData() export uses — so non-SQL drivers (Redis, Mongo) can
   // render a real grid. The renderer stays dialect-agnostic; the driver owns how
   // its data maps to rows + columns.
-  handle(IPC_CHANNELS.DB_GET_TABLE_DATA, async (profileId, table, schema) => {
+  handle(IPC_CHANNELS.DB_GET_TABLE_DATA, async (profileId, table, schema, options) => {
     const adapter = requireAdapter(profileId)
     const type = ctx.configStore.getConnection(profileId)?.type ?? ''
     const driver = ctx.driverRegistry.get(type)
     if (!driver?.getTableData) {
       throw new Error(`Driver '${type}' does not implement getTableData()`)
     }
-    return driver.getTableData(adapter, table, schema)
+    // The browse path passes a `limit` so a huge table is fetched a page at a
+    // time; the driver reports `hasMore` for the "load more" affordance.
+    return driver.getTableData(adapter, table, schema, options)
   })
 
   handle(IPC_CHANNELS.DB_GET_COLUMNS, async (profileId, table, schema) =>

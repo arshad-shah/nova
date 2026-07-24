@@ -8,6 +8,7 @@ import { formatSql, createSampleQuery, createMigrationDdl } from '../../sdk/sql-
 import { extractSnowflakeName } from './naming'
 
 const SNOWFLAKE_QUOTE = '"' as const
+const SNOWFLAKE_PAGINATION = { style: 'limit-offset' } as const
 
 export const manifest: PluginManifest = {
   name: 'verql-plugin-snowflake',
@@ -226,7 +227,8 @@ export function activate(ctx: PluginContext): void {
       { key: 'schema', label: 'Schema', type: 'select', fetchable: true, step: 2, default: 'PUBLIC' },
     ],
     sampleQuery: createSampleQuery(SNOWFLAKE_QUOTE),
-    getTableData: createRelationalGetTableData(SNOWFLAKE_QUOTE),
+    getTableData: createRelationalGetTableData(SNOWFLAKE_QUOTE, { pagination: SNOWFLAKE_PAGINATION }),
+    pagination: SNOWFLAKE_PAGINATION,
     explain: { supportsAnalyze: false, format: 'text', statement: 'EXPLAIN' },
     generateMigrationDdl: createMigrationDdl(SNOWFLAKE_QUOTE),
     databaseSwitch: { supported: true },

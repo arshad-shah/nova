@@ -55,6 +55,18 @@ export function GeneralSettings() {
         />
       </SettingRow>
 
+      <SettingRow label={t('settings.general.maxViewDataRows.label')} description={t('settings.general.maxViewDataRows.description')}>
+        <NumberInput
+          value={general.maxViewDataRows}
+          onChange={(v) => setSetting('general.maxViewDataRows', v)}
+          min={100}
+          max={100000}
+          step={100}
+          size="sm"
+          className="w-24"
+        />
+      </SettingRow>
+
       <Divider />
 
       <SettingRow

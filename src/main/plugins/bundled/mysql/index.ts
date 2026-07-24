@@ -10,6 +10,7 @@ import { formatSql, createSampleQuery, createMigrationDdl } from '../../sdk/sql-
 import { PG_TO_MYSQL, pgToMysqlFallback } from './type-maps'
 
 const MY_QUOTE = '`' as const
+const MY_PAGINATION = { style: 'limit-offset' } as const
 
 export const manifest: PluginManifest = {
   name: 'verql-plugin-mysql',
@@ -155,7 +156,8 @@ export function activate(ctx: PluginContext): void {
       { key: 'ssl', label: 'SSL', type: 'boolean', default: false },
     ],
     sampleQuery: createSampleQuery(MY_QUOTE),
-    getTableData: createRelationalGetTableData(MY_QUOTE),
+    getTableData: createRelationalGetTableData(MY_QUOTE, { pagination: MY_PAGINATION }),
+    pagination: MY_PAGINATION,
     explain: { supportsAnalyze: true, format: 'text', statement: 'EXPLAIN ANALYZE' },
     generateMigrationDdl: createMigrationDdl(MY_QUOTE),
     databaseSwitch: { supported: true },

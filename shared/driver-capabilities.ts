@@ -39,6 +39,19 @@ export interface DatabaseSwitchCapability {
   supported: boolean
 }
 
+/** How a driver expresses a bounded page of rows in its query language. The
+ *  browse ("View data") reader appends the matching clause to a `SELECT *` so a
+ *  huge table is fetched a page at a time instead of whole — routing the paging
+ *  syntax through the driver instead of hardcoding `LIMIT`. Data-only so it
+ *  serializes over IPC. Omit ⇒ the shared relational reader defaults to
+ *  `LIMIT n OFFSET m`. */
+export interface PaginationCapability {
+  /** Clause dialect. `'limit-offset'` ⇒ `LIMIT n OFFSET m`
+   *  (Postgres/MySQL/SQLite/Snowflake); `'offset-fetch'` ⇒
+   *  `OFFSET m ROWS FETCH NEXT n ROWS ONLY` (ANSI / SQL-Server family). */
+  style: 'limit-offset' | 'offset-fetch'
+}
+
 /** A singular/plural noun pair the driver uses for one of its data concepts. */
 export interface DataNoun {
   /** Singular, lower-case (e.g. "table", "collection", "key"). */
@@ -148,6 +161,10 @@ export interface DriverCapabilities {
    *  The renderer gates the database selector on this instead of discovering
    *  support by catching a thrown error. Omit ⇒ no in-connection switch. */
   databaseSwitch?: DatabaseSwitchCapability
+  /** How the driver pages a bounded read of a table's rows. The shared
+   *  relational browse reader uses this to build a driver-aware paging clause
+   *  instead of hardcoding `LIMIT`. Omit ⇒ `LIMIT n OFFSET m`. */
+  pagination?: PaginationCapability
 }
 
 /**

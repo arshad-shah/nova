@@ -13,6 +13,10 @@ export const settings = {
       label: 'Default Page Size',
       description: 'Number of rows to fetch per page when browsing tables',
     },
+    maxViewDataRows: {
+      label: 'Max Rows to View',
+      description: 'How many rows to load at a time when viewing a table’s data. A large table loads in pages instead of all at once.',
+    },
     confirmDestructive: {
       label: 'Confirm destructive queries',
       description:

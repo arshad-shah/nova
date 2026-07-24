@@ -7,6 +7,7 @@
 
 import { format as prettyFormatSql, type SqlLanguage } from 'sql-formatter'
 import type { SchemaColumn } from '@shared/types'
+import type { PaginationCapability } from '@shared/driver-capabilities'
 import { errorMessage } from '@shared/errors'
 import { quoteIdentifier } from './identifier'
 import { splitSqlStatements } from './sql-statements'
@@ -139,6 +140,25 @@ export function createMigrationDdl(
  * schema is included in the qualified name when present and `qualifySchema`
  * accepts it (SQLite passes `(s) => s !== 'main'` to skip its implicit schema).
  */
+/**
+ * Render the driver-aware clause that bounds a `SELECT *` to `limit` rows
+ * starting at `offset`. Kept beside `createSampleQuery` so the one module that
+ * knows LIMIT syntax also owns paging syntax. `limit`/`offset` are coerced to
+ * non-negative integers so a caller can never inject SQL through them.
+ */
+export function renderPageClause(
+  style: PaginationCapability['style'],
+  limit: number,
+  offset = 0,
+): string {
+  const safeLimit = Math.max(0, Math.trunc(limit))
+  const safeOffset = Math.max(0, Math.trunc(offset))
+  if (style === 'offset-fetch') {
+    return `OFFSET ${safeOffset} ROWS FETCH NEXT ${safeLimit} ROWS ONLY`
+  }
+  return safeOffset > 0 ? `LIMIT ${safeLimit} OFFSET ${safeOffset}` : `LIMIT ${safeLimit}`
+}
+
 export function createSampleQuery(
   quoteChar: string,
   options?: { limit?: number; qualifySchema?: (schema: string) => boolean },

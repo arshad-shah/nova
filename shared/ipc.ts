@@ -1,4 +1,4 @@
-import type { ConnectionProfile, QueryResult, SchemaTable, SchemaColumn, SchemaIndex, SchemaObject, DatabaseType, PlanNode } from './types'
+import type { ConnectionProfile, QueryResult, SchemaTable, SchemaColumn, SchemaIndex, SchemaObject, DatabaseType, PlanNode, TableDataOptions, TableDataResult } from './types'
 import type { AppSettings } from './settings'
 import type { AIChatStartRequest, AIStreamEvent, AIProviderInfo, AIModelInfo, AIChatMessage } from './ai-types'
 import type { DriverCapabilities, SessionOpts, RuntimeCapabilityOverlay } from './driver-capabilities'
@@ -74,8 +74,8 @@ export interface IpcChannelShapes {
    *  uses). Lets non-SQL drivers (Redis key/value, Mongo documents) render a
    *  data grid the renderer can't build from a SELECT. */
   DB_GET_TABLE_DATA: {
-    args: [profileId: string, table: string, schema?: string]
-    return: { rows: Record<string, unknown>[]; columns: SchemaColumn[] }
+    args: [profileId: string, table: string, schema?: string, options?: TableDataOptions]
+    return: TableDataResult
   }
   DB_GET_COLUMNS: {
     args: [profileId: string, table: string, schema?: string]
