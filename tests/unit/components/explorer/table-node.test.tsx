@@ -28,15 +28,17 @@ vi.mock('../../../../src/renderer/src/stores/ui', () => ({
 let columns = new Map<string, SchemaColumn[]>()
 let indexes = new Map<string, SchemaIndex[]>()
 let rowCounts = new Map<string, number>()
+let errored = new Set<string>()
 const mockFetchColumns = vi.fn()
 const mockFetchIndexes = vi.fn()
 const mockFetchRowCount = vi.fn()
 vi.mock('../../../../src/renderer/src/stores/schema', () => ({
   useSchemaStore: (selector: (s: Record<string, unknown>) => unknown) =>
     selector({
-      columns, indexes, rowCounts,
+      columns, indexes, rowCounts, errored,
       fetchColumns: mockFetchColumns, fetchIndexes: mockFetchIndexes, fetchRowCount: mockFetchRowCount,
     }),
+  schemaErrorTag: (kind: string, key: string) => `${kind}:${key}`,
 }))
 
 let canViewData = true
@@ -65,6 +67,7 @@ beforeEach(() => {
   columns = new Map()
   indexes = new Map()
   rowCounts = new Map()
+  errored = new Set()
   canViewData = true
 })
 

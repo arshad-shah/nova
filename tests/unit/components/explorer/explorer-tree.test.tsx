@@ -25,6 +25,7 @@ let schemaState = {
   tables: new Map<string, SchemaTable[]>(),
   filterText: '',
   loading: false,
+  errored: new Set<string>(),
 }
 const mockFetchDatabases = vi.fn()
 const mockFetchSchemas = vi.fn()
@@ -32,6 +33,7 @@ const mockFetchTables = vi.fn()
 vi.mock('../../../../src/renderer/src/stores/schema', () => ({
   useSchemaStore: (selector: (s: typeof schemaState & { fetchDatabases: unknown; fetchSchemas: unknown; fetchTables: unknown }) => unknown) =>
     selector({ ...schemaState, fetchDatabases: mockFetchDatabases, fetchSchemas: mockFetchSchemas, fetchTables: mockFetchTables }),
+  schemaErrorTag: (kind: string, key: string) => `${kind}:${key}`,
 }))
 
 let nouns = {
@@ -77,6 +79,7 @@ beforeEach(() => {
     tables: new Map(),
     filterText: '',
     loading: false,
+    errored: new Set(),
   }
 })
 

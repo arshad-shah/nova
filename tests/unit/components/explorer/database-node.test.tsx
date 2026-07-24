@@ -31,9 +31,10 @@ vi.mock('../../../../src/renderer/src/stores/schema', () => ({
     selector({
       schemas, switchDatabase: mockSwitchDatabase, fetchSchemas: mockFetchSchemas, clearCache: mockClearCache,
       // A cached schema list renders child SchemaNodes, which read these too.
-      tables: new Map(), objects: new Map(), filterText: '',
+      tables: new Map(), objects: new Map(), filterText: '', errored: new Set(),
       fetchTables: vi.fn(), fetchSchemaObjects: vi.fn(),
     }),
+  schemaErrorTag: (kind: string, key: string) => `${kind}:${key}`,
 }))
 
 const mockAddToast = vi.fn()
