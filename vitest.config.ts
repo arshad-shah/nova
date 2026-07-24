@@ -50,10 +50,10 @@ export default defineConfig({
       // Pinned a touch below to absorb browser-timing variance run-to-run;
       // raise as behavioural tests land (see docs/testing.md).
       thresholds: {
-        statements: 75,
-        branches: 70,
-        functions: 69,
-        lines: 77,
+        statements: 77,
+        branches: 71,
+        functions: 71,
+        lines: 78,
         autoUpdate: false,
       },
     },
