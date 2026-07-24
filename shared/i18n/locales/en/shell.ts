@@ -126,6 +126,7 @@ export const shell = {
     filterOptions: 'Filter by kind and level',
     removeFilter: 'Remove filter',
     occurrences: '{count} total',
+    detailTitle: 'Entry detail',
     pause: 'Pause live updates',
     resume: 'Resume live updates',
     paused: 'Paused',

@@ -1,11 +1,15 @@
 import { useMemo, useRef, useState } from 'react'
-import { Flex, Text } from '@/primitives'
+import { Flex, Box, Text, ResizeHandle } from '@/primitives'
 import type { ActivityEntry } from '@shared/activity'
 import { useTranslation } from '@/i18n/I18nProvider'
 import { setDiagnosticsVerbose, isDiagnosticsVerbose } from '@/lib/diagnostics'
+import { useSettingsStore } from '@/stores/settings'
+import { useUiStore } from '@/stores/ui'
+import { usePanelResize } from '@/hooks/usePanelResize'
 import { type FilterToken, parseFilter, applyFilter, summarizeLevel } from '@/lib/activity/filter'
 import { ActivityFilterBar } from './ActivityFilterBar'
 import { ActivityStream } from './ActivityStream'
+import { ActivityDetail } from './ActivityDetail'
 
 /** Cap rendered rows so a long stream stays smooth; the store keeps more and
  *  export still sees every matching entry. */
@@ -26,8 +30,9 @@ export interface ActivityListProps {
   onClear: () => void
 }
 
-/** Presentational, store-free — used by the panel and Storybook. Owns its own
- *  filter/pause state so the live container stays a thin wiring layer. */
+/** Presentational, store-free (data-wise) — used by the panel and Storybook.
+ *  Owns its own filter/pause/selection state so the live container stays a thin
+ *  wiring layer. */
 export function ActivityList({ entries, onClear }: ActivityListProps) {
   const { t } = useTranslation()
   // Committed filter tokens (shown as removable chips) + the in-progress draft.
@@ -35,6 +40,19 @@ export function ActivityList({ entries, onClear }: ActivityListProps) {
   const [draft, setDraft] = useState('')
   const [paused, setPaused] = useState(false)
   const [verbose, setVerbose] = useState(isDiagnosticsVerbose())
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+
+  // The drawer height persists alongside the other layout dimensions; the
+  // splitter reuses the shared panel-resize behaviour (a mouse-down grows the
+  // stream / shrinks the drawer, hence direction -1).
+  const detailHeight = useSettingsStore((s) => s.settings.appearance.activityDetailHeight)
+  const setDetailHeight = useUiStore((s) => s.setActivityDetailHeight)
+  const resize = usePanelResize({
+    value: detailHeight, min: 120, max: 640, restoreDefault: 220, direction: -1,
+    read: () => useSettingsStore.getState().settings.appearance.activityDetailHeight,
+    commit: setDetailHeight,
+  })
+
   // While paused we render a frozen snapshot so a fast stream can't yank rows
   // out from under the reader; live entries keep accumulating in the store.
   const frozen = useRef<ActivityEntry[]>([])
@@ -67,6 +85,13 @@ export function ActivityList({ entries, onClear }: ActivityListProps) {
   const matched = useMemo(() => applyFilter(source, activeTokens), [source, activeTokens])
   const rendered = useMemo(() => matched.slice(0, MAX_RENDERED), [matched])
 
+  // The selected entry closes itself if a filter (or clear) removes it, so the
+  // drawer never shows a stale row.
+  const selected = useMemo(
+    () => (selectedId ? matched.find((e) => e.id === selectedId) ?? null : null),
+    [selectedId, matched],
+  )
+
   return (
     <Flex direction="column" className="h-full min-h-0">
       <ActivityFilterBar
@@ -86,6 +111,9 @@ export function ActivityList({ entries, onClear }: ActivityListProps) {
       />
       <ActivityStream
         entries={rendered}
+        selectedId={selected ? selectedId : null}
+        onSelect={setSelectedId}
+        onClose={() => setSelectedId(null)}
         empty={
           <Flex align="center" justify="center" className="h-full p-6">
             <Text size="sm" color="muted">
@@ -94,6 +122,20 @@ export function ActivityList({ entries, onClear }: ActivityListProps) {
           </Flex>
         }
       />
+      {selected && (
+        <>
+          <ResizeHandle
+            direction="vertical"
+            onResize={resize.onResize}
+            onResizeEnd={resize.onResizeEnd}
+            onDoubleClick={resize.onDoubleClick}
+          />
+          {/* Fixed height, but capped so the stream keeps at least ~120px. */}
+          <Box style={{ height: resize.effective, maxHeight: 'calc(100% - 120px)' }} className="min-h-0 shrink-0">
+            <ActivityDetail entry={selected} onClose={() => setSelectedId(null)} />
+          </Box>
+        </>
+      )}
     </Flex>
   )
 }

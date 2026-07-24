@@ -2,34 +2,13 @@ import React from 'react'
 import { Flex, Box, cn } from '@/primitives'
 import type { ActivityEntry } from '@shared/activity'
 import { useTranslation } from '@/i18n/I18nProvider'
-import { formatClockTime, formatClockTimeWithMillis } from '@/lib/format-time'
+import { formatClockTime } from '@/lib/format-time'
 import { KIND_META, KIND_TONE_CLASS, LEVEL_RAIL_CLASS } from '@/lib/activity/meta'
 import type { DurationScale } from '@/lib/activity/scale'
 
 /** Fixed timestamp-gutter width. An inline pixel width (the sanctioned
  *  exception for a density-independent gutter), not a design width step. */
 const GUTTER_WIDTH = 44
-
-/** A labelled field row in the expanded detail. */
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <Box className="flex gap-2">
-      <Box as="span" className="w-20 shrink-0 text-3xs uppercase tracking-wider text-text-muted">{label}</Box>
-      <Box as="span" className="flex-1 min-w-0 break-words font-mono text-3xs text-text-secondary">{children}</Box>
-    </Box>
-  )
-}
-
-function Pre({ text, tone }: { text: string; tone?: 'error' }) {
-  return (
-    <Box as="pre" className={cn(
-      'mt-1 whitespace-pre-wrap break-words font-mono text-3xs rounded p-2 max-h-56 overflow-auto bg-bg-inset',
-      tone === 'error' ? 'text-error/90' : 'text-text-secondary',
-    )}>
-      {text}
-    </Box>
-  )
-}
 
 function Timestamp({ ts }: { ts: number }) {
   return (
@@ -76,48 +55,45 @@ export interface ActivityRowProps {
   /** Panel is wide enough for one line (drops the duration bar). */
   dense: boolean
   scale: DurationScale
-  expanded: boolean
-  onToggle: () => void
+  selected: boolean
+  onSelect: () => void
 }
 
 /**
  * One activity entry. The message owns the full width; everything else is a
  * gutter. Severity moves to the panel edge (the rail); the kind, source and
  * duration sit quietly on the meta line beneath the message (or inline, when the
- * panel is wide). The whole row is the affordance — no chevron.
+ * panel is wide). The whole row is the affordance — no chevron; selecting it
+ * fills the detail drawer rather than expanding inline.
  */
-export function ActivityRow({ entry, dense, scale, expanded, onToggle }: ActivityRowProps) {
+export function ActivityRow({ entry, dense, scale, selected, onSelect }: ActivityRowProps) {
   const { t } = useTranslation()
   const { label } = KIND_META[entry.kind]
-  const metaJson = entry.metadata ? JSON.stringify(entry.metadata, null, 2) : null
-  const expandable = Boolean(entry.detail || entry.stack || metaJson || entry.source || entry.traceId)
   const durationText = entry.durationMs !== undefined ? `${Math.round(entry.durationMs)}ms` : null
   const showBar = !dense && entry.durationMs !== undefined
 
-  const activate = expandable ? onToggle : undefined
   // Severity is never colour-only: the accessible name carries level + kind.
   const accessibleName = `${entry.level} ${t(label)}: ${entry.title}`
 
   return (
     <Box
       className={cn(
-        'relative border-b border-border/50',
-        expandable && 'cursor-pointer hover:bg-hover',
-        // ~6% error wash so a failure has more visual mass than the rail alone.
-        entry.level === 'error' && 'bg-error/5',
+        'relative cursor-pointer border-b border-border/50',
+        // Selection reads as interface state (accent) at low opacity, alongside
+        // the rail; hover is a plain wash.
+        selected ? 'bg-accent/10' : 'hover:bg-hover',
+        // ~5% error wash so a failure has more visual mass than the rail alone.
+        entry.level === 'error' && !selected && 'bg-error/5',
       )}
-      role={expandable ? 'button' : undefined}
-      tabIndex={expandable ? 0 : undefined}
-      aria-expanded={expandable ? expanded : undefined}
-      aria-label={expandable ? accessibleName : undefined}
-      onClick={activate}
-      onKeyDown={
-        activate
-          ? (e: React.KeyboardEvent) => {
-              if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activate() }
-            }
-          : undefined
-      }
+      role="option"
+      aria-selected={selected}
+      tabIndex={selected ? 0 : -1}
+      data-activity-row={entry.id}
+      aria-label={accessibleName}
+      onClick={onSelect}
+      onKeyDown={(e: React.KeyboardEvent) => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect() }
+      }}
     >
       {/* Severity rail — the full-bleed 2px left edge (2px = w-0.5). */}
       <Box aria-hidden className={cn('absolute left-0 top-0 bottom-0 w-0.5', LEVEL_RAIL_CLASS[entry.level])} />
@@ -157,19 +133,6 @@ export function ActivityRow({ entry, dense, scale, expanded, onToggle }: Activit
           </>
         )}
       </Box>
-
-      {expanded && expandable && (
-        <Box className="flex flex-col gap-1.5 px-3 pb-2 pl-3">
-          <Field label={t('shell.activity.fieldTime')}>{formatClockTimeWithMillis(entry.ts)}</Field>
-          <Field label={t('shell.activity.fieldKind')}>{t(label)} · {entry.level}</Field>
-          {entry.source && <Field label={t('shell.activity.fieldSource')}>{entry.source}</Field>}
-          {entry.durationMs !== undefined && <Field label={t('shell.activity.fieldDuration')}>{Math.round(entry.durationMs)}ms</Field>}
-          {entry.traceId && <Field label={t('shell.activity.fieldTrace')}>{entry.traceId}</Field>}
-          {entry.detail && <Pre text={entry.detail} />}
-          {metaJson && <Pre text={metaJson} />}
-          {entry.stack && <Pre text={entry.stack} tone="error" />}
-        </Box>
-      )}
     </Box>
   )
 }

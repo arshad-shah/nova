@@ -91,10 +91,14 @@ describe('ActivityList', () => {
     expect(screen.getByText(/no matching activity/i)).toBeInTheDocument()
   })
 
-  it('expands an entry detail on click', () => {
+  it('opens the detail drawer on click and closes it from the drawer', () => {
     setup()
     expect(screen.queryByText('SELECT 1')).not.toBeInTheDocument()
     fireEvent.click(screen.getByText('q-one'))
+    // The detail (e.g. the SELECT text) now lives in the pinned drawer, not
+    // inline in the row.
     expect(screen.getByText('SELECT 1')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }))
+    expect(screen.queryByText('SELECT 1')).not.toBeInTheDocument()
   })
 })

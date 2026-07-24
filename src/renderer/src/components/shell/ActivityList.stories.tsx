@@ -68,3 +68,22 @@ export const FilterInteraction: Story = {
     await expect(canvas.getByText('42 row(s) · 12ms')).toBeInTheDocument()
   },
 }
+
+/** Selecting a row opens the pinned drawer without scrolling the stream, and
+ *  Escape closes it. */
+export const DrawerInteraction: Story = {
+  play: async ({ canvas }) => {
+    const list = canvas.getByRole('listbox')
+    await expect(list.scrollTop).toBe(0)
+
+    const rows = canvas.getAllByRole('option')
+    await userEvent.click(rows[0])
+    await expect(await canvas.findByRole('region', { name: 'Entry detail' })).toBeInTheDocument()
+    // Selecting a row must not scroll the stream.
+    await expect(list.scrollTop).toBe(0)
+
+    // Focus lands in the drawer on open; Escape closes it.
+    await userEvent.keyboard('{Escape}')
+    await expect(canvas.queryByRole('region', { name: 'Entry detail' })).not.toBeInTheDocument()
+  },
+}

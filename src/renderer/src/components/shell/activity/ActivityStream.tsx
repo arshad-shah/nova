@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Box } from '@/primitives'
 import type { ActivityEntry } from '@shared/activity'
+import { useTranslation } from '@/i18n/I18nProvider'
+import { clamp } from '@/lib/math'
 import { computeDurationScale } from '@/lib/activity/scale'
 import { ActivityRow } from './ActivityRow'
 
@@ -12,20 +14,25 @@ const DENSE_MIN_WIDTH = 420
 export interface ActivityStreamProps {
   /** Already filtered + capped — the rendered slice. */
   entries: ActivityEntry[]
+  selectedId: string | null
+  onSelect: (id: string) => void
+  /** Close the drawer (Escape). */
+  onClose: () => void
   /** Shown when `entries` is empty (nothing-yet vs no-match is decided upstream). */
   empty: React.ReactNode
 }
 
 /**
- * The scroll region: rows, and the panel-width measurement that drives the
- * one-line/two-line row layout. The duration scale is computed from the
- * rendered slice (not the whole store), so a bar answers "how does this compare
- * to what I'm looking at".
+ * The scroll region: rows, panel-width measurement (drives the one/two-line row
+ * layout), and keyboard selection (↑/↓ move, Esc closes). The duration scale is
+ * computed from the rendered slice, so a bar answers "how does this compare to
+ * what I'm looking at". Selecting a row never scrolls the stream (only keyboard
+ * navigation nudges the newly-selected row into view).
  */
-export function ActivityStream({ entries, empty }: ActivityStreamProps) {
+export function ActivityStream({ entries, selectedId, onSelect, onClose, empty }: ActivityStreamProps) {
+  const { t } = useTranslation()
   const ref = useRef<HTMLDivElement>(null)
   const [dense, setDense] = useState(false)
-  const [expandedId, setExpandedId] = useState<string | null>(null)
 
   useEffect(() => {
     const el = ref.current
@@ -43,8 +50,33 @@ export function ActivityStream({ entries, empty }: ActivityStreamProps) {
     [entries],
   )
 
+  const selectByOffset = (delta: number) => {
+    if (entries.length === 0) return
+    const idx = selectedId ? entries.findIndex((e) => e.id === selectedId) : -1
+    const nextId = entries[clamp(idx + delta, 0, entries.length - 1)].id
+    onSelect(nextId)
+    // Keyboard navigation keeps the selected row visible; a mouse click never
+    // scrolls the stream.
+    requestAnimationFrame(() => {
+      ref.current?.querySelector(`[data-activity-row="${nextId}"]`)?.scrollIntoView({ block: 'nearest' })
+    })
+  }
+
+  const onKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'ArrowDown') { e.preventDefault(); selectByOffset(1) }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); selectByOffset(-1) }
+    else if (e.key === 'Escape' && selectedId) { e.preventDefault(); onClose() }
+  }
+
   return (
-    <Box ref={ref} className="min-h-0 flex-1 overflow-auto">
+    <Box
+      ref={ref}
+      role={entries.length > 0 ? 'listbox' : undefined}
+      aria-label={entries.length > 0 ? t('shell.secondaryPanel.activity') : undefined}
+      tabIndex={entries.length > 0 ? 0 : undefined}
+      onKeyDown={onKeyDown}
+      className="min-h-0 flex-1 overflow-auto outline-none"
+    >
       {entries.length === 0
         ? empty
         : entries.map((e) => (
@@ -53,8 +85,8 @@ export function ActivityStream({ entries, empty }: ActivityStreamProps) {
               entry={e}
               dense={dense}
               scale={scale}
-              expanded={expandedId === e.id}
-              onToggle={() => setExpandedId((id) => (id === e.id ? null : e.id))}
+              selected={selectedId === e.id}
+              onSelect={() => onSelect(e.id)}
             />
           ))}
     </Box>

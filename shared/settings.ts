@@ -63,6 +63,9 @@ export interface AppearanceSettings {
   showBottomDock: boolean
   /** Height of the bottom dock in pixels. Clamped 120..640. */
   bottomDockHeight: number
+  /** Height of the Activity panel's detail drawer in pixels. Clamped 120..640,
+   *  and further capped at render so the stream keeps at least ~120px. */
+  activityDetailHeight: number
 }
 
 export interface EditorSettings {
@@ -215,6 +218,7 @@ export const defaultSettings: AppSettings = {
     secondarySidebarWidth: 320,
     showBottomDock: true,
     bottomDockHeight: 240,
+    activityDetailHeight: 220,
   },
   editor: {
     fontSize: 14,
