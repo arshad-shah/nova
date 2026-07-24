@@ -3,6 +3,8 @@ import { ipcMain } from 'electron'
 import type { PluginContext, Disposable, PluginIpc, BroadcastFn, ToolRegistry } from './types'
 import { broadcast as broadcastEvent } from '../../ipc/broadcast'
 import type { IpcEventMap } from '@shared/ipc'
+import { extractTraceEnvelope } from '@shared/trace'
+import { runWithTrace } from '../../activity/trace-context'
 import { DriverRegistryImpl } from './driver-registry'
 import { CommandRegistryImpl } from './command-registry'
 import { PanelRegistryImpl } from './panel-registry'
@@ -265,9 +267,13 @@ export function createPluginContext(deps: ContextDeps): PluginContext {
       if (!hasPermission(grant, PLUGIN_PERMISSION.IPC)) {
         throw new PermissionDeniedError(pluginName, PLUGIN_PERMISSION.IPC)
       }
-      ipcMain.handle(channel, (_event, ...args) =>
-        (handler as (...a: unknown[]) => unknown)(...args)
-      )
+      ipcMain.handle(channel, (_event, ...rawArgs) => {
+        // Strip the platform client's trace envelope so plugin handlers see only
+        // their declared args, and run under the ambient trace so activity the
+        // handler records correlates with the call that triggered it.
+        const { args, traceId } = extractTraceEnvelope(rawArgs)
+        return runWithTrace(traceId, () => (handler as (...a: unknown[]) => unknown)(...args))
+      })
       const disposable: Disposable = { dispose: () => ipcMain.removeHandler(channel as string) }
       subscriptions.push(disposable)
       return disposable
