@@ -7,6 +7,7 @@ import { useSettingsStore } from '@/stores/settings'
 import { useUiStore } from '@/stores/ui'
 import { usePanelResize } from '@/hooks/usePanelResize'
 import { type FilterToken, parseFilter, applyFilter, summarizeLevel } from '@/lib/activity/filter'
+import { traceTotals } from '@/lib/activity/group'
 import { ActivityFilterBar } from './ActivityFilterBar'
 import { ActivityStream } from './ActivityStream'
 import { ActivityDetail } from './ActivityDetail'
@@ -45,6 +46,8 @@ export function ActivityList({ entries, onClear }: ActivityListProps) {
   // The drawer height persists alongside the other layout dimensions; the
   // splitter reuses the shared panel-resize behaviour (a mouse-down grows the
   // stream / shrinks the drawer, hence direction -1).
+  const grouping = useSettingsStore((s) => s.settings.appearance.activityGrouping)
+  const setGrouping = useUiStore((s) => s.setActivityGrouping)
   const detailHeight = useSettingsStore((s) => s.settings.appearance.activityDetailHeight)
   const setDetailHeight = useUiStore((s) => s.setActivityDetailHeight)
   const resize = usePanelResize({
@@ -84,6 +87,9 @@ export function ActivityList({ entries, onClear }: ActivityListProps) {
   // Full match set (used for export); the rendered slice is capped below.
   const matched = useMemo(() => applyFilter(source, activeTokens), [source, activeTokens])
   const rendered = useMemo(() => matched.slice(0, MAX_RENDERED), [matched])
+  // Per-trace totals from the unfiltered source, so a group can report how many
+  // children a filter hid.
+  const totals = useMemo(() => traceTotals(source), [source])
 
   // The selected entry closes itself if a filter (or clear) removes it, so the
   // drawer never shows a stale row.
@@ -102,6 +108,8 @@ export function ActivityList({ entries, onClear }: ActivityListProps) {
         errorSummary={errorSummary}
         warnSummary={warnSummary}
         canExport={matched.length > 0}
+        grouping={grouping}
+        onToggleGrouping={() => setGrouping(!grouping)}
         onTokensChange={setTokens}
         onDraftChange={setDraft}
         onTogglePause={togglePause}
@@ -112,6 +120,8 @@ export function ActivityList({ entries, onClear }: ActivityListProps) {
       <ActivityStream
         entries={rendered}
         hiddenOlder={matched.length - rendered.length}
+        grouping={grouping}
+        traceTotals={totals}
         selectedId={selected ? selectedId : null}
         onSelect={setSelectedId}
         onClose={() => setSelectedId(null)}

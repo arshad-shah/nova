@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { expect, userEvent, fireEvent } from 'storybook/test'
 import { Button } from '@/primitives'
+import { useSettingsStore } from '@/stores/settings'
 import { ActivityList } from './ActivityList'
 import type { ActivityEntry } from '@shared/activity'
 
@@ -54,6 +55,46 @@ export const Narrow: Story = { args: { width: 280 } }
 /** A wide panel — the row collapses to one line and drops the duration bar. */
 export const Wide: Story = { args: { width: 560 } }
 export const Empty: Story = { args: { entries: [] } }
+
+// Traced entries forming three shapes: a clean group, a group whose child
+// errored (parent still succeeded), and a group with a single child. Plus a
+// bare untraced row between them.
+const GROUPED: ActivityEntry[] = [
+  { id: 'g1-ipc', ts: now - 5000, kind: 'ipc', level: 'debug', title: 'db:query · 2ms', source: 'db:query', durationMs: 2, traceId: 'trace-clean' },
+  { id: 'g1-q', ts: now - 4998, kind: 'query', level: 'success', title: '128 row(s) · 40ms', detail: 'SELECT * FROM orders', source: 'Prod', durationMs: 40, traceId: 'trace-clean' },
+  { id: 'g1-perf', ts: now - 4990, kind: 'perf', level: 'info', title: 'render 6ms', durationMs: 6, traceId: 'trace-clean' },
+  { id: 'bare1', ts: now - 4000, kind: 'connection', level: 'success', title: 'Connected to Prod', source: 'prod-1' },
+  { id: 'g2-ipc', ts: now - 3000, kind: 'ipc', level: 'debug', title: 'ai:tool · 5ms', source: 'perform_app_action', durationMs: 5, traceId: 'trace-failing' },
+  { id: 'g2-tool', ts: now - 2995, kind: 'tool-call', level: 'success', title: 'query · 210ms', source: 'query', durationMs: 210, traceId: 'trace-failing' },
+  { id: 'g2-net', ts: now - 2900, kind: 'network', level: 'error', title: 'POST provider failed', detail: 'Error: request timed out', source: 'api.example.com', durationMs: 120, traceId: 'trace-failing' },
+  { id: 'g3-conn', ts: now - 1500, kind: 'connection', level: 'success', title: 'Connect Analytics', source: 'analytics', durationMs: 88, traceId: 'trace-two' },
+  { id: 'g3-ipc', ts: now - 1495, kind: 'ipc', level: 'debug', title: 'db:connect · 90ms', source: 'db:connect', durationMs: 90, traceId: 'trace-two' },
+]
+
+/** Sets the persisted grouping flag for a story, then renders the panel. */
+function GroupedHarness({ entries, grouping }: { entries: ActivityEntry[]; grouping: boolean }) {
+  useEffect(() => {
+    useSettingsStore.getState().set('appearance.activityGrouping', grouping)
+  }, [grouping])
+  const active = useSettingsStore((s) => s.settings.appearance.activityGrouping)
+  return (
+    <div style={{ height: 480, width: 340 }} className="border border-border bg-bg-secondary">
+      {/* Wait for the flag to settle so the story shows the intended mode. */}
+      {active === grouping && <ActivityList entries={entries} onClear={() => {}} />}
+    </div>
+  )
+}
+
+/** Three trace shapes: a clean group, a group whose child errored (its rail
+ *  rolls up to error though the parent succeeded), and a one-child group. */
+export const Grouped: StoryObj<typeof GroupedHarness> = {
+  render: () => <GroupedHarness entries={GROUPED} grouping />,
+}
+
+/** The same entries with grouping off — flat chronological order, one toggle away. */
+export const GroupingOff: StoryObj<typeof GroupedHarness> = {
+  render: () => <GroupedHarness entries={GROUPED} grouping={false} />,
+}
 
 /** Typing a filter narrows the stream to matching entries as a removable token;
  *  removing the token restores the full stream. */

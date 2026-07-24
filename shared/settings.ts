@@ -66,6 +66,9 @@ export interface AppearanceSettings {
   /** Height of the Activity panel's detail drawer in pixels. Clamped 120..640,
    *  and further capped at render so the stream keeps at least ~120px. */
   activityDetailHeight: number
+  /** Group the Activity stream by trace (default on). Flat chronological order
+   *  is one toggle away. */
+  activityGrouping: boolean
 }
 
 export interface EditorSettings {
@@ -219,6 +222,7 @@ export const defaultSettings: AppSettings = {
     showBottomDock: true,
     bottomDockHeight: 240,
     activityDetailHeight: 220,
+    activityGrouping: true,
   },
   editor: {
     fontSize: 14,

@@ -57,6 +57,10 @@ export interface ActivityRowProps {
   scale: DurationScale
   selected: boolean
   onSelect: () => void
+  /** Indent one step (a group child). */
+  indent?: boolean
+  /** Replaces the duration bar (a group child shows a span bar instead). */
+  spanBar?: React.ReactNode
 }
 
 /**
@@ -66,7 +70,7 @@ export interface ActivityRowProps {
  * panel is wide). The whole row is the affordance — no chevron; selecting it
  * fills the detail drawer rather than expanding inline.
  */
-export function ActivityRow({ entry, dense, scale, selected, onSelect }: ActivityRowProps) {
+export function ActivityRow({ entry, dense, scale, selected, onSelect, indent, spanBar }: ActivityRowProps) {
   const { t } = useTranslation()
   const { label } = KIND_META[entry.kind]
   const durationText = entry.durationMs !== undefined ? `${Math.round(entry.durationMs)}ms` : null
@@ -98,7 +102,7 @@ export function ActivityRow({ entry, dense, scale, selected, onSelect }: Activit
       {/* Severity rail — the full-bleed 2px left edge (2px = w-0.5). */}
       <Box aria-hidden className={cn('absolute left-0 top-0 bottom-0 w-0.5', LEVEL_RAIL_CLASS[entry.level])} />
 
-      <Box className="py-1.5 pl-3 pr-3">
+      <Box className={cn('py-1.5 pr-3', indent ? 'pl-7' : 'pl-3')}>
         {dense ? (
           // Wide panel: single line, no duration bar.
           <Flex align="center" gap="sm" className="min-w-0">
@@ -129,7 +133,7 @@ export function ActivityRow({ entry, dense, scale, selected, onSelect }: Activit
               <Box as="span" className="flex-1" />
               {durationText && <Box as="span" className="shrink-0 font-mono tabular-nums">{durationText}</Box>}
             </Flex>
-            {showBar && <DurationBar durationMs={entry.durationMs!} scale={scale} />}
+            {spanBar ?? (showBar && <DurationBar durationMs={entry.durationMs!} scale={scale} />)}
           </>
         )}
       </Box>

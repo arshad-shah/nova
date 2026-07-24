@@ -8,7 +8,9 @@ import { computeDurationScale } from '@/lib/activity/scale'
 import {
   tailReducer, countPrepended, isAtBottom, INITIAL_TAIL,
 } from '@/lib/activity/tail'
+import { groupEntries, type StreamItem } from '@/lib/activity/group'
 import { ActivityRow } from './ActivityRow'
+import { ActivityGroup } from './ActivityGroup'
 
 /** At/above this panel width a row collapses to one line and drops its duration
  *  bar. Measured on the panel, not the viewport — the panel resizes 220–640px
@@ -20,6 +22,10 @@ export interface ActivityStreamProps {
   entries: ActivityEntry[]
   /** How many older matches were dropped by the render cap (0 when none). */
   hiddenOlder: number
+  /** Group the stream by trace (default on, from settings). */
+  grouping: boolean
+  /** Per-trace totals over the unfiltered set, for the group's hidden-child count. */
+  traceTotals: Map<string, number>
   selectedId: string | null
   onSelect: (id: string) => void
   /** Close the drawer (Escape). */
@@ -35,7 +41,7 @@ export interface ActivityStreamProps {
  * the duration scale is computed from the rendered slice; ↑/↓ move selection and
  * Esc closes the drawer. Selecting a row never scrolls the stream.
  */
-export function ActivityStream({ entries, hiddenOlder, selectedId, onSelect, onClose, empty }: ActivityStreamProps) {
+export function ActivityStream({ entries, hiddenOlder, grouping, traceTotals, selectedId, onSelect, onClose, empty }: ActivityStreamProps) {
   const { t } = useTranslation()
   const scrollRef = useRef<HTMLDivElement>(null)
   const [dense, setDense] = useState(false)
@@ -44,6 +50,12 @@ export function ActivityStream({ entries, hiddenOlder, selectedId, onSelect, onC
 
   // Display order is oldest→newest (the store keeps newest-first).
   const display = useMemo(() => [...entries].reverse(), [entries])
+
+  // Group the display list by trace, or a flat list of bare entries when off.
+  const items = useMemo<StreamItem[]>(
+    () => (grouping ? groupEntries(display, traceTotals) : display.map((entry) => ({ type: 'entry', entry }))),
+    [grouping, display, traceTotals],
+  )
 
   useEffect(() => {
     const el = scrollRef.current
@@ -131,16 +143,27 @@ export function ActivityStream({ entries, hiddenOlder, selectedId, onSelect, onC
                 {t('shell.activity.olderHidden')}
               </Box>
             )}
-            {display.map((e) => (
-              <ActivityRow
-                key={e.id}
-                entry={e}
-                dense={dense}
-                scale={scale}
-                selected={selectedId === e.id}
-                onSelect={() => onSelect(e.id)}
-              />
-            ))}
+            {items.map((item) =>
+              item.type === 'group' ? (
+                <ActivityGroup
+                  key={`group:${item.group.traceId}`}
+                  group={item.group}
+                  dense={dense}
+                  scale={scale}
+                  selectedId={selectedId}
+                  onSelect={onSelect}
+                />
+              ) : (
+                <ActivityRow
+                  key={item.entry.id}
+                  entry={item.entry}
+                  dense={dense}
+                  scale={scale}
+                  selected={selectedId === item.entry.id}
+                  onSelect={() => onSelect(item.entry.id)}
+                />
+              ),
+            )}
           </>
         )}
       </Box>

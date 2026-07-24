@@ -2,7 +2,7 @@ import React, { useRef } from 'react'
 import {
   Trash2, Download, Pause, Play, Gauge, AlertCircle, TriangleAlert, Filter, X, ListFilter,
 } from 'lucide-react'
-import { Flex, Box, cn, Button, ToggleGroup, StatusDot, Popover, Text, type StatusDotTone } from '@/primitives'
+import { Flex, Box, cn, Button, ToggleGroup, StatusDot, Popover, Text, Switch, Label, type StatusDotTone } from '@/primitives'
 import type { ActivityKind, ActivityLevel } from '@shared/activity'
 import { useTranslation } from '@/i18n/I18nProvider'
 import type { MessageKey } from '@shared/i18n'
@@ -34,6 +34,8 @@ export interface ActivityFilterBarProps {
   errorSummary: SeveritySummary
   warnSummary: SeveritySummary
   canExport: boolean
+  grouping: boolean
+  onToggleGrouping: () => void
   onTokensChange: (next: FilterToken[]) => void
   onDraftChange: (value: string) => void
   onTogglePause: () => void
@@ -58,6 +60,7 @@ export function ActivityFilterBar(props: ActivityFilterBarProps) {
   const { t } = useTranslation()
   const {
     tokens, draft, paused, verbose, errorSummary, warnSummary, canExport,
+    grouping, onToggleGrouping,
     onTokensChange, onDraftChange, onTogglePause, onToggleVerbose, onExport, onClear,
   } = props
   const inputRef = useRef<HTMLInputElement>(null)
@@ -105,6 +108,16 @@ export function ActivityFilterBar(props: ActivityFilterBarProps) {
       }
       content={
         <Box className="flex w-56 flex-col gap-2 p-2">
+          <Flex align="center" justify="between" className="gap-2">
+            <Label size="2xs" htmlFor="activity-grouping">{t('shell.activity.groupByTrace')}</Label>
+            <Switch
+              id="activity-grouping"
+              label={t('shell.activity.groupByTrace')}
+              checked={grouping}
+              onChange={onToggleGrouping}
+            />
+          </Flex>
+          <Box className="border-t border-border/60" />
           <Text size="2xs" color="muted" className="uppercase tracking-wider">{t('shell.activity.fieldKind')}</Text>
           <ToggleGroup
             wrap
