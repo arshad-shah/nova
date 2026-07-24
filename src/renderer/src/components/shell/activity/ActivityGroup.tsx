@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { ChevronRight, ChevronDown } from 'lucide-react'
-import { Flex, Box, Button, cn } from '@/primitives'
+import { Flex, Box, Button, cn, FOCUS_GLOW } from '@/primitives'
 import type { ActivityEntry } from '@shared/activity'
 import { useTranslation } from '@/i18n/I18nProvider'
 import { clamp } from '@/lib/math'
@@ -66,6 +66,7 @@ export function ActivityGroup({ group, dense, scale, selectedId, onSelect }: Act
       <Box
         className={cn(
           'relative cursor-pointer border-b border-border/50',
+          FOCUS_GLOW,
           parentSelected ? 'bg-accent/10' : 'hover:bg-hover',
           group.level === 'error' && !parentSelected && 'bg-error/5',
         )}

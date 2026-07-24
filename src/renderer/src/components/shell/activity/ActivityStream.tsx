@@ -1,6 +1,6 @@
 import React, { useEffect, useLayoutEffect, useMemo, useReducer, useRef, useState } from 'react'
 import { ArrowDown } from 'lucide-react'
-import { Box, Button, cn } from '@/primitives'
+import { Box, Button, cn, FOCUS_GLOW } from '@/primitives'
 import type { ActivityEntry } from '@shared/activity'
 import { useTranslation } from '@/i18n/I18nProvider'
 import { clamp } from '@/lib/math'
@@ -132,7 +132,7 @@ export function ActivityStream({ entries, hiddenOlder, grouping, traceTotals, se
         aria-label={isEmpty ? undefined : t('shell.secondaryPanel.activity')}
         tabIndex={isEmpty ? undefined : 0}
         onKeyDown={onKeyDown}
-        className="h-full overflow-auto outline-none"
+        className={cn('h-full overflow-auto', FOCUS_GLOW)}
       >
         {isEmpty ? (
           empty

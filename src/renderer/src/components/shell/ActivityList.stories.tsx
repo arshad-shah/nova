@@ -135,6 +135,19 @@ export const DrawerInteraction: Story = {
   },
 }
 
+/** The stream is keyboard-navigable: ArrowDown selects (opening the drawer),
+ *  Escape closes it. */
+export const KeyboardNav: Story = {
+  play: async ({ canvas }) => {
+    const list = canvas.getByRole('listbox')
+    list.focus()
+    await userEvent.keyboard('{ArrowDown}')
+    await expect(await canvas.findByRole('region', { name: 'Entry detail' })).toBeInTheDocument()
+    await userEvent.keyboard('{Escape}')
+    await expect(canvas.queryByRole('region', { name: 'Entry detail' })).not.toBeInTheDocument()
+  },
+}
+
 // A harness that appends live entries on demand, to exercise the tail pill.
 function TailHarness({ entries }: { entries: ActivityEntry[] }) {
   const [items, setItems] = useState(entries)

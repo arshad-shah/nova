@@ -1,5 +1,5 @@
 import React from 'react'
-import { Flex, Box, cn } from '@/primitives'
+import { Flex, Box, cn, FOCUS_GLOW } from '@/primitives'
 import type { ActivityEntry } from '@shared/activity'
 import { useTranslation } from '@/i18n/I18nProvider'
 import { formatClockTime } from '@/lib/format-time'
@@ -83,6 +83,7 @@ export function ActivityRow({ entry, dense, scale, selected, onSelect, indent, s
     <Box
       className={cn(
         'relative cursor-pointer border-b border-border/50',
+        FOCUS_GLOW,
         // Selection reads as interface state (accent) at low opacity, alongside
         // the rail; hover is a plain wash.
         selected ? 'bg-accent/10' : 'hover:bg-hover',

@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from 'react'
-import { Flex, Box, Text, ResizeHandle } from '@/primitives'
+import { Inbox } from 'lucide-react'
+import { Flex, Box, Button, EmptyState, ResizeHandle } from '@/primitives'
 import type { ActivityEntry } from '@shared/activity'
 import { useTranslation } from '@/i18n/I18nProvider'
 import { setDiagnosticsVerbose, isDiagnosticsVerbose } from '@/lib/diagnostics'
@@ -98,6 +99,17 @@ export function ActivityList({ entries, onClear }: ActivityListProps) {
     [selectedId, matched],
   )
 
+  // Closing the drawer returns focus to the row it came from (a11y).
+  const closeDrawer = () => {
+    const id = selectedId
+    setSelectedId(null)
+    if (id) {
+      requestAnimationFrame(() => {
+        (document.querySelector(`[data-activity-row="${id}"]`) as HTMLElement | null)?.focus()
+      })
+    }
+  }
+
   return (
     <Flex direction="column" className="h-full min-h-0">
       <ActivityFilterBar
@@ -124,12 +136,33 @@ export function ActivityList({ entries, onClear }: ActivityListProps) {
         traceTotals={totals}
         selectedId={selected ? selectedId : null}
         onSelect={setSelectedId}
-        onClose={() => setSelectedId(null)}
+        onClose={closeDrawer}
         empty={
-          <Flex align="center" justify="center" className="h-full p-6">
-            <Text size="sm" color="muted">
-              {entries.length === 0 ? t('shell.activity.empty') : t('shell.activity.noMatch')}
-            </Text>
+          <Flex align="center" justify="center" className="h-full p-4">
+            {entries.length === 0 ? (
+              // Nothing recorded yet — explain what will appear here.
+              <EmptyState
+                size="sm"
+                icon={<Inbox size={28} className="text-text-muted" />}
+                title={t('shell.activity.empty')}
+                description={t('shell.activity.emptyDescription')}
+              />
+            ) : (
+              // A filter matched nothing — offer to clear it as an action.
+              <EmptyState
+                size="sm"
+                title={t('shell.activity.noMatch')}
+                action={
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => { setTokens([]); setDraft('') }}
+                  >
+                    {t('shell.activity.clearFilters')}
+                  </Button>
+                }
+              />
+            )}
           </Flex>
         }
       />
@@ -143,7 +176,7 @@ export function ActivityList({ entries, onClear }: ActivityListProps) {
           />
           {/* Fixed height, but capped so the stream keeps at least ~120px. */}
           <Box style={{ height: resize.effective, maxHeight: 'calc(100% - 120px)' }} className="min-h-0 shrink-0">
-            <ActivityDetail entry={selected} onClose={() => setSelectedId(null)} />
+            <ActivityDetail entry={selected} onClose={closeDrawer} />
           </Box>
         </>
       )}
