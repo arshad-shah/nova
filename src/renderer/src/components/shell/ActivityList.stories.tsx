@@ -1,5 +1,7 @@
+import { useState } from 'react'
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { expect, userEvent } from 'storybook/test'
+import { expect, userEvent, fireEvent } from 'storybook/test'
+import { Button } from '@/primitives'
 import { ActivityList } from './ActivityList'
 import type { ActivityEntry } from '@shared/activity'
 
@@ -74,16 +76,64 @@ export const FilterInteraction: Story = {
 export const DrawerInteraction: Story = {
   play: async ({ canvas }) => {
     const list = canvas.getByRole('listbox')
-    await expect(list.scrollTop).toBe(0)
+    // Detach from the tail and settle at the top so the scroll position is
+    // stable (the stream auto-scrolls to the newest entry while pinned).
+    list.scrollTop = 0
+    fireEvent.scroll(list)
+    const before = list.scrollTop
 
     const rows = canvas.getAllByRole('option')
     await userEvent.click(rows[0])
     await expect(await canvas.findByRole('region', { name: 'Entry detail' })).toBeInTheDocument()
     // Selecting a row must not scroll the stream.
-    await expect(list.scrollTop).toBe(0)
+    await expect(list.scrollTop).toBe(before)
 
     // Focus lands in the drawer on open; Escape closes it.
     await userEvent.keyboard('{Escape}')
     await expect(canvas.queryByRole('region', { name: 'Entry detail' })).not.toBeInTheDocument()
+  },
+}
+
+// A harness that appends live entries on demand, to exercise the tail pill.
+function TailHarness({ entries }: { entries: ActivityEntry[] }) {
+  const [items, setItems] = useState(entries)
+  const emit = () =>
+    setItems((prev) => [
+      { id: `live-${prev.length}`, ts: now + prev.length, kind: 'log', level: 'info', title: `Live entry ${prev.length}` },
+      ...prev,
+    ])
+  // Deliberately short so the sample always overflows and can be scrolled up.
+  return (
+    <div style={{ height: 300, width: 340 }} className="flex flex-col border border-border bg-bg-secondary">
+      <Button size="sm" onClick={emit} className="m-1 shrink-0">Emit</Button>
+      <div className="min-h-0 flex-1">
+        <ActivityList entries={items} onClear={() => {}} />
+      </div>
+    </div>
+  )
+}
+
+/** Scrolling up detaches the tail; entries that arrive while detached surface a
+ *  "N new" pill that re-pins and clears on click. */
+export const TailInteraction: StoryObj<typeof TailHarness> = {
+  render: () => <TailHarness entries={SAMPLE} />,
+  play: async ({ canvas }) => {
+    const list = canvas.getByRole('listbox')
+    // Detach by scrolling up.
+    list.scrollTop = 0
+    fireEvent.scroll(list)
+
+    // Emit two entries while detached.
+    const emit = canvas.getByRole('button', { name: 'Emit' })
+    await userEvent.click(emit)
+    await userEvent.click(emit)
+
+    // The pill appears with the arrival count (its accessible name is the text).
+    const pill = await canvas.findByRole('button', { name: /2 new entries/ })
+    await expect(pill).toBeInTheDocument()
+
+    // Clicking it re-pins and clears the pill.
+    await userEvent.click(pill)
+    await expect(canvas.queryByRole('button', { name: /new entries/ })).not.toBeInTheDocument()
   },
 }

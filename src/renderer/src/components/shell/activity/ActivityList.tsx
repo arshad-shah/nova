@@ -111,6 +111,7 @@ export function ActivityList({ entries, onClear }: ActivityListProps) {
       />
       <ActivityStream
         entries={rendered}
+        hiddenOlder={matched.length - rendered.length}
         selectedId={selected ? selectedId : null}
         onSelect={setSelectedId}
         onClose={() => setSelectedId(null)}
