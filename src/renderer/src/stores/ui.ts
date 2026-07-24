@@ -62,6 +62,8 @@ interface UiState {
   setBottomDockActivePanel: (panel: BottomPanelId) => void
   toggleBottomDock: () => void
   setBottomDockHeight: (height: number) => void
+  setActivityDetailHeight: (height: number) => void
+  setActivityGrouping: (on: boolean) => void
   // Command palette — open state lives here so the keybinding, the in-app menu,
   // and the native-menu IPC event all toggle one source of truth.
   commandPaletteOpen: boolean
@@ -133,6 +135,13 @@ export const useUiStore = create<UiState>((set) => ({
   setBottomDockHeight: (height) => {
     const clamped = Math.min(640, Math.max(120, height))
     useSettingsStore.getState().set('appearance.bottomDockHeight', clamped)
+  },
+  setActivityDetailHeight: (height) => {
+    const clamped = Math.min(640, Math.max(120, height))
+    useSettingsStore.getState().set('appearance.activityDetailHeight', clamped)
+  },
+  setActivityGrouping: (on) => {
+    useSettingsStore.getState().set('appearance.activityGrouping', on)
   },
   commandPaletteOpen: false,
   setCommandPaletteOpen: (open) => set({ commandPaletteOpen: open }),

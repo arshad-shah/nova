@@ -127,19 +127,80 @@ the UI smooth:
 The panel also caps **rendered** rows (400) independently of how many the store
 keeps, while export still sees every matching entry.
 
+## Trace propagation
+
+`traceId` correlates the entries a single action causes — a query's `ipc` +
+`query` + driver + `perf` entries, or a tool call and the `network` requests it
+triggers. It is minted and threaded automatically, not by each recorder:
+
+- **Minted at the preload wire boundary** (`src/preload/index.ts`). Every
+  renderer→main `invoke` carries a freshly-minted id as a trailing **trace
+  envelope** argument (`shared/trace.ts`). The preload is the isolated-world
+  boundary, so the envelope stays a transparent transport concern — no call site
+  sees it. Each invoke is its own trace root; unrelated actions get distinct ids.
+- **Ambient on the main side** (`src/main/activity/trace-context.ts`). The IPC
+  `handle` wrapper and the plugin `ipc.handle` strip the envelope and run each
+  handler inside an `AsyncLocalStorage` scope; `ActivityLog.record` inherits the
+  ambient id when a call site sets none. `activity:*` channels are excluded, so a
+  store mutation / autosave correctly keeps **no** trace.
+- **Tool calls** get a fresh trace from the `ToolRegistry`'s injected
+  `traceRunner`, so a tool-call entry and the network entries it triggers share
+  one id — independent of any renderer invoke.
+
 ## The Activity panel
 
-`ActivityList` is presentational and store-free (used by the panel and
-Storybook); it owns its own filter/search/pause state. `ActivityPanel` is the
-thin container that wires the live store. Controls: **search** (free-text across
-title, detail, source, and serialized metadata), **kind** and **level** chips
-(multi-select; empty = show all — kind chips include the developer kinds `ipc`,
-`plugin`, `store`, `perf`), a **severity summary** (session error/warn counts;
-click to filter that level), a **verbose** toggle (turns on renderer `store` +
-`perf` capture), **pause / resume**, **export** (download the matching entries as
-`verql-activity-<ts>.json`), and **clear**. Each row expands into a **detail
-drawer** with the structured fields — timestamp, kind, level, source, duration,
-`traceId`, the `metadata` JSON, and the error `stack` when present.
+The panel lives in `src/renderer/src/components/shell/activity/` (a barrel, with
+legacy `shell/ActivityPanel` + `shell/ActivityList` shims). `ActivityPanel` is
+the thin container that wires the live store; `ActivityList` is presentational
+and store-free (used by the panel and Storybook) and owns the filter/pause/
+selection state. Pure logic lives in `src/renderer/src/lib/activity/` (`filter`,
+`group`, `scale`, `tail`, `meta`) and is unit-tested directly.
+
+- **The row** — the message owns the full width; a 2px **severity rail** on the
+  left edge carries the level (`error`/`warn`/`success`; `info`/`debug`
+  transparent) plus a ~5% error wash. A monospace timestamp gutter, the message
+  (wraps in a narrow panel, one line in a wide one), a meta line (kind glyph +
+  label tinted by the `data`/`agent`/`muted` accent, source, duration), and a 2px
+  duration hairline scaled against the slowest entry **in view** (warning past
+  the p95). Responsive to the **panel** width via a `ResizeObserver`.
+- **Filter bar** — one compact bar: an expression field whose applied filters are
+  removable tokens, a popover holding the kind/level chips and the
+  **group-by-trace** toggle, the severity pills (deduplicated distinct-title
+  count with the raw occurrence total), and verbose / pause / export / clear.
+- **Detail drawer** — selecting a row fills a resizable bottom drawer (time,
+  kind, level, source, duration, `traceId`, `detail`, `metadata`, `stack`); no
+  inline expansion, so selection never reflows the stream. Height persists as
+  `appearance.activityDetailHeight`; focus moves in on open and back on close;
+  `Esc` closes, `↑`/`↓` move selection.
+- **Tail** — newest-at-bottom, follows new entries while pinned; scrolling up
+  detaches and a "N new" pill re-pins. **Pause** keeps its frozen snapshot. The
+  400-row render cap marks its cut with an explicit "older entries hidden" row.
+- **Empty states** use the `EmptyState` primitive: nothing recorded yet, versus a
+  filter that matched nothing (which offers a **Clear filters** action).
+
+### Filter expression grammar
+
+`lib/activity/filter.ts` parses a small, space-separated expression:
+
+```
+level:error   kind:query   source:pg-main   "free text"   bareTerm
+```
+
+`level:` / `kind:` take a valid level/kind; `source:` is a case-insensitive
+substring; quotes group a value with spaces. Bare terms and unknown keys are
+free text (matched across title, detail, source, metadata) — the field never
+rejects input. OR within a key, AND across keys and free-text terms.
+
+### Trace grouping
+
+`lib/activity/group.ts` turns the filtered list into an order-stable list of
+trace groups and bare rows; grouping is on by default
+(`appearance.activityGrouping`). Untraced and single-entry traces are bare rows.
+The **parent** is the longest-running entry (tie-broken to earliest); severity
+**rolls up** so a child error shows on the group even when the parent succeeded;
+children (collapsed by default) each show a **span bar** of their offset +
+duration within the parent's window. Filters apply before grouping — a group
+appears if any entry matches, showing matching children with a hidden count.
 
 ## Data model
 
@@ -171,18 +232,22 @@ interface ActivityEntry {
 | Concern | File |
 |---------|------|
 | Shared types | `shared/activity.ts` |
+| Trace envelope (wire) | `shared/trace.ts` |
+| Ambient trace context (main) | `src/main/activity/trace-context.ts` |
 | Activity ring buffer | `src/main/activity/log.ts` |
 | Process-wide sink | `src/main/activity/recorder.ts` |
 | Traced network fetch | `src/main/activity/net.ts` |
 | IPC batcher | `src/main/activity/batcher.ts` |
 | App logger | `src/main/logging/logger.ts` |
-| IPC-trace recorder | `src/main/ipc/context.ts` |
+| IPC-trace recorder + envelope strip | `src/main/ipc/context.ts` |
+| Trace mint (preload wire boundary) | `src/preload/index.ts` |
 | Plugin-lifecycle recorder | `src/main/plugins/plugin-host.ts` |
 | Renderer diagnostics (recorder + verbose store/perf capture) | `src/renderer/src/lib/diagnostics.ts`, `src/renderer/src/lib/store-diagnostics.ts` |
-| Host wiring (provide services, stream batches, recorders, set sink) | `src/main/ipc-handlers.ts` |
+| Host wiring (services, batches, recorders, sink, tool traceRunner) | `src/main/ipc-handlers.ts` |
 | IPC channels / events | `shared/ipc.ts` (`activity:list`, `activity:clear`, `activity:record`, `activity:batch`) |
 | Renderer store | `src/renderer/src/stores/activity.ts` |
-| Activity panel UI | `src/renderer/src/components/shell/ActivityList.tsx`, `ActivityPanel.tsx` |
+| Activity panel UI | `src/renderer/src/components/shell/activity/` (barrel) |
+| Panel pure logic | `src/renderer/src/lib/activity/` (`filter`, `group`, `scale`, `tail`, `meta`) |
 
 See also: [Notifications](/develop/notifications/) for the **attention seam** (a
 separate concern — "your response is needed", not a passive record), and

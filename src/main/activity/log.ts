@@ -1,5 +1,6 @@
 import { randomUUID } from 'crypto'
 import type { ActivityEntry, ActivityKind, ActivityQuery } from '@shared/activity'
+import { getCurrentTraceId } from './trace-context'
 
 /** Read surface handed to consumers (e.g. the activity tool) via the service
  *  registry — list + live subscription, no ability to write. */
@@ -66,7 +67,10 @@ export class ActivityLog implements ActivityReader {
       durationMs: input.durationMs,
       stack: clip(input.stack),
       metadata: clipMetadata(input.metadata),
-      traceId: input.traceId,
+      // An explicit id wins; otherwise inherit the ambient trace of the action
+      // currently being handled (an IPC call, a tool call), so every entry that
+      // action causes correlates without each recorder threading the id.
+      traceId: input.traceId ?? getCurrentTraceId(),
     }
     this.entries.push(entry)
     if (this.entries.length > this.cap) {

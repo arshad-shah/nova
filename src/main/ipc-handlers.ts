@@ -21,6 +21,7 @@ import { ThemeRegistryImpl } from './plugins/sdk/theme-registry'
 import { DragDropRegistryImpl } from './plugins/sdk/drag-drop-registry'
 import { ActivityLog } from './activity/log'
 import { setActivitySink } from './activity/recorder'
+import { runWithTrace, newTraceId } from './activity/trace-context'
 import { ActivityBatcher } from './activity/batcher'
 import { createLogger } from './logging/logger'
 import { broadcast } from './ipc/broadcast'
@@ -135,6 +136,9 @@ export function registerIpcHandlers(): IpcContext {
   // from the in-app Activity panel. Exposed as a service for plugins.
   const logger = createLogger(activityLog)
   services.provide('logger', logger)
+  // Give every tool execution a fresh ambient trace so its tool-call entry and
+  // the network/db entries it triggers correlate in the Activity panel.
+  toolRegistry.setTraceRunner((fn) => runWithTrace(newTraceId(), fn))
   // Log every AI/MCP tool execution (the AI loop routes through
   // toolRegistry.execute; the MCP server records its own path below).
   toolRegistry.setActivityRecorder(({ toolId, params, success, durationMs, error }) => {
