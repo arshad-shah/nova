@@ -33,6 +33,16 @@ export const manifest: PluginManifest = {
         description: 'COUNT hint used when listing keys via SCAN.'
       },
       {
+        key: 'maxKeys',
+        title: 'Max keys to scan',
+        type: 'number',
+        default: 10000,
+        min: 100,
+        max: 1000000,
+        step: 100,
+        description: 'Upper bound on keys read when listing key prefixes or counting keys, so browsing a huge keyspace never walks it whole.'
+      },
+      {
         key: 'commandTimeoutMs',
         title: 'Command timeout (ms)',
         type: 'number',
@@ -207,17 +217,28 @@ Examples:
 - GET mykey
 - SET mykey "hello"
 - HGETALL user:1
-- KEYS user:*
+- SCAN 0 MATCH user:* COUNT 200
 - LPUSH mylist "item1"
 Multiple commands can be sent on separate lines and will be executed sequentially.
 Do not use SQL syntax. Use standard Redis commands.`
     }
   })
 
+  // Read a numeric plugin setting at adapter-creation time, coercing away a
+  // string/undefined value the settings store may hand back.
+  const numberSetting = (key: string, fallback: number): number => {
+    const raw = ctx.settings?.get<number>(key)
+    const n = typeof raw === 'number' ? raw : Number(raw)
+    return Number.isFinite(n) ? n : fallback
+  }
+
   ctx.drivers.register('redis', {
     createAdapter: (config) => {
       const { options, database } = buildRedisConnection(config as Record<string, unknown>)
-      return new RedisAdapter(options, database)
+      return new RedisAdapter(options, database, {
+        scanCount: numberSetting('scanCount', 200),
+        maxKeys: numberSetting('maxKeys', 10000),
+      })
     },
     editorLanguage: 'plaintext',
     statementSyntax: 'redis',
@@ -227,11 +248,13 @@ Do not use SQL syntax. Use standard Redis commands.`
       field: { one: 'field', many: 'fields' },
       record: { one: 'entry', many: 'entries' },
     },
-    // "Tables" are key prefixes (e.g. `user:1`,`user:2` → `user`). List the keys
-    // under the prefix instead of `GET <prefix>` (a prefix isn't itself a key, so
-    // GET returned nil — or WRONGTYPE on a non-string key). Glob metachars in the
+    // "Tables" are key prefixes (e.g. `user:1`,`user:2` → `user`). Iterate the
+    // keys under the prefix with SCAN (non-blocking) instead of `GET <prefix>` (a
+    // prefix isn't itself a key, so GET returned nil — or WRONGTYPE on a
+    // non-string key) or `KEYS` (which blocks the server). Glob metachars in the
     // prefix are escaped so a name can't expand into an unintended wildcard.
-    sampleQuery: async (prefix: string) => `KEYS ${prefix.replace(/[*?[\]\\]/g, '\\$&')}:*`,
+    sampleQuery: async (prefix: string) =>
+      `SCAN 0 MATCH ${prefix.replace(/[*?[\]\\]/g, '\\$&')}:* COUNT ${numberSetting('scanCount', 200)}`,
     getTableData,
     connectionFields: [
       { key: 'host', label: 'Host', type: 'text', required: true, default: 'localhost' },

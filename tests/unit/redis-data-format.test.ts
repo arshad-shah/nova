@@ -1,41 +1,45 @@
-// redis/data-format.ts: getTableData walks a key prefix and dispatches on
-// each key's TYPE to read it correctly (GET vs LRANGE vs SMEMBERS vs
-// HGETALL vs ZRANGE); a glob-metacharacter prefix must be escaped so a
-// "table" named e.g. "user*" can't expand into an unintended wildcard scan.
+// redis/data-format.ts: getTableData enumerates a key prefix with SCAN (never
+// the server-blocking KEYS), then reads every key on the page in TWO pipeline
+// round trips — one TYPE batch, one type-specific read batch (GET vs LRANGE vs
+// SMEMBERS vs HGETALL vs ZRANGE) — rather than two sequential awaits per key.
+// A glob-metacharacter prefix is escaped so a "table" named e.g. "user*" can't
+// expand into an unintended wildcard scan.
 //
-// Every read is dispatched as a STRUCTURED argument array through the Redis
-// command dispatcher — never an interpolated command string — so a key name
-// containing a newline or a space cannot smuggle in a second command
-// (see the "server-supplied key name" tests below and issue #211).
+// Every command is dispatched as a STRUCTURED argument array — never an
+// interpolated command string — so a key name containing a newline or a space
+// cannot smuggle in a second command (see the "server-supplied key name" tests
+// below and issue #211).
 import { describe, it, expect, vi } from 'vitest'
 import type { DbAdapter } from '../../src/main/db/adapter'
-import type { QueryResult } from '../../shared/types'
-import type { RedisArg } from '../../src/main/plugins/bundled/redis/redis-adapter'
+import type { RedisArg, RedisPipelineReply } from '../../src/main/plugins/bundled/redis/redis-adapter'
 import { getTableData, jsonExporter } from '../../src/main/plugins/bundled/redis/data-format'
 
-function rowsResult(rows: Record<string, unknown>[]): QueryResult {
-  return { rows, fields: [], rowCount: rows.length, duration: 0, affectedRows: 0 }
-}
+type PipelineFn = (commands: RedisArg[][]) => Promise<RedisPipelineReply[]>
+type ScanFn = (match: string, opts?: { max?: number }) => Promise<{ keys: string[]; truncated: boolean }>
 
-// Simulates the adapter's structured command dispatcher: switch on the leading
-// verb of the argument array and return canned per-type responses.
+// A fake dispatcher: SCAN returns the canned key list; the pipeline answers each
+// command from the per-key type/data maps, one reply per command in order.
 function fakeAdapter(keys: string[], typeOf: Record<string, string>, data: Record<string, unknown>) {
-  const command = vi.fn(async (args: RedisArg[]) => {
-    const [verb, first] = args.map(a => String(a))
-    if (verb === 'KEYS') return rowsResult(keys.map((k, i) => ({ index: i, value: k })))
-    const key = first
-    if (verb === 'TYPE') return rowsResult([{ value: typeOf[key] ?? 'string' }])
-    if (verb === 'GET') return rowsResult([{ value: data[key] }])
-    if (verb === 'LRANGE') return rowsResult((data[key] as unknown[]).map(v => ({ value: v })))
-    if (verb === 'SMEMBERS') return rowsResult((data[key] as unknown[]).map(v => ({ value: v })))
-    if (verb === 'ZRANGE') return rowsResult((data[key] as unknown[]).map(v => ({ value: v })))
-    if (verb === 'HGETALL') {
-      const hash = data[key] as Record<string, unknown>
-      return rowsResult(Object.entries(hash).map(([field, value]) => ({ field, value })))
-    }
-    throw new Error(`unexpected command ${args.join(' ')}`)
-  })
-  return { command } as unknown as DbAdapter & { command: typeof command }
+  const scanKeys = vi.fn<ScanFn>(async (_match, opts) => ({
+    keys: keys.slice(0, opts?.max ?? keys.length),
+    truncated: false,
+  }))
+  const pipeline = vi.fn<PipelineFn>(async (commands) =>
+    commands.map((args) => {
+      const [verb, key] = args.map((a) => String(a))
+      if (verb === 'TYPE') return { error: null, value: typeOf[key] ?? 'string' }
+      if (['GET', 'LRANGE', 'SMEMBERS', 'ZRANGE', 'HGETALL'].includes(verb)) {
+        return { error: null, value: data[key] }
+      }
+      return { error: new Error(`unexpected command ${args.join(' ')}`), value: null }
+    }),
+  )
+  const command = vi.fn()
+  return { command, scanKeys, pipeline } as unknown as DbAdapter & {
+    scanKeys: typeof scanKeys
+    pipeline: typeof pipeline
+    command: typeof command
+  }
 }
 
 describe('redis getTableData — type dispatch', () => {
@@ -63,47 +67,128 @@ describe('redis getTableData — type dispatch', () => {
     expect(rows[0].value).toEqual({ name: 'bob', age: '5' })
   })
 
+  it('folds a flat [field, value, …] HGETALL reply into an object too', async () => {
+    const adapter = fakeAdapter(['profile:1'], { 'profile:1': 'hash' }, { 'profile:1': ['name', 'bob', 'age', '5'] })
+    const { rows } = await getTableData(adapter, 'profile')
+    expect(rows[0].value).toEqual({ name: 'bob', age: '5' })
+  })
+
   it('reads a zset key via ZRANGE WITHSCORES', async () => {
     const adapter = fakeAdapter(['board:1'], { 'board:1': 'zset' }, { 'board:1': ['alice', '10'] })
     const { rows } = await getTableData(adapter, 'board')
     expect(rows[0].value).toEqual(['alice', '10'])
   })
 
-  it('records an unrecognized type as null value without throwing', async () => {
+  it('records an unrecognized type as null value without issuing a read', async () => {
     const adapter = fakeAdapter(['weird:1'], { 'weird:1': 'stream' }, {})
     const { rows } = await getTableData(adapter, 'weird')
     expect(rows[0]).toEqual({ key: 'weird:1', type: 'stream', value: null })
   })
 
-  it('falls back to type "unknown" when a per-key command throws mid-walk', async () => {
-    const command = vi.fn(async (args: RedisArg[]) => {
-      if (String(args[0]) === 'KEYS') return rowsResult([{ index: 0, value: 'broken:1' }])
-      throw new Error('connection reset')
-    })
-    const adapter = { command } as unknown as DbAdapter
+  it('falls back to type "unknown" when the TYPE lookup for a key errors', async () => {
+    const scanKeys = vi.fn<ScanFn>(async () => ({ keys: ['broken:1'], truncated: false }))
+    const pipeline = vi.fn<PipelineFn>(async (commands) =>
+      commands.map((args) =>
+        String(args[0]) === 'TYPE'
+          ? { error: new Error('connection reset'), value: null }
+          : { error: null, value: null },
+      ),
+    )
+    const adapter = { command: vi.fn(), scanKeys, pipeline } as unknown as DbAdapter
     const { rows } = await getTableData(adapter, 'broken')
     expect(rows).toEqual([{ key: 'broken:1', type: 'unknown', value: null }])
   })
 
+  it('marks a key "unknown" when its value read errors mid-batch', async () => {
+    const scanKeys = vi.fn<ScanFn>(async () => ({ keys: ['a:1'], truncated: false }))
+    const pipeline = vi.fn<PipelineFn>(async (commands) =>
+      commands.map((args) =>
+        String(args[0]) === 'TYPE'
+          ? { error: null, value: 'string' }
+          : { error: new Error('WRONGTYPE'), value: null },
+      ),
+    )
+    const adapter = { command: vi.fn(), scanKeys, pipeline } as unknown as DbAdapter
+    const { rows } = await getTableData(adapter, 'a')
+    expect(rows).toEqual([{ key: 'a:1', type: 'unknown', value: null }])
+  })
+
   it('escapes glob metacharacters in the table/prefix name before scanning', async () => {
-    const command = vi.fn(async () => rowsResult([]))
-    const adapter = { command } as unknown as DbAdapter
+    const adapter = fakeAdapter([], {}, {})
     await getTableData(adapter, 'user*[1]')
-    expect(command).toHaveBeenCalledWith(['KEYS', 'user\\*\\[1\\]:*'])
+    expect(adapter.scanKeys).toHaveBeenCalledWith('user\\*\\[1\\]:*', expect.anything())
   })
 
   it('declares key/type/value as its fixed column shape', async () => {
     const adapter = fakeAdapter([], {}, {})
     const { columns } = await getTableData(adapter, 'empty')
-    expect(columns.map(c => c.name)).toEqual(['key', 'type', 'value'])
-    expect(columns.find(c => c.name === 'key')?.isPrimaryKey).toBe(true)
+    expect(columns.map((c) => c.name)).toEqual(['key', 'type', 'value'])
+    expect(columns.find((c) => c.name === 'key')?.isPrimaryKey).toBe(true)
   })
 
-  it('throws if handed an adapter without a structured command dispatcher', async () => {
+  it('throws if handed an adapter without the structured command dispatcher', async () => {
     // A plain query()-only adapter is exactly the injection-prone path this
     // function must refuse; getTableData never falls back to string commands.
     const adapter = { query: vi.fn() } as unknown as DbAdapter
     await expect(getTableData(adapter, 'user')).rejects.toThrow(/command dispatcher/)
+  })
+
+  it('throws if the adapter has command() but not the scan/pipeline transport', async () => {
+    const adapter = { command: vi.fn() } as unknown as DbAdapter
+    await expect(getTableData(adapter, 'user')).rejects.toThrow(/command dispatcher/)
+  })
+})
+
+describe('redis getTableData — pipelining (round-trip count)', () => {
+  it('reads any number of keys in exactly two pipeline round trips, never one call per key', async () => {
+    const keys = Array.from({ length: 50 }, (_, i) => `user:${i}`)
+    const typeOf = Object.fromEntries(keys.map((k) => [k, 'string']))
+    const data = Object.fromEntries(keys.map((k) => [k, `v-${k}`]))
+    const adapter = fakeAdapter(keys, typeOf, data)
+
+    const { rows } = await getTableData(adapter, 'user')
+
+    expect(rows).toHaveLength(50)
+    // One SCAN, one TYPE pipeline, one read pipeline — regardless of key count.
+    expect(adapter.scanKeys).toHaveBeenCalledTimes(1)
+    expect(adapter.pipeline).toHaveBeenCalledTimes(2)
+    // The per-key single-command path is never taken.
+    expect(adapter.command).not.toHaveBeenCalled()
+  })
+})
+
+describe('redis getTableData — paging (View data / load more)', () => {
+  const keys = ['user:1', 'user:2', 'user:3', 'user:4', 'user:5']
+  const typeOf = Object.fromEntries(keys.map((k) => [k, 'string']))
+  const data = Object.fromEntries(keys.map((k) => [k, k]))
+
+  it('returns a bounded page and reports hasMore when more keys exist', async () => {
+    const adapter = fakeAdapter(keys, typeOf, data)
+    const result = await getTableData(adapter, 'user', undefined, { limit: 2, offset: 0 })
+    expect(result.rows.map((r) => r.key)).toEqual(['user:1', 'user:2'])
+    expect(result.hasMore).toBe(true)
+  })
+
+  it('pages with offset and clears hasMore on the final page', async () => {
+    const adapter = fakeAdapter(keys, typeOf, data)
+    const result = await getTableData(adapter, 'user', undefined, { limit: 2, offset: 4 })
+    expect(result.rows.map((r) => r.key)).toEqual(['user:5'])
+    expect(result.hasMore).toBe(false)
+  })
+
+  it('only scans enough keys to fill the requested page (+1 for hasMore)', async () => {
+    const adapter = fakeAdapter(keys, typeOf, data)
+    await getTableData(adapter, 'user', undefined, { limit: 2, offset: 1 })
+    // offset(1) + limit(2) + 1 = 4
+    expect(adapter.scanKeys).toHaveBeenCalledWith('user:*', { max: 4 })
+  })
+
+  it('omits hasMore on an unbounded (export) read and scans without a cap', async () => {
+    const adapter = fakeAdapter(keys, typeOf, data)
+    const result = await getTableData(adapter, 'user')
+    expect(result.rows).toHaveLength(5)
+    expect('hasMore' in result).toBe(false)
+    expect(adapter.scanKeys).toHaveBeenCalledWith('user:*', { max: Infinity })
   })
 })
 
@@ -111,42 +196,45 @@ describe('redis getTableData — server-supplied key names (injection)', () => {
   it('reads a key literally named "app\\nFLUSHALL" as a single argument, never issuing FLUSHALL', async () => {
     const malicious = 'app:cache\nFLUSHALL'
     const sent: RedisArg[][] = []
-    const command = vi.fn(async (args: RedisArg[]) => {
-      sent.push(args)
-      const verb = String(args[0])
-      if (verb === 'KEYS') return rowsResult([{ index: 0, value: malicious }])
-      if (verb === 'TYPE') return rowsResult([{ value: 'string' }])
-      if (verb === 'GET') return rowsResult([{ value: 'cached' }])
-      throw new Error(`unexpected command ${args.join(' ')}`)
+    const scanKeys = vi.fn<ScanFn>(async () => ({ keys: [malicious], truncated: false }))
+    const pipeline = vi.fn<PipelineFn>(async (commands) => {
+      sent.push(...commands)
+      return commands.map((args) => {
+        const verb = String(args[0])
+        if (verb === 'TYPE') return { error: null, value: 'string' }
+        if (verb === 'GET') return { error: null, value: 'cached' }
+        return { error: new Error(`unexpected ${args.join(' ')}`), value: null }
+      })
     })
-    const adapter = { command } as unknown as DbAdapter
+    const adapter = { command: vi.fn(), scanKeys, pipeline } as unknown as DbAdapter
 
     const { rows } = await getTableData(adapter, 'app')
 
     // The malicious key is read correctly as one key...
     expect(rows).toEqual([{ key: malicious, type: 'string', value: 'cached' }])
-    // ...and no dispatched command is FLUSHALL (nor is the newline split apart).
-    const verbs = sent.map(args => String(args[0]))
-    expect(verbs).not.toContain('FLUSHALL')
-    // TYPE and GET each received the whole key as ONE argument.
-    expect(command).toHaveBeenCalledWith(['TYPE', malicious])
-    expect(command).toHaveBeenCalledWith(['GET', malicious])
+    // ...no dispatched command is FLUSHALL (the newline never split it apart)...
+    expect(sent.map((args) => String(args[0]))).not.toContain('FLUSHALL')
+    // ...and TYPE / GET each received the whole key as ONE argument.
+    expect(sent).toContainEqual(['TYPE', malicious])
+    expect(sent).toContainEqual(['GET', malicious])
   })
 
   it('reads a key containing a space correctly (single argument, right arity)', async () => {
     const spaced = 'my key'
-    const command = vi.fn(async (args: RedisArg[]) => {
-      const verb = String(args[0])
-      if (verb === 'KEYS') return rowsResult([{ index: 0, value: spaced }])
-      if (verb === 'TYPE') return rowsResult([{ value: 'string' }])
-      if (verb === 'GET') return rowsResult([{ value: 'reachable' }])
-      throw new Error(`unexpected command ${args.join(' ')}`)
-    })
-    const adapter = { command } as unknown as DbAdapter
+    const scanKeys = vi.fn<ScanFn>(async () => ({ keys: [spaced], truncated: false }))
+    const pipeline = vi.fn<PipelineFn>(async (commands) =>
+      commands.map((args) => {
+        const verb = String(args[0])
+        if (verb === 'TYPE') return { error: null, value: 'string' }
+        if (verb === 'GET') return { error: null, value: 'reachable' }
+        return { error: new Error('unexpected'), value: null }
+      }),
+    )
+    const adapter = { command: vi.fn(), scanKeys, pipeline } as unknown as DbAdapter
 
     const { rows } = await getTableData(adapter, 'my')
     expect(rows).toEqual([{ key: spaced, type: 'string', value: 'reachable' }])
-    expect(command).toHaveBeenCalledWith(['GET', spaced])
+    expect(pipeline).toHaveBeenCalledWith(expect.arrayContaining([['GET', spaced]]))
   })
 })
 
