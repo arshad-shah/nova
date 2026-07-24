@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { ChevronDown, ChevronRight, FolderOpen, RefreshCw, GitFork, Layers, FunctionSquare, Workflow, Zap, Hash, Table2, Eye, KeySquare, Package } from 'lucide-react'
 import { useUiStore } from '@/stores/ui'
-import { useSchemaStore } from '@/stores/schema'
+import { useSchemaStore, schemaErrorTag } from '@/stores/schema'
 import { useTabsStore } from '@/stores/tabs'
 import { useToastStore } from '@/stores/toast'
 import { useClipboard } from '@/hooks/useClipboard'
@@ -13,6 +13,7 @@ import { Tooltip } from '@/primitives/surfaces/Tooltip'
 import { Box, Text, Button } from '@/primitives'
 import { TableNode } from './TableNode'
 import { ViewNode } from './ViewNode'
+import { ExplorerErrorRow } from './ExplorerErrorRow'
 import { HighlightedText } from './HighlightedText'
 import { SchemaGroup } from './schema-group/SchemaGroup'
 import { SchemaObjectGroup } from './schema-group/SchemaObjectGroup'
@@ -57,6 +58,11 @@ export function SchemaNode({ schemaName, connectionId, databaseName, depth, onEx
 
   const allTables = tables.get(tableCacheKey) ?? []
   const allObjects = objects.get(tableCacheKey) ?? []
+  const loadError = useSchemaStore(
+    (s) =>
+      s.errored.has(schemaErrorTag('tables', tableCacheKey)) ||
+      s.errored.has(schemaErrorTag('objects', tableCacheKey))
+  )
 
   const loadAll = async () => {
     if (databaseName) await switchDatabase(connectionId, databaseName)
@@ -199,7 +205,13 @@ export function SchemaNode({ schemaName, connectionId, databaseName, depth, onEx
         {/* Expanded content */}
         {isExpanded && (
           <Box>
-            {allTables.length === 0 ? (
+            {loadError && allTables.length === 0 && allObjects.length === 0 ? (
+              <ExplorerErrorRow
+                message={t('explorer.loadError.tables', { objects: nouns.object.many })}
+                onRetry={() => { loadAll().catch(() => { /* handled by store */ }) }}
+                paddingLeft={groupLabelPaddingLeft}
+              />
+            ) : allTables.length === 0 ? (
               <Text
                 as="p"
                 className="py-1 text-xs text-text-muted"

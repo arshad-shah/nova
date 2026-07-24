@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { Database } from 'lucide-react'
 import { Spinner } from '@/primitives/feedback/Spinner'
 import { useConnectionsStore } from '@/stores/connections'
-import { useSchemaStore } from '@/stores/schema'
+import { useSchemaStore, schemaErrorTag } from '@/stores/schema'
 import { EmptyState } from '@/primitives/data-display/EmptyState'
 import { Text } from '@/primitives/typography/Text'
 import { Box } from '@/primitives/layout/Box'
@@ -14,6 +14,7 @@ import { ViewNode } from './ViewNode'
 import { fuzzyMatch } from '@/lib/fuzzy-match'
 import { useDataNouns, titleCase } from '@/hooks/useDataNouns'
 import { useTranslation } from '@/i18n/I18nProvider'
+import { ExplorerErrorRow } from './ExplorerErrorRow'
 
 interface ExplorerTreeProps {
   onExportTable?: (tableName: string) => void
@@ -34,7 +35,22 @@ export function ExplorerTree({ onExportTable }: ExplorerTreeProps) {
   const fetchSchemas = useSchemaStore((s) => s.fetchSchemas)
   const fetchTables = useSchemaStore((s) => s.fetchTables)
 
+  // A failed hierarchy fetch caches nothing, so `hierarchyLoaded` stays false —
+  // without this the tree would spin forever. Surface it as retryable instead.
+  const hierarchyError = useSchemaStore(
+    (s) =>
+      activeConnectionId != null &&
+      (s.errored.has(schemaErrorTag('databases', activeConnectionId)) ||
+        s.errored.has(schemaErrorTag('schemas', activeConnectionId)))
+  )
+
   const isConnected = activeConnectionId != null && connectedIds.has(activeConnectionId)
+
+  const retryHierarchy = () => {
+    if (!activeConnectionId) return
+    fetchDatabases(activeConnectionId)
+    fetchSchemas(activeConnectionId)
+  }
 
   // Fetch databases and schemas when connection changes
   useEffect(() => {
@@ -96,6 +112,14 @@ export function ExplorerTree({ onExportTable }: ExplorerTreeProps) {
             title={t('explorer.empty.noConnection.title')}
             description={t('explorer.empty.noConnection.description')}
             icon={<Database size={32} strokeWidth={1.8} className="text-[var(--color-text-disabled)]" />}
+          />
+        </Box>
+      ) : !hierarchyLoaded && hierarchyError ? (
+        /* The hierarchy fetch failed — offer a retry instead of a dead spinner. */
+        <Box className="flex-1 flex items-start justify-stretch p-4">
+          <ExplorerErrorRow
+            message={t('explorer.loadError.hierarchy')}
+            onRetry={retryHierarchy}
           />
         </Box>
       ) : !hierarchyLoaded ? (

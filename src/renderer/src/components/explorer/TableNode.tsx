@@ -1,11 +1,12 @@
 import { useEffect } from 'react'
 import { ChevronRight, ChevronDown, Table2 } from 'lucide-react'
 import { useUiStore } from '@/stores/ui'
-import { useSchemaStore } from '@/stores/schema'
+import { useSchemaStore, schemaErrorTag } from '@/stores/schema'
 import { ContextMenu } from '@/primitives/surfaces/ContextMenu'
 import type { MenuNode } from '@/primitives/surfaces/menu/types'
 import { Badge, Box, Card, Text, Button } from '@/primitives'
 import { ColumnRow } from './ColumnRow'
+import { ExplorerErrorRow } from './ExplorerErrorRow'
 import { HighlightedText } from './HighlightedText'
 import { TableHoverActions } from './TableHoverActions'
 import { useTableNodeActions } from './useTableNodeActions'
@@ -45,6 +46,7 @@ export function TableNode({
   const fetchColumns = useSchemaStore((s) => s.fetchColumns)
   const fetchIndexes = useSchemaStore((s) => s.fetchIndexes)
   const fetchRowCount = useSchemaStore((s) => s.fetchRowCount)
+  const columnsError = useSchemaStore((s) => s.errored.has(schemaErrorTag('columns', cacheKey)))
 
   const tableColumns = columns.get(cacheKey) ?? []
   const tableIndexes = indexes.get(cacheKey) ?? []
@@ -186,7 +188,13 @@ export function TableNode({
 
         {/* Column rows */}
         <Box className="py-1">
-          {tableColumns.length === 0 ? (
+          {columnsError ? (
+            <ExplorerErrorRow
+              message={t('explorer.loadError.columns', { fields: nouns.field.many })}
+              onRetry={() => fetchColumns(connectionId, tableName, schema)}
+              paddingLeft={12}
+            />
+          ) : tableColumns.length === 0 ? (
             <Text as="p" className="px-3 py-1 text-xs text-text-secondary">
               {/* Distinguish "loaded, but this driver has no columns" (e.g. Redis)
                   from "still fetching" — otherwise schema-less drivers show a

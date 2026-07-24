@@ -111,6 +111,13 @@ headers**, which can carry secrets.
   `activity:record` IPC. This is **verbose-gated**: capture is off by default and
   costs nothing until a dev flips the Activity panel's **verbose** toggle, which
   flips the renderer's diagnostics flag.
+- **Schema fetch failures** (`src/renderer/src/stores/schema.ts`) — every schema
+  fetcher records a `store`-kind entry at level `error` (source `schema-store`)
+  when a load against a live connection fails, so an errored schema explorer is
+  visible in the stream rather than a silent empty tree. This one is **not**
+  verbose-gated — a failed fetch is an event worth surfacing unconditionally. The
+  `recordActivity` call is fire-and-forget but catches its own rejection, so
+  recording a failure can never itself become an unhandled rejection.
 
 ## Clever processing: batching & pause
 

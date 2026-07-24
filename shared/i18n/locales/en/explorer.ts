@@ -38,6 +38,13 @@ export const explorer = {
     noTables: 'No {objects}',
     cannotAccessDatabase: 'Cannot access this database',
   },
+  /** Shown when a schema fetch fails, in place of a misleading empty/loading row. */
+  loadError: {
+    generic: "Couldn't load",
+    hierarchy: "Couldn't load the database structure",
+    tables: "Couldn't load {objects}",
+    columns: "Couldn't load {fields}",
+  },
   object: {
     indexOn: 'on {parent}',
     indexOnWithType: 'on {parent} • {type}',
@@ -65,6 +72,7 @@ export const explorer = {
     viewData: 'View data',
     copySampleQuery: 'Copy sample query',
     exportTable: 'Export {object}',
+    retry: 'Retry',
   },
   menu: {
     openErDiagram: 'Open ER Diagram',

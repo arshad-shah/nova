@@ -1,6 +1,6 @@
 import { ChevronRight, ChevronDown, Eye, ExternalLink } from 'lucide-react'
 import { useUiStore } from '@/stores/ui'
-import { useSchemaStore } from '@/stores/schema'
+import { useSchemaStore, schemaErrorTag } from '@/stores/schema'
 import { useTabsStore } from '@/stores/tabs'
 import { useConnectionsStore } from '@/stores/connections'
 import { useClipboard } from '@/hooks/useClipboard'
@@ -11,6 +11,7 @@ import type { MenuNode } from '@/primitives/surfaces/menu/types'
 import { IconButton } from '@/primitives/forms/Button'
 import { Box, Text } from '@/primitives'
 import { ColumnRow } from './ColumnRow'
+import { ExplorerErrorRow } from './ExplorerErrorRow'
 import { HighlightedText } from './HighlightedText'
 import { IPC_CHANNELS } from '@shared/ipc'
 import { useTranslation } from '@/i18n/I18nProvider'
@@ -41,6 +42,7 @@ export function ViewNode({ viewName, connectionId, schema, depth, highlightQuery
   const colCacheKey = `${connectionId}:${schema}:${viewName}`
   const isExpanded = expandedTreeNodes.has(nodeKey)
   const cols = columns.get(colCacheKey) ?? []
+  const columnsError = useSchemaStore((s) => s.errored.has(schemaErrorTag('columns', colCacheKey)))
 
   async function getSampleQuery(): Promise<string> {
     try {
@@ -175,7 +177,13 @@ export function ViewNode({ viewName, connectionId, schema, depth, highlightQuery
 
         {/* Column rows */}
         <Box className="py-0.5">
-          {cols.length === 0 ? (
+          {columnsError ? (
+            <ExplorerErrorRow
+              message={t('explorer.loadError.columns', { fields: nouns.field.many })}
+              onRetry={() => fetchColumns(connectionId, viewName, schema)}
+              paddingLeft={8}
+            />
+          ) : cols.length === 0 ? (
             <Text as="p" className="text-xs px-2 py-1.5 text-text-muted">
               {t('explorer.loading.columns', { fields: nouns.field.many })}
             </Text>
