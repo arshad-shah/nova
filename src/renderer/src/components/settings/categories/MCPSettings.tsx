@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { Stack, Divider, Flex, Button, Text, Input, CodeView, Switch, Alert } from '@/primitives'
 import { useSettingsStore } from '@/stores/settings'
 import { useClipboard } from '@/hooks/useClipboard'
+import { useIsMounted } from '@/hooks/useIsMounted'
 import { useTranslation } from '@/i18n/I18nProvider'
 import { SettingRow } from '../SettingRow'
 import { PluginContributedSettings } from '../PluginContributedSettings'
@@ -24,13 +25,23 @@ export function MCPSettings() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  const isMounted = useIsMounted()
+
+  // Polled every 5s and re-run on lifecycle events, so its awaited writes can
+  // land after this settings pane closes — drop them once unmounted.
   const refresh = useCallback(async () => {
     try {
-      setStatus(await ipc.invoke(IPC_CHANNELS.MCP_STATUS) as MCPServerStatus)
-      setTools(await ipc.invoke(IPC_CHANNELS.MCP_TOOLS) as MCPToolInfo[])
-      setActivity(await ipc.invoke(IPC_CHANNELS.MCP_ACTIVITY) as MCPActivityEntry[])
+      const status = await ipc.invoke(IPC_CHANNELS.MCP_STATUS) as MCPServerStatus
+      if (!isMounted()) return
+      setStatus(status)
+      const tools = await ipc.invoke(IPC_CHANNELS.MCP_TOOLS) as MCPToolInfo[]
+      if (!isMounted()) return
+      setTools(tools)
+      const activity = await ipc.invoke(IPC_CHANNELS.MCP_ACTIVITY) as MCPActivityEntry[]
+      if (!isMounted()) return
+      setActivity(activity)
     } catch { /* */ }
-  }, [])
+  }, [isMounted])
 
   useEffect(() => {
     refresh()

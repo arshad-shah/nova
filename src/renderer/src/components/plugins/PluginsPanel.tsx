@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { includesFold } from '@/lib/fuzzy-match'
+import { useIsMounted } from '@/hooks/useIsMounted'
 import { FolderOpen, RefreshCw, Package } from 'lucide-react'
 import { useTabsStore } from '@/stores/tabs'
 import { useTranslation } from '@/i18n/I18nProvider'
@@ -33,9 +34,11 @@ export function PluginsPanel() {
   const openPluginDetail = useTabsStore(s => s.openPluginDetail)
   const openInstallPlugin = useTabsStore(s => s.openInstallPlugin)
   const activeTabId = useTabsStore(s => s.activeTabId)
+  const isMounted = useIsMounted()
   const loadPlugins = async () => {
     setLoading(true)
     const list = await ipc.invoke(IPC_CHANNELS.PLUGINS_LIST)
+    if (!isMounted()) return
     setPlugins(list)
     setLoading(false)
   }

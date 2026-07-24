@@ -241,6 +241,53 @@ describe('ConnectionSelector', () => {
     expect(mockSetTabSchema).toHaveBeenCalledWith('tab-1', 'sales')
   })
 
+  it('ignores a stale database fetch that resolves after the connection switches (regression #216)', async () => {
+    // Begin a fetch for connection A, switch to B before it settles, then let
+    // A's promise resolve. A's late response must not populate B's selector or
+    // auto-select one of A's databases on the current tab.
+    let resolveA!: (dbs: string[]) => void
+    const aPending = new Promise<string[]>((r) => {
+      resolveA = r
+    })
+    mockFetchDatabases.mockImplementation((id: string) =>
+      id === 'conn-1' ? aPending : Promise.resolve(['bravo', 'charlie']),
+    )
+
+    // `database` is unset so the effect's auto-default branch runs and would
+    // call setTabDatabase with the resolved list's first entry.
+    const { rerender } = render(
+      <ConnectionSelector
+        tabId="tab-1"
+        connectionId="conn-1"
+        database={undefined}
+        schema="public"
+        caps={CAPS_WITH_SWITCH}
+      />,
+    )
+    await waitFor(() => expect(mockFetchDatabases).toHaveBeenCalledWith('conn-1'))
+
+    // Switch to connection B before A's fetch settles.
+    rerender(
+      <ConnectionSelector
+        tabId="tab-1"
+        connectionId="conn-2"
+        database={undefined}
+        schema="public"
+        caps={CAPS_WITH_SWITCH}
+      />,
+    )
+    await waitFor(() => expect(mockSetTabDatabase).toHaveBeenCalledWith('tab-1', 'bravo'))
+
+    // Now let A's stale fetch resolve with a disjoint set.
+    resolveA(['alpha-stale', 'omega-stale'])
+    await aPending
+
+    // The stale resolution must be dropped: no tab database from A's list, and
+    // B's default (bravo) stands.
+    expect(mockSetTabDatabase).not.toHaveBeenCalledWith('tab-1', 'alpha-stale')
+    expect(mockSetTabDatabase).not.toHaveBeenCalledWith('tab-1', 'omega-stale')
+  })
+
   it('only one of the three menus is open at a time', async () => {
     const user = userEvent.setup()
     renderSelector({ database: 'app', schema: 'public' })

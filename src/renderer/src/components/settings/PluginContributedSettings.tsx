@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Box, Divider, Stack, Text, Input, NumberInput, PasswordInput, Select, Switch } from '@/primitives'
+import { useIsMounted } from '@/hooks/useIsMounted'
 import { useTranslation } from '@/i18n/I18nProvider'
 import { SettingRow } from './SettingRow'
 import { IPC_CHANNELS, IPC_EVENTS } from '@shared/ipc'
@@ -36,15 +37,17 @@ interface Props {
 export function PluginContributedSettings({ category }: Props) {
   const { t } = useTranslation()
   const [contributions, setContributions] = useState<PluginContribution[]>([])
+  const isMounted = useIsMounted()
 
+  // Re-run on plugin lifecycle events, which can fire after this pane unmounts.
   const reload = useCallback(async () => {
     try {
       const result = await ipc.invoke(IPC_CHANNELS.PLUGINS_GET_CATEGORIZED_SETTINGS, category)
-      setContributions(result)
+      if (isMounted()) setContributions(result)
     } catch {
-      setContributions([])
+      if (isMounted()) setContributions([])
     }
-  }, [category])
+  }, [category, isMounted])
 
   useEffect(() => {
     reload()

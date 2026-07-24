@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Database, ChevronDown, Layers, HardDrive } from 'lucide-react'
+import { useAsyncEffect } from '@/hooks/useAsyncEffect'
 import { useConnectionsStore } from '@/stores/connections'
 import { useSchemaStore } from '@/stores/schema'
 import { useTabsStore } from '@/stores/tabs'
@@ -48,42 +49,45 @@ export function ConnectionSelector({ tabId, connectionId, database, schema, caps
   const canSwitchDatabase = Boolean(caps?.databaseSwitch?.supported)
   const hasMultipleDatabases = databaseList.length > 1 && canSwitchDatabase
 
-  // Fetch databases when connection changes
-  useEffect(() => {
+  // Fetch databases when connection changes. Guarded so a fetch for a
+  // just-switched-away connection can't land late and populate this selector
+  // with the wrong connection's databases.
+  useAsyncEffect(async (isCancelled) => {
     if (!connectionId || !connectedIds.has(connectionId)) {
       setDatabaseList([])
       return
     }
 
-    fetchDatabases(connectionId).then(dbs => {
-      setDatabaseList(dbs)
-      // Auto-set default database if none selected and multi-DB
-      if (!database && dbs.length > 0) {
-        const conn = connections.find(c => c.id === connectionId)
-        const defaultDb = conn?.database && dbs.includes(conn.database) ? conn.database : dbs[0]
-        setTabDatabase(tabId, defaultDb)
-      }
-    })
+    const dbs = await fetchDatabases(connectionId)
+    if (isCancelled()) return
+    setDatabaseList(dbs)
+    // Auto-set default database if none selected and multi-DB
+    if (!database && dbs.length > 0) {
+      const conn = connections.find(c => c.id === connectionId)
+      const defaultDb = conn?.database && dbs.includes(conn.database) ? conn.database : dbs[0]
+      setTabDatabase(tabId, defaultDb)
+    }
   }, [connectionId, connectedIds])
 
-  // Fetch schemas when connection or database changes
-  useEffect(() => {
+  // Fetch schemas when connection or database changes (same stale-guard).
+  useAsyncEffect(async (isCancelled) => {
     if (!connectionId || !connectedIds.has(connectionId)) {
       setSchemaList([])
       return
     }
 
-    fetchSchemas(connectionId, database ?? undefined).then(async (s) => {
-      setSchemaList(s)
-      // Auto-set default schema if none selected. The driver decides which
-      // schema to prefer via its capability spec — the renderer is generic.
-      if (!schema && s.length > 0) {
-        const conn = connections.find(c => c.id === connectionId)
-        const caps = conn ? await fetchCaps(conn.type) : null
-        const defaultSchema = pickDefaultSchema(caps ?? {}, s, conn?.database)
-        if (defaultSchema) setTabSchema(tabId, defaultSchema)
-      }
-    })
+    const s = await fetchSchemas(connectionId, database ?? undefined)
+    if (isCancelled()) return
+    setSchemaList(s)
+    // Auto-set default schema if none selected. The driver decides which
+    // schema to prefer via its capability spec — the renderer is generic.
+    if (!schema && s.length > 0) {
+      const conn = connections.find(c => c.id === connectionId)
+      const caps = conn ? await fetchCaps(conn.type) : null
+      if (isCancelled()) return
+      const defaultSchema = pickDefaultSchema(caps ?? {}, s, conn?.database)
+      if (defaultSchema) setTabSchema(tabId, defaultSchema)
+    }
   }, [connectionId, database, connectedIds])
 
   const handleSelectConnection = async (id: string) => {

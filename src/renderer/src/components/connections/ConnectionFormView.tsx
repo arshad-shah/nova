@@ -1,4 +1,5 @@
-import { useState, useEffect, type FormEvent } from 'react'
+import { useState, type FormEvent } from 'react'
+import { useAsyncEffect } from '@/hooks/useAsyncEffect'
 import { parseAppError } from '@/lib/db-error'
 import { ConnectionTestButton } from './ConnectionTestButton'
 import { useConnectionsStore } from '@/stores/connections'
@@ -57,9 +58,16 @@ export function ConnectionFormView({ tabId, editingId }: Props) {
     ...(existingProfile ?? {})
   })
 
-  useEffect(() => {
-    ipc.invoke(IPC_CHANNELS.PLUGINS_CONNECTION_FIELDS).then(setPluginDrivers).catch(() => { })
-    ipc.invoke(IPC_CHANNELS.PLUGINS_MIDDLEWARE_FIELDS).then(setMiddlewareFields).catch(() => { })
+  useAsyncEffect(async (isCancelled) => {
+    try {
+      const [drivers, middleware] = await Promise.all([
+        ipc.invoke(IPC_CHANNELS.PLUGINS_CONNECTION_FIELDS),
+        ipc.invoke(IPC_CHANNELS.PLUGINS_MIDDLEWARE_FIELDS),
+      ])
+      if (isCancelled()) return
+      setPluginDrivers(drivers)
+      setMiddlewareFields(middleware)
+    } catch { /* best-effort metadata read */ }
   }, [])
 
   const allTypes = pluginDrivers.map(driverTypeOption)

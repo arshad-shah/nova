@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import { Box, Button } from '@/primitives'
+import { useIsMounted } from '@/hooks/useIsMounted'
 import { useUiStore } from '@/stores/ui'
 import { SETTINGS_CATEGORIES, type SettingsCategoryDef } from '@/lib/settings-categories'
 import { IPC_CHANNELS, IPC_EVENTS } from '@shared/ipc'
@@ -22,18 +23,20 @@ export function SettingsCategoryNav({ categories }: NavProps = {}) {
   const activeCategory = useUiStore((s) => s.activeSettingsCategory)
   const setActive = useUiStore((s) => s.setActiveSettingsCategory)
   const [activePlugins, setActivePlugins] = useState<Set<string>>(new Set())
+  const isMounted = useIsMounted()
 
+  // Re-run on plugin lifecycle events, which can fire after this nav unmounts.
   const reload = useCallback(async () => {
     try {
       const list = await ipc.invoke(IPC_CHANNELS.PLUGINS_LIST) as PluginInfo[]
       const active = new Set(
         list.filter((p) => p.status.state === 'active' || p.status.state === 'degraded').map((p) => p.name)
       )
-      setActivePlugins(active)
+      if (isMounted()) setActivePlugins(active)
     } catch {
-      setActivePlugins(new Set())
+      if (isMounted()) setActivePlugins(new Set())
     }
-  }, [])
+  }, [isMounted])
 
   useEffect(() => {
     reload()
