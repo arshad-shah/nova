@@ -16,15 +16,13 @@ import { useTranslation } from '@/i18n/I18nProvider'
 export function TabBar() {
   const { t } = useTranslation()
   const { copy } = useClipboard()
-  const {
-    tabs,
-    activeTabId,
-    setActiveTab,
-    closeTab,
-    addQueryTab,
-    reorderTabs,
-    duplicateTab,
-  } = useTabsStore()
+  const tabs = useTabsStore(s => s.tabs)
+  const activeTabId = useTabsStore(s => s.activeTabId)
+  const setActiveTab = useTabsStore(s => s.setActiveTab)
+  const closeTab = useTabsStore(s => s.closeTab)
+  const addQueryTab = useTabsStore(s => s.addQueryTab)
+  const reorderTabs = useTabsStore(s => s.reorderTabs)
+  const duplicateTab = useTabsStore(s => s.duplicateTab)
   const activeConnectionId = useConnectionsStore(s => s.activeConnectionId)
   const activeProfile = useActiveProfile()
 

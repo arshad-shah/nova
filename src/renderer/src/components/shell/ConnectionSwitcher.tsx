@@ -18,8 +18,11 @@ interface ConnectionSwitcherProps {
 
 export function ConnectionSwitcher({ isOpen, onClose, onNewConnection }: ConnectionSwitcherProps) {
   const { t } = useTranslation()
-  const { connections, activeConnectionId, connectedIds, setActiveConnection, connect } =
-    useConnectionsStore()
+  const connections = useConnectionsStore(s => s.connections)
+  const activeConnectionId = useConnectionsStore(s => s.activeConnectionId)
+  const connectedIds = useConnectionsStore(s => s.connectedIds)
+  const setActiveConnection = useConnectionsStore(s => s.setActiveConnection)
+  const connect = useConnectionsStore(s => s.connect)
   const [filter, setFilter] = useState('')
   const panelRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)

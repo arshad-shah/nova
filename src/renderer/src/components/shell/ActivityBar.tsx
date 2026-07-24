@@ -21,7 +21,9 @@ const topItems: { id: ActivityPanel; icon: typeof Database; labelKey: MessageKey
 
 export function ActivityBar() {
   const { t } = useTranslation()
-  const { activePanel, sidebarVisible, setActivePanel } = useUiStore()
+  const activePanel = useUiStore(s => s.activePanel)
+  const sidebarVisible = useUiStore(s => s.sidebarVisible)
+  const setActivePanel = useUiStore(s => s.setActivePanel)
   const openSettings = useTabsStore((s) => s.openSettings)
   const activeTabType = useTabsStore((s) => s.tabs.find((t) => t.id === s.activeTabId)?.type)
   const activityBarContributions = usePluginUIStore(selectContributions('activityBar'))

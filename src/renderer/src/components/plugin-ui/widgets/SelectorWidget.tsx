@@ -11,7 +11,8 @@ interface Props {
 
 export function SelectorWidgetRenderer({ widget, pluginId }: Props) {
   const activeConnectionId = useConnectionsStore((s) => s.activeConnectionId)
-  const { resolveOptions, executeAction } = usePluginUIStore()
+  const resolveOptions = usePluginUIStore(s => s.resolveOptions)
+  const executeAction = usePluginUIStore(s => s.executeAction)
   const [options, setOptions] = useState(widget.options ?? [])
   const [value, setValue] = useState(widget.value ?? '')
   const [loading, setLoading] = useState(false)

@@ -20,7 +20,9 @@ interface Props {
 }
 
 export function QueryPanel({ tab }: Props) {
-  const { updateTabSql, setTabIsolation, setTabReadOnly } = useTabsStore()
+  const updateTabSql = useTabsStore(s => s.updateTabSql)
+  const setTabIsolation = useTabsStore(s => s.setTabIsolation)
+  const setTabReadOnly = useTabsStore(s => s.setTabReadOnly)
   const connections = useConnectionsStore(s => s.connections)
   const dbType = tab.connectionId ? connections.find(c => c.id === tab.connectionId)?.type : undefined
 

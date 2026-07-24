@@ -21,7 +21,8 @@ export function ERDiagram({ connectionId, schema }: Props) {
   const [diagram, setDiagram] = useState<Diagram>(EMPTY)
   const [loading, setLoading] = useState(true)
   const [direction, setDirection] = useState<'LR' | 'TB'>('LR')
-  const { fetchTables, fetchColumns } = useSchemaStore()
+  const fetchTables = useSchemaStore(s => s.fetchTables)
+  const fetchColumns = useSchemaStore(s => s.fetchColumns)
 
   useEffect(() => {
     let cancelled = false

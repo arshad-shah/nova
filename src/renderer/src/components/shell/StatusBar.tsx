@@ -14,7 +14,8 @@ import {
 } from './status-bar'
 
 export function StatusBar() {
-  const { activeConnectionId, connectedIds } = useConnectionsStore()
+  const activeConnectionId = useConnectionsStore(s => s.activeConnectionId)
+  const connectedIds = useConnectionsStore(s => s.connectedIds)
   const active = useActiveProfile()
   const isConnected = activeConnectionId ? connectedIds.has(activeConnectionId) : false
 
