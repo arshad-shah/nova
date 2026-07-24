@@ -32,13 +32,14 @@ const mockSetTabExecuting = vi.fn()
 const mockSetTabResults = vi.fn()
 const mockSetTabError = vi.fn()
 const mockSetTabTxnStatus = vi.fn()
+const tabsState = {
+  setTabExecuting: mockSetTabExecuting,
+  setTabResults: mockSetTabResults,
+  setTabError: mockSetTabError,
+  setTabTxnStatus: mockSetTabTxnStatus,
+}
 vi.mock('../../../../src/renderer/src/stores/tabs', () => ({
-  useTabsStore: () => ({
-    setTabExecuting: mockSetTabExecuting,
-    setTabResults: mockSetTabResults,
-    setTabError: mockSetTabError,
-    setTabTxnStatus: mockSetTabTxnStatus,
-  }),
+  useTabsStore: (selector: (s: typeof tabsState) => unknown) => selector(tabsState),
 }))
 
 const mockSetBottomDockActivePanel = vi.fn()
