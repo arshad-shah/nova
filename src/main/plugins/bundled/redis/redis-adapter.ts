@@ -10,6 +10,21 @@ export interface CommandResult {
 /** A single Redis command argument. Numbers are stringified at dispatch. */
 export type RedisArg = string | number
 
+/** One reply from a pipelined command: either an error or a value, never both. */
+export interface RedisPipelineReply {
+  error: Error | null
+  value: unknown
+}
+
+/** Runtime limits for the key-scanning paths, sourced from plugin settings. */
+export interface RedisScanLimits {
+  /** `COUNT` hint handed to every `SCAN` (batch size, not a result cap). */
+  scanCount?: number
+  /** Upper bound on keys collected by an unbounded scan (getTables/getRowCount),
+   *  so deriving prefixes or a count can never walk an entire huge keyspace. */
+  maxKeys?: number
+}
+
 /**
  * The structured-command escape hatch driver code (getTableData, …) uses to run
  * Redis commands without going through the string-parsing `query()`. Arguments
@@ -19,6 +34,22 @@ export type RedisArg = string | number
  */
 export interface RedisCommandDispatcher {
   command(args: RedisArg[]): Promise<QueryResult>
+  /**
+   * Non-blocking, bounded key enumeration via `SCAN` (`scanStream`) — never
+   * `KEYS`, which is O(N) over the whole keyspace and blocks the server for its
+   * duration. Honours the `scanCount` setting as the `COUNT` hint, de-duplicates
+   * keys a cursor may revisit, and stops at `max` (default: the `maxKeys` limit),
+   * reporting `truncated` when it hit the bound instead of exhausting the scan.
+   */
+  scanKeys(match: string, opts?: { max?: number }): Promise<{ keys: string[]; truncated: boolean }>
+  /**
+   * Run many commands in a single round trip via an ioredis pipeline. Each
+   * argument array is sent verbatim (never re-parsed), so a server-supplied key
+   * name is injection-safe here exactly as it is through `command()`. Returns one
+   * reply per command, in order, so the caller can handle per-command errors
+   * without one bad key failing the whole batch.
+   */
+  pipeline(commands: RedisArg[][]): Promise<RedisPipelineReply[]>
 }
 
 /**
@@ -184,14 +215,23 @@ export function formatRedisResult(results: CommandResult[]): QueryResult {
   return { rows, fields, rowCount: rows.length, duration, affectedRows }
 }
 
+/** Default `COUNT` hint for `SCAN` when the plugin setting is absent. */
+const DEFAULT_SCAN_COUNT = 200
+/** Default ceiling for an unbounded scan (getTables/getRowCount) when unset. */
+const DEFAULT_MAX_KEYS = 10000
+
 export class RedisAdapter implements DbAdapter, RedisCommandDispatcher {
   private client: Redis | null = null
   private readonly connectionOptions: RedisOptions | string
   private currentDatabase: number
+  private readonly scanCount: number
+  private readonly maxKeys: number
 
-  constructor(options: RedisOptions | string, database = 0) {
+  constructor(options: RedisOptions | string, database = 0, limits: RedisScanLimits = {}) {
     this.connectionOptions = options
     this.currentDatabase = database
+    this.scanCount = limits.scanCount ?? DEFAULT_SCAN_COUNT
+    this.maxKeys = limits.maxKeys ?? DEFAULT_MAX_KEYS
   }
 
   async connect(): Promise<void> {
@@ -265,10 +305,55 @@ export class RedisAdapter implements DbAdapter, RedisCommandDispatcher {
     return formatRedisResult([await this.callCommand(args)])
   }
 
+  /**
+   * Enumerate keys matching `match` with `SCAN` (never `KEYS`). `scanStream`
+   * iterates the keyspace in `scanCount`-sized batches without blocking the
+   * server; we de-duplicate keys a cursor can legitimately return more than once
+   * and stop at `max`, tearing the stream down early rather than draining a
+   * multi-million-key keyspace. `truncated` tells the caller the bound was hit.
+   */
+  async scanKeys(match: string, opts: { max?: number } = {}): Promise<{ keys: string[]; truncated: boolean }> {
+    if (!this.client) throw new Error('Not connected')
+    const max = opts.max ?? this.maxKeys
+    const stream = this.client.scanStream({ match, count: this.scanCount })
+    const seen = new Set<string>()
+    let truncated = false
+    try {
+      for await (const batch of stream as AsyncIterable<string[]>) {
+        for (const key of batch) {
+          seen.add(key)
+          if (seen.size >= max) { truncated = true; break }
+        }
+        if (truncated) break
+      }
+    } finally {
+      stream.destroy()
+    }
+    return { keys: Array.from(seen), truncated }
+  }
+
+  /**
+   * Dispatch many commands in one pipeline round trip. Argument arrays are sent
+   * to ioredis verbatim (never tokenised), so server-supplied key names stay
+   * injection-safe. Returns one `{ error, value }` per command so a single bad
+   * key surfaces as its own error instead of aborting the whole batch.
+   */
+  async pipeline(commands: RedisArg[][]): Promise<RedisPipelineReply[]> {
+    if (!this.client) throw new Error('Not connected')
+    if (commands.length === 0) return []
+    const stringified = commands.map(args => args.map(a => String(a)))
+    const replies = await this.client.pipeline(stringified).exec()
+    // exec() resolves to null only when the pipeline itself could not run.
+    if (!replies) return commands.map(() => ({ error: new Error('Pipeline execution failed'), value: null }))
+    return replies.map(([error, value]) => ({ error: (error as Error | null) ?? null, value }))
+  }
+
   async getTables(_schema?: string): Promise<SchemaTable[]> {
     if (!this.client) throw new Error('Not connected')
-    // Redis doesn't have tables — return key patterns as pseudo-tables
-    const keys = await this.client.keys('*')
+    // Redis doesn't have tables — derive pseudo-tables from key prefixes. Sample
+    // the keyspace with a bounded SCAN (never KEYS *): enough to surface the
+    // prefixes in use without walking every key on a huge instance.
+    const { keys } = await this.scanKeys('*')
     const prefixes = new Set<string>()
     for (const key of keys) {
       const parts = key.split(':')
@@ -297,7 +382,13 @@ export class RedisAdapter implements DbAdapter, RedisCommandDispatcher {
 
   async getRowCount(table: string, _schema?: string): Promise<number> {
     if (!this.client) throw new Error('Not connected')
-    const keys = await this.client.keys(`${table}:*`)
+    // Count keys under the prefix with a bounded, non-blocking SCAN instead of
+    // `KEYS prefix:*` (which blocks the server, and fired once per explorer node).
+    // The count is capped at `maxKeys`: on a prefix larger than the cap this is a
+    // lower bound, not an exact total — the alternative is a full keyspace walk
+    // per node, which is exactly the DoS this removes.
+    const escaped = table.replace(/[*?[\]\\]/g, '\\$&')
+    const { keys } = await this.scanKeys(`${escaped}:*`)
     return keys.length
   }
 

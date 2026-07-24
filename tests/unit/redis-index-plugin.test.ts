@@ -65,11 +65,11 @@ describe('redis driver descriptor', () => {
     })
   })
 
-  it('sampleQuery escapes glob metacharacters in the prefix before building KEYS', async () => {
+  it('sampleQuery escapes glob metacharacters in the prefix and uses SCAN, not KEYS', async () => {
     const { drivers } = setup()
     const descriptor = drivers.get('redis')!
     const sample = await descriptor.sampleQuery!('user*[1]')
-    expect(sample).toBe('KEYS user\\*\\[1\\]:*')
+    expect(sample).toBe('SCAN 0 MATCH user\\*\\[1\\]:* COUNT 200')
   })
 
   it('editorLanguage is plaintext, not sql — Redis commands are not SQL', () => {

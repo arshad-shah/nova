@@ -1,8 +1,7 @@
 import type { DbAdapter } from '../../../db/adapter'
-import type { SchemaColumn } from '@shared/types'
-import type { RedisCommandDispatcher } from './redis-adapter'
+import type { SchemaColumn, TableDataOptions, TableDataResult } from '@shared/types'
+import type { RedisArg, RedisCommandDispatcher } from './redis-adapter'
 import type { RegisteredExporter } from '../../sdk/exporter-registry'
-import type { RegisteredImporter } from '../../sdk/importer-registry'
 
 /**
  * In Redis, "tables" are key prefixes. `getTableData` walks every key matching
@@ -21,65 +20,101 @@ function escapeRedisGlob(s: string): string {
  */
 function asRedisDispatcher(adapter: DbAdapter): RedisCommandDispatcher {
   const candidate = adapter as Partial<RedisCommandDispatcher>
-  if (typeof candidate.command !== 'function') {
+  if (
+    typeof candidate.command !== 'function' ||
+    typeof candidate.scanKeys !== 'function' ||
+    typeof candidate.pipeline !== 'function'
+  ) {
     throw new Error('Redis getTableData requires the RedisAdapter command dispatcher')
   }
   return candidate as RedisCommandDispatcher
 }
 
+/** Build the type-specific read for a key, or `null` for a type we can't render. */
+function readCommandFor(type: string, key: string): RedisArg[] | null {
+  switch (type) {
+    case 'string': return ['GET', key]
+    case 'list': return ['LRANGE', key, '0', '-1']
+    case 'set': return ['SMEMBERS', key]
+    case 'hash': return ['HGETALL', key]
+    case 'zset': return ['ZRANGE', key, '0', '-1', 'WITHSCORES']
+    default: return null
+  }
+}
+
+/** Fold a HGETALL reply into a plain object. ioredis returns an object for a
+ *  pipelined HGETALL, but tolerate a flat `[field, value, …]` array too. */
+function foldHash(reply: unknown): Record<string, unknown> {
+  if (Array.isArray(reply)) {
+    const obj: Record<string, unknown> = {}
+    for (let i = 0; i + 1 < reply.length; i += 2) obj[String(reply[i])] = reply[i + 1]
+    return obj
+  }
+  return (reply ?? {}) as Record<string, unknown>
+}
+
 export async function getTableData(
   adapter: DbAdapter,
   table: string,
-  _schema?: string
-): Promise<{ rows: Record<string, unknown>[]; columns: SchemaColumn[] }> {
+  _schema?: string,
+  options?: TableDataOptions,
+): Promise<TableDataResult> {
   const redis = asRedisDispatcher(adapter)
-  const escaped = escapeRedisGlob(table)
-  // Dispatch structured argument arrays, NOT interpolated command strings. Key
-  // names come back from the server and are binary-safe — a key literally named
-  // "app\nFLUSHALL" would, if spliced into a `query()` string, be re-tokenised
-  // into a second command (stored command injection). Passing each argument as
-  // its own array element closes that hole: ioredis sends it verbatim and never
-  // re-parses it.
-  const keysResult = await redis.command(['KEYS', `${escaped}:*`])
-  const keys = keysResult.rows.map(r => String(r.value ?? r['0'] ?? ''))
-    .filter(k => k.length > 0)
-  const rows: Record<string, unknown>[] = []
-  for (const key of keys) {
-    try {
-      const typeRes = await redis.command(['TYPE', key])
-      const type = String(typeRes.rows[0]?.value ?? 'string')
-      let value: unknown
-      switch (type) {
-        case 'string':
-          value = (await redis.command(['GET', key])).rows[0]?.value
-          break
-        case 'list':
-          value = (await redis.command(['LRANGE', key, '0', '-1'])).rows.map(r => r.value)
-          break
-        case 'set':
-          value = (await redis.command(['SMEMBERS', key])).rows.map(r => r.value)
-          break
-        case 'hash':
-          value = (await redis.command(['HGETALL', key])).rows.reduce(
-            (acc, r) => ({ ...acc, [String(r.field)]: r.value }), {})
-          break
-        case 'zset':
-          value = (await redis.command(['ZRANGE', key, '0', '-1', 'WITHSCORES'])).rows.map(r => r.value)
-          break
-        default:
-          value = null
-      }
-      rows.push({ key, type, value })
-    } catch {
-      rows.push({ key, type: 'unknown', value: null })
+  const pattern = `${escapeRedisGlob(table)}:*`
+
+  // Enumerate keys with SCAN, never KEYS. The browse path passes a `limit`, so
+  // we only need enough keys to fill the page (+1 to detect `hasMore`); the
+  // export path (no limit) reads the whole prefix — still via non-blocking SCAN.
+  const limit = options?.limit
+  const offset = options?.offset ?? 0
+  const scanMax = limit == null ? Infinity : offset + limit + 1
+  const { keys: scanned } = await redis.scanKeys(pattern, { max: scanMax })
+  // SCAN has no ordering guarantee and a cursor can revisit keys; sort so paging
+  // (`offset`/`limit` across successive "load more" calls) is deterministic.
+  scanned.sort()
+  const page = limit == null ? scanned : scanned.slice(offset, offset + limit)
+  const hasMore = limit != null && scanned.length > offset + limit
+
+  // Read every key in the page in TWO pipeline round trips — one TYPE batch, one
+  // type-specific read batch — instead of two sequential awaits per key. Key
+  // names are passed as structured argument arrays, so a key literally named
+  // "app\nFLUSHALL" cannot smuggle in a second command (issue #211).
+  const typeReplies = await redis.pipeline(page.map(key => ['TYPE', key]))
+  const types = page.map((_key, i) =>
+    typeReplies[i]?.error ? 'unknown' : String(typeReplies[i]?.value ?? 'string'),
+  )
+
+  // Build the read batch and remember which reply slot each key maps to (keys of
+  // an unrenderable type get no read and resolve to a null value).
+  const readCommands: RedisArg[][] = []
+  const readSlot: (number | null)[] = []
+  page.forEach((key, i) => {
+    const cmd = readCommandFor(types[i], key)
+    if (cmd == null) {
+      readSlot.push(null)
+    } else {
+      readSlot.push(readCommands.length)
+      readCommands.push(cmd)
     }
-  }
+  })
+  const readReplies = await redis.pipeline(readCommands)
+
+  const rows: Record<string, unknown>[] = page.map((key, i) => {
+    const type = types[i]
+    const slot = readSlot[i]
+    if (slot == null) return { key, type, value: null }
+    const reply = readReplies[slot]
+    if (reply?.error) return { key, type: 'unknown', value: null }
+    const value = type === 'hash' ? foldHash(reply?.value) : reply?.value ?? null
+    return { key, type, value }
+  })
+
   const columns: SchemaColumn[] = [
     { name: 'key', dataType: 'string', nullable: false, isPrimaryKey: true, isForeignKey: false, defaultValue: null },
     { name: 'type', dataType: 'string', nullable: false, isPrimaryKey: false, isForeignKey: false, defaultValue: null },
     { name: 'value', dataType: 'any', nullable: true, isPrimaryKey: false, isForeignKey: false, defaultValue: null }
   ]
-  return { rows, columns }
+  return { rows, columns, ...(limit == null ? {} : { hasMore }) }
 }
 
 export const jsonExporter: RegisteredExporter = {

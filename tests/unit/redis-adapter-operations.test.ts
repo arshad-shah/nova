@@ -1,10 +1,22 @@
 // RedisAdapter's schema-introspection methods encode Redis-specific
 // semantics as relational-shaped data: key prefixes become "tables", INFO
 // output gets regex-parsed into a database list, and "table" names are
-// re-derived from the `prefix:*` KEYS convention. These tests exercise that
+// re-derived from the `prefix:*` SCAN convention. These tests exercise that
 // translation layer against a fake ioredis client, independent of a live
 // server.
+//
+// Key enumeration goes through SCAN (`scanStream`), never the server-blocking
+// `KEYS`, so the fakes below supply a `scanStream` returning batched keys.
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { Readable } from 'node:stream'
+
+// A fake ioredis `scanStream`: yields the given keys in `batchSize` chunks as an
+// object-mode stream the adapter iterates with `for await` and tears down early.
+function scanStreamOf(keys: string[], batchSize = 1000) {
+  const batches: string[][] = []
+  for (let i = 0; i < keys.length; i += batchSize) batches.push(keys.slice(i, i + batchSize))
+  return vi.fn((_opts: { match: string; count: number }) => Readable.from(batches.length ? batches : [[]]))
+}
 
 const ioredisCalls: string[] = []
 let fakeInstance: { select: ReturnType<typeof vi.fn>; ping: ReturnType<typeof vi.fn> } | undefined
@@ -29,21 +41,30 @@ function adapterWithClient(client: Record<string, unknown>, database = 0): Redis
 
 describe('RedisAdapter — getTables (key-prefix grouping)', () => {
   it('groups colon-delimited keys by their first segment', async () => {
-    const adapter = adapterWithClient({ keys: vi.fn(async () => ['user:1', 'user:2', 'session:abc']) })
+    const adapter = adapterWithClient({ scanStream: scanStreamOf(['user:1', 'user:2', 'session:abc']) })
     const tables = await adapter.getTables()
     expect(tables.map(t => t.name).sort()).toEqual(['session', 'user'])
   })
 
   it('treats a key with no colon as its own prefix', async () => {
-    const adapter = adapterWithClient({ keys: vi.fn(async () => ['standalone']) })
+    const adapter = adapterWithClient({ scanStream: scanStreamOf(['standalone']) })
     const tables = await adapter.getTables()
     expect(tables).toEqual([{ name: 'standalone', schema: 'db0', type: 'table' }])
   })
 
   it('tags every table with the current database as its schema', async () => {
-    const adapter = adapterWithClient({ keys: vi.fn(async () => ['a:1']) }, 3)
+    const adapter = adapterWithClient({ scanStream: scanStreamOf(['a:1']) }, 3)
     const tables = await adapter.getTables()
     expect(tables[0].schema).toBe('db3')
+  })
+
+  it('enumerates with SCAN, never the server-blocking KEYS', async () => {
+    const scanStream = scanStreamOf(['user:1'])
+    const keys = vi.fn()
+    const adapter = adapterWithClient({ scanStream, keys })
+    await adapter.getTables()
+    expect(scanStream).toHaveBeenCalledWith(expect.objectContaining({ match: '*' }))
+    expect(keys).not.toHaveBeenCalled()
   })
 
   it('throws "Not connected" without a client', async () => {
@@ -53,17 +74,54 @@ describe('RedisAdapter — getTables (key-prefix grouping)', () => {
 })
 
 describe('RedisAdapter — getRowCount / getColumns / getIndexes', () => {
-  it('getRowCount counts keys under the "table:*" prefix', async () => {
-    const keys = vi.fn(async () => ['user:1', 'user:2', 'user:3'])
-    const adapter = adapterWithClient({ keys })
+  it('getRowCount counts keys under the "table:*" prefix via SCAN', async () => {
+    const scanStream = scanStreamOf(['user:1', 'user:2', 'user:3'])
+    const keys = vi.fn()
+    const adapter = adapterWithClient({ scanStream, keys })
     expect(await adapter.getRowCount('user')).toBe(3)
-    expect(keys).toHaveBeenCalledWith('user:*')
+    expect(scanStream).toHaveBeenCalledWith(expect.objectContaining({ match: 'user:*' }))
+    expect(keys).not.toHaveBeenCalled()
+  })
+
+  it('escapes glob metacharacters in the prefix before scanning', async () => {
+    const scanStream = scanStreamOf([])
+    const adapter = adapterWithClient({ scanStream })
+    await adapter.getRowCount('user*[1]')
+    expect(scanStream).toHaveBeenCalledWith(expect.objectContaining({ match: 'user\\*\\[1\\]:*' }))
   })
 
   it('getColumns/getIndexes are always empty — Redis has neither concept', async () => {
     const adapter = adapterWithClient({})
     expect(await adapter.getColumns('user')).toEqual([])
     expect(await adapter.getIndexes('user')).toEqual([])
+  })
+})
+
+describe('RedisAdapter — SCAN is bounded and non-blocking (issue #212)', () => {
+  it('a 10k-key keyspace is capped at maxKeys and never calls KEYS', async () => {
+    const bigKeyspace = Array.from({ length: 10000 }, (_, i) => `user:${i}`)
+    const scanStream = scanStreamOf(bigKeyspace, 500)
+    const keys = vi.fn()
+    const adapter = new RedisAdapter({}, 0, { maxKeys: 2000, scanCount: 500 })
+    ;(adapter as unknown as { client: unknown }).client = { scanStream, keys }
+    // getRowCount over a single prefix stops at the cap rather than walking 10k keys.
+    expect(await adapter.getRowCount('user')).toBe(2000)
+    expect(keys).not.toHaveBeenCalled()
+  })
+
+  it('passes the scanCount setting through to SCAN as its COUNT hint', async () => {
+    const scanStream = scanStreamOf(['user:1'])
+    const adapter = new RedisAdapter({}, 0, { scanCount: 321 })
+    ;(adapter as unknown as { client: unknown }).client = { scanStream }
+    await adapter.getTables()
+    expect(scanStream).toHaveBeenCalledWith(expect.objectContaining({ count: 321 }))
+  })
+
+  it('de-duplicates keys a cursor legitimately revisits', async () => {
+    // SCAN may return the same key more than once; the count must not double it.
+    const scanStream = scanStreamOf(['user:1', 'user:1', 'user:2'])
+    const adapter = adapterWithClient({ scanStream })
+    expect(await adapter.getRowCount('user')).toBe(2)
   })
 })
 
