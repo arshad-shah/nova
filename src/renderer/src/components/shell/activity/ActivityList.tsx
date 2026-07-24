@@ -1,21 +1,15 @@
 import { useMemo, useRef, useState } from 'react'
 import { Flex, Text } from '@/primitives'
-import type { ActivityEntry, ActivityKind, ActivityLevel } from '@shared/activity'
+import type { ActivityEntry } from '@shared/activity'
 import { useTranslation } from '@/i18n/I18nProvider'
 import { setDiagnosticsVerbose, isDiagnosticsVerbose } from '@/lib/diagnostics'
+import { type FilterToken, parseFilter, applyFilter, summarizeLevel } from '@/lib/activity/filter'
 import { ActivityFilterBar } from './ActivityFilterBar'
 import { ActivityStream } from './ActivityStream'
 
 /** Cap rendered rows so a long stream stays smooth; the store keeps more and
  *  export still sees every matching entry. */
 const MAX_RENDERED = 400
-
-function toggle<T>(set: Set<T>, value: T): Set<T> {
-  const next = new Set(set)
-  if (next.has(value)) next.delete(value)
-  else next.add(value)
-  return next
-}
 
 function downloadEntries(entries: ActivityEntry[]): void {
   const blob = new Blob([JSON.stringify(entries, null, 2)], { type: 'application/json' })
@@ -33,12 +27,12 @@ export interface ActivityListProps {
 }
 
 /** Presentational, store-free — used by the panel and Storybook. Owns its own
- *  filter/search/pause state so the live container stays a thin wiring layer. */
+ *  filter/pause state so the live container stays a thin wiring layer. */
 export function ActivityList({ entries, onClear }: ActivityListProps) {
   const { t } = useTranslation()
-  const [kinds, setKinds] = useState<Set<ActivityKind>>(new Set())
-  const [levels, setLevels] = useState<Set<ActivityLevel>>(new Set())
-  const [search, setSearch] = useState('')
+  // Committed filter tokens (shown as removable chips) + the in-progress draft.
+  const [tokens, setTokens] = useState<FilterToken[]>([])
+  const [draft, setDraft] = useState('')
   const [paused, setPaused] = useState(false)
   const [verbose, setVerbose] = useState(isDiagnosticsVerbose())
   // While paused we render a frozen snapshot so a fast stream can't yank rows
@@ -61,41 +55,30 @@ export function ActivityList({ entries, onClear }: ActivityListProps) {
   }
   const source = paused ? frozen.current : entries
 
-  // Session severity counts for the summary header (from the live store).
-  const errorCount = useMemo(() => entries.filter((e) => e.level === 'error').length, [entries])
-  const warnCount = useMemo(() => entries.filter((e) => e.level === 'warn').length, [entries])
+  // Deduplicated severity summaries for the pills (from the live store).
+  const errorSummary = useMemo(() => summarizeLevel(entries, 'error'), [entries])
+  const warnSummary = useMemo(() => summarizeLevel(entries, 'warn'), [entries])
+
+  // Live filter = committed tokens + whatever's being typed, so partial input
+  // narrows the stream without waiting for a commit.
+  const activeTokens = useMemo(() => [...tokens, ...parseFilter(draft)], [tokens, draft])
 
   // Full match set (used for export); the rendered slice is capped below.
-  const matched = useMemo(() => {
-    const q = search.trim().toLowerCase()
-    return source.filter((e) => {
-      if (kinds.size > 0 && !kinds.has(e.kind)) return false
-      if (levels.size > 0 && !levels.has(e.level)) return false
-      if (q) {
-        const hay = `${e.title} ${e.detail ?? ''} ${e.source ?? ''} ${e.metadata ? JSON.stringify(e.metadata) : ''}`.toLowerCase()
-        if (!hay.includes(q)) return false
-      }
-      return true
-    })
-  }, [source, kinds, levels, search])
-
+  const matched = useMemo(() => applyFilter(source, activeTokens), [source, activeTokens])
   const rendered = useMemo(() => matched.slice(0, MAX_RENDERED), [matched])
 
   return (
     <Flex direction="column" className="h-full min-h-0">
       <ActivityFilterBar
-        kinds={kinds}
-        levels={levels}
-        search={search}
+        tokens={tokens}
+        draft={draft}
         paused={paused}
         verbose={verbose}
-        errorCount={errorCount}
-        warnCount={warnCount}
+        errorSummary={errorSummary}
+        warnSummary={warnSummary}
         canExport={matched.length > 0}
-        onKindsChange={setKinds}
-        onLevelsChange={setLevels}
-        onSearchChange={setSearch}
-        onToggleLevel={(level) => setLevels((p) => toggle(p, level))}
+        onTokensChange={setTokens}
+        onDraftChange={setDraft}
         onTogglePause={togglePause}
         onToggleVerbose={toggleVerbose}
         onExport={() => downloadEntries(matched)}

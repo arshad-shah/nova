@@ -18,6 +18,11 @@ function setup() {
   return { onClear }
 }
 
+/** The kind/level chips now live behind the filter popover. */
+function openFilterPopover() {
+  fireEvent.click(screen.getByTitle('Filter by kind and level'))
+}
+
 describe('ActivityList', () => {
   it('renders all entries when no filter is active', () => {
     setup()
@@ -27,32 +32,39 @@ describe('ActivityList', () => {
     expect(screen.getByText('debug-line')).toBeInTheDocument()
   })
 
-  it('filters by kind when a chip is clicked', () => {
+  it('filters by kind when a chip in the popover is clicked', () => {
     setup()
-    // By role+name, not title: the chips are ToggleGroup toggles now, so their
-    // name comes from their label. This also asserts they're named at all,
-    // which a getByTitle never did.
+    openFilterPopover()
     fireEvent.click(screen.getByRole('button', { name: 'Connections' }))
     expect(screen.getByText('connected-row')).toBeInTheDocument()
     expect(screen.queryByText('q-one')).not.toBeInTheDocument()
     expect(screen.queryByText('debug-line')).not.toBeInTheDocument()
   })
 
-  it('filters by level when a level chip is clicked', () => {
+  it('filters by level when a level chip in the popover is clicked', () => {
     setup()
+    openFilterPopover()
     fireEvent.click(screen.getByRole('button', { name: 'Errors' }))
     expect(screen.getByText('q-two')).toBeInTheDocument()
     expect(screen.queryByText('q-one')).not.toBeInTheDocument()
     expect(screen.queryByText('debug-line')).not.toBeInTheDocument()
   })
 
-  it('filters by free-text search across title, detail and source', () => {
+  it('filters by a free-text term typed into the expression field', () => {
     setup()
-    fireEvent.change(screen.getByPlaceholderText(/search activity/i), { target: { value: 'select 1' } })
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'select 1' } })
     // Matches the detail of q-one only.
     expect(screen.getByText('q-one')).toBeInTheDocument()
     expect(screen.queryByText('connected-row')).not.toBeInTheDocument()
     expect(screen.queryByText('q-two')).not.toBeInTheDocument()
+  })
+
+  it('filters by a typed level:kind expression', () => {
+    setup()
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'level:error kind:query' } })
+    expect(screen.getByText('q-two')).toBeInTheDocument()
+    expect(screen.queryByText('q-one')).not.toBeInTheDocument()
+    expect(screen.queryByText('connected-row')).not.toBeInTheDocument()
   })
 
   it('invokes onClear from the clear button', () => {
@@ -75,7 +87,7 @@ describe('ActivityList', () => {
 
   it('shows a no-match state when filters exclude everything', () => {
     setup()
-    fireEvent.change(screen.getByPlaceholderText(/search activity/i), { target: { value: 'zzz-nothing' } })
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'zzz-nothing' } })
     expect(screen.getByText(/no matching activity/i)).toBeInTheDocument()
   })
 

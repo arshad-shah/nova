@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
+import { expect, userEvent } from 'storybook/test'
 import { ActivityList } from './ActivityList'
 import type { ActivityEntry } from '@shared/activity'
 
@@ -51,3 +52,19 @@ export const Narrow: Story = { args: { width: 280 } }
 /** A wide panel — the row collapses to one line and drops the duration bar. */
 export const Wide: Story = { args: { width: 560 } }
 export const Empty: Story = { args: { entries: [] } }
+
+/** Typing a filter narrows the stream to matching entries as a removable token;
+ *  removing the token restores the full stream. */
+export const FilterInteraction: Story = {
+  play: async ({ canvas }) => {
+    const field = canvas.getByRole('textbox')
+    await userEvent.type(field, 'kind:connection{Enter}')
+    // Only the connection entry survives; the query rows are gone.
+    await expect(canvas.getByText('Connected to Prod')).toBeInTheDocument()
+    await expect(canvas.queryByText('42 row(s) · 12ms')).not.toBeInTheDocument()
+
+    // Removing the token restores the full stream.
+    await userEvent.click(canvas.getByRole('button', { name: 'Remove filter' }))
+    await expect(canvas.getByText('42 row(s) · 12ms')).toBeInTheDocument()
+  },
+}
