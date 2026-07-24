@@ -46,7 +46,10 @@ export function useQueryExecution(
   caps: DriverCapabilities | null
 ): QueryExecution {
   const { t } = useTranslation()
-  const { setTabExecuting, setTabResults, setTabError, setTabTxnStatus } = useTabsStore()
+  const setTabExecuting = useTabsStore(s => s.setTabExecuting)
+  const setTabResults = useTabsStore(s => s.setTabResults)
+  const setTabError = useTabsStore(s => s.setTabError)
+  const setTabTxnStatus = useTabsStore(s => s.setTabTxnStatus)
   const queryTimeout = useSettingsStore(s => s.settings.general.queryTimeout)
   const confirmDestructive = useSettingsStore(s => s.settings.general.confirmDestructiveQueries)
 

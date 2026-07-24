@@ -7,7 +7,8 @@ interface Props {
 }
 
 export function SchemaSegment({ onClick }: Props) {
-  const { tabs, activeTabId } = useTabsStore()
+  const tabs = useTabsStore(s => s.tabs)
+  const activeTabId = useTabsStore(s => s.activeTabId)
   const activeTab = tabs.find((t) => t.id === activeTabId)
   const queryTab = activeTab?.type === 'query' ? (activeTab as QueryTab) : null
   if (!queryTab?.schema) return null

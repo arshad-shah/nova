@@ -35,7 +35,7 @@ export function QueryEditor({ tabId, value, onChange, onExecute, onSave, connect
   // is ready, instead of silently missing the initial registration.
   const [editorInstance, setEditorInstance] = useState<editor.IStandaloneCodeEditor | null>(null)
   const [monacoInstance, setMonacoInstance] = useState<Monaco | null>(null)
-  const { connectedIds } = useConnectionsStore()
+  const connectedIds = useConnectionsStore(s => s.connectedIds)
   const { theme } = useTheme()
   const editorSettings = useSettingsStore((s) => s.settings.editor)
   const keybindings = useSettingsStore((s) => s.settings.keybindings)

@@ -8,8 +8,8 @@ import { useTranslation } from '@/i18n/I18nProvider'
 
 export function ChartsDashboard() {
   const { t } = useTranslation()
-  const { tabs } = useTabsStore()
-  const { activeConnectionId } = useConnectionsStore()
+  const tabs = useTabsStore(s => s.tabs)
+  const activeConnectionId = useConnectionsStore(s => s.activeConnectionId)
 
   // Show query tabs that have results (potential charts)
   const queryTabsWithResults = tabs.filter(

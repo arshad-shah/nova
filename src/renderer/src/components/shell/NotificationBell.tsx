@@ -7,7 +7,9 @@ import { useTranslation } from '@/i18n/I18nProvider'
 export function NotificationBell() {
   const { t } = useTranslation()
   const unread = useNotificationsStore((s) => s.unreadCount())
-  const { secondarySidebarVisible, secondaryActivePanel, setSecondaryActivePanel } = useUiStore()
+  const secondarySidebarVisible = useUiStore(s => s.secondarySidebarVisible)
+  const secondaryActivePanel = useUiStore(s => s.secondaryActivePanel)
+  const setSecondaryActivePanel = useUiStore(s => s.setSecondaryActivePanel)
   const isActive = secondarySidebarVisible && secondaryActivePanel === SECONDARY_PANEL.NOTIFICATIONS
 
   return (

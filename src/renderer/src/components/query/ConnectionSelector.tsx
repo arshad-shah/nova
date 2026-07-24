@@ -26,9 +26,15 @@ interface Props {
 
 export function ConnectionSelector({ tabId, connectionId, database, schema, caps }: Props) {
   const { t } = useTranslation()
-  const { connections, connectedIds, connect } = useConnectionsStore()
-  const { fetchSchemas, fetchDatabases } = useSchemaStore()
-  const { setTabConnection, setTabDatabase, setTabSchema, setTabTxnStatus } = useTabsStore()
+  const connections = useConnectionsStore(s => s.connections)
+  const connectedIds = useConnectionsStore(s => s.connectedIds)
+  const connect = useConnectionsStore(s => s.connect)
+  const fetchSchemas = useSchemaStore(s => s.fetchSchemas)
+  const fetchDatabases = useSchemaStore(s => s.fetchDatabases)
+  const setTabConnection = useTabsStore(s => s.setTabConnection)
+  const setTabDatabase = useTabsStore(s => s.setTabDatabase)
+  const setTabSchema = useTabsStore(s => s.setTabSchema)
+  const setTabTxnStatus = useTabsStore(s => s.setTabTxnStatus)
   const fetchCaps = useDriverCapabilitiesStore((s) => s.fetch)
   const [schemaList, setSchemaList] = useState<string[]>([])
   const [databaseList, setDatabaseList] = useState<string[]>([])

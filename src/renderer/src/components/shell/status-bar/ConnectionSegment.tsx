@@ -18,7 +18,8 @@ export function ConnectionSegment({ onNewConnection }: Props) {
     window.addEventListener('statusbar:open-switcher', handler)
     return () => window.removeEventListener('statusbar:open-switcher', handler)
   }, [])
-  const { activeConnectionId, connectedIds } = useConnectionsStore()
+  const activeConnectionId = useConnectionsStore(s => s.activeConnectionId)
+  const connectedIds = useConnectionsStore(s => s.connectedIds)
   const active = useActiveProfile()
   const isConnected = activeConnectionId ? connectedIds.has(activeConnectionId) : false
   const presentationOf = useDriverPresentation(active?.type ? [active.type] : [])

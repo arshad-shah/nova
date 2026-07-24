@@ -42,9 +42,11 @@ export function CommandPalette({ open, onClose }: Props) {
   // page reload, but stable while the user types so filtering doesn't churn.
   const [editorActions, setEditorActions] = useState<{ id: string; label: string }[]>([])
 
-  const { activeConnectionId, connectedIds } = useConnectionsStore()
-  const { addQueryTab, openErDiagram } = useTabsStore()
-  const { setActivePanel } = useUiStore()
+  const activeConnectionId = useConnectionsStore(s => s.activeConnectionId)
+  const connectedIds = useConnectionsStore(s => s.connectedIds)
+  const addQueryTab = useTabsStore(s => s.addQueryTab)
+  const openErDiagram = useTabsStore(s => s.openErDiagram)
+  const setActivePanel = useUiStore(s => s.setActivePanel)
   const toggleSecondary = useUiStore(s => s.toggleSecondarySidebar)
   const toggleBottom = useUiStore(s => s.toggleBottomDock)
   const setSecondaryActive = useUiStore(s => s.setSecondaryActivePanel)

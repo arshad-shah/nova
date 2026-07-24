@@ -19,22 +19,25 @@ const mockConnections = [
 
 const mockConnect = vi.fn().mockResolvedValue({ success: true })
 
+const connectionsState = {
+  connections: mockConnections,
+  connectedIds: new Set(['conn-1', 'conn-2']),
+  connect: mockConnect,
+}
 vi.mock('../../../../src/renderer/src/stores/connections', () => ({
-  useConnectionsStore: () => ({
-    connections: mockConnections,
-    connectedIds: new Set(['conn-1', 'conn-2']),
-    connect: mockConnect,
-  }),
+  useConnectionsStore: (selector: (s: typeof connectionsState) => unknown) =>
+    selector(connectionsState),
 }))
 
 const mockFetchDatabases = vi.fn().mockResolvedValue(['app', 'analytics'])
 const mockFetchSchemas = vi.fn().mockResolvedValue(['public', 'sales'])
 
+const schemaState = {
+  fetchDatabases: mockFetchDatabases,
+  fetchSchemas: mockFetchSchemas,
+}
 vi.mock('../../../../src/renderer/src/stores/schema', () => ({
-  useSchemaStore: () => ({
-    fetchDatabases: mockFetchDatabases,
-    fetchSchemas: mockFetchSchemas,
-  }),
+  useSchemaStore: (selector: (s: typeof schemaState) => unknown) => selector(schemaState),
 }))
 
 const mockNotifyError = vi.fn()
@@ -51,13 +54,14 @@ const mockSetTabDatabase = vi.fn()
 const mockSetTabSchema = vi.fn()
 const mockSetTabTxnStatus = vi.fn()
 
+const tabsState = {
+  setTabConnection: mockSetTabConnection,
+  setTabDatabase: mockSetTabDatabase,
+  setTabSchema: mockSetTabSchema,
+  setTabTxnStatus: mockSetTabTxnStatus,
+}
 vi.mock('../../../../src/renderer/src/stores/tabs', () => ({
-  useTabsStore: () => ({
-    setTabConnection: mockSetTabConnection,
-    setTabDatabase: mockSetTabDatabase,
-    setTabSchema: mockSetTabSchema,
-    setTabTxnStatus: mockSetTabTxnStatus,
-  }),
+  useTabsStore: (selector: (s: typeof tabsState) => unknown) => selector(tabsState),
 }))
 
 vi.mock('../../../../src/renderer/src/stores/driver-capabilities', () => ({

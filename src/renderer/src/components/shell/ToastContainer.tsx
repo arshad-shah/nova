@@ -33,7 +33,8 @@ const TONE: Record<ToastData['type'], ToastTone> = {
 
 export function ToastContainer() {
   const { t } = useTranslation()
-  const { toasts, removeToast } = useToastStore()
+  const toasts = useToastStore(s => s.toasts)
+  const removeToast = useToastStore(s => s.removeToast)
   const [items, setItems] = useState<RenderToast[]>([])
 
   // Sync store -> local: append new toasts, refresh kept ones (so in-place updates like

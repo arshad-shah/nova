@@ -51,7 +51,8 @@ function buildCopyPayload(n: Notification): string {
 
 function NotificationItem({ notification }: { notification: Notification }) {
   const { t } = useTranslation()
-  const { markRead, removeNotification } = useNotificationsStore()
+  const markRead = useNotificationsStore(s => s.markRead)
+  const removeNotification = useNotificationsStore(s => s.removeNotification)
   const Icon = typeIcons[notification.type]
   const { copied, copy } = useClipboard()
   const isError = notification.type === 'error'
@@ -178,8 +179,10 @@ function NotificationItem({ notification }: { notification: Notification }) {
 
 export function NotificationsSidebar() {
   const { t } = useTranslation()
-  const { notifications, markAllRead, clearAll, unreadCount } =
-    useNotificationsStore()
+  const notifications = useNotificationsStore(s => s.notifications)
+  const markAllRead = useNotificationsStore(s => s.markAllRead)
+  const clearAll = useNotificationsStore(s => s.clearAll)
+  const unreadCount = useNotificationsStore(s => s.unreadCount)
   const unread = unreadCount()
 
   return (

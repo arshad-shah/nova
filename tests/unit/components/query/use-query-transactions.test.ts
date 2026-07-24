@@ -12,11 +12,12 @@ import type { QueryTab } from '../../../../shared/types'
 
 const mockSetTabAutoCommit = vi.fn()
 const mockSetTabTxnStatus = vi.fn()
+const tabsState = {
+  setTabAutoCommit: mockSetTabAutoCommit,
+  setTabTxnStatus: mockSetTabTxnStatus,
+}
 vi.mock('../../../../src/renderer/src/stores/tabs', () => ({
-  useTabsStore: () => ({
-    setTabAutoCommit: mockSetTabAutoCommit,
-    setTabTxnStatus: mockSetTabTxnStatus,
-  }),
+  useTabsStore: (selector: (s: typeof tabsState) => unknown) => selector(tabsState),
 }))
 
 const mockNotifyError = vi.fn()

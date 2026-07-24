@@ -22,7 +22,8 @@ export interface QueryTransactions {
  *  the App.tsx close-guard can keep its dialog open on failure; the `on*`
  *  variants swallow errors into notifications for inline toolbar use. */
 export function useQueryTransactions(tab: QueryTab): QueryTransactions {
-  const { setTabAutoCommit, setTabTxnStatus } = useTabsStore()
+  const setTabAutoCommit = useTabsStore(s => s.setTabAutoCommit)
+  const setTabTxnStatus = useTabsStore(s => s.setTabTxnStatus)
 
   // All three handlers are wrapped in try/catch so IPC failures surface as
   // toasts + bell notifications (via notifyError) rather than silently failing.

@@ -16,8 +16,9 @@ import { useTranslation } from '@/i18n/I18nProvider'
 
 export function Sidebar() {
   const { t } = useTranslation()
-  const { activePanel } = useUiStore()
-  const { activeConnectionId, connectedIds } = useConnectionsStore()
+  const activePanel = useUiStore(s => s.activePanel)
+  const activeConnectionId = useConnectionsStore(s => s.activeConnectionId)
+  const connectedIds = useConnectionsStore(s => s.connectedIds)
 
   const [exportTable, setExportTable] = useState<string | null>(null)
   const [showImport, setShowImport] = useState(false)
