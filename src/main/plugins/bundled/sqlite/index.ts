@@ -14,6 +14,7 @@ import {
 } from './type-maps'
 
 const SQLITE_QUOTE = '"' as const
+const SQLITE_PAGINATION = { style: 'limit-offset' } as const
 
 export const manifest: PluginManifest = {
   name: 'verql-plugin-sqlite',
@@ -154,7 +155,8 @@ export function activate(ctx: PluginContext): void {
       { key: 'database', label: 'Database File', type: 'file-path', accept: '.db,.sqlite,.sqlite3,.db3', required: true },
     ],
     sampleQuery: createSampleQuery(SQLITE_QUOTE, { qualifySchema: (s) => s !== 'main' }),
-    getTableData: createRelationalGetTableData(SQLITE_QUOTE),
+    getTableData: createRelationalGetTableData(SQLITE_QUOTE, { pagination: SQLITE_PAGINATION }),
+    pagination: SQLITE_PAGINATION,
     explain: { supportsAnalyze: false, format: 'text', statement: 'EXPLAIN QUERY PLAN' },
     generateMigrationDdl: async (tableName, columns) => {
       // SQLite quirk: the rowid alias is only created when the column is

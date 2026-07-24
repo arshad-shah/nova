@@ -97,6 +97,25 @@ export interface SchemaIndex {
   unique: boolean
 }
 
+/** Bounds a driver's `getTableData` read. The browse ("View data") path always
+ *  supplies a `limit` so a large table can't be pulled whole into memory;
+ *  omitting it is an unbounded read (the export path). */
+export interface TableDataOptions {
+  /** Maximum number of rows to return. Omit for an unbounded read. */
+  limit?: number
+  /** Row offset for paging. Ignored when `limit` is omitted. */
+  offset?: number
+}
+
+/** A page of a table/collection's rows plus its column metadata. */
+export interface TableDataResult {
+  rows: Record<string, unknown>[]
+  columns: SchemaColumn[]
+  /** True when more rows exist beyond the returned page. Set only for a bounded
+   *  read; undefined when the whole result was returned (unbounded). */
+  hasMore?: boolean
+}
+
 export interface TestConnectionResult {
   version: string
   details?: Record<string, string>

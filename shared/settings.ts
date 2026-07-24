@@ -23,6 +23,10 @@ export interface GeneralSettings {
   queryTimeout: number
   maxHistoryItems: number
   defaultPageSize: number
+  /** Max rows fetched per page when browsing a table's data ("View data"). Keeps
+   *  a huge table from being pulled whole into memory; the grid offers "load
+   *  more" to fetch the next page. */
+  maxViewDataRows: number
   /** Ask before closing a tab with unsaved changes. */
   confirmOnUnsavedClose: boolean
   /** Re-open the tabs that were active when the app last quit. */
@@ -199,6 +203,7 @@ export const defaultSettings: AppSettings = {
     queryTimeout: 30,
     maxHistoryItems: 200,
     defaultPageSize: 100,
+    maxViewDataRows: 500,
     confirmOnUnsavedClose: true,
     restoreTabsOnStartup: true,
     confirmDestructiveQueries: true,

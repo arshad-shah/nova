@@ -50,7 +50,7 @@ correct category.
 
 | Category | Key examples | Consumed by |
 |----------|-------------|-------------|
-| **General** | `queryTimeout`, `defaultPageSize`, `maxHistoryItems`, `confirmDestructiveQueries`, `confirmOnUnsavedClose`, `restoreTabsOnStartup`, `language`* | QueryPanel (timeout/confirm), ResultsGrid (page size), query history, tab-actions (close confirm), tab restore, i18n locale |
+| **General** | `queryTimeout`, `defaultPageSize`, `maxViewDataRows`, `maxHistoryItems`, `confirmDestructiveQueries`, `confirmOnUnsavedClose`, `restoreTabsOnStartup`, `language`* | QueryPanel (timeout/confirm), ResultsGrid (page size), TableDataView (view-data page size), query history, tab-actions (close confirm), tab restore, i18n locale |
 | **Appearance** | `appearanceMode`, `theme`/`lightTheme`/`darkTheme`, `uiDensity`, `accentColor`, `animations`, sidebar/dock visibility + sizes | `ThemeProvider`, `App` shell layout, `usePanelResize` |
 | **Editor** | font, tab size, word wrap, minimap, line numbers, cursor, ligatures, … | `QueryEditor` Monaco options |
 | **Data Display** | `nullDisplay`, `dateFormat` (+`customDateFormat`), `numberFormat`, `booleanDisplay`, `truncateTextAt`, `maxColumnWidth` | `ResultsGrid` via `lib/format-cell.ts` |
@@ -62,6 +62,13 @@ correct category.
 
 ## Notable features
 
+- **View-data paging** (`maxViewDataRows`, default **500**) — the "View data"
+  browse grid (`TableDataView`) fetches at most this many rows per request over
+  `db:get-table-data`, so opening a huge table can't pull it whole into the main
+  process. The driver's `getTableData` reader over-fetches by one to report
+  `hasMore`; when set, the grid header shows "Showing first N rows" and a **Load
+  more** button that pages in the next batch. The paging clause is driver-aware
+  (the `pagination` driver capability). Export is a separate, unbounded path.
 - **Query history** (`maxHistoryItems`) — runs are recorded to the SQLite
   app-data `query_history` table, capped to the preference, surfaced via the
   Saved/History toggle. See `stores/query-history.ts`.

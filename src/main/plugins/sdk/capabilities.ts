@@ -21,5 +21,6 @@ export function serializeStaticCapabilities(factory: DriverFactory): DriverCapab
     explain: factory.explain,
     sessionInspection: factory.sessionInspection,
     databaseSwitch: factory.databaseSwitch,
+    pagination: factory.pagination,
   }
 }

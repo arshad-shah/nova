@@ -10,6 +10,7 @@ import { formatSql, createSampleQuery, createMigrationDdl } from '../../sdk/sql-
 import { MYSQL_TO_PG, mysqlToPgFallback, sqliteToPgFallback } from './type-maps'
 
 const PG_QUOTE = '"' as const
+const PG_PAGINATION = { style: 'limit-offset' } as const
 
 export const manifest: PluginManifest = {
   name: 'verql-plugin-postgresql',
@@ -147,7 +148,8 @@ export function activate(ctx: PluginContext): void {
       ]},
     ],
     sampleQuery: createSampleQuery(PG_QUOTE),
-    getTableData: createRelationalGetTableData(PG_QUOTE),
+    getTableData: createRelationalGetTableData(PG_QUOTE, { pagination: PG_PAGINATION }),
+    pagination: PG_PAGINATION,
     explain: { supportsAnalyze: true, format: 'tree', statement: 'EXPLAIN ANALYZE' },
     generateMigrationDdl: createMigrationDdl(PG_QUOTE),
     session: {

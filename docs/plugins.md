@@ -259,14 +259,24 @@ ctx.drivers.register('cassandra', {
   // answer over the RPC bridge.
   sampleQuery: async (table, schema) => `SELECT * FROM ${table} LIMIT 100;`,
 
-  // Reads all rows for a table/collection/key-prefix. Use
-  // `createRelationalGetTableData(quoteChar)` from the SDK if your driver speaks
-  // plain SELECT. Powers both data export *and* the "View data" grid (the
-  // `'table'` tab) over `db:get-table-data` — so a non-SQL driver (Redis
+  // How the browse grid pages a bounded read. Routes the paging clause through
+  // the driver instead of the SDK hardcoding LIMIT: 'limit-offset' ⇒
+  // `LIMIT n OFFSET m` (Postgres/MySQL/SQLite/Snowflake); 'offset-fetch' ⇒
+  // `OFFSET m ROWS FETCH NEXT n ROWS ONLY` (ANSI / SQL-Server family). Omit ⇒
+  // limit-offset. `createRelationalGetTableData` uses it to build the clause.
+  pagination: { style: 'limit-offset' },
+
+  // Reads a table/collection/key-prefix's rows. Use
+  // `createRelationalGetTableData(quoteChar, { pagination })` from the SDK if your
+  // driver speaks plain SELECT. Powers both data export *and* the "View data" grid
+  // (the `'table'` tab) over `db:get-table-data` — so a non-SQL driver (Redis
   // key/value, Mongo documents) gets a real browse grid the renderer can't build
-  // from a SELECT. The renderer gates the "View data" action on
-  // `hasGetTableData`, set automatically when this is present.
-  getTableData: async (adapter, table, schema) => { ... },
+  // from a SELECT. The renderer gates the "View data" action on `hasGetTableData`,
+  // set automatically when this is present. `options.limit` bounds the read (the
+  // browse path always passes one, so a huge table isn't pulled whole into memory)
+  // and the reader sets `hasMore` for the grid's "load more"; omitting the limit
+  // is the unbounded export read.
+  getTableData: async (adapter, table, schema, options) => { ... },
 
   // Optional EXPLAIN capability. `statement` is the prefix the renderer prepends
   // *verbatim* to the query — the renderer never hardcodes an EXPLAIN dialect.

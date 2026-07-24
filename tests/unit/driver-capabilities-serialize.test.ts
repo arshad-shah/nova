@@ -36,6 +36,12 @@ describe('serializeStaticCapabilities', () => {
     expect(caps.explain).toBeUndefined()
   })
 
+  it('passes the pagination capability through for the browse reader', () => {
+    const caps = serializeStaticCapabilities(factory({ pagination: { style: 'offset-fetch' } }))
+    expect(caps.pagination?.style).toBe('offset-fetch')
+    expect(serializeStaticCapabilities(factory({})).pagination).toBeUndefined()
+  })
+
   it('passes the supportsDollarQuoting flag through for the renderer splitter', () => {
     expect(serializeStaticCapabilities(factory({ supportsDollarQuoting: true })).supportsDollarQuoting).toBe(true)
     expect(serializeStaticCapabilities(factory({})).supportsDollarQuoting).toBeUndefined()

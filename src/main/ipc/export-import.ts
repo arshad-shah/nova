@@ -37,6 +37,9 @@ async function readRowsForExport(
       `Cannot export this connection type without a driver-provided data fetcher.`
     )
   }
+  // Export deliberately passes no `limit`: it needs every row. Bounding the
+  // browse ("View data") path is #213; streaming export so it isn't fully
+  // buffered is the separate concern tracked by #214/#17.
   return driver.getTableData(adapter, table, schema)
 }
 
