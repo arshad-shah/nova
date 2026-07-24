@@ -10,7 +10,8 @@ vi.stubGlobal('window', {
   }
 })
 
-import { useSchemaStore } from '../../src/renderer/src/stores/schema'
+import { useSchemaStore, schemaErrorTag } from '../../src/renderer/src/stores/schema'
+import { ACTIVITY_KIND } from '../../shared/activity'
 
 function resetStore(): void {
   useSchemaStore.setState({
@@ -25,6 +26,7 @@ function resetStore(): void {
     rowCounts: new Map(),
     loading: false,
     cacheVersion: 0,
+    errored: new Set(),
     databasesPending: new Map(),
     schemasPending: new Map(),
     tablesPending: new Map(),
@@ -44,6 +46,14 @@ function deferred<T>(): { promise: Promise<T>; resolve: (v: T) => void; reject: 
     reject = rej
   })
   return { promise, resolve, reject }
+}
+
+/**
+ * How many *data* round trips the bridge saw, excluding the fire-and-forget
+ * `activity:record` writes that error paths emit over the same mock.
+ */
+function dataInvokeCount(): number {
+  return mockInvoke.mock.calls.filter(([channel]) => channel !== IPC_CHANNELS.ACTIVITY_RECORD).length
 }
 
 describe('Schema cache logic', () => {
@@ -141,11 +151,14 @@ describe('useSchemaStore (behavioral)', () => {
     expect(result).toEqual(['db1'])
   })
 
-  it('fetchDatabases stores an empty array and returns [] on IPC failure', async () => {
+  it('fetchDatabases returns [] and marks errored (not cached-empty) on IPC failure', async () => {
     mockInvoke.mockRejectedValueOnce(new Error('boom'))
     const result = await useSchemaStore.getState().fetchDatabases('conn1')
     expect(result).toEqual([])
-    expect(useSchemaStore.getState().databases.get('conn1')).toEqual([])
+    // A failed fetch must not masquerade as a connection with zero databases:
+    // no cached result, an errored marker instead.
+    expect(useSchemaStore.getState().databases.has('conn1')).toBe(false)
+    expect(useSchemaStore.getState().errored.has(schemaErrorTag('databases', 'conn1'))).toBe(true)
   })
 
   it('switchDatabase rejects immediately when database name is empty', async () => {
@@ -186,12 +199,13 @@ describe('useSchemaStore (behavioral)', () => {
     expect(useSchemaStore.getState().loading).toBe(false)
   })
 
-  it('fetchSchemas caches an empty array and clears loading on IPC failure', async () => {
+  it('fetchSchemas returns [], clears loading, and marks errored on IPC failure', async () => {
     mockInvoke.mockRejectedValueOnce(new Error('down'))
     const result = await useSchemaStore.getState().fetchSchemas('conn1')
     expect(result).toEqual([])
-    expect(useSchemaStore.getState().schemas.get('conn1')).toEqual([])
+    expect(useSchemaStore.getState().schemas.has('conn1')).toBe(false)
     expect(useSchemaStore.getState().loading).toBe(false)
+    expect(useSchemaStore.getState().errored.has(schemaErrorTag('schemas', 'conn1'))).toBe(true)
   })
 
   it('fetchTables keys the cache by connection+database+schema when a database is given', async () => {
@@ -248,11 +262,12 @@ describe('useSchemaStore (behavioral)', () => {
     expect(result).toEqual(indexes)
   })
 
-  it('fetchSchemaObjects caches an empty array on IPC failure', async () => {
+  it('fetchSchemaObjects returns [] and marks errored (not cached-empty) on IPC failure', async () => {
     mockInvoke.mockRejectedValueOnce(new Error('boom'))
     const result = await useSchemaStore.getState().fetchSchemaObjects('conn1', 'public')
     expect(result).toEqual([])
-    expect(useSchemaStore.getState().objects.get('conn1:public')).toEqual([])
+    expect(useSchemaStore.getState().objects.has('conn1:public')).toBe(false)
+    expect(useSchemaStore.getState().errored.has(schemaErrorTag('objects', 'conn1:public'))).toBe(true)
   })
 
   it('toggleTable adds then removes a key from expandedTables', () => {
@@ -382,21 +397,24 @@ describe('useSchemaStore — in-flight request de-duplication (#206)', () => {
     expect(useSchemaStore.getState().rowCounts.get('conn1:public:users')).toBe(42)
   })
 
-  it('a rejected request evicts its pending entry so the next call retries', async () => {
-    // fetchIndexes propagates errors (no internal catch), so a failure must not
-    // leave a poisoned pending promise behind.
+  it('a failed fetchIndexes returns [] (no throw) and evicts its pending entry so the next call retries', async () => {
+    // fetchIndexes now follows the shared policy: a failure is caught and
+    // returns [] rather than propagating as an unhandled rejection, and the
+    // dedupe `finally` still evicts the pending entry.
     const first = deferred<SchemaIndex[]>()
     mockInvoke.mockReturnValueOnce(first.promise)
     const failing = useSchemaStore.getState().fetchIndexes('conn1', 'users', 'public')
     first.reject(new Error('transient'))
-    await expect(failing).rejects.toThrow('transient')
+    await expect(failing).resolves.toEqual([])
 
     // Pending entry gone → a fresh call issues a new invoke and succeeds.
     const indexes: SchemaIndex[] = [{ name: 'idx', columns: ['a'], unique: false }]
     mockInvoke.mockResolvedValueOnce(indexes)
     const result = await useSchemaStore.getState().fetchIndexes('conn1', 'users', 'public')
     expect(result).toEqual(indexes)
-    expect(mockInvoke).toHaveBeenCalledTimes(2)
+    // Two data round trips (the failure also fires a fire-and-forget activity
+    // record on the same bridge — count only the index fetches).
+    expect(dataInvokeCount()).toBe(2)
   })
 
   it('a failed fetchColumns (which returns []) also retries on the next call', async () => {
@@ -411,7 +429,9 @@ describe('useSchemaStore — in-flight request de-duplication (#206)', () => {
     mockInvoke.mockResolvedValueOnce(columns)
     const second = await useSchemaStore.getState().fetchColumns('conn1', 'users', 'public')
     expect(second).toEqual(columns)
-    expect(mockInvoke).toHaveBeenCalledTimes(2)
+    // The failure also records a fire-and-forget activity entry over the same
+    // bridge — count only the column fetches.
+    expect(dataInvokeCount()).toBe(2)
   })
 
   it('clearCache(connectionId) drops in-flight promises for that connection', async () => {
@@ -446,5 +466,134 @@ describe('useSchemaStore — in-flight request de-duplication (#206)', () => {
     useSchemaStore.getState().clearCache()
     expect(useSchemaStore.getState().columnsPending.size).toBe(0)
     expect(useSchemaStore.getState().tablesPending.size).toBe(0)
+  })
+})
+
+describe('useSchemaStore — unified fetch error policy (#201)', () => {
+  beforeEach(() => {
+    mockInvoke.mockReset()
+    resetStore()
+    // The activity seam is invoked (fire-and-forget) via the same bridge mock;
+    // resolve those writes so recording never itself rejects.
+    mockInvoke.mockImplementation((channel: unknown) =>
+      channel === IPC_CHANNELS.ACTIVITY_RECORD
+        ? Promise.resolve(undefined)
+        : Promise.reject(new Error('boom'))
+    )
+  })
+
+  // Every fetcher, invoked against a backend that rejects, must: settle without
+  // throwing, cache no result, and set an errored marker. This is the guard —
+  // add a fetcher that swallows silently or rejects unhandled and it fails here.
+  const cases: Array<{
+    name: string
+    kind: Parameters<typeof schemaErrorTag>[0]
+    key: string
+    run: () => Promise<unknown>
+    cache: () => Map<string, unknown>
+  }> = [
+    {
+      name: 'fetchDatabases',
+      kind: 'databases',
+      key: 'conn1',
+      run: () => useSchemaStore.getState().fetchDatabases('conn1'),
+      cache: () => useSchemaStore.getState().databases as Map<string, unknown>,
+    },
+    {
+      name: 'fetchSchemas',
+      kind: 'schemas',
+      key: 'conn1',
+      run: () => useSchemaStore.getState().fetchSchemas('conn1'),
+      cache: () => useSchemaStore.getState().schemas as Map<string, unknown>,
+    },
+    {
+      name: 'fetchTables',
+      kind: 'tables',
+      key: 'conn1:public',
+      run: () => useSchemaStore.getState().fetchTables('conn1', 'public'),
+      cache: () => useSchemaStore.getState().tables as Map<string, unknown>,
+    },
+    {
+      name: 'fetchColumns',
+      kind: 'columns',
+      key: 'conn1:public:users',
+      run: () => useSchemaStore.getState().fetchColumns('conn1', 'users', 'public'),
+      cache: () => useSchemaStore.getState().columns as Map<string, unknown>,
+    },
+    {
+      name: 'fetchIndexes',
+      kind: 'indexes',
+      key: 'conn1:public:users',
+      run: () => useSchemaStore.getState().fetchIndexes('conn1', 'users', 'public'),
+      cache: () => useSchemaStore.getState().indexes as Map<string, unknown>,
+    },
+    {
+      name: 'fetchSchemaObjects',
+      kind: 'objects',
+      key: 'conn1:public',
+      run: () => useSchemaStore.getState().fetchSchemaObjects('conn1', 'public'),
+      cache: () => useSchemaStore.getState().objects as Map<string, unknown>,
+    },
+    {
+      name: 'fetchRowCount',
+      kind: 'rowCounts',
+      key: 'conn1:public:users',
+      run: () => useSchemaStore.getState().fetchRowCount('conn1', 'users', 'public'),
+      cache: () => useSchemaStore.getState().rowCounts as Map<string, unknown>,
+    },
+  ]
+
+  for (const c of cases) {
+    it(`${c.name}: an IPC failure resolves (no unhandled rejection), caches nothing, and marks errored`, async () => {
+      // Resolves rather than rejects — proves no fetcher leaks a rejection.
+      await expect(c.run()).resolves.not.toThrow()
+      expect(c.cache().has(c.key)).toBe(false)
+      expect(useSchemaStore.getState().errored.has(schemaErrorTag(c.kind, c.key))).toBe(true)
+    })
+  }
+
+  it('records the failure to the activity seam as a store-level error', async () => {
+    await useSchemaStore.getState().fetchColumns('conn1', 'users', 'public')
+    const activityCall = mockInvoke.mock.calls.find(
+      ([channel]) => channel === IPC_CHANNELS.ACTIVITY_RECORD
+    )
+    expect(activityCall).toBeDefined()
+    const payload = activityCall![1] as { kind: string; level: string; source?: string }
+    expect(payload.kind).toBe(ACTIVITY_KIND.STORE)
+    expect(payload.level).toBe('error')
+    expect(payload.source).toBe('schema-store')
+  })
+
+  it('a successful retry clears the errored marker', async () => {
+    // First attempt fails and marks errored.
+    await useSchemaStore.getState().fetchColumns('conn1', 'users', 'public')
+    expect(useSchemaStore.getState().errored.has(schemaErrorTag('columns', 'conn1:public:users'))).toBe(true)
+
+    // Second attempt (the retry) succeeds → marker cleared, result cached.
+    const columns: SchemaColumn[] = [
+      { name: 'id', dataType: 'integer', nullable: false, defaultValue: null, isPrimaryKey: true, isForeignKey: false }
+    ]
+    mockInvoke.mockImplementationOnce(() => Promise.resolve(columns))
+    const result = await useSchemaStore.getState().fetchColumns('conn1', 'users', 'public')
+    expect(result).toEqual(columns)
+    expect(useSchemaStore.getState().errored.has(schemaErrorTag('columns', 'conn1:public:users'))).toBe(false)
+  })
+
+  it('clearCache(connectionId) drops that connection\'s errored markers, keeping others', async () => {
+    await useSchemaStore.getState().fetchColumns('conn1', 'users', 'public')
+    await useSchemaStore.getState().fetchColumns('conn2', 'orders', 'public')
+    expect(useSchemaStore.getState().errored.has(schemaErrorTag('columns', 'conn1:public:users'))).toBe(true)
+    expect(useSchemaStore.getState().errored.has(schemaErrorTag('columns', 'conn2:public:orders'))).toBe(true)
+
+    useSchemaStore.getState().clearCache('conn1')
+    expect(useSchemaStore.getState().errored.has(schemaErrorTag('columns', 'conn1:public:users'))).toBe(false)
+    expect(useSchemaStore.getState().errored.has(schemaErrorTag('columns', 'conn2:public:orders'))).toBe(true)
+  })
+
+  it('clearCache() with no connectionId clears all errored markers', async () => {
+    await useSchemaStore.getState().fetchColumns('conn1', 'users', 'public')
+    expect(useSchemaStore.getState().errored.size).toBeGreaterThan(0)
+    useSchemaStore.getState().clearCache()
+    expect(useSchemaStore.getState().errored.size).toBe(0)
   })
 })

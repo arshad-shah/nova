@@ -25,5 +25,7 @@ export function isDiagnosticsVerbose(): boolean { return verbose }
 
 /** Push a renderer-originated entry into the unified, main-owned activity stream. */
 export function recordActivity(input: DiagnosticInput): void {
-  void ipc.optional(IPC_CHANNELS.ACTIVITY_RECORD, input)
+  // Fire-and-forget, but never let recording a diagnostic *become* an unhandled
+  // rejection itself — callers reach here precisely on their own error paths.
+  ipc.optional(IPC_CHANNELS.ACTIVITY_RECORD, input)?.catch(() => {})
 }

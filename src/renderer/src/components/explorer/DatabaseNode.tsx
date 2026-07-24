@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { ChevronRight, ChevronDown, Database, RefreshCw } from 'lucide-react'
 import { useUiStore } from '@/stores/ui'
-import { useSchemaStore } from '@/stores/schema'
+import { useSchemaStore, schemaErrorTag } from '@/stores/schema'
 import { useToastStore } from '@/stores/toast'
 import { useClipboard } from '@/hooks/useClipboard'
 import { ContextMenu } from '@/primitives/surfaces/ContextMenu'
@@ -10,6 +10,7 @@ import { IconButton } from '@/primitives/forms/Button'
 import { Tooltip } from '@/primitives/surfaces/Tooltip'
 import { Box, Text } from '@/primitives'
 import { SchemaNode } from './SchemaNode'
+import { ExplorerErrorRow } from './ExplorerErrorRow'
 import { useTranslation } from '@/i18n/I18nProvider'
 import { treeIndent } from '@/lib/math'
 
@@ -46,6 +47,7 @@ export function DatabaseNode({
   // Schemas are keyed by connectionId:databaseName
   const schemaCacheKey = `${connectionId}:${databaseName}`
   const schemaList = schemas.get(schemaCacheKey) ?? []
+  const schemasError = useSchemaStore((s) => s.errored.has(schemaErrorTag('schemas', schemaCacheKey)))
 
   // When expanded, switch to this database and fetch its schemas
   useEffect(() => {
@@ -72,6 +74,18 @@ export function DatabaseNode({
   function handleToggle() {
     setSwitchError(false)
     toggleTreeNode(nodeKey)
+  }
+
+  async function handleRetry() {
+    setSwitchError(false)
+    try {
+      await switchDatabase(connectionId, databaseName)
+      // fetchSchemas swallows and records its own failures (marks errored), so
+      // only a switchDatabase failure reaches this catch.
+      await fetchSchemas(connectionId, databaseName)
+    } catch {
+      setSwitchError(true)
+    }
   }
 
   async function handleRefresh() {
@@ -156,6 +170,12 @@ export function DatabaseNode({
               >
                 {t('explorer.status.cannotAccessDatabase')}
               </Text>
+            ) : schemasError && schemaList.length === 0 ? (
+              <ExplorerErrorRow
+                message={t('explorer.loadError.generic')}
+                onRetry={handleRetry}
+                paddingLeft={paddingLeft + 20}
+              />
             ) : schemaList.length === 0 ? (
               <Text
                 as="p"
