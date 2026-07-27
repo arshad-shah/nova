@@ -274,7 +274,7 @@ jobs:
           path: dist
 
       - name: Setup Microsoft Store CLI
-        uses: microsoft/setup-msstore-cli@b76227f539d68e6465f79bbbc82ed92f61081aa4 # v1.3
+        uses: microsoft/setup-msstore-cli@cc9910a8d59f2eb55cbb83df0a3800cf3b5300e0 # v1.4
 
       - name: Configure msstore CLI
         run: >
