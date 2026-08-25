@@ -49,6 +49,26 @@ import type { ReleaseNote } from './types'
  */
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '1.8.1',
+    date: '2026-08-25',
+    headline: 'whatsNew.v1_8_1.headline',
+    summary: 'whatsNew.v1_8_1.summary',
+    groups: [
+      {
+        title: 'whatsNew.groups.fixes',
+        tone: 'fix',
+        highlights: [
+          { id: 'splash-hang', icon: Rocket, title: 'whatsNew.v1_8_1.splashHang.title', description: 'whatsNew.v1_8_1.splashHang.description' },
+          { id: 'startup-errors', icon: ShieldAlert, title: 'whatsNew.v1_8_1.startupErrors.title', description: 'whatsNew.v1_8_1.startupErrors.description' },
+          { id: 'loading-screen', icon: Hourglass, title: 'whatsNew.v1_8_1.loadingScreen.title', description: 'whatsNew.v1_8_1.loadingScreen.description' },
+        ],
+      },
+    ],
+    links: [
+      { label: 'whatsNew.links.changelog', url: 'https://github.com/arshad-shah/verql/blob/main/CHANGELOG.md' },
+    ],
+  },
+  {
     version: '1.8.0',
     date: '2026-08-25',
     headline: 'whatsNew.v1_8_0.headline',

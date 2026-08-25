@@ -20,6 +20,26 @@ export const whatsNew = {
   // Covers everything since 1.5.0 — the release pages for 1.6.0 and 1.7.0 were
   // never authored, and a user updating from 1.5.0 only ever sees this page, so
   // the tab-bar, menu and ER-diagram work from those releases is folded in here.
+  v1_8_1: {
+    headline: 'A fix for Verql not starting',
+    summary:
+      'Some installations of 1.8.0 never got past the loading screen. The cause was a single bad import in the layer that connects Verql\u2019s window to the rest of the app: it failed silently on launch, leaving the app unable to load anything and no message to explain why. This release fixes that, and makes sure a failure at startup can never again look like nothing happening.',
+    splashHang: {
+      title: 'Verql starts again',
+      description:
+        'On affected installations 1.8.0 would show the loading screen and stay there indefinitely. The bridge Verql uses to talk to your databases, settings and plugins failed to load, so nothing that depends on it \u2014 which is everything \u2014 could finish starting. It now loads correctly, and an automated check keeps this specific failure from returning.',
+    },
+    startupErrors: {
+      title: 'A startup problem now tells you what went wrong',
+      description:
+        'If Verql cannot load your settings it shows the error and a Try again button instead of sitting on the loading screen. Anything that is not needed to open the window \u2014 restoring your tabs, conversation history, saved queries \u2014 no longer takes the whole app down if it fails; you get the app, minus that one thing.',
+    },
+    loadingScreen: {
+      title: 'The loading screen always clears',
+      description:
+        'Launching Verql minimised, or behind another window, could leave the loading screen covering the app after it had finished starting \u2014 with nothing clickable underneath. It now always comes down.',
+    },
+  },
   v1_8_0: {
     headline: 'Built for bigger databases',
     summary:
