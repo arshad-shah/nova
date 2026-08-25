@@ -52,7 +52,7 @@
     "lucide-react": "1.7.0",
     "mime-db": "1.52.0",
     "mime-types": "2.1.35",
-    "monaco-editor": "0.55.1",
+    "monaco-editor": "0.56.0",
     "mongodb": "7.1.1",
     "mysql2": "3.20.0",
     "pg": "8.20.0",
