@@ -60,7 +60,7 @@
     "react-dom": "19.2.4",
     "react-markdown": "^10.1.0",
     "remark-gfm": "^4.0.1",
-    "shiki": "^4.0.2",
+    "shiki": "^4.4.3",
     "snowflake-sdk": "2.4.0",
     "sql-formatter": "^15.8.0",
     "ssh2": "1.17.0",
