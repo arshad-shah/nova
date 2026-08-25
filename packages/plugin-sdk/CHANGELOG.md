@@ -1,5 +1,21 @@
 # @verql/plugin-sdk
 
+## 0.11.1
+
+### Patch Changes
+
+- [#224](https://github.com/arshad-shah/verql/pull/224) [`8962e8f`](https://github.com/arshad-shah/verql/commit/8962e8fd93607be68fc8ede5fa4797ce9316aaa7) Thanks [@arshad-shah](https://github.com/arshad-shah)! - Unify the two divergent SQL statement splitters into one shared walk ([#199](https://github.com/arshad-shah/verql/issues/199)). The
+  SDK splitter (`string[]`) and the renderer gutter splitter (`Statement[]` with
+  positions) were separate hand-written tokenisers that disagreed on statement
+  boundaries — the SDK deleted comments and missed backticks, the renderer missed
+  `''` doubling, and neither handled Postgres `$$…$$` bodies. They now share a
+  single pure walk in `shared/sql/statement-splitter.ts` with two thin adapters,
+  so "Run statement N" and the SQL importer/formatter always see the same text.
+  Comments are now retained in emitted statements, dollar-quoted function bodies no
+  longer split on their internal semicolons (gated on a new `supportsDollarQuoting`
+  driver capability, set on Postgres), and a `statement-splitter-single-implementation`
+  fitness function keeps a second tokeniser from reappearing.
+
 ## 0.11.0
 
 ### Minor Changes

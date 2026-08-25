@@ -1,6 +1,6 @@
 {
   "name": "@verql/plugin-sdk",
-  "version": "0.11.0",
+  "version": "0.11.1",
   "description": "Public SDK for building Verql plugins — types, helpers, and the capability model third-party plugin authors code against.",
   "license": "MIT",
   "author": "Arshad Shah",
