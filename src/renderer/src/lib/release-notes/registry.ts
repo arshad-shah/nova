@@ -21,6 +21,14 @@ import {
   BellRing,
   Keyboard,
   Contrast,
+  Activity,
+  Zap,
+  Rocket,
+  Share2,
+  ArrowLeftRight,
+  ListOrdered,
+  ShieldAlert,
+  Hourglass,
 } from 'lucide-react'
 import type { ReleaseNote } from './types'
 
@@ -40,6 +48,49 @@ import type { ReleaseNote } from './types'
  * resolves it.
  */
 export const RELEASE_NOTES: ReleaseNote[] = [
+  {
+    version: '1.8.0',
+    date: '2026-08-25',
+    headline: 'whatsNew.v1_8_0.headline',
+    summary: 'whatsNew.v1_8_0.summary',
+    groups: [
+      {
+        title: 'whatsNew.groups.features',
+        tone: 'feature',
+        highlights: [
+          { id: 'view-data-paging', icon: Table2, title: 'whatsNew.v1_8_0.viewData.title', description: 'whatsNew.v1_8_0.viewData.description' },
+          { id: 'redis-scan', icon: Zap, title: 'whatsNew.v1_8_0.redisScan.title', description: 'whatsNew.v1_8_0.redisScan.description' },
+          { id: 'activity-panel', icon: Activity, title: 'whatsNew.v1_8_0.activityPanel.title', description: 'whatsNew.v1_8_0.activityPanel.description' },
+          { id: 'er-diagram', icon: Share2, title: 'whatsNew.v1_8_0.erDiagram.title', description: 'whatsNew.v1_8_0.erDiagram.description' },
+        ],
+      },
+      {
+        title: 'whatsNew.groups.improvements',
+        tone: 'improvement',
+        highlights: [
+          { id: 'faster-start', icon: Rocket, title: 'whatsNew.v1_8_0.fasterStart.title', description: 'whatsNew.v1_8_0.fasterStart.description' },
+          { id: 'snappier', icon: Gauge, title: 'whatsNew.v1_8_0.snappier.title', description: 'whatsNew.v1_8_0.snappier.description' },
+          { id: 'schema-errors', icon: RefreshCw, title: 'whatsNew.v1_8_0.schemaErrors.title', description: 'whatsNew.v1_8_0.schemaErrors.description' },
+          { id: 'database-switch', icon: ArrowLeftRight, title: 'whatsNew.v1_8_0.databaseSwitch.title', description: 'whatsNew.v1_8_0.databaseSwitch.description' },
+          { id: 'statements', icon: ListOrdered, title: 'whatsNew.v1_8_0.statements.title', description: 'whatsNew.v1_8_0.statements.description' },
+          { id: 'tab-bar', icon: PanelsTopLeft, title: 'whatsNew.v1_8_0.tabBar.title', description: 'whatsNew.v1_8_0.tabBar.description' },
+        ],
+      },
+      {
+        title: 'whatsNew.groups.fixes',
+        tone: 'fix',
+        highlights: [
+          { id: 'redis-injection', icon: ShieldCheck, title: 'whatsNew.v1_8_0.redisInjection.title', description: 'whatsNew.v1_8_0.redisInjection.description' },
+          { id: 'write-gate', icon: ShieldAlert, title: 'whatsNew.v1_8_0.writeGate.title', description: 'whatsNew.v1_8_0.writeGate.description' },
+          { id: 'stale-responses', icon: Hourglass, title: 'whatsNew.v1_8_0.staleResponses.title', description: 'whatsNew.v1_8_0.staleResponses.description' },
+        ],
+      },
+    ],
+    links: [
+      { label: 'whatsNew.links.changelog', url: 'https://github.com/arshad-shah/verql/blob/main/CHANGELOG.md' },
+      { label: 'whatsNew.links.userGuide', url: 'https://verql.arshadshah.com/guide/' },
+    ],
+  },
   {
     version: '1.5.0',
     date: '2026-07-16',

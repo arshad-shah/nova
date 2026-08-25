@@ -17,6 +17,79 @@ export const whatsNew = {
     sdkDocs: 'Plugin SDK docs',
     userGuide: 'User guide',
   },
+  // Covers everything since 1.5.0 — the release pages for 1.6.0 and 1.7.0 were
+  // never authored, and a user updating from 1.5.0 only ever sees this page, so
+  // the tab-bar, menu and ER-diagram work from those releases is folded in here.
+  v1_8_0: {
+    headline: 'Built for bigger databases',
+    summary:
+      'Verql no longer reads a whole table — or a whole Redis keyspace — into memory just to show you what is in it. Browsing is paged and bounded, Redis stops blocking your server while it lists keys, the app opens faster, and the Activity panel has been rebuilt around the message you are actually looking for. Two security fixes land here as well.',
+    viewData: {
+      title: 'Browse large tables without the wait',
+      description:
+        'Viewing data used to read every record into memory before showing you anything, so a large table could hang the app. Verql now loads a page at a time — the header tells you when there is more, and Load more fetches the next batch. Set the page size under Settings → General → Max Rows to View (500 by default). Exports are unchanged and still write everything.',
+    },
+    redisScan: {
+      title: 'Redis that doesn’t stall your server',
+      description:
+        'Every Redis key-listing path used a command that walks the entire keyspace and blocks the server for as long as it runs — simply expanding a large connection could freeze every other client. Verql now walks keys incrementally instead. A new Max keys to scan setting (10,000 by default) caps how far a listing goes, and the Key scan batch size setting, which until now did nothing at all, genuinely tunes it.',
+    },
+    activityPanel: {
+      title: 'A rebuilt Activity panel',
+      description:
+        'The message now gets the full width of the row, with severity moved to a slim rail down the edge. Search and the filter chips collapse into one bar you can type into — "level:error kind:query" alongside free text. Details open in a pinned, resizable drawer instead of pushing the list around, the stream tails newest entries at the bottom, and everything a single run caused is grouped under it, so a buried error is visible without expanding anything.',
+    },
+    erDiagram: {
+      title: 'ER diagrams that say what a relationship means',
+      description:
+        'The diagram is redrawn from scratch. Connectors now carry crow’s-foot cardinality — exactly one, zero or one, one or many, zero or many — with identifying relationships drawn solid and non-identifying dashed, plus a legend built from the same symbols. Each connector meets the row of the field it constrains, cards size to their contents, and the whole diagram follows your theme.',
+    },
+    fasterStart: {
+      title: 'The app opens faster',
+      description:
+        'The query editor, results grid, ER diagram, AI chat and charts are no longer loaded before Verql can draw anything. Each one arrives the moment you first open it, so the welcome screen, the app shell and your connections appear without waiting on parts you may not use at all this session.',
+    },
+    snappier: {
+      title: 'A snappier window while you work',
+      description:
+        'Typing in the editor no longer re-renders the whole app shell. And surfaces that want the same schema information at the same moment — the explorer and an ER diagram open on one schema, say — now share a single round trip instead of each making its own.',
+    },
+    schemaErrors: {
+      title: 'The explorer tells failed apart from empty',
+      description:
+        'A schema load that failed used to look exactly like one that came back empty, or spin on “Loading…” forever. Failures now show an error row with a Retry action, and are recorded in Activity so you can see what actually went wrong.',
+    },
+    databaseSwitch: {
+      title: 'Switching databases fails loudly',
+      description:
+        'When switching a connection to another database failed — it had been dropped, or you lacked permission — Verql updated the tab anyway and quietly ran your next query against the previous one. The failure now surfaces and the tab stays where it was. Drivers that cannot switch no longer offer the picker at all.',
+    },
+    statements: {
+      title: 'One consistent view of your statements',
+      description:
+        'Running a single statement, importing a file and formatting each used their own rules for where one statement ends and the next begins, and they disagreed. They now share one. Comments stay with the statement they belong to, and on PostgreSQL a function body written between $$ markers no longer splits at its own semicolons.',
+    },
+    tabBar: {
+      title: 'A roomier, keyboard-friendly tab bar',
+      description:
+        'Tabs are larger at every density, the active one is easier to pick out, and the bar is fully operable from the keyboard and exposed to assistive tech. Menus across the app share one implementation now, so a right-click near the edge of the screen flips into view instead of being clipped.',
+    },
+    redisInjection: {
+      title: 'Redis key names can no longer run commands',
+      description:
+        'Viewing Redis data built commands by pasting key names into text, so a key deliberately named to contain a line break could run a command of the attacker’s choosing — destructive ones included — just by being browsed. Key names are now passed as data and never re-read as commands. Keys containing spaces read correctly for the first time, and the Redis console understands quoted arguments.',
+    },
+    writeGate: {
+      title: 'Writes can’t slip past the approval prompt',
+      description:
+        'The check that decides whether a statement needs your approval removed comments without understanding quoted text, so a write hidden after a comment marker inside a string could be read as harmless and run unprompted through the AI assistant or a connected MCP client. Anything the check cannot read with confidence is now treated as a write.',
+    },
+    staleResponses: {
+      title: 'Late answers no longer overwrite fresh ones',
+      description:
+        'Switching connections quickly could let a slow reply for the connection you left populate the one you moved to — listing its databases, and sometimes selecting one that does not exist there. Replies that arrive after you have moved on are now discarded, across the explorer, the connection picker and the plugin and data browsers.',
+    },
+  },
   // Covers everything since 1.3.1 — the release pages for 1.4.x were never
   // authored, and a user updating from 1.3.1 only ever sees this page, so the
   // form-field, text-area and toast work from 1.4.0 is folded in here.
