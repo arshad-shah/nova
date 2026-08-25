@@ -205,6 +205,7 @@ core architecture invariants and their enforcing tests:
 | One SQL statement splitter across main + renderer (#199) | `statement-splitter-single-implementation.test.ts` |
 | Published `@verql/plugin-sdk` surface stays curated | `sdk-public-surface.test.ts` |
 | No raw control bytes in tracked source (a NUL/control byte makes a file binary and invisible to grep) (#208) | `no-control-bytes-in-source.test.ts` |
+| The shipped version always has a curated "What's New" page (registry newest-first, never behind `package.json`) | `release-notes-cover-shipped-version.test.ts` |
 
 When you add or change an architectural invariant, add (or update) its guard in
 `tests/unit/audit/` and its row here in the same change — demonstrate the guard

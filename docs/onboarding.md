@@ -146,5 +146,11 @@ that references those keys:
 - `tests/unit/onboarding.test.ts` — the pure startup decision across fresh
   install / version bump / opt-out / no-note / unchanged.
 - `tests/unit/release-notes.test.ts` — registry helpers + structural invariants.
+- `tests/unit/audit/release-notes-cover-shipped-version.test.ts` — the release-process
+  guard: `RELEASE_NOTES` stays ordered newest-first and its newest entry is never
+  *behind* `package.json`. Authoring the page ahead of the Version Packages PR is
+  fine (the registry may run ahead); shipping a version with no page is not. This is
+  what catches a skipped step 2 — 1.6.0 and 1.7.0 both shipped with no page, and
+  their users were shown the 1.5.0 one.
 - Stories: `GetStartedStep.stories.tsx`, `ReleaseNotesContent.stories.tsx`
   (both presentational, prop-driven).
