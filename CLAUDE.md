@@ -194,6 +194,7 @@ core architecture invariants and their enforcing tests:
 | --- | --- |
 | Renderer backend access only through the platform layer (#165) | `renderer-backend-access-through-platform.test.ts` |
 | No `string`-keyed IPC event registration; every `IPC_EVENTS` entry has a shape and vice versa (#166) | `ipc-event-seam-typed.test.ts` |
+| The sandboxed preload (and everything it imports) uses no Node builtin — one throws at load and takes the whole IPC bridge with it | `preload-sandbox-safe.test.ts` |
 | IPC channels + shared constants are single-sourced | `ipc-channels-single-sourced.test.ts`, `constants-single-sourced.test.ts` |
 | No driver-type special-casing in `src/main/db/` (registry-purity) | `db-factory-registry-purity.test.ts` |
 | A driver's declared capabilities ⇔ its implemented adapter methods (#168) | `driver-capability-agreement.test.ts` |

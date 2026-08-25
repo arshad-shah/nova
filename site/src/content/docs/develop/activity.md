@@ -147,6 +147,14 @@ triggers. It is minted and threaded automatically, not by each recorder:
   `traceRunner`, so a tool-call entry and the network entries it triggers share
   one id — independent of any renderer invoke.
 
+Because the id is minted *in the preload*, `newTraceId()` (`shared/trace.ts`) is
+built on `globalThis.crypto`, never `node:crypto`. The preload runs with
+`sandbox: true`, where a Node builtin throws at load and takes the whole IPC
+bridge down with it — the app then boots with no `window.electronAPI` and hangs
+on the splash screen (this shipped in 1.8.0). One implementation serves both
+places traces are born: `src/main/activity/trace-context.ts` re-exports it. See
+[the IPC guide](/develop/ipc/) ("The preload runs sandboxed").
+
 ## The Activity panel
 
 The panel lives in `src/renderer/src/components/shell/activity/` (a barrel, with
