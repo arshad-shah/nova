@@ -1,5 +1,156 @@
 # Changelog
 
+## 1.8.0
+
+### Minor Changes
+
+- [#231](https://github.com/arshad-shah/verql/pull/231) [`81744f4`](https://github.com/arshad-shah/verql/commit/81744f4c0ad892a2056f096b0372c5d2fb2585ad) Thanks [@arshad-shah](https://github.com/arshad-shah)! - Bound the "View data" table browse so a huge table no longer loads whole into
+  memory ([#213](https://github.com/arshad-shah/verql/issues/213)). The relational reader (`createRelationalGetTableData`) now fetches
+  a page at a time using a driver-aware paging clause — a new `pagination` driver
+  capability (`limit-offset` or `offset-fetch`) instead of a hardcoded `LIMIT`.
+  The page size is a new General setting, **Max Rows to View** (`maxViewDataRows`,
+  default 500); when a table has more rows the grid header shows "Showing first N
+  rows" and a **Load more** button that pages in the next batch. Export is
+  unchanged — it deliberately stays an unbounded read (streaming export is tracked
+  separately).
+
+- [#232](https://github.com/arshad-shah/verql/pull/232) [`bc01ada`](https://github.com/arshad-shah/verql/commit/bc01ada7526892265613d0aeccc5fada97efed8b) Thanks [@arshad-shah](https://github.com/arshad-shah)! - Stop the Redis driver from blocking production servers with `KEYS` ([#212](https://github.com/arshad-shah/verql/issues/212)). Every
+  key-listing path — listing key prefixes in the explorer, counting keys per node,
+  and browsing a prefix's data — used `KEYS` (including unbounded `KEYS *`), which
+  is O(N) over the entire keyspace and blocks the Redis server for its whole
+  duration; simply expanding a connection to a multi-million-key instance could
+  stall every other client. All of them now use the non-blocking, cursor-based
+  `SCAN` (ioredis `scanStream`), and the previously decorative **Key scan batch
+  size** (`scanCount`) setting is finally real — it is passed through as the `SCAN`
+  `COUNT` hint. A new **Max keys to scan** (`maxKeys`, default 10,000) setting caps
+  how far prefix-listing and key-counting walk, so neither can traverse a whole
+  huge keyspace; the per-node count is a lower bound once a prefix exceeds the cap.
+
+  Browsing a prefix's data ("View data") now pages through `SCAN` honouring the
+  same **Max Rows to View** limit and "Load more" affordance as the relational
+  drivers, and reads every key on a page in two pipelined round trips (one `TYPE`
+  batch, one type-specific read batch) instead of two sequential round trips per
+  key. Key names stay injection-safe throughout — they are dispatched as
+  structured argument arrays and pipeline elements, never re-parsed. A new fitness
+  function (`tests/unit/audit/redis-no-blocking-keys.test.ts`) fails the build if
+  `KEYS` is reintroduced in either form (a `client.keys(...)` call or a `['KEYS', …]`
+  command dispatch).
+
+### Patch Changes
+
+- [#229](https://github.com/arshad-shah/verql/pull/229) [`5149bbf`](https://github.com/arshad-shah/verql/commit/5149bbfa3bfe2afc7d5c04fe89d00db682a07e20) Thanks [@arshad-shah](https://github.com/arshad-shah)! - Guard renderer async effects against stale resolution so a response for a
+  previous connection, plugin, or table can no longer land late and overwrite
+  fresher state. Switching connections quickly in the query toolbar could let
+  connection A's database/schema list populate connection B's selector (and
+  auto-select a database that doesn't exist on B); the schema and plugin/table
+  browse surfaces had the same class of race, and several pollers/lifecycle
+  refreshers could `setState` after their pane had closed.
+
+  Two small dependency-free hooks now state the pattern once: `useAsyncEffect`
+  (cancels a fetch-on-dependency effect when its dependencies change or the
+  component unmounts) and `useIsMounted` (an unmount probe for stable pollers and
+  event-driven refreshers whose async lives outside a single effect run). Every
+  previously unguarded async effect across the renderer adopts one of them.
+
+- [#221](https://github.com/arshad-shah/verql/pull/221) [`236f64e`](https://github.com/arshad-shah/verql/commit/236f64e5740a6614f48534f444fb009ce731cd60) Thanks [@arshad-shah](https://github.com/arshad-shah)! - Make in-connection database switching a declared driver capability and stop
+  swallowing switch failures ([#200](https://github.com/arshad-shah/verql/issues/200)). Support was previously discovered by catching
+  a thrown error at two call sites with empty `catch {}` blocks, so a genuine
+  failure (target database missing, permission denied, connection dropped) was
+  indistinguishable from "adapter doesn't support switching" — the tab chrome
+  updated regardless and the next query ran against the _previous_ database. A
+  driver now declares `databaseSwitch: { supported: true }` (postgresql, mysql,
+  mongodb, redis, snowflake; SQLite declares neither the capability nor the
+  method), the adapter factory validates the declaration against the optional
+  `switchDatabase` method in both directions, and the connection selector gates
+  its database dropdown on the declaration rather than on a thrown error. The
+  shared `applyConnectionContext` helper now backs both the selector and the
+  pre-query prelude: a switch that fails on a _capable_ driver surfaces the error
+  and leaves the tab's database unchanged instead of silently running elsewhere.
+
+- [#220](https://github.com/arshad-shah/verql/pull/220) [`4540c24`](https://github.com/arshad-shah/verql/commit/4540c24adadd9d886bfa013f7a410d42ef3c277f) Thanks [@arshad-shah](https://github.com/arshad-shah)! - Fix a Redis stored command-injection vulnerability ([#211](https://github.com/arshad-shah/verql/issues/211)). The Redis driver read
+  table data by interpolating server-supplied key names into command strings and
+  running them through `query()`, whose parser splits on whitespace and newlines —
+  so a key literally named `app:cache\nFLUSHALL` browsed by a DBA executed
+  `FLUSHALL` (and `CONFIG SET`, `SCRIPT LOAD`, `SHUTDOWN`, … were reachable the same
+  way). `getTableData` now dispatches structured argument arrays through a new
+  `RedisCommandDispatcher.command([...])` method, which ioredis sends verbatim and
+  never re-parses, closing the hole; keys containing spaces (previously unreadable
+  due to bad arity) now read correctly too. `parseRedisCommands` — the parser for
+  user-typed console input — gains `redis-cli`-style quoting, so `SET k "hello
+world"` is finally three arguments instead of four. A new fitness function
+  (`tests/unit/audit/redis-no-value-interpolation.test.ts`) fails the build if any
+  `query()` call in the Redis plugin is handed an interpolated command string.
+
+- [#233](https://github.com/arshad-shah/verql/pull/233) [`0c4b8e7`](https://github.com/arshad-shah/verql/commit/0c4b8e782488999f46a23d882c6d3639830f8c84) Thanks [@arshad-shah](https://github.com/arshad-shah)! - Code-split the renderer so the heaviest, non-first-paint dependencies no longer
+  load before first paint ([#205](https://github.com/arshad-shah/verql/issues/205)). The query editor (Monaco), the results grid
+  (ag-grid), the ER diagram, the AI chat panel (`react-markdown`/`shiki`), and the
+  charts panel/dashboard now mount behind a `React.lazy` boundary at their render
+  sites, with a shared spinner fallback while the chunk downloads. The renderer
+  build gained a `manualChunks` split that pulls `monaco-editor`, `ag-grid`, and
+  the markdown/highlight stack into their own vendor chunks, so opening a
+  connection, the welcome screen, and the app shell paint without paying for the
+  editor and grid up front. No component behaviour changes — only when each one
+  loads.
+
+- [#230](https://github.com/arshad-shah/verql/pull/230) [`924589d`](https://github.com/arshad-shah/verql/commit/924589d30ea07d80a6181480f388633f8ef5d35f) Thanks [@arshad-shah](https://github.com/arshad-shah)! - Schema explorer now handles load failures consistently. Every schema fetcher
+  (databases, schemas, tables, columns, indexes, objects, row counts) applies one
+  error policy: a failed load is recorded to the Activity stream, marked as
+  errored rather than cached as an empty result, and can no longer surface as an
+  unhandled promise rejection. The explorer tells a _failed_ load apart from a
+  genuinely empty one — where it used to show a perpetual "Loading…" or a silent
+  empty list, it now shows an error row with a Retry action.
+
+- [#228](https://github.com/arshad-shah/verql/pull/228) [`b4abc54`](https://github.com/arshad-shah/verql/commit/b4abc5416d81e0ecd5fce57b5296fc033b2c9243) Thanks [@arshad-shah](https://github.com/arshad-shah)! - De-duplicate in-flight schema requests so concurrent callers share one round trip.
+
+  The schema store cached resolved results but tracked no pending requests, so the
+  cache was only consulted after a request settled. Opening an ER diagram while the
+  explorer was expanded on the same schema — or any surface asking for the same
+  table's columns as another — fired a separate `DB_GET_COLUMNS` (and `DB_GET_TABLES`,
+  `DB_GET_INDEXES`, `DB_GET_ROW_COUNT`, `DB_GET_SCHEMA_OBJECTS`, `DB_GET_SCHEMAS`,
+  `DB_GET_DATABASES`) per caller. Each fetcher now caches its in-flight promise keyed
+  identically to its result cache; a second caller arriving before the first settles
+  awaits the same promise. Entries are evicted the moment a request settles so a
+  failed request never poisons the key, and cache invalidation (`clearCache`,
+  disconnect, connection delete) drops pending entries alongside the results they
+  would populate.
+
+- [#227](https://github.com/arshad-shah/verql/pull/227) [`fc9775b`](https://github.com/arshad-shah/verql/commit/fc9775b8e3ddf972f391b7c3efc1b38611f85677) Thanks [@arshad-shah](https://github.com/arshad-shah)! - Subscribe to Zustand stores per-field across the renderer so shell chrome no
+  longer re-renders on every keystroke.
+
+  `App.tsx` already documented the rule — subscribe to individual fields, not the
+  whole store, because App renders the entire shell and a whole-store subscription
+  re-renders it on every store mutation (including per-keystroke `updateTabSql`,
+  which also carries full result sets in the tabs store) — but 26 call sites still
+  took the whole store. All 26 (tab bar, charts dashboard, status bar, command
+  palette, connection selector/switcher, query panel/editor, sidebars,
+  notifications, toasts, and the query-execution/transaction hooks) now select the
+  exact fields they use; actions are stable references, so selecting them
+  individually is free. A new fitness function,
+  `tests/unit/audit/renderer-store-selectors.test.ts`, fails the build if a bare
+  `useXStore()` whole-store subscription is reintroduced.
+
+- [#218](https://github.com/arshad-shah/verql/pull/218) [`3e21102`](https://github.com/arshad-shah/verql/commit/3e21102a5c469a0dd68df76a275070add3c32fc0) Thanks [@arshad-shah](https://github.com/arshad-shah)! - Security: `isWriteQuery` now strips SQL comments with a string-aware scan
+  instead of two literal-blind regexes. A comment marker (`/*`, `--`, `$$`)
+  inside a quoted string is treated as data rather than opening a phantom
+  comment, so a write hidden after such a marker — e.g.
+  `SELECT '/*' AS a; DELETE FROM users; SELECT '*/' AS b` — is no longer
+  mis-classified as a read and can no longer slip past the write-approval gate
+  on the MCP server or the AI assistant. Input the scanner cannot confidently
+  tokenise (unterminated quote, unbalanced block comment) is treated as a write
+  (fail closed).
+
+- [#224](https://github.com/arshad-shah/verql/pull/224) [`8962e8f`](https://github.com/arshad-shah/verql/commit/8962e8fd93607be68fc8ede5fa4797ce9316aaa7) Thanks [@arshad-shah](https://github.com/arshad-shah)! - Unify the two divergent SQL statement splitters into one shared walk ([#199](https://github.com/arshad-shah/verql/issues/199)). The
+  SDK splitter (`string[]`) and the renderer gutter splitter (`Statement[]` with
+  positions) were separate hand-written tokenisers that disagreed on statement
+  boundaries — the SDK deleted comments and missed backticks, the renderer missed
+  `''` doubling, and neither handled Postgres `$$…$$` bodies. They now share a
+  single pure walk in `shared/sql/statement-splitter.ts` with two thin adapters,
+  so "Run statement N" and the SQL importer/formatter always see the same text.
+  Comments are now retained in emitted statements, dollar-quoted function bodies no
+  longer split on their internal semicolons (gated on a new `supportsDollarQuoting`
+  driver capability, set on Postgres), and a `statement-splitter-single-implementation`
+  fitness function keeps a second tokeniser from reappearing.
+
 ## 1.7.0
 
 ### Minor Changes
