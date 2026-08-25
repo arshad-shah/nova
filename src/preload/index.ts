@@ -1,7 +1,14 @@
 import { contextBridge, ipcRenderer } from 'electron'
-import { randomUUID } from 'node:crypto'
 import type { IpcChannelMap, IpcEventMap } from '@shared/ipc'
-import { makeTraceEnvelope } from '@shared/trace'
+import { makeTraceEnvelope, newTraceId } from '@shared/trace'
+
+// This file runs with `sandbox: true`, so it may import only 'electron' and
+// pure `@shared`/relative modules. A Node builtin (`node:crypto`, `fs`, …)
+// throws "module not found" as the sandboxed preload loads, which kills the
+// whole bridge: `contextBridge.exposeInMainWorld` never runs, the renderer
+// comes up with no `window.electronAPI`, and it hangs on the splash forever
+// because the settings hydrate that dismisses the splash can't complete.
+// Pinned by tests/unit/audit/preload-sandbox-safe.test.ts.
 
 const electronAPI = {
   /** Host OS, so the renderer can lay out the title bar / window controls to
@@ -24,7 +31,7 @@ const electronAPI = {
     channel: K,
     ...args: IpcChannelMap[K]['args']
   ): Promise<IpcChannelMap[K]['return']> =>
-    ipcRenderer.invoke(channel, ...args, makeTraceEnvelope(randomUUID())),
+    ipcRenderer.invoke(channel, ...args, makeTraceEnvelope(newTraceId())),
 
   on: <E extends keyof IpcEventMap>(
     channel: E,

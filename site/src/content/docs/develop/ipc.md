@@ -33,6 +33,54 @@ string-literal `invoke()` / `on()` calls and fails the build if it finds one
 that isn't a known channel — and a forgotten constant is a clear regression
 signal.
 
+## The preload runs sandboxed
+
+[`src/preload/index.ts`](https://github.com/arshad-shah/verql/blob/main/src/preload/index.ts) is the wire boundary — the only file that touches
+`ipcRenderer` — and the renderer that loads it is created with `sandbox: true`
+([`src/main/index.ts`](https://github.com/arshad-shah/verql/blob/main/src/main/index.ts)). That is a hard constraint on what this one file, and
+everything it imports, is allowed to be.
+
+A sandboxed preload does **not** get Node. It runs inside Chromium's sandbox
+with a polyfilled `require` that resolves `electron` and a small set of shims
+(`events`, `timers`, `url`) and nothing else. Import a Node builtin and it
+throws `module not found: node:crypto` *while the script is loading*, which
+aborts it before the last line runs:
+
+```ts
+contextBridge.exposeInMainWorld('electronAPI', electronAPI)
+```
+
+So the failure is total and silent. `window.electronAPI` is simply absent; every
+`ipc.invoke` rejects with "Backend unavailable"; the settings hydrate that
+dismisses the splash never resolves; **the app hangs on the splash screen** with
+nothing in the UI saying why. This is not hypothetical — it shipped in 1.8.0
+(the trace-id work in #226 added `import { randomUUID } from 'node:crypto'`).
+
+Three things conspired to let it through, which is why the rule is now
+executable rather than remembered:
+
+- TypeScript resolves Node builtins fine under `tsconfig.node.json`.
+- The bundler happily externalises them into a runtime `require`.
+- The unit suite runs on Node, where `node:crypto` imports without complaint.
+
+The break exists only at runtime, inside the sandbox. So:
+
+| Instead of | Use |
+|------------|-----|
+| `node:crypto` `randomUUID` | `newTraceId()` from `@shared/trace` (built on `globalThis.crypto`) |
+| `node:crypto` hashing / random bytes | `globalThis.crypto.subtle` / `getRandomValues`, or move it to main behind a channel |
+| `node:buffer`, `node:util` encoders | `TextEncoder` / `TextDecoder` |
+| `fs`, `path`, `os`, `child_process` | a main-process handler behind an IPC channel — the preload is a bridge, not a place to do work |
+
+A pure `@shared/*` or relative import is always fine: it is compiled into the
+preload bundle, not resolved at runtime. An `import type` is fine for the same
+reason — it is erased before the bundle exists.
+
+[`tests/unit/audit/preload-sandbox-safe.test.ts`](https://github.com/arshad-shah/verql/blob/main/tests/unit/audit/preload-sandbox-safe.test.ts) walks the preload's whole static
+import graph (through `@shared/`, not just the entry file) and fails the build on
+any Node builtin outside the sandbox-safe set, naming the file, the line, and the
+chain that pulled it in.
+
 ## Adding a new invoke channel
 
 Each channel is described in two complementary halves, both in `shared/ipc.ts`:
@@ -192,6 +240,7 @@ and `IpcEventMap` derived from the two.
 | Single-source key coverage | `IPC_CHANNELS` / `IPC_EVENTS` use `satisfies Record<keyof IpcChannelShapes, string>` | Constant without a shape (or shape without a constant) → build fail |
 | Compile-time map coverage | `tests/unit/ipc-channels-coverage.test.ts` re-asserts the shape↔constant key sets match | Drift between the two halves → build fail |
 | Call-site single-sourcing | `tests/unit/audit/ipc-channels-single-sourced.test.ts` scans **all** processes for a raw `'domain:action'` literal passed to `invoke`/`on`/`send`/`handle`/`h`/`broadcast`/`emit` | Hand-rolled wire string at any call site (renderer **or** main `handle`/`broadcast`) → test fail. Always pass `IPC_CHANNELS.X` / `IPC_EVENTS.X`, never the literal |
+| Sandbox-safe preload | [`tests/unit/audit/preload-sandbox-safe.test.ts`](https://github.com/arshad-shah/verql/blob/main/tests/unit/audit/preload-sandbox-safe.test.ts) walks the preload's static import graph (including through `@shared/`) for Node builtins | A sandboxed preload cannot `require` a Node builtin: it throws at load, `contextBridge.exposeInMainWorld` never runs, and the app boots with no `window.electronAPI` — stuck on the splash screen → test fail |
 | Renderer typing | `window.electronAPI.invoke<K>()` | Wrong args / wrong return → build fail |
 | Handler typing | `handle: Handle` in `ipc/context.ts` | Wrong args / wrong return → build fail |
 

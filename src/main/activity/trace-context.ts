@@ -1,5 +1,4 @@
 import { AsyncLocalStorage } from 'node:async_hooks'
-import { randomUUID } from 'node:crypto'
 
 /**
  * Ambient trace context (main process).
@@ -18,10 +17,10 @@ import { randomUUID } from 'node:crypto'
  */
 const storage = new AsyncLocalStorage<{ traceId: string }>()
 
-/** Mint a fresh trace id. */
-export function newTraceId(): string {
-  return randomUUID()
-}
+/** Mint a fresh trace id. One implementation, shared with the preload bridge —
+ *  the other place traces are born. See `shared/trace.ts` for why it is built
+ *  on Web Crypto rather than `node:crypto`. */
+export { newTraceId } from '@shared/trace'
 
 /**
  * Run `fn` with `traceId` as the ambient trace. A falsy id runs `fn` unwrapped,

@@ -47,3 +47,40 @@ export function extractTraceEnvelope(args: readonly unknown[]): { args: unknown[
   }
   return { args: [...args] }
 }
+
+/**
+ * Mint a fresh trace id.
+ *
+ * Deliberately built on the **Web Crypto** global rather than `node:crypto`,
+ * because the preload bridge — the one place renderer→main traces are born —
+ * runs with `sandbox: true` (see `src/main/index.ts`). A sandboxed preload gets
+ * Chromium's web platform and a `require` that resolves only `electron`,
+ * `events`, `timers` and `url`; `require('node:crypto')` throws "module not
+ * found" there, which aborts the preload *before*
+ * `contextBridge.exposeInMainWorld` runs. The renderer then boots with no
+ * `window.electronAPI` at all and hangs on the splash forever, because every
+ * IPC call — starting with the settings hydrate that dismisses the splash —
+ * fails at the bridge.
+ *
+ * That failure mode is invisible to the unit suite (Vitest runs on Node, where
+ * `node:crypto` resolves fine), so the rule is pinned statically by
+ * `tests/unit/audit/preload-sandbox-safe.test.ts` instead.
+ *
+ * `globalThis.crypto.randomUUID` is available in all three processes: Node ≥19
+ * exposes Web Crypto globally, and Chromium exposes it in any secure context
+ * (`file://` and `http://localhost`, which is every context Verql loads the
+ * renderer from). The fallback exists so a trace id is still minted if that
+ * ever stops holding — a trace id only has to be unique enough to correlate
+ * one session's activity entries, so a non-cryptographic id is correct here.
+ * Never reuse this for anything security-bearing.
+ */
+let traceCounter = 0
+
+export function newTraceId(): string {
+  // Structural type rather than the DOM `Crypto` lib type: `shared/` compiles
+  // under both the node and web tsconfigs, and this only needs the one method.
+  const webCrypto = (globalThis as { crypto?: { randomUUID?: () => string } }).crypto
+  if (typeof webCrypto?.randomUUID === 'function') return webCrypto.randomUUID()
+  traceCounter = (traceCounter + 1) % Number.MAX_SAFE_INTEGER
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}-${traceCounter}`
+}
