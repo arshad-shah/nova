@@ -217,7 +217,7 @@ jobs:
             sha256sums.txt
 
       - name: Generate SBOM (CycloneDX)
-        uses: anchore/sbom-action@61119d458adab75f756bc0b9e4bde25725f86a7a # v0.17.7
+        uses: anchore/sbom-action@3ad7283483fc7af8ff2b4ea19663c2d5ca935e26 # v0.17.7
         with:
           path: .
           format: cyclonedx-json
